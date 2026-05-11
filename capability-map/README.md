@@ -11,11 +11,19 @@ markers distinguish completed work, hypotheses, and human-only territory.
 ## Regenerate
 
 ```bash
-pip install matplotlib pyyaml
+pip install plotly kaleido pyyaml
+plotly_get_chrome -y    # one-time; kaleido v1 needs Chrome for PNG export
 python3 capability-map/plot.py
 ```
 
-Output: `capability-map.png`.
+Outputs:
+
+- `capability-map.html` — interactive view (open in a browser; hover for
+  task details).
+- `capability-map.png` — static export, suitable for embedding in
+  one-pagers and Markdown.
+
+Both regenerate from `tasks.yaml` on every run.
 
 ## Editing the map
 

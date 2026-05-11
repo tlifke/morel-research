@@ -5,6 +5,7 @@ status: in-progress
 parents: []
 children:
   - studies/000-research-organization/investigations/001-initial-scaffold
+  - studies/000-research-organization/investigations/002-plotly-migration
 related: []
 axes:
   llm_capability: medium
@@ -41,6 +42,8 @@ matters more than getting them perfectly right — the convention here is
 
 - `001-initial-scaffold` — first pass at directory layout, file conventions,
   one-pager template, capability map, lineage handling. In-progress.
+- `002-plotly-migration` — migrate `capability-map/plot.py` from matplotlib
+  to Plotly, producing HTML + PNG outputs. In-progress.
 
 ## Repository policy
 

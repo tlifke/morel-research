@@ -48,13 +48,13 @@ context.
    Keep the file roughly grouped by study with comment headers.
 
 4. Run `python3 capability-map/plot.py` to regenerate
-   `capability-map.png`. If matplotlib is unavailable, `pip install
-   matplotlib pyyaml` first. (The repo prefers Plotly for figures
-   generally — see "Future" below — but `plot.py` currently uses
-   matplotlib until migrated.)
+   `capability-map.html` (interactive) and `capability-map.png`
+   (static). If dependencies are missing, run
+   `pip install plotly kaleido pyyaml` and `plotly_get_chrome -y`
+   (one-time, Chrome is required for kaleido PNG export).
 
-5. Eyeball the rendered PNG. If labels overlap or coordinates look
-   wrong, adjust and re-render.
+5. Eyeball the rendered HTML or PNG. If labels overlap, coordinates
+   look wrong, or hover text is missing context, adjust and re-render.
 
 6. Tell the user what was added/changed and where it landed on the
    plot.
@@ -71,18 +71,6 @@ context.
   status: done | in-progress | hypothesized | human-only | blocked
   notes: free-form
 ```
-
-## Future
-
-The repo prefers Plotly over matplotlib (see `CLAUDE.md`). When
-`plot.py` is migrated to Plotly, this skill will also need to:
-
-- regenerate `capability-map.html` (interactive) alongside the static
-  image,
-- export PNG via `fig.write_image(..., engine="kaleido")` for the
-  static check-in.
-
-Until then, the matplotlib output is fine.
 
 ## Don't
 
