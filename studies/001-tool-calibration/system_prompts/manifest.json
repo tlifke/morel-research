@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "system_prompts/manifest.json",
+  "title": "System prompt manifest (study 001-tool-calibration)",
+  "description": "Authoritative list of system prompt variants used by seeds.jsonl. Each entry maps a system_prompt_id to its template file, declared tool set, and framing. Templates are .txt files in this directory.",
+  "version": "1.0.0",
+  "frozen_on": "2026-05-11",
+  "prompts": [
+    {
+      "id": "sys_all_tools_neutral_v1",
+      "template": "all_tools_neutral_v1.txt",
+      "tool_set": ["calculator", "python_execute", "datetime_now", "unit_convert", "general_knowledge_lookup", "user_knowledge_lookup"],
+      "framing": "neutral",
+      "version": 1,
+      "description": "Workhorse: all six tools available, neutral framing. Used by most Type A pairs and the tool-warranted half of Type B affordance pairs."
+    },
+    {
+      "id": "sys_no_tools_v1",
+      "template": "no_tools_v1.txt",
+      "tool_set": [],
+      "framing": "neutral",
+      "version": 1,
+      "description": "Control: no tools available. Used by the no-tools half of Type B affordance pairs and by control prompts."
+    },
+    {
+      "id": "sys_all_tools_proactive_v1",
+      "template": "all_tools_proactive_v1.txt",
+      "tool_set": ["calculator", "python_execute", "datetime_now", "unit_convert", "general_knowledge_lookup", "user_knowledge_lookup"],
+      "framing": "proactive",
+      "version": 1,
+      "description": "All six tools available, proactive framing (explicit preference for tool use under uncertainty). Used for framing-sensitivity probes; not yet swept against neutral in matched pairs (deferred to A2)."
+    },
+    {
+      "id": "sys_calc_only_neutral_v1",
+      "template": "calc_only_neutral_v1.txt",
+      "tool_set": ["calculator"],
+      "framing": "neutral",
+      "version": 1,
+      "description": "Only the calculator tool is exposed. Probes whether the model correctly identifies opportunities for calculator use without distraction from other tools."
+    },
+    {
+      "id": "sys_py_only_neutral_v1",
+      "template": "py_only_neutral_v1.txt",
+      "tool_set": ["python_execute"],
+      "framing": "neutral",
+      "version": 1,
+      "description": "Only python_execute is exposed. Probes calibration in isolated multi-step computation."
+    },
+    {
+      "id": "sys_dt_only_neutral_v1",
+      "template": "dt_only_neutral_v1.txt",
+      "tool_set": ["datetime_now"],
+      "framing": "neutral",
+      "version": 1,
+      "description": "Only datetime_now is exposed. Probes recognition of runtime-knowable facts."
+    },
+    {
+      "id": "sys_uc_only_neutral_v1",
+      "template": "uc_only_neutral_v1.txt",
+      "tool_set": ["unit_convert"],
+      "framing": "neutral",
+      "version": 1,
+      "description": "Only unit_convert is exposed. Probes deterministic-transformation calibration."
+    },
+    {
+      "id": "sys_gkl_only_neutral_v1",
+      "template": "gkl_only_neutral_v1.txt",
+      "tool_set": ["general_knowledge_lookup"],
+      "framing": "neutral",
+      "version": 1,
+      "description": "Only general_knowledge_lookup is exposed. Probes world-knowledge calibration (recognizing what's outside the weights)."
+    },
+    {
+      "id": "sys_ukl_only_neutral_v1",
+      "template": "ukl_only_neutral_v1.txt",
+      "tool_set": ["user_knowledge_lookup"],
+      "framing": "neutral",
+      "version": 1,
+      "description": "Only user_knowledge_lookup is exposed. Probes private-context calibration (recognizing the model cannot know the user)."
+    }
+  ]
+}

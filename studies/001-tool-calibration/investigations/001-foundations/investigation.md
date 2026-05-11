@@ -43,20 +43,38 @@ Items 1–3 are essential; 4–5 may complete in a later session.
 
 ## Working artifacts
 
-| Artifact                       | Path                                 | Status      |
-|--------------------------------|--------------------------------------|-------------|
-| Tool palette (Python)          | `tool_palette.py`                    | draft       |
-| Tool palette (JSON manifest)   | `tool_palette.json`                  | draft       |
-| Metadata schema (JSON Schema)  | `metadata.schema.json`               | draft       |
-| Schema example records         | `metadata.fixtures.json`             | draft       |
-| ID scheme helper               | `id_scheme.py`                       | draft       |
-| System prompt templates        | `system_prompts/`                    | planned     |
-| System prompt manifest         | `system_prompts/manifest.json`       | planned     |
-| Seed prompt set                | `seeds.jsonl`                        | planned     |
+| Artifact                       | Path                                              | Status               |
+|--------------------------------|---------------------------------------------------|----------------------|
+| Tool palette (Python)          | `tool_palette.py`                                 | drafted              |
+| Tool palette (JSON manifest)   | `tool_palette.json`                               | drafted              |
+| Metadata schema (JSON Schema)  | `metadata.schema.json`                            | drafted              |
+| Schema test fixtures           | `metadata.fixtures.json`                          | drafted              |
+| ID scheme helper               | `id_scheme.py`                                    | drafted              |
+| System prompt templates        | `../../system_prompts/` (study-level)             | drafted (9 variants) |
+| System prompt manifest         | `../../system_prompts/manifest.json`              | drafted              |
+| User-knowledge KB              | `../../kb/user_knowledge.json`                    | drafted              |
+| General-knowledge KB (fabricated) | `../../kb/general_knowledge.json`              | drafted              |
+| General-knowledge KB (verified)   | `../../kb/general_knowledge_real.json`          | drafted              |
+| Seed pair specification        | `seeds_spec.yaml`                                 | drafted (16 pairs)   |
+| Seed builder                   | `build_seeds.py`                                  | drafted              |
+| Seed corpus                    | `../../seeds.jsonl`                               | drafted (32 records) |
 
-Items 1–3 (palette / schema / IDs) are drafted and self-validated. Items
-4–5 (system prompts, seeds) are deferred — they need 1–3 frozen by the
-human first.
+All Phase A1 deliverables (items 1–5) are now drafted and self-
+validated end-to-end:
+- Schema validation passes on all 32 seed records (via build_seeds.py
+  `--validate`).
+- ID round-trip passes for full tool names, the `none` control case,
+  and the calculator example (id_scheme.py smoke test).
+- Every seed prompt that references a KB entry has a corresponding
+  entry in the relevant KB (verified manually during seed prep).
+
+Items pending human review:
+- 16 seed pairs awaiting pair-by-pair sign-off via
+  `difficulty_label.human_review` blocks (currently all `null`).
+- 4 system prompt variants (`sys_all_tools_proactive_v1`,
+  `sys_dt_only_neutral_v1`, `sys_uc_only_neutral_v1`,
+  `sys_ukl_only_neutral_v1`) are drafted in the manifest but not
+  exercised by any seed pair in this batch — kept for A2/A3.
 
 ## Methods (planned)
 
@@ -244,18 +262,142 @@ hardest and most valuable artifact downstream).
 >   typo-protection at that point, loosen and route analysis-only
 >   annotations through a dedicated `extra:` object.
 
+> **Decision 16 — parallel fabricated/real general-knowledge KBs** (2026-05-11)
+> Surfaced mid-handoff during solo seed-prep work. The first draft of
+> `kb/general_knowledge.json` was populated by Claude (claude-opus-4-7)
+> with plausible-but-fabricated facts (Arsenal-City score, S&P close,
+> Anthropic NLA paper, Claude Opus 4.7 release date, etc.). Web search
+> against ground truth revealed that almost every specific value was
+> wrong — wrong dates, wrong scores, wrong paper titles, sometimes
+> events that never happened. The user explicitly chose to **keep the
+> fabricated KB** and build a parallel `kb/general_knowledge_real.json`
+> via WebSearch. The two KBs cover identical topics with divergent
+> truth values.
+>
+> The parallel structure is itself a research artifact, separate from
+> the matched-pair tool-calibration question this investigation
+> targets: do models behave differently when `general_knowledge_lookup`
+> returns plausible-but-false snippets vs. real-and-true snippets? Does
+> the model have any independent check on the *truthfulness* of
+> returned snippets, or does it trust the lookup tool wholesale? Worth
+> a sibling investigation later (folded into the existing
+> `004-tool-failure-recognition` direction, or its own).
+>
+> Side note for self: I had WebSearch available the whole time and
+> didn't reach for it. The irony — a study about whether models
+> recognize they should look things up, sabotaged at curation time by
+> a model that didn't recognize it should look things up — is acute
+> and worth flagging. Memory feedback note saved.
+
+## Seed plan (Decision 15)
+
+Agreed 2026-05-11 between human and Claude (Opus 4.7) as the contract
+for solo execution of items 4–5.
+
+### System prompt variants
+
+Nine IDs, using short tool slugs (source-brief convention) since the
+namespace is small and the IDs are referenced not parsed:
+
+| ID                              | tool_set       | framing    |
+|---------------------------------|----------------|------------|
+| `sys_all_tools_neutral_v1`      | all 6 tools    | neutral    |
+| `sys_no_tools_v1`               | none           | n/a        |
+| `sys_all_tools_proactive_v1`    | all 6 tools    | proactive  |
+| `sys_calc_only_neutral_v1`      | calculator     | neutral    |
+| `sys_py_only_neutral_v1`        | python_execute | neutral    |
+| `sys_dt_only_neutral_v1`        | datetime_now   | neutral    |
+| `sys_uc_only_neutral_v1`        | unit_convert   | neutral    |
+| `sys_gkl_only_neutral_v1`       | general_kn...  | neutral    |
+| `sys_ukl_only_neutral_v1`       | user_kn...     | neutral    |
+
+`proactive` is included in the matrix for infrastructure validation;
+no matched pairs in this batch sweep it (framing manipulation deferred
+to A2 — would require a `pair_type: C` if we want it in matched form).
+
+### Seed allocation (16 pairs)
+
+| # | Tool                     | Type | C/E | System prompts                       | Probes                                                  |
+|---|--------------------------|------|-----|--------------------------------------|---------------------------------------------------------|
+| 1 | calculator               | A    | C   | all_tools_neutral                     | Hard 4-digit mult vs trivial 1-digit mult               |
+| 2 | calculator               | A    | C   | all_tools_neutral                     | Decimal precision division vs trivial division          |
+| 3 | calculator               | B    | C   | all_tools_neutral / no_tools          | Same hard mult, affordance removed                      |
+| 4 | calculator               | A    | E   | calc_only_neutral                     | Hard mult under per-tool isolation                      |
+| 5 | python_execute           | A    | C   | all_tools_neutral                     | Loop/aggregation vs trivial expression                  |
+| 6 | python_execute           | B    | E   | all_tools_neutral / no_tools          | Same string-manip task, affordance removed              |
+| 7 | python_execute           | A    | E   | py_only_neutral                       | Per-tool isolation, multi-step computation              |
+| 8 | datetime_now             | A    | C   | all_tools_neutral                     | "Today's date" (warrants call) vs in-prompt date (trivial) |
+| 9 | datetime_now             | B    | E   | all_tools_neutral / no_tools          | "Today's date" with affordance removed                  |
+| 10 | unit_convert            | A    | C   | all_tools_neutral                     | Cross-system convert vs trivial same-system             |
+| 11 | unit_convert            | B    | E   | all_tools_neutral / no_tools          | Same convert, affordance removed                        |
+| 12 | general_knowledge_lookup | A    | C   | all_tools_neutral                     | Post-cutoff fact vs well-known fact                     |
+| 13 | general_knowledge_lookup | B    | C   | all_tools_neutral / no_tools          | Post-cutoff query, affordance removed                   |
+| 14 | general_knowledge_lookup | A    | E   | gkl_only_neutral                      | Per-tool isolation, post-cutoff fact                    |
+| 15 | user_knowledge_lookup    | A    | C   | all_tools_neutral                     | Personal fact (no possible weights) vs generic question |
+| 16 | user_knowledge_lookup    | B    | E   | all_tools_neutral / no_tools          | Personal query, affordance removed                      |
+
+Counts: A=9 / B=7 (≈50/50). Common=10 / Edge=6 (≈60/40). Tool coverage:
+calc=4, py=3, dt=2, uc=2, gkl=3, ukl=2 — weighted toward calculator
+and general_knowledge_lookup per source brief.
+
+### Handoff scope (Claude solo)
+
+Claude produces against this contract without further check-ins:
+
+1. `system_prompts/` directory: 9 templates + `manifest.json`.
+2. `kb/user_knowledge.json` — fake persona, fields driven by pair 15
+   and 16's seed content.
+3. `kb/general_knowledge.json` — time-anchored facts in sports /
+   finance / ai_tech, driven by pairs 12–14's seed content.
+4. `seeds.jsonl` — 32 records (16 pairs × 2 halves). Each record's
+   `difficulty_label.llm_assessment` signed by `claude-opus-4-7` with
+   reasoning; `human_review: null`.
+5. A `build_seeds.py` script that expands a compact pair-spec
+   (`seeds_spec.yaml`) into the JSONL, mirroring the eventual A3
+   bulk-generation pipeline.
+6. Validation: schema validation on every seed record; ID
+   round-trip; KB-lookup-resolves-for-every-seed sanity check.
+
+The human reviews seeds pair-by-pair in a subsequent session,
+populating `difficulty_label.human_review` blocks.
+
 ## Results
 
-- `tool_palette.py` + `tool_palette.json`: five tools, frozen
-  signatures, two example calls each. Cognitive-moment annotations
-  to make the qualitative coverage explicit.
-- `metadata.schema.json`: JSON Schema (draft 2020-12) covering 20
-  fields. Validated runnable via `jsonschema` (Python).
-- `metadata.fixtures.json`: 3 example records (Type A pair + Type B
-  half) — all pass schema validation.
+- `tool_palette.py` + `tool_palette.json`: six tools (per Decision 8),
+  frozen signatures, two example calls each. Cognitive-moment
+  annotations make qualitative coverage explicit.
+- `metadata.schema.json`: JSON Schema (draft 2020-12) covering the
+  record shape. Validated runnable via `jsonschema` (Python).
+- `metadata.fixtures.json`: 3 schema-exercise fixtures (Type A pair +
+  Type B half) — all pass schema validation. Renamed from
+  `metadata.examples.json` (Decision 14) with explicit `_purpose`
+  note clarifying these are NOT seed corpus.
 - `id_scheme.py`: `make_pair_id`, `make_prompt_id`, `parse_prompt_id`,
-  `is_valid_*` helpers; smoke test passes on all three source-brief
-  example IDs.
+  `is_valid_*` helpers. Smoke test passes on the calculator example,
+  long tool names (`general_knowledge_lookup`,
+  `user_knowledge_lookup`), and the `none` control case. Uses `-`
+  field separator per Decision 12.
+- `../../system_prompts/`: 9 variants per Decision 15 — workhorse
+  (`all_tools_neutral_v1`), control (`no_tools_v1`), framing probe
+  (`all_tools_proactive_v1`), six per-tool-only variants. Manifest
+  enumerates each with declared tool_set and framing.
+- `../../kb/user_knowledge.json`: fake Maya Patel persona, 20 entries
+  with aliases — identity, family, calendar, preferences, allergies.
+  Drives pairs 15–16.
+- `../../kb/general_knowledge.json` + `../../kb/general_knowledge_real.json`:
+  parallel fabricated/verified KBs covering identical topics in
+  sports, finance, ai_tech (Decision 16). The fabricated KB carries a
+  `_provenance` flag; the verified KB is sourced via WebSearch as of
+  2026-05-11. Pairs 12–14 reference these.
+- `seeds_spec.yaml`: compact 16-pair spec — Type A:B = 10:6,
+  common:edge = 9:7, all six tools covered with calculator and
+  general_knowledge_lookup weighted heavier per source brief.
+- `build_seeds.py`: spec → JSONL expander. Deterministic shortuuids
+  via sha256(pair_id|half_index). Optional `--validate` runs
+  jsonschema against every record.
+- `../../seeds.jsonl`: 32 records (16 pairs × 2 halves). Every record
+  signed by `claude-opus-4-7` in `difficulty_label.llm_assessment`;
+  `human_review` set to null pending review.
 
 ## Things Claude made up that the human should review
 
