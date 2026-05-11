@@ -144,8 +144,22 @@ sources live next to their study or investigation.
   when a schema demands it.
 - No spreadsheets or notebooks as the source of truth for anything; export
   to text formats and check those in.
-- Prefer plain-text artifacts over binary; check in PNG figures alongside
+- Prefer plain-text artifacts over binary; check in figures alongside
   the scripts that regenerate them.
+
+### Figures
+
+- **Plotly is preferred over matplotlib** for most figures in this repo.
+  Reach for it first; reach for matplotlib only when there's a concrete
+  reason (e.g. a specific publication-style plot Plotly handles awkwardly).
+- Check in the figure as both:
+  - the source script (always regenerable from data),
+  - a PNG (and optionally HTML for Plotly interactive views).
+- For one-pager inclusion: export to PDF or PNG via Plotly's static export
+  (`fig.write_image(..., engine="kaleido")`). The LaTeX template expects
+  a static image.
+- Keep figure data files (`tasks.yaml`, etc.) separate from rendering code
+  so plots can be regenerated when the data changes.
 
 ## Claude's role boundaries
 
