@@ -56,10 +56,10 @@ Items 1–3 are essential; 4–5 may complete in a later session.
 | User-knowledge KB              | `../../kb/user_knowledge.json`                    | drafted              |
 | General-knowledge KB (fabricated) | `../../kb/general_knowledge.json`              | drafted              |
 | General-knowledge KB (verified)   | `../../kb/general_knowledge_real.json`          | drafted              |
-| Seed pair specification        | `seeds_spec.yaml`                                 | drafted (17 pairs)   |
+| Seed pair specification        | `seeds_spec.yaml`                                 | drafted (18 pairs)   |
 | Seed builder                   | `build_seeds.py`                                  | drafted              |
 | Seed approvals                 | `seeds_approvals.yaml`                            | drafted (17/17)      |
-| Seed corpus                    | `../../seeds.jsonl`                               | drafted (34 records, fully reviewed) |
+| Seed corpus                    | `../../seeds.jsonl`                               | drafted (36 records, fully reviewed) |
 
 All Phase A1 deliverables (items 1–5) are now drafted and self-
 validated end-to-end:

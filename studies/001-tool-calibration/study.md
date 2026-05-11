@@ -79,6 +79,72 @@ This study is the substrate for several downstream questions:
   (palette, schema, KBs, IDs); pair variation is `tool_helped` /
   `tool_insufficient`.
 
+### How performative are the per-tool difficulty axes? (probable sibling investigation)
+
+Investigation 002 freezes a set of per-tool difficulty axes
+(`difficulty_axes_proposal.md`) and uses them to label seeds. A
+natural follow-on is to *test the axes themselves*: how well do the
+axis-derived difficulty predictions correlate with empirical
+calibration (`difficulty_calibrated.success_rate`)? If the axes are
+performative — i.e. weakly related to actual model performance —
+that's signal about what makes prompts hard that doesn't reduce to
+the structural dimensions we picked. Likely lives as its own
+sub-investigation under study 001, sometime after Phase A4 has
+collected enough empirical signal.
+
+```yaml
+llm_assessment:
+  model: claude-opus-4-7
+  date: 2026-05-11
+  llm_capability: medium
+  human_capability: high
+  confidence: medium
+  reasoning: |
+    LLM can run the correlation analysis and surface axis-by-axis
+    predictive power once empirical data exists. Designing the
+    follow-on experiment (which alternative axes to try if these
+    fail) is more judgment-laden — human-led. Confidence medium
+    because the result depends on having enough calibration data,
+    which is a separate prereq.
+
+human_assessment: null
+
+divergence_notes: null
+```
+
+### Obscurity threshold for `general_knowledge_lookup` topic_salience
+
+The `general_knowledge_lookup` difficulty axes (proposal) include a
+`topic_salience` dimension with values `mainstream | niche | obscure`.
+The LLM curator's intuition about what's "mainstream" is itself
+worth probing — concrete reviewer prompt during pair-12 review:
+"how obscure would a soccer match have to be to not be considered
+mainstream? EPL? Championship? MLS? U18 US Mens Team? USL? Europa
+League?" Likely a small mini-investigation: enumerate sports at
+decreasing audience size, prompt a target model with a question about
+each, measure where the model's confidence in answering without lookup
+breaks. That breakpoint defines `mainstream` for that model.
+
+```yaml
+llm_assessment:
+  model: claude-opus-4-7
+  date: 2026-05-11
+  llm_capability: medium
+  human_capability: medium
+  confidence: medium
+  reasoning: |
+    The probe design (sweep audience size) is LLM-feasible. The
+    judgment about which sports to include (and how to map them to
+    audience proxies — TV viewership? Wikipedia article length?
+    Search interest?) is mixed-difficulty. Confidence medium because
+    "audience size" is a hidden axis that may itself need empirical
+    definition rather than a-priori ordering.
+
+human_assessment: null
+
+divergence_notes: null
+```
+
 ### Categorization variance on human_feasibility (blog-sized writeup)
 
 The `human_feasibility` label on each seed (Decision 18) is a

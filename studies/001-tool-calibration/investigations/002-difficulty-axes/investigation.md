@@ -93,12 +93,19 @@ _To be populated._
 
 ## Forward-looking
 
-_To be populated. Likely:_
-
 - `003-bulk-generation` (Phase A3) — once axes are frozen, generate
   the larger corpus.
 - Phase A4 — empirical calibration runs against target models;
-  populate `difficulty_calibrated`.
+  populate `difficulty_calibrated`. Initial target set: Gemma 3 4B IT,
+  4B base, 12B IT, 12B base. See `calibration_cost_estimate.md` for
+  cost/feasibility analysis.
+- Axes-performativity sibling investigation — once Phase A4 has enough
+  empirical signal, test how well the axes here predict
+  `success_rate`. See study-level Forward-looking entry.
+- Per-record `runtime_overrides` infrastructure and Type-C
+  (scenario-manipulation) pair support — needed to express
+  leap-year-style probes via tool overrides rather than in-prompt
+  dates. Belongs to investigation 004 (tool-output-interpretation).
 
 ## Things to flag
 
