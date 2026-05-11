@@ -1,0 +1,62 @@
+_purpose: |
+  Human-review approvals for the seed pairs in seeds_spec.yaml. Maps
+  each pair_id to a list of two human_review blocks (one per half,
+  ordered as halves[0], halves[1] in the spec). Kept separate from
+  seeds_spec.yaml so the LLM's curation contribution and the human's
+  review contribution are independently legible — and so build_seeds.py
+  can be re-run safely as the spec evolves without clobbering approvals.
+
+  Per record, each block matches the schema for
+  difficulty_label.human_review:
+    - reviewer (string, required) — defaults from _metadata.default_reviewer
+    - date (string, required) — defaults from _metadata.default_date
+    - agreed (boolean, required) — true = approve LLM proposal,
+      false = override
+    - overridden_to (string|null) — only when agreed=false
+    - notes (string|null) — short prose, especially on overrides
+
+  Pairs not yet reviewed simply do not have an entry here;
+  build_seeds.py emits `human_review: null` for any half without a
+  matching approval.
+
+_metadata:
+  default_reviewer: tlifke
+  default_date: 2026-05-11
+
+approvals:
+
+  calculator-math-hard-mult4digit-001:
+    - {agreed: true}
+    - {agreed: true}
+
+  calculator-math-hard-decimal_division-001:
+    - {agreed: true}
+    - {agreed: true}
+
+  calculator-math-hard-mult_affordance-001:
+    - {agreed: true}
+    - {agreed: true}
+
+  calculator-math-hard-mult_isolated-001:
+    - {agreed: true}
+    - {agreed: true}
+
+  python_execute-math-hard-prime_sum-001:
+    - {agreed: true}
+    - {agreed: true}
+
+  python_execute-text-hard-sha256_hash-001:
+    - {agreed: true}
+    - {agreed: true}
+
+  python_execute-math-hard-fibonacci_modular-001:
+    - {agreed: true}
+    - {agreed: true}
+
+  datetime_now-time-medium-current_date-001:
+    - {agreed: true, notes: "Reviewer flagged tool reproducibility: datetime_now should return a fixed value tied to the runtime anchor (2026-05-11) when actually wired for grading, otherwise late verification can mark correct calls false. Captured in investigation Decision 18."}
+    - {agreed: true}
+
+  datetime_now-time-medium-today_affordance-001:
+    - {agreed: true}
+    - {agreed: true}

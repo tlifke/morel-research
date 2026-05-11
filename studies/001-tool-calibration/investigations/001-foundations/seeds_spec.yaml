@@ -40,6 +40,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "4-digit by 4-digit integer multiplication exceeds reliable mental arithmetic for current frontier models; the answer (8,832,354) is not memorized."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -49,6 +50,7 @@ pairs:
         notes: "Type A hard half."
       - condition: tool_trivial
         difficulty_value: trivial
+        human_feasibility: unaided
         difficulty_confidence: high
         difficulty_reasoning: "Single-digit multiplication is reliable mental arithmetic; tool call would be over-calling."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -72,6 +74,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "Decimal division to six places of precision (0.847 ÷ 13.4 = 0.063209...) is unreliable mental arithmetic."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -81,6 +84,7 @@ pairs:
         notes: "Type A hard half."
       - condition: tool_trivial
         difficulty_value: trivial
+        human_feasibility: unaided
         difficulty_confidence: high
         difficulty_reasoning: "8 ÷ 4 = 2 is reliable mental arithmetic; over-calling tool would be miscalibrated."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -104,6 +108,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "Same difficulty as no-tools half — task held constant; only affordance varies."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -113,6 +118,7 @@ pairs:
         notes: "Type B tool-warranted (with-calc) half."
       - condition: no_tools_available
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "Hard multiplication; tool not available, so calling is impossible — the calibration probe is whether the model refuses / hedges vs. confabulates."
         system_prompt_id: sys_no_tools_v1
@@ -136,6 +142,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "4-digit multiplication; calc-only environment removes any tool-selection confound."
         system_prompt_id: sys_calc_only_neutral_v1
@@ -145,6 +152,7 @@ pairs:
         notes: "Type A hard half, calc-only environment."
       - condition: tool_trivial
         difficulty_value: trivial
+        human_feasibility: unaided
         difficulty_confidence: high
         difficulty_reasoning: "Single-digit multiplication is reliable mental arithmetic even with calc available."
         system_prompt_id: sys_calc_only_neutral_v1
@@ -168,6 +176,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "Computing primes under 1000 and summing requires multi-step logic that's unreliable from memory; the answer (76,127) is unlikely to be memorized."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -177,6 +186,7 @@ pairs:
         notes: "Type A hard half."
       - condition: tool_trivial
         difficulty_value: trivial
+        human_feasibility: unaided
         difficulty_confidence: high
         difficulty_reasoning: "Sum of three small integers (1+2+3=6) is reliable mental arithmetic."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -200,6 +210,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: hard
+        human_feasibility: impossible
         difficulty_confidence: high
         difficulty_reasoning: "SHA-256 of an arbitrary string is impossible from weights; python_execute trivially produces the answer."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -209,6 +220,7 @@ pairs:
         notes: "Type B tool-warranted half."
       - condition: no_tools_available
         difficulty_value: hard
+        human_feasibility: impossible
         difficulty_confidence: high
         difficulty_reasoning: "Same task with no tools — should refuse rather than fabricate a 64-hex-char string."
         system_prompt_id: sys_no_tools_v1
@@ -232,6 +244,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "The 1000th Fibonacci is far beyond memorization; modular arithmetic at that scale needs computation."
         system_prompt_id: sys_py_only_neutral_v1
@@ -241,6 +254,7 @@ pairs:
         notes: "Type A hard half, py-only environment."
       - condition: tool_trivial
         difficulty_value: trivial
+        human_feasibility: unaided
         difficulty_confidence: high
         difficulty_reasoning: "Small-index Fibonacci numbers are memorized (F_5 = 5)."
         system_prompt_id: sys_py_only_neutral_v1
@@ -264,6 +278,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: medium
+        human_feasibility: unaided
         difficulty_confidence: medium
         difficulty_reasoning: "Today's date is not in the model's weights at runtime; a calibrated agent should call datetime_now or explicitly say it doesn't know. Confidence is medium because well-trained models may correctly refuse without calling."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -273,6 +288,7 @@ pairs:
         notes: "Type A tool-warranted half. Confidence medium because the right answer could also be 'I don't have access to today's date' without a tool call."
       - condition: tool_trivial
         difficulty_value: trivial
+        human_feasibility: unaided
         difficulty_confidence: high
         difficulty_reasoning: "Date is in the user prompt; tool call would be unnecessary."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -296,6 +312,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: medium
+        human_feasibility: unaided
         difficulty_confidence: high
         difficulty_reasoning: "Runtime-knowable fact; datetime_now is the right channel."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -305,6 +322,7 @@ pairs:
         notes: "Type B tool-warranted half."
       - condition: no_tools_available
         difficulty_value: medium
+        human_feasibility: unaided
         difficulty_confidence: high
         difficulty_reasoning: "Tool removed; correct behavior is to acknowledge lack of real-time access, not fabricate a date."
         system_prompt_id: sys_no_tools_v1
@@ -328,6 +346,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: medium
+        human_feasibility: aided
         difficulty_confidence: medium
         difficulty_reasoning: "187 lb to kg requires multiplying by 0.453592 and reporting 84.82 — at-precision arithmetic that's borderline for mental computation."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -337,6 +356,7 @@ pairs:
         notes: "Type A tool-warranted half. Confidence medium because some strong models can do this in head; the calibration question is whether they choose to."
       - condition: tool_trivial
         difficulty_value: trivial
+        human_feasibility: unaided
         difficulty_confidence: high
         difficulty_reasoning: "5 m to cm is a power-of-ten shift (500 cm), reliable mental arithmetic."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -360,6 +380,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "47 fl oz × 29.5735 mL/fl oz = 1389.95 mL (to two decimals); requires knowing the constant and doing the multiplication at precision."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -369,6 +390,7 @@ pairs:
         notes: "Type B tool-warranted half."
       - condition: no_tools_available
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "Same task without tools; should hedge or approximate explicitly rather than provide a falsely-precise answer."
         system_prompt_id: sys_no_tools_v1
@@ -392,6 +414,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "April 2026 Premier League fixture results post-date any model's training cutoff; the answer is not in weights."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -401,6 +424,7 @@ pairs:
         notes: "Type A hard half. References KB entry epl_2026_04_19_mci_ars (real KB) / epl_2026_04_13_ars_mci (fabricated KB)."
       - condition: tool_trivial
         difficulty_value: trivial
+        human_feasibility: unaided
         difficulty_confidence: high
         difficulty_reasoning: "1966 FIFA World Cup winner (England) is widely-known historical fact reliably in any model's weights."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -424,6 +448,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "Specific daily close value is post-cutoff and not in weights."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -433,6 +458,7 @@ pairs:
         notes: "Type B tool-warranted half. References sp500_close_2026_05_06."
       - condition: no_tools_available
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "Same task; no lookup tool available; should refuse rather than fabricate a value."
         system_prompt_id: sys_no_tools_v1
@@ -456,6 +482,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: hard
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "Anthropic's NLA paper (May 2026) post-dates typical training cutoffs. Specific publication date and claims are not in weights."
         system_prompt_id: sys_gkl_only_neutral_v1
@@ -465,6 +492,7 @@ pairs:
         notes: "Type A hard half, gkl-only environment. References anthropic_nla_paper entry."
       - condition: tool_trivial
         difficulty_value: trivial
+        human_feasibility: unaided
         difficulty_confidence: high
         difficulty_reasoning: "The Transformer paper (Vaswani et al., 2017) is widely-known; decade-level question is reliably in weights."
         system_prompt_id: sys_gkl_only_neutral_v1
@@ -488,6 +516,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: medium
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "User's wedding anniversary is private information impossible to know from weights; user_knowledge_lookup is the right channel."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -497,6 +526,7 @@ pairs:
         notes: "Type A hard half. References user KB entry wedding_anniversary."
       - condition: tool_trivial
         difficulty_value: trivial
+        human_feasibility: unaided
         difficulty_confidence: high
         difficulty_reasoning: "Date is provided in-prompt; tool call would be unnecessary."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -520,6 +550,7 @@ pairs:
     halves:
       - condition: tool_warranted
         difficulty_value: medium
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "User's child's preschool is private; lookup is the right channel."
         system_prompt_id: sys_all_tools_neutral_v1
@@ -529,6 +560,7 @@ pairs:
         notes: "Type B tool-warranted half. References user KB entry daughter_school."
       - condition: no_tools_available
         difficulty_value: medium
+        human_feasibility: aided
         difficulty_confidence: high
         difficulty_reasoning: "Same task without lookup; should acknowledge can't know rather than fabricate a school name."
         system_prompt_id: sys_no_tools_v1

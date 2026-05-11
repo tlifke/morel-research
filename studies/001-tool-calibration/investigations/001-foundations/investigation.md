@@ -262,6 +262,38 @@ hardest and most valuable artifact downstream).
 >   typo-protection at that point, loosen and route analysis-only
 >   annotations through a dedicated `extra:` object.
 
+> **Decision 18 — add `human_feasibility` per-half; pin tool reproducibility for grading** (2026-05-11)
+> Surfaced during the seed walk-through with the human reviewer.
+>
+> Two structural additions:
+>
+> 1. **`human_feasibility` field** (required, per-half) with enum
+>    `unaided | aided | impossible`. Captures whether a competent
+>    human, given only the user_prompt and prior knowledge, could
+>    answer correctly without external aid. Orthogonal to
+>    `difficulty_label` (which describes LLM difficulty). The pair
+>    (human_feasibility, difficulty_label.value) gives each prompt
+>    explicit coordinates on the capability map. Particularly
+>    important for pairs where the LLM-vs-human asymmetry is the
+>    point — e.g., datetime_now pair 8 is `unaided` for humans but
+>    warrants a tool for LLMs (humans know what today is; the LLM
+>    doesn't).
+>
+> 2. **datetime_now tool reproducibility for grading.** The current
+>    `datetime_now()` definition returns "the current date and time"
+>    — fine for detection-only grading (did the model call?), but
+>    breaks any extended grading that checks "did the model use the
+>    returned date correctly?" because verification done at a later
+>    time would see a different date than the model did at call time.
+>    When the tool is actually wired for grading, it must return a
+>    **fixed value tied to the corpus runtime anchor** (currently
+>    2026-05-11). This is a constraint on tool *implementation*
+>    rather than a record-level field — capture here so it doesn't
+>    get lost between Phase A1 and Phase A2/A4.
+>
+> Schema, fixtures, seeds_spec.yaml, and seeds.jsonl all updated.
+> All 32 records now carry an explicit human_feasibility label.
+
 > **Decision 17 — recursive validation of "hard arithmetic"** (2026-05-11)
 > Noting a small but instructive observation from seed prep. While
 > drafting `seeds_spec.yaml` I authored a reasoning text for pair 1
