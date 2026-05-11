@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "tool_palette.json",
   "title": "Tool palette (frozen)",
-  "description": "Five-tool palette for the matched-pair tool-calibration study. Mirrors tool_palette.py. Frozen 2026-05-11; changes require a new investigation.",
-  "version": "1.0.0",
+  "description": "Six-tool palette for the matched-pair tool-calibration study. Mirrors tool_palette.py. Frozen 2026-05-11; Decision 8 (2026-05-11) split knowledge_lookup into general_knowledge_lookup + user_knowledge_lookup. Further changes require a new investigation.",
+  "version": "1.1.0",
   "frozen_on": "2026-05-11",
   "tools": [
     {
@@ -90,25 +90,80 @@
       "cognitive_moment": "transform-deterministically"
     },
     {
-      "name": "knowledge_lookup",
-      "summary": "Look up a discrete fact in an external knowledge base. Stand-in for web search.",
+      "name": "general_knowledge_lookup",
+      "summary": "Search an external KB of time-anchored world facts (sports, markets, AI/tech news). Mimics web search: ranked list of records out; empty list on miss.",
       "parameters": {
         "type": "object",
         "properties": {
           "query": {
             "type": "string",
-            "description": "Short natural-language query for a discrete fact."
+            "description": "Free-form natural-language query."
           }
         },
         "required": ["query"],
         "additionalProperties": false
       },
-      "returns": {"type": "string"},
+      "returns": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {"type": "string"},
+                "date": {"type": "string", "format": "date"},
+                "domain": {"type": "string"},
+                "snippet": {"type": "string"}
+              },
+              "required": ["id", "date", "domain", "snippet"]
+            }
+          }
+        },
+        "required": ["results"]
+      },
       "examples": [
-        {"query": "capital of Mongolia"},
-        {"query": "year the Eiffel Tower was completed"}
+        {"query": "Arsenal Manchester City April 2026"},
+        {"query": "S&P 500 market cap May 6 2026"}
       ],
-      "cognitive_moment": "look-up-I-don't-know (factual)"
+      "cognitive_moment": "look-up-I-don't-know (world, post-cutoff)"
+    },
+    {
+      "name": "user_knowledge_lookup",
+      "summary": "Search the user's private profile (identity, family, calendar, preferences). Same shape as general_knowledge_lookup.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Free-form natural-language query over the user's private context."
+          }
+        },
+        "required": ["query"],
+        "additionalProperties": false
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {"type": "string"},
+                "snippet": {"type": "string"}
+              },
+              "required": ["field", "snippet"]
+            }
+          }
+        },
+        "required": ["results"]
+      },
+      "examples": [
+        {"query": "wedding anniversary"},
+        {"query": "daughter's school"}
+      ],
+      "cognitive_moment": "look-up-I-can't-know (private)"
     }
   ]
 }

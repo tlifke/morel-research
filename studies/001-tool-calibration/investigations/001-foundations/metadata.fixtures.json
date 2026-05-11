@@ -1,0 +1,120 @@
+{
+  "$schema": "metadata.schema.json",
+  "_purpose": "Schema test fixtures. These records exist to exercise metadata.schema.json end-to-end — they are NOT part of the research seed corpus. Do not analyze them as seeds or filter for them when slicing the real corpus. New fixtures may be added here to cover schema edge cases.",
+  "fixtures": [
+    {
+      "id": "calculator-math-hard-3digit-001-a7f3b2c4",
+      "pair_id": "calculator-math-hard-3digit-001",
+      "condition": "tool_warranted",
+      "pair_type": "A",
+      "tool_target": "calculator",
+      "domain": "math",
+      "sub_domain": "integer_multiplication",
+      "difficulty_label": {
+        "value": "hard",
+        "llm_assessment": {
+          "model": "claude-opus-4-7",
+          "date": "2026-05-11",
+          "value": "hard",
+          "confidence": "high",
+          "reasoning": "4-digit by 4-digit integer multiplication exceeds reliable mental arithmetic for current frontier models; a calibrated agent should reach for the calculator."
+        },
+        "human_review": null
+      },
+      "difficulty_calibrated": null,
+      "frequency_class": "common",
+      "register_tone": "neutral",
+      "register_form": "imperative",
+      "register_length": "terse",
+      "register_notes": null,
+      "system_prompt_id": "sys_calc_only_neutral_v1",
+      "user_prompt": "Compute 4782 × 1847 and give me the exact result.",
+      "token_counts": null,
+      "expected_tool_call": true,
+      "expected_call_confidence": "high",
+      "expected_pair_behavior": "Tool-warranted half; pair sibling (id ending in different shortuuid) is the trivial-difficulty version.",
+      "calibration_status": "assumed",
+      "calibration_verified_on": null,
+      "tags": ["multiplication", "exact_result_requested"],
+      "source": "hand_curated",
+      "source_record_id": null,
+      "notes": "Type A: difficulty manipulation. Same affordance (system_prompt offers calculator) as the trivial half."
+    },
+    {
+      "id": "calculator-math-trivial-1digit-001-8e1d40fa",
+      "pair_id": "calculator-math-trivial-1digit-001",
+      "condition": "tool_trivial",
+      "pair_type": "A",
+      "tool_target": "calculator",
+      "domain": "math",
+      "sub_domain": "integer_multiplication",
+      "difficulty_label": {
+        "value": "trivial",
+        "llm_assessment": {
+          "model": "claude-opus-4-7",
+          "date": "2026-05-11",
+          "value": "trivial",
+          "confidence": "high",
+          "reasoning": "Single-digit multiplication is within reliable mental arithmetic; a calibrated agent should answer directly without invoking the calculator."
+        },
+        "human_review": null
+      },
+      "difficulty_calibrated": null,
+      "frequency_class": "common",
+      "register_tone": "neutral",
+      "register_form": "imperative",
+      "register_length": "terse",
+      "register_notes": null,
+      "system_prompt_id": "sys_calc_only_neutral_v1",
+      "user_prompt": "Compute 4 × 7 and give me the exact result.",
+      "token_counts": null,
+      "expected_tool_call": false,
+      "expected_call_confidence": "high",
+      "expected_pair_behavior": "Trivial-difficulty half of pair calculator_math_001. A calibrated agent should NOT reach for the calculator.",
+      "calibration_status": "assumed",
+      "calibration_verified_on": null,
+      "tags": ["multiplication", "exact_result_requested"],
+      "source": "hand_curated",
+      "source_record_id": null,
+      "notes": "Type A: paired with calculator-math-hard-3digit-001-a7f3b2c4."
+    },
+    {
+      "id": "calculator-math-hard-affordance-001-5cbb19a1",
+      "pair_id": "calculator-math-hard-affordance-001",
+      "condition": "no_tools_available",
+      "pair_type": "B",
+      "tool_target": "calculator",
+      "domain": "math",
+      "sub_domain": "integer_multiplication",
+      "difficulty_label": {
+        "value": "hard",
+        "llm_assessment": {
+          "model": "claude-opus-4-7",
+          "date": "2026-05-11",
+          "value": "hard",
+          "confidence": "high",
+          "reasoning": "Same arithmetic as the tool-warranted sibling — hard for current frontier models without compute assistance. The affordance manipulation (no tools) means the agent must either attempt or refuse, not call."
+        },
+        "human_review": null
+      },
+      "difficulty_calibrated": null,
+      "frequency_class": "common",
+      "register_tone": "neutral",
+      "register_form": "imperative",
+      "register_length": "terse",
+      "register_notes": null,
+      "system_prompt_id": "sys_no_tools_v1",
+      "user_prompt": "Compute 4782 × 1847 and give me the exact result.",
+      "token_counts": null,
+      "expected_tool_call": false,
+      "expected_call_confidence": "high",
+      "expected_pair_behavior": "Type B sibling has the same user_prompt but the all-tools system_prompt; we expect the agent to call calculator there and not here.",
+      "calibration_status": "assumed",
+      "calibration_verified_on": null,
+      "tags": ["multiplication", "exact_result_requested", "no_affordance"],
+      "source": "hand_curated",
+      "source_record_id": null,
+      "notes": "Type B: affordance manipulation. Identical user_prompt to its pair sibling."
+    }
+  ]
+}

@@ -48,7 +48,7 @@ Items 1–3 are essential; 4–5 may complete in a later session.
 | Tool palette (Python)          | `tool_palette.py`                    | draft       |
 | Tool palette (JSON manifest)   | `tool_palette.json`                  | draft       |
 | Metadata schema (JSON Schema)  | `metadata.schema.json`               | draft       |
-| Schema example records         | `metadata.examples.json`             | draft       |
+| Schema example records         | `metadata.fixtures.json`             | draft       |
 | ID scheme helper               | `id_scheme.py`                       | draft       |
 | System prompt templates        | `system_prompts/`                    | planned     |
 | System prompt manifest         | `system_prompts/manifest.json`       | planned     |
@@ -113,6 +113,137 @@ hardest and most valuable artifact downstream).
 > chars of uuid4. Greppable, sortable, unambiguous. Validation regex
 > in `id_scheme.py`; round-trips the three brief examples.
 
+> **Decision 8 — split `knowledge_lookup` into two tools; palette grows to 6** (2026-05-11)
+> Amends Decision 1. `knowledge_lookup` had a fuzzy success criterion
+> and conflated two distinct cognitive moments: world-knowledge
+> retrieval ("do you know you don't know?") and personal-context
+> retrieval ("do you reach for the right channel when the answer is
+> structurally outside your weights?"). Split into:
+>
+> - `general_knowledge_lookup(query: str)` — over a curated KB of
+>   time-anchored facts (post-cutoff sports results, market data,
+>   AI/tech announcements) across a small set of domains chosen up
+>   front so seed prompts can be balanced.
+> - `user_knowledge_lookup(query: str)` — over a fixed fake-persona
+>   JSON (~30–50 fields: identity, family, calendar, preferences).
+>
+> Both tools mimic a real `web_search` tool: free-form `query: str`
+> in, structured **ranked list** of result records out (`results: [...]`),
+> empty list when nothing matches (no special `not_found` flag —
+> hit and miss share the same shape, matching real search semantics).
+> Top-K via simple deterministic ranking (BM25 / keyword + aliases)
+> over snippet text — KBs are small enough that this is unambiguous.
+>
+> Result record shape:
+> - general: `{id, date, domain, snippet}`
+> - user: `{field, snippet}`
+>
+> **Multi-call enabled, one-shot by design.** The tool signature
+> permits repeated calls (faithful to real web search), but Phase A1
+> seed prompts are written so a single well-formed call suffices.
+> Multi-call refinement — "does the model know it should re-query,
+> particularly when the KB doesn't have the requested info?" — becomes
+> a distinct calibration target for a later investigation rather than
+> a confound here.
+>
+> Web search itself was considered as the tool and rejected:
+> non-deterministic results break matched-pair reproducibility across
+> re-runs. Curating two small closed-world KBs is bounded; living with
+> drifting ground truth is not.
+
+> **Decision 9 — canonical domains list as soft convention; sub_domain nests under domain** (2026-05-11)
+> Amends Decision 2. `domain` stays free-form to avoid premature
+> enumeration, but to head off label drift ("math" vs "mathematics"
+> vs "arithmetic") we maintain a study-level soft-convention reference
+> at [`../../canonical_domains.md`](../../canonical_domains.md).
+> Curator rule: reuse before invent; if you add a new label, add a
+> row in the same edit. `sub_domain` is treated as a hierarchical
+> finer slice of its row's `domain`, never orthogonal — this preserves
+> roll-up slicing as a real capability. Sub_domains themselves remain
+> un-enumerated.
+
+> **Decision 10 — `frequency_class` pinned to answer salience** (2026-05-11)
+> Amends Decision 3. Enum unchanged (`common | uncommon | edge`) but
+> meaning is now explicit: how well-known is the *answer* / fact being
+> probed. NOT prompt-type frequency, NOT tool-need frequency.
+> Schema description updated.
+
+> **Decision 11 — register split into three orthogonal small enums** (2026-05-11)
+> Supersedes Decision 4. The 7-value dominant-aspect enum mixed four
+> dimensions (tone, form, length, vocabulary) and lost signal whenever
+> a prompt spanned them. Replaced with:
+> - `register_tone`: `neutral | formal | casual | technical`
+> - `register_form`: `statement | question | imperative`
+> - `register_length`: `terse | normal | verbose`
+> Plus `register_notes` retained for nuance. Same total labeling cost;
+> matched-pair register controls now have real leverage.
+
+> **Decision 12 — ID separator switched to `-`; full tool names retained** (2026-05-11)
+> Implements Decision 7's "full tool names" choice. Discovered mid-edit
+> that the original `_`-only format silently mis-segmented multi-token
+> tool names (`general_knowledge_lookup` parsed as
+> tool=`general`/domain=`knowledge`/difficulty=`lookup`). Fixed by
+> using `-` as the field separator and allowing `_` within field
+> values:
+>     `{tool}-{domain}-{difficulty}-{disambiguator}-{NNN}-{shortuuid}`
+> Control prompts use `tool=none` literal. `id_scheme.py`, the schema
+> regex, and example records all updated; smoke test extended to
+> round-trip long tool names and the `none` control case.
+
+> **Decision 13 — difficulty_label becomes signed object; difficulty_calibrated stores raw empirical signal** (2026-05-11)
+> Amends item 1 of "Things Claude made up." Two structural changes:
+>
+> 1. The curator is an LLM by default (only a sample of records get
+>    interactive human review). So `difficulty_label` is *itself* a
+>    model prediction and must be signed. Refactored from a bare enum
+>    to a nested object:
+>    - `value`: 5-enum, authoritative for slicing.
+>    - `llm_assessment`: required block with `model`, `date`, `value`,
+>      `confidence`, `reasoning`. Set at record creation.
+>    - `human_review`: optional asymmetric review block —
+>      `reviewer`, `date`, `agreed`, `overridden_to`, `notes`. Null
+>      until reviewed; non-null records gate on a human sign-off.
+>    Asymmetric (not parallel dual-block) because reviewers stamp-
+>    agree on most records and only need to write prose on overrides.
+>    LLM-vs-human divergence becomes a research artifact in itself,
+>    same intuition as the future-directions dual-assessment convention.
+>
+> 2. `difficulty_calibrated` no longer stores per-model enum buckets.
+>    Replaced with raw empirical signal per model:
+>    `{model_id: {success_rate, n, last_run}}`. Bucket assignment
+>    moves to analysis time, governed by thresholds defined in the
+>    planned A4 calibration methodology. This avoids locking
+>    empirical observations into the same coarse buckets used for the
+>    hypothesis, and makes re-bucketing a config change rather than
+>    a data migration.
+>
+> Side effect: `calibration_status: contested` now has a crisper
+> meaning — the empirical success_rate falls in a bucket different
+> from `difficulty_label.value` under A4's thresholds.
+
+> **Decision 14 — closing the rest of the "Things Claude made up" list** (2026-05-11)
+>
+> - **Item 5 (disambiguator)**: stays free-form. Added a soft
+>   convention in `canonical_domains.md` — disambiguator should be a
+>   *meaningful slug describing what makes this pair distinct within
+>   its bucket*, not a random suffix (shortuuid already handles
+>   uniqueness). Examples and anti-patterns documented inline.
+> - **Item 6 (token_count)**: replaced single-int `token_count` with
+>   tokenizer-keyed dict `token_counts: {tokenizer_id: int} | null`,
+>   mirroring `difficulty_calibrated`'s per-model dict. Cheap now,
+>   painful migration later. Fixtures updated.
+> - **Item 8 (example records)**: renamed `metadata.examples.json` →
+>   `metadata.fixtures.json`, top-level array renamed `examples` →
+>   `fixtures`, added `_purpose` field clarifying these are schema
+>   exercises and NOT part of the seed corpus. Prevents accidental
+>   inclusion when slicing on `source: hand_curated`.
+> - **Item 10 (additionalProperties: false)**: kept strict during
+>   early iteration. Recorded a revisit note in `study.md` Open
+>   questions tied to ~500-record corpus size and the arrival of
+>   bulk generation (A3) — if schema-bump friction starts outweighing
+>   typo-protection at that point, loosen and route analysis-only
+>   annotations through a dedicated `extra:` object.
+
 ## Results
 
 - `tool_palette.py` + `tool_palette.json`: five tools, frozen
@@ -120,7 +251,7 @@ hardest and most valuable artifact downstream).
   to make the qualitative coverage explicit.
 - `metadata.schema.json`: JSON Schema (draft 2020-12) covering 20
   fields. Validated runnable via `jsonschema` (Python).
-- `metadata.examples.json`: 3 example records (Type A pair + Type B
+- `metadata.fixtures.json`: 3 example records (Type A pair + Type B
   half) — all pass schema validation.
 - `id_scheme.py`: `make_pair_id`, `make_prompt_id`, `parse_prompt_id`,
   `is_valid_*` helpers; smoke test passes on all three source-brief
@@ -174,6 +305,16 @@ After this investigation completes:
 - `002-difficulty-axes` — per-tool difficulty calibration so we can generate
   prompts at known difficulty levels.
 - `003-bulk-generation` — generate the corpus from seeds + axes.
+- `004-tool-failure-recognition` — sibling line of inquiry probing a
+  *different* calibration moment: when a tool is available and called
+  but returns nothing useful (empty `results: []`, incompatible
+  unit_convert, calculator-resistant expression, etc.), does the
+  model recognize the tool failed and report it, or confabulate? This
+  is interpretive (post-call) calibration vs. A1's anticipatory
+  (pre-call) calibration. Inherits A1's palette, schema, KBs, and ID
+  scheme; defines its own pair structure (`tool_helped` /
+  `tool_insufficient` as the matched variation). Decision 8's
+  empty-list-on-miss choice was made partly to enable this.
 
 ## Things Claude should flag to the human
 
