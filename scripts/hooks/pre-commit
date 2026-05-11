@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Git pre-commit hook for morel-research.
+#
+# Validates frontmatter and rebuilds lineage.yaml whenever a study.md or
+# investigation.md is staged. If lineage.yaml changes, it is auto-added to
+# the commit. Validation failures abort the commit.
+#
+# Install (one-time):
+#   ln -sf ../../scripts/hooks/pre-commit .git/hooks/pre-commit
+#
+# This hook is opt-in by design — we don't auto-install on clone.
+
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+staged_doc_changes="$(
+  git diff --cached --name-only --diff-filter=ACMR \
+    | { grep -E '(^|/)(study|investigation)\.md$' || true; }
+)"
+
+if [[ -z "$staged_doc_changes" ]]; then
+  exit 0
+fi
+
+echo "[pre-commit] frontmatter change detected; rebuilding lineage.yaml..."
+if ! python3 scripts/update_lineage.py; then
+  echo "[pre-commit] lineage rebuild failed — fix frontmatter and retry." >&2
+  exit 1
+fi
+
+if ! git diff --quiet -- lineage.yaml; then
+  git add lineage.yaml
+  echo "[pre-commit] lineage.yaml updated and added to the commit."
+fi
