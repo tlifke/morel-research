@@ -89,3 +89,21 @@ This study is the substrate for several downstream questions:
   bulk generation (A3) is producing records routinely. If schema-bump
   friction starts outweighing typo-protection, loosen at that point
   and use a separate `extra:` object for analysis-only annotations.
+
+## Observations carried forward from A1
+
+- **Curator-LLM arithmetic errors validate seed design.** During
+  Phase A1 seed prep the curator-LLM (claude-opus-4-7) made a
+  mental-arithmetic error on a seed it was simultaneously annotating
+  (claimed 4782 × 1847 = 8,832,754; actual 8,832,354). Caught on
+  python self-check. The seed is therefore not testing an artificial
+  difficulty — it's testing a real one, since the curator-LLM failed
+  exactly the way a calibrated agent should recognize it would and
+  reach for the calculator. See Decision 17 in
+  `investigations/001-foundations/investigation.md`. Worth tracking
+  across the study: when the curator makes the same kind of error a
+  target model would, the prompt is well-calibrated for the cognitive
+  moment it claims to probe. Complementary to Decision 16 (curator-
+  LLM confabulated when it should have used WebSearch) — both
+  observations reinforce that the study's own scaffolding work is a
+  preview of the calibration failure modes it intends to measure.
