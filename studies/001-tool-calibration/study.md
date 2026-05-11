@@ -70,6 +70,13 @@ This study is the substrate for several downstream questions:
 - Does providing more tools improve or degrade calibration?
 - Is there a "tool-use temperature" — a single parameter that captures an
   agent's eagerness to delegate?
+- **Tool-failure recognition** (planned as `investigations/004-tool-failure-recognition`):
+  when a tool is called but returns nothing useful, does the model
+  recognize the tool failed and report "I can't" — or confabulate?
+  This is a distinct *post-call* calibration moment, complementary to
+  the pre-call calibration A1 probes. Inherits the A1 substrate
+  (palette, schema, KBs, IDs); pair variation is `tool_helped` /
+  `tool_insufficient`.
 
 ## Open questions
 
@@ -77,3 +84,8 @@ This study is the substrate for several downstream questions:
   Phase A1 targets 60/40 common/edge; revisit after seeing model behavior.
 - Should we publish the schema externally so other research can reuse it?
   Probably yes once stable.
+- `metadata.schema.json` is currently strict (`additionalProperties:
+  false`) — revisit when the corpus exceeds ~500 records or once
+  bulk generation (A3) is producing records routinely. If schema-bump
+  friction starts outweighing typo-protection, loosen at that point
+  and use a separate `extra:` object for analysis-only annotations.

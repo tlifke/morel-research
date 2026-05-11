@@ -1,10 +1,14 @@
-"""ID scheme for prompt records in the tool-calibration corpus.
+r"""ID scheme for prompt records in the tool-calibration corpus.
 
 Format:
-    {tool}_{domain}_{difficulty}_{disambiguator}_{NNN}_{shortuuid}
+    {tool}-{domain}-{difficulty}-{disambiguator}-{NNN}-{shortuuid}
     \________________ pair_id _________________/ \_ instance _/
 
-- All slug segments are lowercase alphanumeric (and underscores).
+- Field separator is `-`; within-field separator is `_`. This lets a
+  field value contain underscores (e.g. tool=`general_knowledge_lookup`,
+  disambiguator=`arsenal_v_city`) without ambiguous parsing.
+- All field values are lowercase alphanumeric with optional internal
+  underscores.
 - `NNN` is a zero-padded three-digit counter within the
   `tool/domain/difficulty/disambiguator` bucket.
 - `shortuuid` is the first 8 hex chars of a uuid4. It is the only
@@ -12,12 +16,12 @@ Format:
   rest is shared between them.
 
 `pair_id` = everything up to and including the `NNN` counter.
-`id`      = `pair_id` + `_` + `shortuuid`.
+`id`      = `pair_id` + `-` + `shortuuid`.
 
 Examples:
-    calc_arith_hard_3digit_001_a7f3b2c4
-    knowledge_facts_easy_capital_002_e2c8f1a9
-    datetime_relative_medium_workday_003_b4d7c2e6
+    calculator-math-hard-3digit-001-a7f3b2c4
+    general_knowledge_lookup-sports-medium-arsenal_v_city-001-e2c8f1a9
+    none-general-easy-smalltalk-002-b4d7c2e6
 """
 
 from __future__ import annotations
@@ -26,11 +30,15 @@ import re
 import uuid
 from dataclasses import dataclass
 
-# Segment that may appear in a slug field.
-_SLUG_SEGMENT = r"[a-z0-9]+(?:_[a-z0-9]+)*"
+# Field value: lowercase alphanumeric with optional internal underscores.
+_FIELD = r"[a-z0-9]+(?:_[a-z0-9]+)*"
 
-PAIR_ID_REGEX = re.compile(rf"^{_SLUG_SEGMENT}_[0-9]{{3}}$")
-PROMPT_ID_REGEX = re.compile(rf"^{_SLUG_SEGMENT}_[0-9]{{3}}_[0-9a-f]{{8}}$")
+PAIR_ID_REGEX = re.compile(
+    rf"^{_FIELD}-{_FIELD}-{_FIELD}-{_FIELD}-[0-9]{{3}}$"
+)
+PROMPT_ID_REGEX = re.compile(
+    rf"^{_FIELD}-{_FIELD}-{_FIELD}-{_FIELD}-[0-9]{{3}}-[0-9a-f]{{8}}$"
+)
 _KEBAB_REGEX = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*$")
 
 VALID_DIFFICULTIES = ("trivial", "easy", "medium", "hard", "extreme")
@@ -50,13 +58,13 @@ class PromptIdParts:
     @property
     def pair_id(self) -> str:
         return (
-            f"{self.tool}_{self.domain}_{self.difficulty}_"
-            f"{self.disambiguator}_{self.counter:03d}"
+            f"{self.tool}-{self.domain}-{self.difficulty}-"
+            f"{self.disambiguator}-{self.counter:03d}"
         )
 
     @property
     def id(self) -> str:
-        return f"{self.pair_id}_{self.shortuuid}"
+        return f"{self.pair_id}-{self.shortuuid}"
 
 
 def make_pair_id(
@@ -89,7 +97,7 @@ def make_pair_id(
         )
     if not 0 <= counter <= 999:
         raise ValueError(f"counter={counter} must fit in three digits")
-    return f"{tool}_{domain}_{difficulty}_{disambiguator}_{counter:03d}"
+    return f"{tool}-{domain}-{difficulty}-{disambiguator}-{counter:03d}"
 
 
 def make_prompt_id(pair_id: str, *, shortuuid: str | None = None) -> str:
@@ -109,7 +117,7 @@ def make_prompt_id(pair_id: str, *, shortuuid: str | None = None) -> str:
         raise ValueError(
             f"shortuuid={shortuuid!r} must be 8 lowercase hex chars"
         )
-    return f"{pair_id}_{shortuuid}"
+    return f"{pair_id}-{shortuuid}"
 
 
 def parse_prompt_id(prompt_id: str) -> PromptIdParts:
@@ -122,9 +130,9 @@ def parse_prompt_id(prompt_id: str) -> PromptIdParts:
         raise ValueError(
             f"prompt_id={prompt_id!r} does not match PROMPT_ID_REGEX"
         )
-    pair_id, shortuuid = prompt_id.rsplit("_", 1)
-    rest, counter_str = pair_id.rsplit("_", 1)
-    tool, domain, difficulty, disambiguator = rest.split("_", 3)
+    pair_id, shortuuid = prompt_id.rsplit("-", 1)
+    rest, counter_str = pair_id.rsplit("-", 1)
+    tool, domain, difficulty, disambiguator = rest.split("-", 3)
     return PromptIdParts(
         tool=tool,
         domain=domain,
@@ -145,14 +153,30 @@ def is_valid_pair_id(pair_id: str) -> bool:
 
 if __name__ == "__main__":
     # Smoke test.
-    pid = make_pair_id("calc", "arith", "hard", "3digit", 1)
+    pid = make_pair_id("calculator", "math", "hard", "3digit", 1)
     fid = make_prompt_id(pid, shortuuid="a7f3b2c4")
     parts = parse_prompt_id(fid)
     assert parts.id == fid, parts
     assert parts.pair_id == pid, parts
-    assert parts.tool == "calc"
+    assert parts.tool == "calculator"
     assert parts.difficulty == "hard"
     assert parts.counter == 1
+
+    # Long-tool-name and control-prompt round-trip checks.
+    for tool, dom, diff, disamb in [
+        ("general_knowledge_lookup", "sports", "medium", "arsenal_v_city"),
+        ("user_knowledge_lookup", "personal", "easy", "wedding_anniversary"),
+        ("none", "general", "easy", "smalltalk"),
+    ]:
+        pp = make_pair_id(tool, dom, diff, disamb, 1)
+        assert is_valid_pair_id(pp), pp
+        ff = make_prompt_id(pp, shortuuid="0123abcd")
+        parsed = parse_prompt_id(ff)
+        assert parsed.tool == tool, parsed
+        assert parsed.domain == dom, parsed
+        assert parsed.difficulty == diff, parsed
+        assert parsed.disambiguator == disamb, parsed
+        print(f"round-trip ok: {ff}")
     print(f"pair_id  = {pid}")
     print(f"id       = {fid}")
     print(f"parsed   = {parts}")

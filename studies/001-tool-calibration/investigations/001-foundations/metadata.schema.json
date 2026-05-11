@@ -14,7 +14,9 @@
     "difficulty_label",
     "system_prompt_id",
     "user_prompt",
-    "register",
+    "register_tone",
+    "register_form",
+    "register_length",
     "expected_tool_call",
     "calibration_status",
     "source"
@@ -23,13 +25,13 @@
   "properties": {
     "id": {
       "type": "string",
-      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*_[0-9a-f]{8}$",
-      "description": "Globally unique prompt id, format `{tool}_{domain}_{difficulty}_{disambiguator}_{NNN}_{shortuuid}`. See id_scheme.py."
+      "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*-[a-z0-9]+(?:_[a-z0-9]+)*-[a-z0-9]+(?:_[a-z0-9]+)*-[a-z0-9]+(?:_[a-z0-9]+)*-[0-9]{3}-[0-9a-f]{8}$",
+      "description": "Globally unique prompt id, format `{tool}-{domain}-{difficulty}-{disambiguator}-{NNN}-{shortuuid}`. Fields are `-`-joined; within-field `_` is allowed (e.g. tool=`general_knowledge_lookup`). See id_scheme.py."
     },
     "pair_id": {
       "type": "string",
-      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*_[0-9]{3}$",
-      "description": "Pair identifier shared by both halves of a matched pair. Identical to id minus the trailing _shortuuid."
+      "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*-[a-z0-9]+(?:_[a-z0-9]+)*-[a-z0-9]+(?:_[a-z0-9]+)*-[a-z0-9]+(?:_[a-z0-9]+)*-[0-9]{3}$",
+      "description": "Pair identifier shared by both halves of a matched pair. Identical to id minus the trailing `-shortuuid`."
     },
     "condition": {
       "type": "string",
@@ -48,49 +50,127 @@
         "python_execute",
         "datetime_now",
         "unit_convert",
-        "knowledge_lookup",
+        "general_knowledge_lookup",
+        "user_knowledge_lookup",
         "none"
       ],
       "description": "Which tool this prompt is designed to probe. `none` for control prompts that should not warrant any tool."
     },
     "domain": {
       "type": "string",
-      "description": "Coarse topical bucket. Free-form for now; see open questions in investigation.md."
+      "description": "Coarse topical bucket. Free-form; curators reuse-before-invent against the study-level canonical list at ../../canonical_domains.md."
     },
     "sub_domain": {
       "type": ["string", "null"],
-      "description": "Optional finer-grained slice within `domain`. Free-form. Use when `domain` alone loses important structure."
+      "description": "Optional finer-grained slice nested within `domain` (never orthogonal). Free-form. Use when `domain` alone loses important structure."
     },
     "difficulty_label": {
-      "type": "string",
-      "enum": ["trivial", "easy", "medium", "hard", "extreme"],
-      "description": "Human-assigned difficulty for the prompt. The intent: at `trivial`/`easy` a target model reliably succeeds; at `hard`/`extreme` it reliably fails. `medium` is the calibration boundary."
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "llm_assessment"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "enum": ["trivial", "easy", "medium", "hard", "extreme"],
+          "description": "Authoritative difficulty bucket for slicing. Initially set by llm_assessment.value at record creation; may be overridden by human_review."
+        },
+        "llm_assessment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["model", "date", "value"],
+          "properties": {
+            "model": {
+              "type": "string",
+              "description": "Model id that proposed this label (e.g. claude-opus-4-7). Required: every record carries an LLM assessment at creation time."
+            },
+            "date": {"type": "string", "format": "date"},
+            "value": {
+              "type": "string",
+              "enum": ["trivial", "easy", "medium", "hard", "extreme"],
+              "description": "The label the LLM originally proposed. Preserved even if the human overrides."
+            },
+            "confidence": {
+              "type": "string",
+              "enum": ["low", "medium", "high"],
+              "description": "LLM's stated confidence in the label."
+            },
+            "reasoning": {
+              "type": ["string", "null"],
+              "description": "Optional one-paragraph rationale from the LLM. Encouraged for `low` confidence."
+            }
+          }
+        },
+        "human_review": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["reviewer", "date", "agreed"],
+          "properties": {
+            "reviewer": {"type": "string", "description": "Human reviewer handle."},
+            "date": {"type": "string", "format": "date"},
+            "agreed": {
+              "type": "boolean",
+              "description": "True if the human accepts the LLM's proposed value. False if the top-level `value` was overridden from llm_assessment.value."
+            },
+            "overridden_to": {
+              "type": ["string", "null"],
+              "enum": ["trivial", "easy", "medium", "hard", "extreme", null],
+              "description": "The new value the human chose, if agreed=false. Mirrors the top-level value; included here for human_review self-containment."
+            },
+            "notes": {
+              "type": ["string", "null"],
+              "description": "Short prose, especially on overrides — what about the prompt made the human disagree with the LLM."
+            }
+          }
+        }
+      },
+      "description": "Curator-assigned difficulty hypothesis. LLM-proposed at record creation, optionally human-reviewed. Slice by `difficulty_label.value`; mine `llm_assessment` vs `human_review` divergence as a separate research signal."
     },
     "difficulty_calibrated": {
       "type": ["object", "null"],
       "additionalProperties": {
-        "type": "string",
-        "enum": ["trivial", "easy", "medium", "hard", "extreme"]
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["success_rate", "n"],
+        "properties": {
+          "success_rate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Empirical fraction of trials the model succeeded on this prompt."
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of trials backing the success_rate."
+          },
+          "last_run": {
+            "type": ["string", "null"],
+            "format": "date",
+            "description": "Date of the most recent calibration run for this (record, model) pair."
+          }
+        }
       },
-      "description": "Empirical difficulty per target model, keyed by model id. Populated post-calibration."
+      "description": "Empirical difficulty per target model, keyed by model id. Raw signal: success_rate + n. Bucketing into trivial/easy/medium/hard/extreme happens at analysis time using thresholds defined in the calibration methodology (planned A4)."
     },
     "frequency_class": {
       "type": "string",
       "enum": ["common", "uncommon", "edge"],
-      "description": "Prior on prompt-shape frequency in real LLM use. Used to stratify analysis (do agents calibrate worse on edge cases?)."
+      "description": "Answer salience: how well-known is the fact or answer being probed. `common` = widely-known; `uncommon` = niche but findable; `edge` = obscure or at the periphery of plausible knowledge. NOT prompt-type frequency or tool-need frequency."
     },
-    "register": {
+    "register_tone": {
       "type": "string",
-      "enum": [
-        "neutral_formal",
-        "neutral_casual",
-        "technical",
-        "imperative",
-        "question",
-        "terse",
-        "verbose"
-      ],
-      "description": "Dominant register of the user_prompt. Pick the most-dominant aspect when multiple apply; capture nuance in register_notes."
+      "enum": ["neutral", "formal", "casual", "technical"],
+      "description": "Tone dimension of the user_prompt. Orthogonal to form and length."
+    },
+    "register_form": {
+      "type": "string",
+      "enum": ["statement", "question", "imperative"],
+      "description": "Speech-act form of the user_prompt. Orthogonal to tone and length."
+    },
+    "register_length": {
+      "type": "string",
+      "enum": ["terse", "normal", "verbose"],
+      "description": "Length dimension of the user_prompt. Orthogonal to tone and form."
     },
     "register_notes": {
       "type": ["string", "null"],
@@ -105,10 +185,13 @@
       "minLength": 1,
       "description": "The user-visible prompt text."
     },
-    "token_count": {
-      "type": ["integer", "null"],
-      "minimum": 0,
-      "description": "Token count of user_prompt under the target tokenizer. Optional; populated during corpus prep."
+    "token_counts": {
+      "type": ["object", "null"],
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "description": "Token count of user_prompt under each tokenizer of interest, keyed by tokenizer id (e.g. `cl100k_base`, `claude-3-tokenizer`). Mirrors the per-model dict shape used by difficulty_calibrated. Optional; populated during corpus prep (planned A2/A3)."
     },
     "expected_tool_call": {
       "type": "boolean",
