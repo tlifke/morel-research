@@ -55,9 +55,10 @@ Items 1–3 are essential; 4–5 may complete in a later session.
 | User-knowledge KB              | `../../kb/user_knowledge.json`                    | drafted              |
 | General-knowledge KB (fabricated) | `../../kb/general_knowledge.json`              | drafted              |
 | General-knowledge KB (verified)   | `../../kb/general_knowledge_real.json`          | drafted              |
-| Seed pair specification        | `seeds_spec.yaml`                                 | drafted (16 pairs)   |
+| Seed pair specification        | `seeds_spec.yaml`                                 | drafted (17 pairs)   |
 | Seed builder                   | `build_seeds.py`                                  | drafted              |
-| Seed corpus                    | `../../seeds.jsonl`                               | drafted (32 records) |
+| Seed approvals                 | `seeds_approvals.yaml`                            | drafted (17/17)      |
+| Seed corpus                    | `../../seeds.jsonl`                               | drafted (34 records, fully reviewed) |
 
 All Phase A1 deliverables (items 1–5) are now drafted and self-
 validated end-to-end:
@@ -68,13 +69,30 @@ validated end-to-end:
 - Every seed prompt that references a KB entry has a corresponding
   entry in the relevant KB (verified manually during seed prep).
 
-Items pending human review:
-- 16 seed pairs awaiting pair-by-pair sign-off via
-  `difficulty_label.human_review` blocks (currently all `null`).
+Seed review complete. All 17 pairs (34 record halves) human-reviewed
+and stamped agreed via `seeds_approvals.yaml`. Phase A1 is ready to
+close pending the human's call on the close itself (investigation
+frontmatter `status` flip from `in-progress` → `complete`).
+
+Pair 17 (`user_knowledge_lookup-personal-medium-aunt_nina-001`) was
+contributed by the human reviewer during batch 4 as the canonical
+"AI cannot possibly know this" example — a specific factual trait
+about a named extended-family member. Added to seeds_spec.yaml; the
+persona KB gained an `aunt_nina` entry.
+
+Loose ends carried forward:
 - 4 system prompt variants (`sys_all_tools_proactive_v1`,
   `sys_dt_only_neutral_v1`, `sys_uc_only_neutral_v1`,
   `sys_ukl_only_neutral_v1`) are drafted in the manifest but not
   exercised by any seed pair in this batch — kept for A2/A3.
+- `datetime_now` tool needs a fixed-return implementation tied to
+  the corpus runtime anchor (2026-05-11) before grading (Decision 18).
+- The verified KB (`general_knowledge_real.json`) is the canonical
+  lookup source for grading; the fabricated KB is a swap for sibling
+  research (Decision 19).
+- A short blog post / mini-investigation on human_feasibility
+  categorization variance is queued under
+  `studies/001-tool-calibration/study.md` Forward-looking.
 
 ## Methods (planned)
 
@@ -261,6 +279,23 @@ hardest and most valuable artifact downstream).
 >   bulk generation (A3) — if schema-bump friction starts outweighing
 >   typo-protection at that point, loosen and route analysis-only
 >   annotations through a dedicated `extra:` object.
+
+> **Decision 19 — verified KB is canonical for test cases** (2026-05-11)
+> The seed pairs that exercise `general_knowledge_lookup` (pairs 12,
+> 13, 14) validate against `kb/general_knowledge_real.json`, not the
+> fabricated `kb/general_knowledge.json`. Rationale: when results land
+> in a one-pager, readers shouldn't have to disentangle real signal
+> from confabulated KB content. The fabricated KB is preserved as a
+> standalone research artifact for a sibling investigation (or blog
+> post) exploring whether model behavior changes when the lookup tool
+> returns plausible-but-false snippets. That comparison stays
+> compelling precisely because the *primary* corpus is grounded in
+> reality.
+>
+> Tool wiring (deferred to A2/A4): the `general_knowledge_lookup`
+> implementation at calibration time reads from
+> `general_knowledge_real.json` by default; experiments that probe
+> the fabricated-KB question swap the source explicitly.
 
 > **Decision 18 — add `human_feasibility` per-half; pin tool reproducibility for grading** (2026-05-11)
 > Surfaced during the seed walk-through with the human reviewer.

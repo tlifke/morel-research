@@ -78,6 +78,39 @@ This study is the substrate for several downstream questions:
   (palette, schema, KBs, IDs); pair variation is `tool_helped` /
   `tool_insufficient`.
 
+### Categorization variance on human_feasibility (blog-sized writeup)
+
+The `human_feasibility` label on each seed (Decision 18) is a
+modal-adult hypothesis, not a universal claim. During seed review the
+human reviewer (born 1995) flagged that they don't actually know the
+1966 World Cup winner despite the trivial half of pair 12 being
+labeled `unaided`. That disagreement is itself signal — it bounds how
+much an LLM's "underperformance" on a prompt should be read as model
+deficiency vs. how much is just below the modal-adult baseline. Worth
+a short blog post / mini-investigation surveying a handful of
+reviewers across the seed corpus and reporting variance per pair.
+
+```yaml
+llm_assessment:
+  model: claude-opus-4-7
+  date: 2026-05-11
+  llm_capability: high
+  human_capability: medium
+  confidence: medium
+  reasoning: |
+    LLM-feasible: small survey design, light analysis, ~20 reviewers
+    × 32 seed halves of unaided/aided labels. The hard work is
+    recruiting and the prose interpretation, both of which a human
+    drives. Confidence medium because the framing matters — the
+    interesting writeup compares LLM-labeled feasibility vs.
+    distribution of human-reported feasibility, which requires
+    careful question wording.
+
+human_assessment: null
+
+divergence_notes: null
+```
+
 ## Open questions
 
 - How aggressively should the seed set cover edge cases vs. mainline?
