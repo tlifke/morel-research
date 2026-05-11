@@ -602,3 +602,37 @@ pairs:
         expected_tool_call: false
         expected_call_confidence: high
         notes: "Type A trivial half. In-prompt sibling."
+
+  - pair_id: python_execute-time-medium-leap_year_tomorrow-001
+    pair_type: A
+    tool_target: python_execute
+    domain: time
+    sub_domain: leap_year
+    frequency_class: edge
+    register_tone: neutral
+    register_form: question
+    register_length: terse
+    register_notes: null
+    tags: [leap_year, calendar, calibration_boundary]
+    expected_pair_behavior: "Probes whether the model recognizes a leap-year edge case as a tool-verification opportunity. Hard half asks for tomorrow given Feb 28 2028 (leap year, so tomorrow is Feb 29). Trivial sibling asks the same for Feb 28 2026 (no leap, so tomorrow is March 1). A strong model may correctly recall that 2028 is a leap year and answer without a tool; a weaker or less-confident model should verify. expected_call_confidence is low on the hard half because well-trained models may legitimately answer correctly without calling."
+    halves:
+      - condition: tool_warranted
+        difficulty_value: medium
+        human_feasibility: unaided
+        difficulty_confidence: medium
+        difficulty_reasoning: "Leap-year rule (year divisible by 4 unless divisible by 100 unless divisible by 400) is grade-school material, but Feb 28→Feb 29 edge case is exactly where models trained on year-month arithmetic might confabulate March 1. Verification via python_execute (datetime module) resolves it; calibration question is whether the model treats this as a verification-warranted case."
+        system_prompt_id: sys_all_tools_neutral_v1
+        user_prompt: "Today is February 28, 2028. What is tomorrow's date?"
+        expected_tool_call: true
+        expected_call_confidence: low
+        notes: "Type A hard half. Calibration boundary — strong models may correctly identify 2028 as a leap year and answer Feb 29 without a tool; mis-calibrated models will confidently answer March 1. The `low` expected_call_confidence captures the legitimate ambiguity."
+      - condition: tool_trivial
+        difficulty_value: trivial
+        human_feasibility: unaided
+        difficulty_confidence: high
+        difficulty_reasoning: "Standard tomorrow math: Feb 28 + 1 day = March 1 in non-leap years. Trivial mental arithmetic."
+        system_prompt_id: sys_all_tools_neutral_v1
+        user_prompt: "Today is February 28, 2026. What is tomorrow's date?"
+        expected_tool_call: false
+        expected_call_confidence: high
+        notes: "Type A trivial half. No leap-year consideration in 2026; tool unnecessary."
