@@ -262,6 +262,32 @@ hardest and most valuable artifact downstream).
 >   typo-protection at that point, loosen and route analysis-only
 >   annotations through a dedicated `extra:` object.
 
+> **Decision 17 — recursive validation of "hard arithmetic"** (2026-05-11)
+> Noting a small but instructive observation from seed prep. While
+> drafting `seeds_spec.yaml` I authored a reasoning text for pair 1
+> claiming the answer to 4782 × 1847 was 8,832,754. Self-review with
+> python (then post-hoc verification before commit) showed the actual
+> product is 8,832,354 — a 400-off mental-arithmetic error. The seed
+> prompt itself was correct; only my justification prose was wrong.
+>
+> This is direct observational support for the framing of pair 1
+> (and pairs 3, 4, 11): four-digit multiplication / precision
+> conversion is exactly the kind of computation a frontier model
+> cannot do reliably in head, which is why a calibrated agent should
+> reach for the calculator. The curator-LLM making the same error
+> as the target model would on the seed prompt is itself signal —
+> the seed isn't testing an artificial difficulty, it's testing a
+> real one. Pair 11's reasoning text was also corrected post-arithmetic-
+> check (1390.0 mL → 1389.95 mL).
+>
+> A general principle worth surfacing from this: when the curator-LLM
+> writes any prose that contains a quantitative claim, run it through
+> python (or the calculator tool) before publishing. The recursion
+> here — a study about whether models recognize they should use tools,
+> with seed prep done by a model that didn't always recognize it
+> should use tools — is consistent with Decision 16's confabulation
+> note. Both call for the same discipline: tool-use over confidence.
+
 > **Decision 16 — parallel fabricated/real general-knowledge KBs** (2026-05-11)
 > Surfaced mid-handoff during solo seed-prep work. The first draft of
 > `kb/general_knowledge.json` was populated by Claude (claude-opus-4-7)
