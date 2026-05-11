@@ -5,6 +5,7 @@ status: in-progress
 parents: []
 children:
   - studies/001-tool-calibration/investigations/001-foundations
+  - studies/001-tool-calibration/investigations/002-difficulty-axes
 related: []
 axes:
   llm_capability: medium

@@ -1,10 +1,11 @@
 ---
 id: studies/001-tool-calibration/investigations/001-foundations
 title: Foundations (Phase A1)
-status: in-progress
+status: complete
 parents:
   - studies/001-tool-calibration
-children: []
+children:
+  - studies/001-tool-calibration/investigations/002-difficulty-axes
 related:
   - studies/000-research-organization/investigations/001-initial-scaffold
 axes:
