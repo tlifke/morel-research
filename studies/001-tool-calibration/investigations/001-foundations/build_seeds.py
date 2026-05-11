@@ -39,6 +39,7 @@ from id_scheme import make_prompt_id
 
 HERE = Path(__file__).resolve().parent
 SPEC_PATH = HERE / "seeds_spec.yaml"
+APPROVALS_PATH = HERE / "seeds_approvals.yaml"
 SCHEMA_PATH = HERE / "metadata.schema.json"
 STUDY_ROOT = HERE.parent.parent
 OUT_PATH = STUDY_ROOT / "seeds.jsonl"
@@ -49,7 +50,34 @@ def deterministic_shortuuid(pair_id: str, half_index: int) -> str:
     return digest[:8]
 
 
-def expand_pair(pair: dict, curator_model: str, curator_date: str) -> list[dict]:
+def _materialize_human_review(
+    raw: dict | None,
+    default_reviewer: str | None,
+    default_date: str | None,
+) -> dict | None:
+    if raw is None:
+        return None
+    block = dict(raw)
+    if "reviewer" not in block and default_reviewer:
+        block["reviewer"] = default_reviewer
+    if "date" not in block and default_date:
+        block["date"] = default_date
+    date_val = block.get("date")
+    if date_val is not None and not isinstance(date_val, str):
+        block["date"] = date_val.isoformat()
+    block.setdefault("overridden_to", None)
+    block.setdefault("notes", None)
+    return block
+
+
+def expand_pair(
+    pair: dict,
+    curator_model: str,
+    curator_date: str,
+    approvals_for_pair: list | None,
+    default_reviewer: str | None,
+    default_date: str | None,
+) -> list[dict]:
     pair_id = pair["pair_id"]
     halves = pair["halves"]
     if len(halves) != 2:
@@ -75,9 +103,14 @@ def expand_pair(pair: dict, curator_model: str, curator_date: str) -> list[dict]
                     "confidence": half.get("difficulty_confidence", "medium"),
                     "reasoning": half.get("difficulty_reasoning"),
                 },
-                "human_review": None,
+                "human_review": _materialize_human_review(
+                    (approvals_for_pair[idx] if approvals_for_pair else None),
+                    default_reviewer,
+                    default_date,
+                ),
             },
             "difficulty_calibrated": None,
+            "human_feasibility": half["human_feasibility"],
             "frequency_class": pair["frequency_class"],
             "register_tone": pair["register_tone"],
             "register_form": pair["register_form"],
@@ -123,10 +156,33 @@ def main() -> int:
         )
         return 2
 
+    approvals_doc = {}
+    if APPROVALS_PATH.exists():
+        approvals_doc = yaml.safe_load(APPROVALS_PATH.read_text()) or {}
+    approvals_map = approvals_doc.get("approvals", {}) or {}
+    approvals_meta = approvals_doc.get("_metadata", {}) or {}
+    default_reviewer = approvals_meta.get("default_reviewer")
+    default_date = approvals_meta.get("default_date")
+    if default_date is not None and not isinstance(default_date, str):
+        default_date = default_date.isoformat()
+
     pairs = spec["pairs"]
     all_records: list[dict] = []
+    n_approved_halves = 0
     for pair in pairs:
-        all_records.extend(expand_pair(pair, curator_model, curator_date))
+        approvals_for_pair = approvals_map.get(pair["pair_id"])
+        if approvals_for_pair:
+            n_approved_halves += len(approvals_for_pair)
+        all_records.extend(
+            expand_pair(
+                pair,
+                curator_model,
+                curator_date,
+                approvals_for_pair,
+                default_reviewer,
+                default_date,
+            )
+        )
 
     if args.validate:
         import jsonschema
@@ -145,6 +201,10 @@ def main() -> int:
     print(
         f"wrote {OUT_PATH.relative_to(STUDY_ROOT.parent.parent)}: "
         f"{n_pairs} pairs, {n_records} records"
+    )
+    print(
+        f"human-reviewed: {n_approved_halves}/{n_records} halves "
+        f"({n_approved_halves // 2}/{n_pairs} pairs)"
     )
     if args.validate:
         print(f"validated all {n_records} records against {SCHEMA_PATH.name}")

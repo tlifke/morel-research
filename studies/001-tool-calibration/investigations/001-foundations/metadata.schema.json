@@ -12,6 +12,7 @@
     "tool_target",
     "domain",
     "difficulty_label",
+    "human_feasibility",
     "system_prompt_id",
     "user_prompt",
     "register_tone",
@@ -151,6 +152,11 @@
         }
       },
       "description": "Empirical difficulty per target model, keyed by model id. Raw signal: success_rate + n. Bucketing into trivial/easy/medium/hard/extreme happens at analysis time using thresholds defined in the calibration methodology (planned A4)."
+    },
+    "human_feasibility": {
+      "type": "string",
+      "enum": ["unaided", "aided", "impossible"],
+      "description": "Whether a competent human, given only the user_prompt and prior knowledge, could answer correctly without external aid. `unaided` = head / mental computation; `aided` = needs calculator, lookup, paper, or other external tool; `impossible` = no human can answer (e.g., SHA-256 of an arbitrary string). Orthogonal to difficulty_label (LLM hypothesis). The pair (human_feasibility, difficulty_label.value) defines the prompt's coordinates on the capability map."
     },
     "frequency_class": {
       "type": "string",
