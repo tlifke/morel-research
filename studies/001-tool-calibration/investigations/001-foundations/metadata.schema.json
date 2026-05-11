@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "metadata.schema.json",
+  "title": "Matched-pair prompt record",
+  "description": "Schema for a single prompt record in the tool-calibration matched-pair corpus. Each record must be addressable by stable id, sliceable on every analysis axis, and explicitly linked to its pair.",
+  "type": "object",
+  "required": [
+    "id",
+    "pair_id",
+    "condition",
+    "pair_type",
+    "tool_target",
+    "domain",
+    "difficulty_label",
+    "system_prompt_id",
+    "user_prompt",
+    "register",
+    "expected_tool_call",
+    "calibration_status",
+    "source"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*_[0-9a-f]{8}$",
+      "description": "Globally unique prompt id, format `{tool}_{domain}_{difficulty}_{disambiguator}_{NNN}_{shortuuid}`. See id_scheme.py."
+    },
+    "pair_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*_[0-9]{3}$",
+      "description": "Pair identifier shared by both halves of a matched pair. Identical to id minus the trailing _shortuuid."
+    },
+    "condition": {
+      "type": "string",
+      "enum": ["tool_warranted", "tool_trivial", "no_tools_available"],
+      "description": "Which half of the matched comparison this record represents."
+    },
+    "pair_type": {
+      "type": "string",
+      "enum": ["A", "B"],
+      "description": "A = difficulty manipulation (task changes, affordance constant). B = affordance manipulation (task constant, available tools differ)."
+    },
+    "tool_target": {
+      "type": "string",
+      "enum": [
+        "calculator",
+        "python_execute",
+        "datetime_now",
+        "unit_convert",
+        "knowledge_lookup",
+        "none"
+      ],
+      "description": "Which tool this prompt is designed to probe. `none` for control prompts that should not warrant any tool."
+    },
+    "domain": {
+      "type": "string",
+      "description": "Coarse topical bucket. Free-form for now; see open questions in investigation.md."
+    },
+    "sub_domain": {
+      "type": ["string", "null"],
+      "description": "Optional finer-grained slice within `domain`. Free-form. Use when `domain` alone loses important structure."
+    },
+    "difficulty_label": {
+      "type": "string",
+      "enum": ["trivial", "easy", "medium", "hard", "extreme"],
+      "description": "Human-assigned difficulty for the prompt. The intent: at `trivial`/`easy` a target model reliably succeeds; at `hard`/`extreme` it reliably fails. `medium` is the calibration boundary."
+    },
+    "difficulty_calibrated": {
+      "type": ["object", "null"],
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["trivial", "easy", "medium", "hard", "extreme"]
+      },
+      "description": "Empirical difficulty per target model, keyed by model id. Populated post-calibration."
+    },
+    "frequency_class": {
+      "type": "string",
+      "enum": ["common", "uncommon", "edge"],
+      "description": "Prior on prompt-shape frequency in real LLM use. Used to stratify analysis (do agents calibrate worse on edge cases?)."
+    },
+    "register": {
+      "type": "string",
+      "enum": [
+        "neutral_formal",
+        "neutral_casual",
+        "technical",
+        "imperative",
+        "question",
+        "terse",
+        "verbose"
+      ],
+      "description": "Dominant register of the user_prompt. Pick the most-dominant aspect when multiple apply; capture nuance in register_notes."
+    },
+    "register_notes": {
+      "type": ["string", "null"],
+      "description": "Optional free-form nuance about register that the enum can't capture."
+    },
+    "system_prompt_id": {
+      "type": "string",
+      "description": "Pointer to a system prompt template in system_prompts/manifest.json."
+    },
+    "user_prompt": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The user-visible prompt text."
+    },
+    "token_count": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "Token count of user_prompt under the target tokenizer. Optional; populated during corpus prep."
+    },
+    "expected_tool_call": {
+      "type": "boolean",
+      "description": "Whether a well-calibrated agent should call any tool on this prompt under the linked system_prompt_id."
+    },
+    "expected_call_confidence": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "default": "medium",
+      "description": "How confident the curator is in expected_tool_call. Low = the prompt sits at the calibration boundary deliberately."
+    },
+    "expected_pair_behavior": {
+      "type": ["string", "null"],
+      "description": "One-line description of how this record should differ from its pair_id sibling. Used as a sanity check when reviewing pairs."
+    },
+    "calibration_status": {
+      "type": "string",
+      "enum": ["assumed", "verified", "contested"],
+      "description": "`assumed` until an empirical calibration run validates the difficulty. `verified` after at least one target-model run agrees. `contested` if calibration disagrees with the human label."
+    },
+    "calibration_verified_on": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Date the calibration was verified, if applicable."
+    },
+    "tags": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true,
+      "default": [],
+      "description": "Free-form tags for slicing."
+    },
+    "source": {
+      "type": "string",
+      "enum": ["hand_curated", "llm_generated", "transformed", "external"],
+      "description": "Where this prompt came from. hand_curated = a human wrote it; llm_generated = produced in bulk generation (A3); transformed = derived from another record."
+    },
+    "source_record_id": {
+      "type": ["string", "null"],
+      "description": "If source is `transformed`, the id of the parent record."
+    },
+    "notes": {
+      "type": "string",
+      "default": "",
+      "description": "Free-form curator notes."
+    }
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tool_palette.json",
+  "title": "Tool palette (frozen)",
+  "description": "Five-tool palette for the matched-pair tool-calibration study. Mirrors tool_palette.py. Frozen 2026-05-11; changes require a new investigation.",
+  "version": "1.0.0",
+  "frozen_on": "2026-05-11",
+  "tools": [
+    {
+      "name": "calculator",
+      "summary": "Evaluate an arithmetic expression and return the exact result.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "expression": {
+            "type": "string",
+            "description": "Arithmetic expression, e.g. '47*83' or 'sqrt(2)'."
+          }
+        },
+        "required": ["expression"],
+        "additionalProperties": false
+      },
+      "returns": {"type": "string"},
+      "examples": [
+        {"expression": "47*83"},
+        {"expression": "sqrt(2)"}
+      ],
+      "cognitive_moment": "compute-I-can't-do"
+    },
+    {
+      "name": "python_execute",
+      "summary": "Run a snippet of Python and return its stdout. Use when the calculator is insufficient.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Python source code; stdout is returned to the caller."
+          }
+        },
+        "required": ["code"],
+        "additionalProperties": false
+      },
+      "returns": {"type": "string"},
+      "examples": [
+        {"code": "print(sum(range(1, 101)))"},
+        {"code": "import math; print(math.factorial(20))"}
+      ],
+      "cognitive_moment": "transform-deterministically"
+    },
+    {
+      "name": "datetime_now",
+      "summary": "Return the current date and time as an ISO-8601 string. Takes no arguments.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "returns": {"type": "string"},
+      "examples": [{}],
+      "cognitive_moment": "look-up-I-don't-know (temporal)"
+    },
+    {
+      "name": "unit_convert",
+      "summary": "Convert a numeric quantity between two units.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "description": "Numeric quantity to convert."
+          },
+          "from_unit": {
+            "type": "string",
+            "description": "Source unit, case-insensitive (e.g. 'kg', 'meters', 'celsius')."
+          },
+          "to_unit": {
+            "type": "string",
+            "description": "Target unit, case-insensitive."
+          }
+        },
+        "required": ["value", "from_unit", "to_unit"],
+        "additionalProperties": false
+      },
+      "returns": {"type": "string"},
+      "examples": [
+        {"value": 180, "from_unit": "cm", "to_unit": "in"},
+        {"value": 72, "from_unit": "fahrenheit", "to_unit": "celsius"}
+      ],
+      "cognitive_moment": "transform-deterministically"
+    },
+    {
+      "name": "knowledge_lookup",
+      "summary": "Look up a discrete fact in an external knowledge base. Stand-in for web search.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Short natural-language query for a discrete fact."
+          }
+        },
+        "required": ["query"],
+        "additionalProperties": false
+      },
+      "returns": {"type": "string"},
+      "examples": [
+        {"query": "capital of Mongolia"},
+        {"query": "year the Eiffel Tower was completed"}
+      ],
+      "cognitive_moment": "look-up-I-don't-know (factual)"
+    }
+  ]
+}
