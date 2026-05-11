@@ -1,8 +1,10 @@
 # Project-level skills
 
-These skills were copied from
-[`anthropics/claude-plugins-official`](https://github.com/anthropics/claude-plugins-official)
-and live in this repo so the workflow is reproducible for collaborators.
+Skills shipped with this repo so the workflow is reproducible for
+collaborators. Two categories: skills imported from the official Anthropic
+plugin marketplace, and skills written for this repo.
+
+## Imported from anthropics/claude-plugins-official
 
 | Skill | Source plugin | When it triggers |
 |-------|---------------|------------------|
@@ -10,6 +12,15 @@ and live in this repo so the workflow is reproducible for collaborators.
 | `writing-hookify-rules` (dir: `writing-rules`) | `hookify` | Authoring rules for the hookify hook system. |
 | `claude-md-improver` | `claude-md-management` | Auditing/updating `CLAUDE.md` files. |
 | `session-report` | `session-report` | Generating an HTML report of session usage. |
+
+## Written for this repo
+
+| Skill | What it does |
+|-------|--------------|
+| `new-study` | Scaffold a top-level study directory + study.md with frontmatter; optionally scaffold its first investigation. |
+| `new-investigation` | Scaffold a new investigation under an existing study with proper frontmatter; rebuild `lineage.yaml`. |
+| `scaffold-one-pager` | Copy `one-pagers/template/` next to a study/investigation and prefill title-block macros. Never writes prose. |
+| `capability-map-entry` | Add or update a task entry in `capability-map/tasks.yaml`; re-render `capability-map.png`. |
 
 ## Notes on partial installation
 
