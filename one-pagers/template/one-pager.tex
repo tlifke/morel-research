@@ -1,0 +1,95 @@
+% One-pager template — morel-research
+%
+% Fixed structure (do not reorder):
+%   1. Title block (title, authors, date)
+%   2. Research question
+%   3. Methods
+%   4. Results
+%   5. Forward-looking
+%   6. ONE figure carrying the message
+%   7. 3-5 takeaways, with:
+%        - >=1 tied to the figure
+%        - >=1 on key limitations
+%        - any remaining bullets for results that didn't make the figure
+%
+% Compile with:  latexmk -pdf one-pager.tex
+%
+% Claude scaffolds this file but does NOT write the prose. The human writes
+% the prose. Claude may suggest structure, edits, and questions during
+% drafting; the human decides what to incorporate.
+
+\documentclass[10pt]{article}
+
+\usepackage[a4paper,margin=0.7in]{geometry}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{microtype}
+\usepackage{parskip}
+
+% Tighten section spacing so we fit on one page.
+\titlespacing*{\section}{0pt}{0.6em}{0.2em}
+\titleformat{\section}{\normalfont\bfseries\large}{}{0pt}{}
+
+\setlist[itemize]{leftmargin=1.2em,topsep=0.2em,itemsep=0.1em,parsep=0pt}
+
+\pagestyle{empty}
+
+% ----- Document metadata -----------------------------------------------------
+\newcommand{\paperTitle}{TITLE GOES HERE}
+\newcommand{\paperAuthors}{Author One, Author Two}
+\newcommand{\paperDate}{YYYY-MM-DD}
+\newcommand{\paperRepo}{\href{https://github.com/tlifke/morel-research}{tlifke/morel-research}}
+\newcommand{\paperStudyRef}{studies/NNN-slug/investigations/NNN-slug}
+
+\begin{document}
+
+% ----- Title block -----------------------------------------------------------
+{\Large\bfseries \paperTitle\par}
+\vspace{0.2em}
+{\small \paperAuthors\ \textbullet\ \paperDate\ \textbullet\ \paperRepo\ \textbullet\ \texttt{\paperStudyRef}\par}
+\vspace{0.5em}
+\hrule
+\vspace{0.4em}
+
+% ----- 1. Research question --------------------------------------------------
+\section*{Research question}
+% One short paragraph. State the question and why it matters in one breath.
+PROSE GOES HERE.
+
+% ----- 2. Methods ------------------------------------------------------------
+\section*{Methods}
+% Short paragraph or compact bullet list. What you did, on what, with what.
+PROSE GOES HERE.
+
+% ----- 3. Results ------------------------------------------------------------
+\section*{Results}
+% Headline first; supporting numbers second. The figure carries the punch.
+PROSE GOES HERE.
+
+% ----- 4. Forward-looking ----------------------------------------------------
+\section*{Forward-looking}
+% One or two sentences. What this enables or asks next.
+PROSE GOES HERE.
+
+% ----- 5. Figure -------------------------------------------------------------
+\begin{figure}[h]
+  \centering
+  % Replace with the actual figure file (PDF or PNG):
+  % \includegraphics[width=0.85\linewidth]{figure.pdf}
+  \fbox{\parbox{0.85\linewidth}{\centering\vspace{2em}FIGURE PLACEHOLDER\vspace{2em}}}
+  \caption*{\small\textbf{Figure.} ONE-SENTENCE CAPTION THAT SAYS WHAT TO SEE.}
+\end{figure}
+
+% ----- 6. Takeaways ----------------------------------------------------------
+\section*{Takeaways}
+\begin{itemize}
+  \item TAKEAWAY TIED TO THE FIGURE.
+  \item TAKEAWAY ON A KEY LIMITATION.
+  \item OPTIONAL: ADDITIONAL RESULT THAT DIDN'T MAKE THE FIGURE.
+  \item OPTIONAL: ADDITIONAL TAKEAWAY (3--5 total).
+\end{itemize}
+
+\end{document}

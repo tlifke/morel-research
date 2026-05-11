@@ -1,0 +1,141 @@
+# Capability map — research tasks plotted on LLM vs. human capability axes.
+#
+# Each entry describes a *research task we (the human + Claude team) do as
+# part of this work*. Coordinates are intentionally rough: 0.0 = task is
+# infeasible for that actor, 1.0 = task is trivial for that actor. Treat
+# these as priors to be revised as evidence accumulates.
+#
+# Status values:
+#   done           — completed in this repo (link via `investigation`)
+#   in-progress    — currently being worked
+#   hypothesized   — we think it lands here; not yet attempted
+#   human-only     — Claude should not attempt (e.g. one-pager prose)
+#   blocked        — attempted, hit a wall; see `notes`
+#
+# Tasks are scoped to *research activities*, not the prompts under study.
+
+tasks:
+  # ----- Study 0: research organization ------------------------------------
+  - id: scaffold-repo-structure
+    label: Scaffold repo structure
+    study: 000-research-organization
+    investigation: 001-initial-scaffold
+    llm_capability: 0.9
+    human_capability: 0.8
+    status: done
+    notes: Done with principles supplied by human; minor decisions delegated.
+
+  - id: design-taxonomy
+    label: Design taxonomy
+    study: 000-research-organization
+    investigation: 001-initial-scaffold
+    llm_capability: 0.6
+    human_capability: 0.85
+    status: done
+    notes: Human chose between presented options.
+
+  - id: lineage-graph-render
+    label: Render lineage graph
+    study: 000-research-organization
+    investigation: null
+    llm_capability: 0.85
+    human_capability: 0.5
+    status: hypothesized
+    notes: Generate DOT/Mermaid from lineage.yaml.
+
+  - id: frontmatter-validator
+    label: Validate frontmatter
+    study: 000-research-organization
+    investigation: null
+    llm_capability: 0.9
+    human_capability: 0.5
+    status: hypothesized
+
+  # ----- Study 1: tool calibration -----------------------------------------
+  - id: design-tool-palette
+    label: Design tool palette
+    study: 001-tool-calibration
+    investigation: 001-foundations
+    llm_capability: 0.7
+    human_capability: 0.9
+    status: hypothesized
+    notes: Five tools pre-decided; signature design with human review.
+
+  - id: design-metadata-schema
+    label: Design metadata schema
+    study: 001-tool-calibration
+    investigation: 001-foundations
+    llm_capability: 0.75
+    human_capability: 0.85
+    status: hypothesized
+
+  - id: design-id-scheme
+    label: Design ID scheme
+    study: 001-tool-calibration
+    investigation: 001-foundations
+    llm_capability: 0.85
+    human_capability: 0.8
+    status: hypothesized
+
+  - id: design-system-prompt-library
+    label: Design system-prompt library
+    study: 001-tool-calibration
+    investigation: 001-foundations
+    llm_capability: 0.7
+    human_capability: 0.8
+    status: hypothesized
+
+  - id: curate-seed-prompts
+    label: Curate 10–20 seed matched pairs
+    study: 001-tool-calibration
+    investigation: 001-foundations
+    llm_capability: 0.45
+    human_capability: 0.7
+    status: hypothesized
+    notes: Hardest A1 deliverable; high downstream leverage. LLM drafts;
+      human curates against confounds.
+
+  - id: define-difficulty-axes
+    label: Define per-tool difficulty axes
+    study: 001-tool-calibration
+    investigation: null
+    llm_capability: 0.5
+    human_capability: 0.7
+    status: hypothesized
+    notes: Phase A2 — depends on palette being frozen.
+
+  - id: bulk-generate-corpus
+    label: Bulk-generate prompt corpus
+    study: 001-tool-calibration
+    investigation: null
+    llm_capability: 0.85
+    human_capability: 0.3
+    status: hypothesized
+    notes: Phase A3 — LLM-favored if seeds + axes are solid.
+
+  - id: empirical-calibration-run
+    label: Run empirical calibration
+    study: 001-tool-calibration
+    investigation: null
+    llm_capability: 0.7
+    human_capability: 0.5
+    status: hypothesized
+    notes: Phase A4 — sweep target models on the corpus.
+
+  - id: cross-model-eval-infra
+    label: Cross-model eval infrastructure
+    study: 001-tool-calibration
+    investigation: null
+    llm_capability: 0.75
+    human_capability: 0.6
+    status: hypothesized
+
+  # ----- Cross-cutting -----------------------------------------------------
+  - id: write-one-pager-prose
+    label: Write one-pager prose
+    study: null
+    investigation: null
+    llm_capability: 0.0
+    human_capability: 0.9
+    status: human-only
+    notes: Policy decision — Claude scaffolds and gives feedback only.
