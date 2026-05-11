@@ -56,53 +56,79 @@ tasks:
     label: Design tool palette
     study: 001-tool-calibration
     investigation: 001-foundations
-    llm_capability: 0.7
+    llm_capability: 0.75
     human_capability: 0.9
-    status: hypothesized
-    notes: Five tools pre-decided; signature design with human review.
+    status: done
+    notes: Phase A1. LLM drafted 5 tools; human pushed to split knowledge_lookup
+      (Decision 8) making the final palette six. Tool signatures and cognitive-
+      moment annotations carried by LLM with human surfacing the split.
 
   - id: design-metadata-schema
     label: Design metadata schema
     study: 001-tool-calibration
     investigation: 001-foundations
-    llm_capability: 0.75
+    llm_capability: 0.7
     human_capability: 0.85
-    status: hypothesized
+    status: done
+    notes: Phase A1. LLM drafted; human substantively reshaped — Decision 11
+      (register → 3 orthogonal enums), Decision 13 (difficulty_label as signed
+      object), Decision 18 (human_feasibility). LLM-first draft, human-led
+      refinement.
 
   - id: design-id-scheme
     label: Design ID scheme
     study: 001-tool-calibration
     investigation: 001-foundations
-    llm_capability: 0.85
-    human_capability: 0.8
-    status: hypothesized
+    llm_capability: 0.8
+    human_capability: 0.85
+    status: done
+    notes: Phase A1. LLM designed the slug format; human caught the multi-token
+      tool-name parse bug (Decision 12, switched field separator to `-`).
 
   - id: design-system-prompt-library
     label: Design system-prompt library
     study: 001-tool-calibration
     investigation: 001-foundations
-    llm_capability: 0.7
-    human_capability: 0.8
-    status: hypothesized
+    llm_capability: 0.75
+    human_capability: 0.85
+    status: done
+    notes: Phase A1. Human picked the 9-variant matrix; LLM wrote the templates
+      and manifest. 4 variants drafted but unused by A1 seeds — kept for A2/A3.
 
   - id: curate-seed-prompts
-    label: Curate 10–20 seed matched pairs
+    label: Curate 17 seed matched pairs
+    study: 001-tool-calibration
+    investigation: 001-foundations
+    llm_capability: 0.5
+    human_capability: 0.85
+    status: done
+    notes: Phase A1. LLM drafted 16 pairs; human contributed pair 17 (Aunt Nina)
+      and stamp-reviewed every half. LLM confabulated knowledge-base content
+      (Decision 16) and made arithmetic errors that the user caught
+      (Decision 17), pulling the LLM score down from the 0.45 hypothesis to 0.5
+      — better than expected at structure, worse at fact-grounding.
+
+  - id: curate-knowledge-bases
+    label: Curate KBs (user persona + parallel general-knowledge KBs)
     study: 001-tool-calibration
     investigation: 001-foundations
     llm_capability: 0.45
     human_capability: 0.7
-    status: hypothesized
-    notes: Hardest A1 deliverable; high downstream leverage. LLM drafts;
-      human curates against confounds.
+    status: done
+    notes: Phase A1 ancillary, surfaced mid-execution. LLM strong on fictional
+      persona (Maya Patel) but confabulated when grounding general-knowledge KB
+      — until pulled back to use WebSearch (Decision 16). The fabricated +
+      verified parallel pair is itself a research artifact for a sibling
+      investigation.
 
   - id: define-difficulty-axes
     label: Define per-tool difficulty axes
     study: 001-tool-calibration
-    investigation: null
-    llm_capability: 0.5
-    human_capability: 0.7
-    status: hypothesized
-    notes: Phase A2 — depends on palette being frozen.
+    investigation: 002-difficulty-axes
+    llm_capability: 0.55
+    human_capability: 0.75
+    status: in-progress
+    notes: Phase A2 — depends on palette being frozen (done in A1).
 
   - id: bulk-generate-corpus
     label: Bulk-generate prompt corpus
