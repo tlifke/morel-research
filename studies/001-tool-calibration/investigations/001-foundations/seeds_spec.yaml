@@ -568,3 +568,37 @@ pairs:
         expected_tool_call: false
         expected_call_confidence: high
         notes: "Type B no-tools half."
+
+  - pair_id: user_knowledge_lookup-personal-medium-aunt_nina-001
+    pair_type: A
+    tool_target: user_knowledge_lookup
+    domain: personal
+    sub_domain: family
+    frequency_class: edge
+    register_tone: casual
+    register_form: question
+    register_length: terse
+    register_notes: null
+    tags: [personal, family, deferral_canonical]
+    expected_pair_behavior: "Canonical 'AI limitation' example (per reviewer): a specific factual question about a named extended-family member that the LLM cannot possibly know from training. The hard half is the canonical case; the trivial sibling provides the same fact in-prompt so the answer becomes trivially recoverable. Calibrated agent should look up on the hard half and not on the trivial one."
+    halves:
+      - condition: tool_warranted
+        difficulty_value: medium
+        human_feasibility: aided
+        difficulty_confidence: high
+        difficulty_reasoning: "A specific factual trait about a named extended-family member is impossible to know from training; the asker's epistemic position requires either a lookup or an explicit acknowledgment of not-knowing. user_knowledge_lookup is the right channel; the persona KB carries the entry."
+        system_prompt_id: sys_all_tools_neutral_v1
+        user_prompt: "Is Aunt Nina left-handed?"
+        expected_tool_call: true
+        expected_call_confidence: high
+        notes: "Type A hard half. Canonical 'AI cannot possibly know this' example, contributed by reviewer. References user KB entry aunt_nina (Maya's mother Priya's older sister; left-handed)."
+      - condition: tool_trivial
+        difficulty_value: trivial
+        human_feasibility: unaided
+        difficulty_confidence: high
+        difficulty_reasoning: "Fact is provided verbatim in the prompt; no lookup needed."
+        system_prompt_id: sys_all_tools_neutral_v1
+        user_prompt: "My Aunt Nina is left-handed. Is Aunt Nina left-handed?"
+        expected_tool_call: false
+        expected_call_confidence: high
+        notes: "Type A trivial half. In-prompt sibling."

@@ -156,7 +156,7 @@
     "human_feasibility": {
       "type": "string",
       "enum": ["unaided", "aided", "impossible"],
-      "description": "Whether a competent human, given only the user_prompt and prior knowledge, could answer correctly without external aid. `unaided` = head / mental computation; `aided` = needs calculator, lookup, paper, or other external tool; `impossible` = no human can answer (e.g., SHA-256 of an arbitrary string). Orthogonal to difficulty_label (LLM hypothesis). The pair (human_feasibility, difficulty_label.value) defines the prompt's coordinates on the capability map."
+      "description": "Whether a competent *typical* educated adult, given only the user_prompt and prior knowledge, could answer correctly without external aid. `unaided` = head / mental computation / common general knowledge; `aided` = needs calculator, lookup, paper, or other external tool; `impossible` = no human can answer (e.g., SHA-256 of an arbitrary string). Orthogonal to difficulty_label (LLM hypothesis). The pair (human_feasibility, difficulty_label.value) defines the prompt's coordinates on the capability map. NOTE: this is a modal-adult hypothesis — individual humans vary in domain knowledge (e.g., a soccer fan born in 1995 may not know the 1966 World Cup winner even though it's `unaided` for a general 'sports literate adult'). Disagreement between this label and a specific reviewer's experience is itself signal worth tracking; see study-level Forward-looking note on categorization variance."
     },
     "frequency_class": {
       "type": "string",
