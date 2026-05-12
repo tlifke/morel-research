@@ -1,20 +1,18 @@
 % One-pager template — morel-research
 %
 % Fixed structure (do not reorder):
-%   1. Title block (title, authors, date)
+%   1. Title block (title, authors, date, repo, study-ref)
 %   2. Research question
-%   3. Methods
-%   4. Results
-%   5. Forward-looking
-%   6. ONE figure carrying the message
-%   7. 3-5 takeaways, with:
+%   3. Context
+%   4. Methods
+%   5. ONE figure carrying the message
+%   6. Takeaways (3-5 bullets):
 %        - >=1 tied to the figure
 %        - >=1 on key limitations
 %        - any remaining bullets for results that didn't make the figure
 %
-% Compile with:  make            (uses xelatex via latexmk)
-% Requires xelatex for fontspec + Morel typography. Falls back to
-% Helvetica Neue if Inter / DM Sans are not installed.
+% Compile with: latexmk -xelatex one-pager.tex   (see Makefile).
+% Requires xelatex for fontspec/Morel typography.
 %
 % Claude scaffolds this file but does NOT write the prose. The human writes
 % the prose. Claude may suggest structure, edits, and questions during
@@ -22,136 +20,42 @@
 
 \documentclass[10pt]{article}
 
-\usepackage[a4paper,margin=0.7in]{geometry}
-\usepackage{graphicx}
-\usepackage{enumitem}
-\usepackage{titlesec}
-\usepackage{xcolor}
-\usepackage[hidelinks]{hyperref}
-\usepackage{microtype}
-\usepackage{parskip}
-\usepackage{fontspec}
-\usepackage{fancyhdr}
-\usepackage{caption}
+% Morel branding lives in `one-pagers/morel.sty`. The Makefile sets
+% TEXINPUTS so xelatex can find it from any writeup subdirectory.
+\usepackage{morel}
 
-% ----- Morel brand palette ---------------------------------------------------
-% Source: morel-primordia/projects/morel-life/brand-guide/BRAND-GUIDE.md
-\definecolor{morelprimary}{HTML}{C1694F}     % Terracotta
-\definecolor{morelaccent}{HTML}{2D5016}      % Forest Green
-\definecolor{morelparchment}{HTML}{F5E6D3}   % Parchment Cream
-\definecolor{moreldark}{HTML}{3B2F2F}        % Dark Earth (body text)
-\definecolor{morelpage}{HTML}{FAFAF8}        % Off-White (page bg)
-\definecolor{morelborder}{HTML}{E8D5BF}      % Cream Dark (dividers)
-\definecolor{morelmuted}{HTML}{6B5E5E}       % Muted text
-
-% Default text color: warm dark earth, not pure black.
-\color{moreldark}
-
-% ----- Typography ------------------------------------------------------------
-% Try Inter / DM Sans (brand fonts). Fall back to Helvetica Neue if not
-% installed, so the template compiles on a vanilla TeX install.
-\IfFontExistsTF{Inter}{%
-  \setmainfont{Inter}[
-    UprightFont = * Regular,
-    BoldFont    = * SemiBold,
-    ItalicFont  = * Italic,
-    Scale       = 1.0,
-  ]%
-}{%
-  \IfFontExistsTF{DM Sans}{%
-    \setmainfont{DM Sans}%
-  }{%
-    \setmainfont{Helvetica Neue}%
-  }%
-}
-
-\IfFontExistsTF{DM Serif Display}{%
-  \newfontfamily\morelserif{DM Serif Display}%
-}{%
-  \newfontfamily\morelserif{Georgia}%
-}
-
-% Tighten section spacing so we fit on one page; color headings forest green.
-\titlespacing*{\section}{0pt}{0.6em}{0.2em}
-\titleformat{\section}{\normalfont\bfseries\large\color{morelaccent}}{}{0pt}{}
-
-\setlist[itemize]{leftmargin=1.2em,topsep=0.2em,itemsep=0.1em,parsep=0pt}
-
-% Header/footer with brand rule.
-\pagestyle{fancy}
-\fancyhf{}
-\renewcommand{\headrulewidth}{0pt}
-\renewcommand{\footrulewidth}{0pt}
-\fancyfoot[L]{\footnotesize\color{morelmuted}\textbf{\color{morelprimary}morel}\,\textbullet\,research}
-\fancyfoot[R]{\footnotesize\color{morelmuted}\paperRepoShort}
-
-% ----- Document metadata -----------------------------------------------------
-\newcommand{\paperTitle}{TITLE GOES HERE}
-\newcommand{\paperAuthors}{Author One, Author Two}
-\newcommand{\paperDate}{YYYY-MM-DD}
-\newcommand{\paperRepo}{\href{https://github.com/tlifke/morel-research}{tlifke/morel-research}}
 \newcommand{\paperRepoShort}{tlifke/morel-research}
-\newcommand{\paperStudyRef}{studies/NNN-slug/investigations/NNN-slug}
-
-% Optional path to a Morel mark / wordmark to show in the title block.
-% Leave the file missing to suppress the logo automatically.
-\newcommand{\paperLogoPath}{../../one-pagers/template/assets/morel-mark.jpg}
 
 \begin{document}
 
-% ----- Title block -----------------------------------------------------------
-\noindent
-\begin{minipage}[t]{0.85\linewidth}
-  \vspace{0pt}
-  {\morelserif\Huge\color{moreldark}\paperTitle\par}
-  \vspace{0.35em}
-  {\small\color{morelmuted}\paperAuthors\ \textbullet\ \paperDate\ \textbullet\ \paperRepo\ \textbullet\ \texttt{\paperStudyRef}\par}
-\end{minipage}\hfill%
-\begin{minipage}[t]{0.13\linewidth}
-  \vspace{0pt}
-  \IfFileExists{\paperLogoPath}{%
-    \hfill\includegraphics[height=0.9in]{\paperLogoPath}%
-  }{%
-    \hfill%
-  }
-\end{minipage}
+\moreltitle
+  {TITLE GOES HERE}
+  {Author One, Author Two}
+  {YYYY-MM-DD}
+  {\href{https://github.com/tlifke/morel-research}{tlifke/morel-research}}
+  {studies/NNN-slug / NNN-investigation}
 
-\vspace{0.4em}
-{\color{morelprimary}\hrule height 1.2pt}
-\vspace{0.1em}
-{\color{morelborder}\hrule height 0.4pt}
-\vspace{0.5em}
-
-% ----- 1. Research question --------------------------------------------------
 \section*{Research question}
 % One short paragraph. State the question and why it matters in one breath.
 PROSE GOES HERE.
 
-% ----- 2. Methods ------------------------------------------------------------
+\section*{Context}
+% Brief background: what was already known, what gap this addresses, what
+% prior work or in-repo findings frame the question. Keep it tight.
+PROSE GOES HERE.
+
 \section*{Methods}
 % Short paragraph or compact bullet list. What you did, on what, with what.
 PROSE GOES HERE.
 
-% ----- 3. Results ------------------------------------------------------------
-\section*{Results}
-% Headline first; supporting numbers second. The figure carries the punch.
-PROSE GOES HERE.
-
-% ----- 4. Forward-looking ----------------------------------------------------
-\section*{Forward-looking}
-% One or two sentences. What this enables or asks next.
-PROSE GOES HERE.
-
-% ----- 5. Figure -------------------------------------------------------------
 \begin{figure}[h]
   \centering
   % Replace with the actual figure file (PDF or PNG):
-  % \includegraphics[width=0.85\linewidth]{figure.pdf}
-  \fcolorbox{morelborder}{morelparchment}{\parbox{0.83\linewidth}{\centering\vspace{2em}\color{morelmuted}FIGURE PLACEHOLDER\vspace{2em}}}
-  \caption*{\small\textbf{\color{morelaccent}Figure.} ONE-SENTENCE CAPTION THAT SAYS WHAT TO SEE.}
+  % \includegraphics[width=0.92\linewidth]{figure.pdf}
+  \fcolorbox{morelborder}{morelparchment}{\parbox{0.86\linewidth}{\centering\vspace{2em}\color{morelmuted}FIGURE PLACEHOLDER\vspace{2em}}}
+  \caption{ONE-SENTENCE CAPTION THAT SAYS WHAT TO SEE.}
 \end{figure}
 
-% ----- 6. Takeaways ----------------------------------------------------------
 \section*{Takeaways}
 \begin{itemize}
   \item TAKEAWAY TIED TO THE FIGURE.

@@ -28,6 +28,8 @@ MOREL_COLORS: dict[str, str] = {
     "off_white": "#FAFAF8",
     "error_red": "#C14F4F",
     "slate_blue": "#3D6478",
+    "mustard": "#B8821C",
+    "mushroom": "#9C7676",
     "muted_text": "#6B5E5E",
     "axis_gridline": "#E8D5BF",
 }

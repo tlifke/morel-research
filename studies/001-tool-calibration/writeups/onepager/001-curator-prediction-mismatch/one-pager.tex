@@ -1,87 +1,37 @@
-% One-pager template — morel-research
-%
-% Fixed structure (do not reorder):
-%   1. Title block (title, authors, date)
-%   2. Research question
-%   3. Methods
-%   4. Results
-%   5. Forward-looking
-%   6. ONE figure carrying the message
-%   7. 3-5 takeaways, with:
-%        - >=1 tied to the figure
-%        - >=1 on key limitations
-%        - any remaining bullets for results that didn't make the figure
-%
-% Compile with:  latexmk -pdf one-pager.tex
-%
-% Claude scaffolds this file but does NOT write the prose. The human writes
-% the prose. Claude may suggest structure, edits, and questions during
-% drafting; the human decides what to incorporate.
+% Curator prediction mismatch — one-pager
+% Structure: Research question / Context / Methods / Figure / Takeaways
+% Compile: `make` (latexmk -xelatex, TEXINPUTS set to find ../../../../one-pagers/morel.sty)
 
 \documentclass[10pt]{article}
 
-\usepackage[a4paper,margin=0.7in]{geometry}
-\usepackage{graphicx}
-\usepackage{enumitem}
-\usepackage{titlesec}
-\usepackage{xcolor}
-\usepackage[hidelinks]{hyperref}
-\usepackage{microtype}
-\usepackage{parskip}
+\usepackage{morel}
 
-% Tighten section spacing so we fit on one page.
-\titlespacing*{\section}{0pt}{0.6em}{0.2em}
-\titleformat{\section}{\normalfont\bfseries\large}{}{0pt}{}
-
-\setlist[itemize]{leftmargin=1.2em,topsep=0.2em,itemsep=0.1em,parsep=0pt}
-
-\pagestyle{empty}
-
-% ----- Document metadata -----------------------------------------------------
-\newcommand{\paperTitle}{An LLM's hypothesized task difficulties don't predict another LLM's empirical difficulty}
-\newcommand{\paperAuthors}{Tyler Lifke}
-\newcommand{\paperDate}{2026-05-12}
-\newcommand{\paperRepo}{\href{https://github.com/tlifke/morel-research}{tlifke/morel-research}}
-\newcommand{\paperStudyRef}{studies/001-tool-calibration/writeups/onepager/001-curator-prediction-mismatch}
+\newcommand{\paperRepoShort}{tlifke/morel-research}
 
 \begin{document}
 
-% ----- Title block -----------------------------------------------------------
-{\Large\bfseries \paperTitle\par}
-\vspace{0.2em}
-{\small \paperAuthors\ \textbullet\ \paperDate\ \textbullet\ \paperRepo\ \textbullet\ \texttt{\paperStudyRef}\par}
-\vspace{0.5em}
-\hrule
-\vspace{0.4em}
+\moreltitle
+  {An LLM's hypothesized task difficulties don't predict another LLM's empirical difficulty}
+  {Tyler Lifke}
+  {2026-05-12}
+  {\href{https://github.com/tlifke/morel-research}{tlifke/morel-research}}
+  {studies/001 / writeups/001}
 
-% ----- 1. Research question --------------------------------------------------
 \section*{Research question}
-% One short paragraph. State the question and why it matters in one breath.
 PROSE GOES HERE.
 
-% ----- 2. Methods ------------------------------------------------------------
+\section*{Context}
+PROSE GOES HERE.
+
 \section*{Methods}
-% Short paragraph or compact bullet list. What you did, on what, with what.
 PROSE GOES HERE.
 
-% ----- 3. Results ------------------------------------------------------------
-\section*{Results}
-% Headline first; supporting numbers second. The figure carries the punch.
-PROSE GOES HERE.
-
-% ----- 4. Forward-looking ----------------------------------------------------
-\section*{Forward-looking}
-% One or two sentences. What this enables or asks next.
-PROSE GOES HERE.
-
-% ----- 5. Figure -------------------------------------------------------------
 \begin{figure}[h]
   \centering
-  \includegraphics[width=0.92\linewidth]{../../../investigations/006-temperature-prompt/figures/a3_bulk/prediction_slopegraph.png}
-  \caption*{\small\textbf{Figure.} ONE-SENTENCE CAPTION THAT SAYS WHAT TO SEE.}
+  \includegraphics[width=0.95\linewidth]{../../../investigations/006-temperature-prompt/figures/a3_bulk/prediction_slopegraph.png}
+  \caption{ONE-SENTENCE CAPTION THAT SAYS WHAT TO SEE.}
 \end{figure}
 
-% ----- 6. Takeaways ----------------------------------------------------------
 \section*{Takeaways}
 \begin{itemize}
   \item TAKEAWAY TIED TO THE FIGURE.

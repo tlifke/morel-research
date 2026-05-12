@@ -84,8 +84,8 @@ def main() -> None:
     fig = go.Figure()
 
     palette = {
-        "Gemma 3 4B IT": MOREL_COLORS["terracotta_light"],
-        "Gemma 3 12B IT": MOREL_COLORS["terracotta_dark"],
+        "Gemma 3 4B IT": MOREL_COLORS["terracotta"],
+        "Gemma 3 12B IT": MOREL_COLORS["forest_green"],
     }
     for model_label, by_bucket in [
         ("Gemma 3 4B IT", by_bucket_4b),
@@ -98,7 +98,7 @@ def main() -> None:
             vals = by_bucket[b]
             if vals:
                 means.append(sum(vals) / len(vals))
-                sizes.append(max(8, 5 + 2 * len(vals)))
+                sizes.append(min(34, 6 + 2.2 * len(vals) ** 0.5))
                 hover.append(
                     f"<b>{model_label} · {b}</b><br>"
                     f"mean: {sum(vals)/len(vals):.1%}<br>"
