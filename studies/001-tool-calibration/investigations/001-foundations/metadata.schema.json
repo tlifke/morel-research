@@ -124,7 +124,7 @@
           }
         }
       },
-      "description": "Curator-assigned difficulty hypothesis. LLM-proposed at record creation, optionally human-reviewed. Slice by `difficulty_label.value`; mine `llm_assessment` vs `human_review` divergence as a separate research signal."
+      "description": "Curator-assigned difficulty hypothesis. LLM-proposed at record creation, optionally human-reviewed. Slice by `difficulty_label.value`; mine `llm_assessment` vs `human_review` divergence as a separate research signal. NOTE: this is a *task-difficulty hypothesis* (could the model solve this task without help?), which is distinct from *tool-call calibration* (does the model recognize when to invoke a tool?). Phase A4 (006) showed the two are not strongly correlated on the A1 corpus — see the axes-performativity investigation. Empirical model-relative difficulty lives in `difficulty_calibrated`."
     },
     "difficulty_calibrated": {
       "type": ["object", "null"],
