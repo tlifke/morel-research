@@ -27,8 +27,11 @@ REPO_ROOT = Path(__file__).resolve().parents[5]
 
 sys.path.insert(0, str(STUDY_ROOT))
 sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
+sys.path.insert(0, str(HERE))
 from harness.parser import classify_trial  # noqa: E402
 from branding import apply_morel_template, MOREL_COLORS  # noqa: E402
+from corpus_config import select_corpus, out_dir  # noqa: E402
+CORPUS = select_corpus()
 
 
 CELLS = {
@@ -119,8 +122,8 @@ def main() -> None:
         attribution="studies/001-tool-calibration / inv 006",
     )
 
-    out_html = HERE / "cell_means.html"
-    out_png = HERE / "cell_means.png"
+    out_html = out_dir(HERE) / "cell_means.html"
+    out_png = out_dir(HERE) / "cell_means.png"
     fig.write_html(out_html)
     fig.write_image(out_png, engine="kaleido", scale=2)
     print(f"wrote {out_html.relative_to(STUDY_ROOT.parent.parent)}")

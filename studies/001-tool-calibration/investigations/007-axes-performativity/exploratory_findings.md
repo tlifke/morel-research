@@ -14,13 +14,14 @@ with `harness/parser.classify_trial`** (canonical pattern; ignores the stored
 | 4B / A1 neutral t=1 | `results/gemma3_4b-it-qat/006_C_neutral_temp1_2026-05-12.jsonl` | 36 | 360 |
 | 4B / A3 bulk neutral t=1 | `results/gemma3_4b-it-qat/007_bulk_neutral_temp1_2026-05-12.jsonl` | 366 | 3,660 |
 | 12B / A1 neutral t=1 | `results/gemma3_12b-it-qat/006_C_neutral_temp1_2026-05-12.jsonl` | 36 | 360 |
-| 12B / A3 bulk neutral t=1 | `results/gemma3_12b-it-qat/007_bulk_neutral_temp1_2026-05-12.jsonl` | 135 | 1,349 |
+| 12B / A3 bulk neutral t=1 | `results/gemma3_12b-it-qat/007_bulk_neutral_temp1_2026-05-12.jsonl` | 366 | 3,660 |
 
-The 12B bulk run was **partial at analysis time** (1,349 / 3,660 ≈ 37 %). It
-covers 135 of the 366 bulk records, and tool coverage is uneven (e.g.
-`datetime_now` n=4, `unit_convert` n=4). **Treat all 12B bulk numbers as
-preliminary.** Per-feature directions for 12B are consistent with 4B on the
-features where both have decent n, which is the main reason I kept them in.
+The 12B bulk run **completed** on 2026-05-12 (3,660 / 3,660 trials, all 366
+records). The original analysis was run at ~37 % completion; numbers in
+this doc were refreshed against the full run. Per-feature directions and
+ranks are stable vs. the partial-run draft — `cond_warranted` remains the
+strongest predictor for both models, curator-difficulty correlation
+remains weak (4B ρ ≈ −0.03, 12B ρ ≈ −0.13).
 
 Records pool across A1 and bulk because they share schema and the same
 neutral system prompt. Curator labels are model-agnostic; empirical

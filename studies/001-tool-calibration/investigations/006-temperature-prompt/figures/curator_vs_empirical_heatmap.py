@@ -25,14 +25,17 @@ from plotly.subplots import make_subplots
 
 HERE = Path(__file__).resolve().parent
 STUDY_ROOT = HERE.parent.parent.parent
-SEEDS_PATH = STUDY_ROOT / "seeds.jsonl"
 RESULTS_ROOT = STUDY_ROOT / "results"
 REPO_ROOT = Path(__file__).resolve().parents[5]
 
 sys.path.insert(0, str(STUDY_ROOT))
 sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
+sys.path.insert(0, str(HERE))
 from harness.parser import classify_trial  # noqa: E402
 from branding import apply_morel_template, MOREL_COLORS, MOREL_SEQUENTIAL_SCALE  # noqa: E402
+from corpus_config import select_corpus, out_dir  # noqa: E402
+CORPUS = select_corpus()
+SEEDS_PATH = STUDY_ROOT / CORPUS.seeds_filename
 
 DATE = "2026-05-12"
 BUCKETS = ["trivial", "easy", "medium", "hard", "extreme"]
@@ -56,7 +59,7 @@ def _safe(m: str) -> str:
 
 
 def _load_cellC_per_record(model: str) -> dict[str, float]:
-    path = RESULTS_ROOT / _safe(model) / f"006_C_neutral_temp1_{DATE}.jsonl"
+    path = RESULTS_ROOT / _safe(model) / CORPUS.results_filename_fmt.format(date=DATE)
     rows = [json.loads(l) for l in path.read_text().splitlines() if l]
     by: dict[str, list[bool]] = defaultdict(list)
     for r in rows:
@@ -145,8 +148,8 @@ def main() -> None:
         attribution="studies/001-tool-calibration / inv 006",
     )
 
-    out_html = HERE / "curator_vs_empirical_heatmap.html"
-    out_png = HERE / "curator_vs_empirical_heatmap.png"
+    out_html = out_dir(HERE) / "curator_vs_empirical_heatmap.html"
+    out_png = out_dir(HERE) / "curator_vs_empirical_heatmap.png"
     fig.write_html(out_html)
     fig.write_image(out_png, engine="kaleido", scale=2)
     print(f"wrote {out_html.relative_to(STUDY_ROOT.parent.parent)}")

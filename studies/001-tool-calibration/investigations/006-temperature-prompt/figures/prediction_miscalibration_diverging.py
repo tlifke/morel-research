@@ -22,14 +22,17 @@ import plotly.graph_objects as go
 
 HERE = Path(__file__).resolve().parent
 STUDY_ROOT = HERE.parent.parent.parent
-SEEDS_PATH = STUDY_ROOT / "seeds.jsonl"
 RESULTS_ROOT = STUDY_ROOT / "results"
 REPO_ROOT = Path(__file__).resolve().parents[5]
 
 sys.path.insert(0, str(STUDY_ROOT))
 sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
+sys.path.insert(0, str(HERE))
 from harness.parser import classify_trial  # noqa: E402
 from branding import apply_morel_template, MOREL_COLORS  # noqa: E402
+from corpus_config import select_corpus, out_dir  # noqa: E402
+CORPUS = select_corpus()
+SEEDS_PATH = STUDY_ROOT / CORPUS.seeds_filename
 
 DATE = "2026-05-12"
 BUCKETS = ["trivial", "easy", "medium", "hard", "extreme"]
@@ -50,7 +53,7 @@ def _safe(m: str) -> str:
 
 
 def _per_record(model: str) -> dict[str, float]:
-    rows = [json.loads(l) for l in (RESULTS_ROOT / _safe(model) / f"006_C_neutral_temp1_{DATE}.jsonl").read_text().splitlines() if l]
+    rows = [json.loads(l) for l in (RESULTS_ROOT / _safe(model) / CORPUS.results_filename_fmt.format(date=DATE)).read_text().splitlines() if l]
     by = defaultdict(list)
     for r in rows:
         ok, _ = classify_trial({"tool_target": r["tool_target"], "expected_tool_call": r["expected_tool_call"]}, r.get("output") or r.get("output_preview", ""))
@@ -155,8 +158,8 @@ def main() -> None:
     )
     fig.update_layout(margin=dict(l=380, r=30, t=100, b=70))
 
-    out_html = HERE / "prediction_miscalibration_diverging.html"
-    out_png = HERE / "prediction_miscalibration_diverging.png"
+    out_html = out_dir(HERE) / "prediction_miscalibration_diverging.html"
+    out_png = out_dir(HERE) / "prediction_miscalibration_diverging.png"
     fig.write_html(out_html)
     fig.write_image(out_png, engine="kaleido", scale=2)
     print(f"wrote {out_html.relative_to(STUDY_ROOT.parent.parent)}")
