@@ -21,9 +21,13 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+# Accept both the fenced form (```tool_code\n<call>\n```) and the bare
+# form (tool_code\n<call>) that some sampling regimes / prompt sets
+# produce. Match optional 0-3 leading backticks, the literal
+# `tool_code` info tag, optional whitespace, a newline, then capture
+# the first non-empty line — that's the call.
 _TOOL_BLOCK_RE = re.compile(
-    r"```tool_code\s*\n(?P<body>.*?)\n```",
-    re.DOTALL,
+    r"`{0,3}tool_code\s*\n(?P<body>[^\n]+)",
 )
 _CALL_RE = re.compile(r"(?P<name>[a-z_][a-z_0-9]*)\s*\(")
 
