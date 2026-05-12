@@ -250,6 +250,57 @@ model to attempt calls on records where neutral correctly abstained.)
    under directive.** Scale fixes most of the tool-selection
    confusion the directive doesn't address.
 
+### Scale × directive interaction at 12B (2026-05-12 follow-up)
+
+The 4B-vs-12B scatter (F2 banded) surfaced a "Scale Hurts / Scale
+Breaks" region — records where 12B underperforms 4B under directive
+prompts. Reading the actual outputs:
+
+| Record | 4B Cell D | 12B Cell D | Failure pattern at 12B |
+|--------|----------:|-----------:|------------------------|
+| `calc-mult_isolated` trivial half ("5 × 9") | 1.00 | **0.00** | Reads `calc_only_directive`'s "use for arithmetic" literally; calls calculator 10/10 trials. 4B respects the same description's "skip for single-digit arithmetic" clause. |
+| `aunt_nina` warranted half | 1.00 | **0.50** | Mixed: Socratic deflection ("is she a public figure?"), wrong-tool (`general_knowledge_lookup` instead of `user_knowledge_lookup`), intermittent no-call. **12B invented escape routes 4B didn't.** |
+| `datetime_now` current_date warranted | 1.00 | **0.70** | Answers from training distribution 3/10 trials despite directive — interprets "please" + directive's "answer directly when unambiguous" as license to abstain. |
+| `anniversary` trivial half (in-prompt) | 1.00 | **0.70** | Same directive over-eagerness pattern as 4B but milder. |
+
+**Finding:** scale doesn't strictly improve calibration when paired
+with prescriptive prompts. **The directive becomes a stronger handle
+on the larger model**, and 12B follows it more literally to
+unintended consequences. The "scale fixes calibration" narrative is
+incomplete — scale fixes neutral-baseline calibration but introduces
+new model-prompt interactions under directive language.
+
+Implication for the style guide (005): prescriptive clauses need to
+be tested at multiple model scales. A clause that works on 4B
+(e.g. "use calc for arithmetic, skip for trivial") can produce
+literal over-application at 12B (uses calc for all arithmetic
+including trivial). The style guide's caveat "verify on target
+model" is load-bearing.
+
+### Axes-performativity follow-up (2026-05-12)
+
+Two figures (F4 heatmap + F5 dot plot) extend F3's "axes don't
+predict success" finding to the per-record level:
+
+- **F4 (curator-vs-empirical heatmap):** for both 4B and 12B, the
+  curator's `hard` records empirically land in the `trivial` bucket
+  (5/15 records for 4B, 9/15 for 12B). The diagonal — perfect
+  prediction — is mostly empty. The mass concentrates in the
+  bottom-left corner: records labeled `hard` by the curator but
+  empirically `trivial` (sr ≥ 0.95).
+- **F5 (per-record dot plot):** at the per-record level, `calculator`
+  and `general_knowledge_lookup` records (blue, red dots) sit at
+  the top of the empirical axis regardless of curator label.
+  `datetime_now` and `user_knowledge_lookup` records are more
+  spread vertically. The axes' predictive power is *tool-dependent*,
+  not just bucket-dependent.
+- The A1 corpus has no `easy` or `extreme` curator labels (visible
+  as the empty rows in F4). Bulk corpus (003 → A4) will populate
+  those bands; the picture may shift.
+
+**Resolution still open** — see the axes-performativity sibling-
+investigation note in study.md Forward-looking.
+
 ### Methodology findings
 
 1. **Use temp=1.0 going forward** (per reviewer direction; aligns

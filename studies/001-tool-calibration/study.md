@@ -322,6 +322,37 @@ follow-on prompt-engineering work in
   Future routine runs default to n=10 with n=20 reserved for known
   boundary cases.
 
+## Scale × prompt interaction surfaced at 12B (2026-05-12)
+
+A subtler finding from the 4B-vs-12B comparison than the simple
+"scaling helps" headline. Under directive prompts at 12B, a handful
+of records *regressed* relative to 4B — and the regressions tell a
+consistent story:
+
+- **Literal-application failures**: directives like "use calc for
+  arithmetic" + "skip trivial" are interpreted more literally by
+  12B (uses calc for all arithmetic, including "5 × 9") while 4B
+  uses contextual judgment to skip trivial cases. The larger
+  model's stronger instruction-following becomes a handle the
+  directive doesn't know how to grip properly.
+- **More escape routes**: where 4B has one or two failure modes
+  per record (refusal OR no-call), 12B has more (refusal, Socratic
+  deflection, wrong-tool, over-call from training distribution).
+  Each prescriptive clause that closes one route gives 12B more
+  cognitive surface to invent a new one.
+- **Confidence under uncertainty**: 12B will answer from training
+  distribution ("Your wedding anniversary is June 12, 2021") rather
+  than call the user_knowledge_lookup tool even with anti-refusal
+  framing — it's confident enough in its memory that it bypasses
+  the tool path.
+
+**Implication**: scale fixes neutral-baseline calibration cleanly,
+but scale + prescriptive prompts is a real interaction — not just
+a constant additive lift. Each prescriptive clause needs to be
+tested at the target model scale; clauses that work on 4B can
+backfire at 12B. Style guide (`tool_description_style_guide.md`)
+explicitly notes this; the empirical evidence now lives in 006.
+
 ## Observations from the 4B vs 12B IT comparison (2026-05-12)
 
 Full breakdown in 006. Cells run at temp=1.0 neutral (the
