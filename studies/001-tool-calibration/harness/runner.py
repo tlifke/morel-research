@@ -23,6 +23,7 @@ import datetime as dt
 import json
 import re
 import sys
+import uuid
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -34,7 +35,7 @@ RESULTS_ROOT = STUDY_ROOT / "results"
 
 sys.path.insert(0, str(STUDY_ROOT))
 from harness.inference import get_backend  # noqa: E402
-from harness.parser import scored_success  # noqa: E402
+from harness.parser import classify_trial  # noqa: E402
 from harness.prompt_format import (  # noqa: E402
     build_prompt,
     load_system_prompt_body,
@@ -73,12 +74,14 @@ def main() -> int:
         records = records[: args.limit]
 
     today = dt.date.today().isoformat()
+    run_id = uuid.uuid4().hex[:8]
     out_dir = RESULTS_ROOT / _safe_model_id(args.model)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{today}.jsonl"
 
     print(f"runner: {len(records)} records × n={args.n} trials → {out_path}")
-    print(f"backend={args.backend} model={args.model} dry_run={args.dry_run}")
+    print(f"run_id={run_id} backend={args.backend} model={args.model} "
+          f"dry_run={args.dry_run}")
 
     for rec in records:
         sys_id = rec["system_prompt_id"]
@@ -87,33 +90,44 @@ def main() -> int:
         prompt = build_prompt(rec, system_body=sys_body)
 
         if args.dry_run:
-            # Just verify dispatch — print the record id and the
-            # first 60 chars of the prompt.
             preview = prompt.replace("\n", " ")[:80]
             print(f"  [dry] {rec['id']}: {preview}…")
             continue
 
         successes = 0
+        over_calls = 0
+        under_calls = 0
         for trial_idx in range(args.n):
             result = backend.generate(prompt, model=args.model)
-            ok = scored_success(rec, result.output)
+            ok, err = classify_trial(rec, result.output)
             successes += int(ok)
+            if err == "over_call":
+                over_calls += 1
+            elif err == "under_call":
+                under_calls += 1
             with out_path.open("a") as f:
                 f.write(json.dumps({
+                    "run_id": run_id,
                     "record_id": rec["id"],
                     "pair_id": rec["pair_id"],
                     "tool_target": rec["tool_target"],
+                    "expected_tool_call": rec["expected_tool_call"],
                     "trial_idx": trial_idx,
                     "model": args.model,
                     "backend": args.backend,
                     "success": ok,
+                    "error_type": err,
                     "output_preview": result.output[:400],
                     "date": today,
                 }) + "\n")
         sr = successes / args.n if args.n else 0.0
-        print(f"  {rec['id']}  → {successes}/{args.n}  (success_rate={sr:.2f})")
+        err_str = ""
+        if over_calls or under_calls:
+            err_str = f"  [over={over_calls} under={under_calls}]"
+        print(f"  {rec['id']}  → {successes}/{args.n}  "
+              f"(success_rate={sr:.2f}){err_str}")
 
-    print(f"runner: done → {out_path}")
+    print(f"runner: done run_id={run_id} → {out_path}")
     return 0
 
 
