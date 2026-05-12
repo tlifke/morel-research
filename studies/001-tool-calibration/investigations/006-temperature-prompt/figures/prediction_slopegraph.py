@@ -189,7 +189,7 @@ def main() -> None:
     )
     apply_morel_template(
         fig,
-        title="Slopegraph: Opus 4.7's predicted difficulty vs Gemma's empirical (Cell C, n=10)",
+        title=f"Slopegraph: Opus 4.7's predicted difficulty vs Gemma's empirical (n={CORPUS.n_records} records · {CORPUS.trials_per_record} trials each)",
         subtitle=(
             "Each line = one record. Flat = calibrated. "
             "Down-slope = Opus overestimated; up-slope = Opus underestimated."

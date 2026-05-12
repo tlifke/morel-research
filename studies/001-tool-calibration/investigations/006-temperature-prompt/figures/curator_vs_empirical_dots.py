@@ -43,14 +43,15 @@ SEEDS_PATH = STUDY_ROOT / CORPUS.seeds_filename
 DATE = "2026-05-12"
 BUCKETS = ["trivial", "easy", "medium", "hard", "extreme"]
 
-# Six categorical tools mapped onto the Morel brand cycle.
+# Six categorical tools, each on a distinct brand hue (terracotta,
+# green, slate, mustard, mauve, brown) so they read apart at low opacity.
 TOOL_PALETTE = {
-    "calculator":               MOREL_CYCLE[0],
-    "python_execute":           MOREL_CYCLE[1],
-    "datetime_now":             MOREL_CYCLE[2],
-    "unit_convert":             MOREL_CYCLE[3],
-    "general_knowledge_lookup": MOREL_CYCLE[4],
-    "user_knowledge_lookup":    MOREL_CYCLE[5],
+    "calculator":               MOREL_COLORS["terracotta"],
+    "python_execute":           MOREL_COLORS["forest_green"],
+    "datetime_now":             MOREL_COLORS["slate_blue"],
+    "unit_convert":             MOREL_COLORS["mustard"],
+    "general_knowledge_lookup": MOREL_COLORS["mushroom"],
+    "user_knowledge_lookup":    MOREL_COLORS["dark_earth"],
 }
 
 # Methodology bucket boundaries on the success_rate axis.

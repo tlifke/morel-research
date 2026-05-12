@@ -22,6 +22,8 @@ class CorpusConfig:
     seeds_filename: str
     results_filename_fmt: str  # gets formatted with DATE
     out_subdir: str
+    n_records: int             # for figure titles
+    trials_per_record: int     # for figure titles
 
 
 CORPORA: dict[str, CorpusConfig] = {
@@ -30,12 +32,16 @@ CORPORA: dict[str, CorpusConfig] = {
         seeds_filename="seeds.jsonl",
         results_filename_fmt="006_C_neutral_temp1_{date}.jsonl",
         out_subdir="a1_seed_n36",
+        n_records=36,
+        trials_per_record=10,
     ),
     "a3_bulk": CorpusConfig(
         name="a3_bulk",
         seeds_filename="bulk_seeds.jsonl",
         results_filename_fmt="007_bulk_neutral_temp1_{date}.jsonl",
         out_subdir="a3_bulk",
+        n_records=366,
+        trials_per_record=10,
     ),
 }
 
