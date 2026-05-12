@@ -125,36 +125,89 @@ tasks:
     label: Define per-tool difficulty axes
     study: 001-tool-calibration
     investigation: 002-difficulty-axes
-    llm_capability: 0.55
+    llm_capability: 0.6
     human_capability: 0.75
-    status: in-progress
-    notes: Phase A2 — depends on palette being frozen (done in A1).
+    status: done
+    notes: Phase A2 (Decision 1, 2026-05-11). LLM drafted per-tool axes; human
+      signed off as-is. Subsequent A4 empirical work (006 F3/F4/F5) showed
+      the axes don't predict tool-call calibration — task-difficulty vs
+      tool-call-calibration mismatch. See investigation 007.
 
   - id: bulk-generate-corpus
     label: Bulk-generate prompt corpus
     study: 001-tool-calibration
-    investigation: null
+    investigation: 003-bulk-generation
     llm_capability: 0.85
-    human_capability: 0.3
-    status: hypothesized
-    notes: Phase A3 — LLM-favored if seeds + axes are solid.
+    human_capability: 0.25
+    status: done
+    notes: Phase A3, 2026-05-12. Subagent-driven generation against the 002
+      axes proposal. 183 pairs / 366 records, KB-grounded, anti-leakage on
+      Type A trivial halves. 4 reviewer items pending; awaiting A4 grading.
+
+  - id: tool-spec-optimization
+    label: Tool-description A/B optimization
+    study: 001-tool-calibration
+    investigation: 005-tool-spec-optimization
+    llm_capability: 0.8
+    human_capability: 0.7
+    status: done
+    notes: 2026-05-12. Variant runner + 5 A/B experiments + style guide
+      synthesis. Found "REQUIRED whenever..." is the load-bearing lever
+      (over naming/epistemic framing); over-cueing hurts.
+
+  - id: temperature-prompt-2x2
+    label: Methodology lock (temperature × prompt 2×2)
+    study: 001-tool-calibration
+    investigation: 006-temperature-prompt
+    llm_capability: 0.85
+    human_capability: 0.65
+    status: done
+    notes: 2026-05-12. Full 4B IT + 12B IT factorial. Locked temp=1.0,
+      top_p=0.95 as production-typical baseline. Surfaced scale × directive
+      interaction.
 
   - id: empirical-calibration-run
-    label: Run empirical calibration
+    label: Run empirical calibration (A1 corpus, 4B + 12B)
     study: 001-tool-calibration
-    investigation: null
-    llm_capability: 0.7
-    human_capability: 0.5
-    status: hypothesized
-    notes: Phase A4 — sweep target models on the corpus.
+    investigation: 004-calibration-pilot
+    llm_capability: 0.9
+    human_capability: 0.4
+    status: done
+    notes: Phase A4 pilot 2026-05-12. 4B IT pilot + 12B IT escalation, both
+      models 2×2 vs neutral/directive prompts. ~2,880 trials between them.
+      All harness automation; human directed model selection + setup.
+
+  - id: bulk-corpus-grading
+    label: Empirical grading of bulk corpus
+    study: 001-tool-calibration
+    investigation: 007-axes-performativity
+    llm_capability: 0.9
+    human_capability: 0.2
+    status: in-progress
+    notes: Phase A4 extension, 2026-05-12. 4B IT + 12B IT against the 366-
+      record bulk corpus at neutral temp=1.0 n=10. Substrate for 007.
+
+  - id: axes-performativity-analysis
+    label: Test whether difficulty axes predict tool-call calibration
+    study: 001-tool-calibration
+    investigation: 007-axes-performativity
+    llm_capability: 0.65
+    human_capability: 0.8
+    status: in-progress
+    notes: Triggered by 006 F3/F4/F5 finding. Empirical work gated on
+      bulk-corpus-grading. LLM does correlation work + feature engineering;
+      human directs reformulation if axes need replacing.
 
   - id: cross-model-eval-infra
     label: Cross-model eval infrastructure
     study: 001-tool-calibration
-    investigation: null
-    llm_capability: 0.75
-    human_capability: 0.6
-    status: hypothesized
+    investigation: 004-calibration-pilot
+    llm_capability: 0.8
+    human_capability: 0.55
+    status: done
+    notes: Harness (Ollama HTTP backend over Tailscale to desktop WSL +
+      Gemini API stub), runner with sampling + prompt-set controls,
+      analyzer with retroactive rescoring. Built into A4 pilot.
 
   # ----- Cross-cutting -----------------------------------------------------
   - id: write-one-pager-prose

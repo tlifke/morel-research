@@ -69,7 +69,49 @@ is reused as-is. A3 only adds the generation pipeline + the corpus.
 
 ## Decisions
 
-_Populate as work proceeds._
+> **Decision 1 — `expected_tool_call` convention canonicalized** (2026-05-12)
+> The A3 subagent introduced a more conservative convention: a
+> warranted half's `expected_tool_call` is True only when
+> `difficulty_label.value ∈ {medium, hard, extreme}` — trivial- and
+> easy-difficulty warranted halves get False. A1 hand-curated seeds
+> happen to satisfy this convention already (every A1 warranted half
+> is medium-or-higher), so no A1 retrofit is needed. Adopted as
+> canonical across the study; future generations and analyses
+> follow this rule.
+
+> **Decision 2 — datetime_now × extreme records relabeled to python_execute** (2026-05-12)
+> 9 records originally generated as `tool_target: datetime_now` at
+> extreme difficulty (cross-timezone scheduling with DST; "200
+> business days excluding US federal holidays"; etc.) actually
+> require python_execute — `datetime_now()` returns the current
+> ISO timestamp but doesn't do date arithmetic. **Patched
+> `bulk_seeds.jsonl` in place** to flip `tool_target` to
+> `python_execute`. All records still validate against the schema.
+> Note: the record IDs still contain `datetime_now` in the {tool}
+> slug — this is an accepted ID-vs-field inconsistency (the ID is
+> just an identifier; downstream code uses the `tool_target` field
+> for dispatch). Subsequent corpora should generate IDs to match.
+>
+> Post-relabel distribution: `python_execute × extreme` rose from
+> 13 to 22 records. `datetime_now × extreme` is now empty.
+
+> **Decision 3 — UKL composite-query amendment to 002 axes** (2026-05-12)
+> The 5 UKL hard/extreme records (composite multi-field queries)
+> are accepted as an axis-refinement and codified in Decision 1a
+> of `../002-difficulty-axes/investigation.md`. Reviewer accepted
+> the extension; A2 proposal's medium cap on UKL is superseded.
+
+## Known limitations (added 2026-05-12)
+
+- **GKL trivial siblings cycle over ~8 well-known facts** (1966
+  World Cup, Hamlet's author, etc.) across many pairs. Matched-pair
+  structure is sound — the warranted half varies per pair, the
+  trivial half is consistent within its rotation pool. But the
+  trivial-side variety is low. If Phase A4 grading reveals model
+  behavior on the trivial halves is dominated by these specific
+  facts (likely 100% across all of them since they're well-known),
+  expand `_GKL_TRIVIALS` and regenerate the trivial-half slot of
+  affected pairs. Cost is low.
 
 ## Results
 

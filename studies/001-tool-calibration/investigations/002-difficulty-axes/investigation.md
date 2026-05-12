@@ -96,6 +96,22 @@ _Populate as we go. Pre-A2 sketch:_
 > empirical difficulty?) is logged as a sibling-investigation
 > Forward-looking entry in `studies/001-tool-calibration/study.md`.
 
+> **Decision 1a — UKL composite-query amendment** (2026-05-12)
+> The original UKL axes capped at `medium` (recoverability + single-
+> field derivation). A3 bulk generation (003) introduced composite
+> queries that compose multiple persona fields ("how many years
+> between the wedding and the daughter's birth"; "what's the
+> family member who lives furthest from Brooklyn"). These reach
+> `hard` and `extreme` bands via 2-field and 3-field synthesis
+> respectively. **Accepted as axis-refinement.** The amended UKL
+> axes are:
+> - `recoverability_from_prompt` — in-prompt vs not (unchanged)
+> - `derivation_depth` — direct (single field) → +0 bands;
+>   derived (two fields) → +1 band; composite (three+ fields)
+>   → +2 bands
+> 5 A3 records at hard/extreme use this extension. No schema
+> changes; compatible with the existing data model.
+
 ## Results
 
 The substantive results for this investigation are the frozen

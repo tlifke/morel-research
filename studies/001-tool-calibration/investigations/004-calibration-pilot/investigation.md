@@ -94,6 +94,17 @@ Tailscale.
 - run_id: `9119ff96`
 - results file (gitignored): `results/gemma3_4b-it-qat/2026-05-12.jsonl`
 
+> **⚠ Legacy data marker.** This pilot ran at temperature=0 on the
+> pre-006 parser version and stored only the first 400 chars of
+> each output (`output_preview`, lossy). It has been **superseded
+> by 006 Cell C / Cell D** for analytical purposes: Cell C is the
+> production-typical neutral baseline (temp=1.0, full outputs,
+> current parser, n=10), and Cell D is the directive companion.
+> Do NOT cite numbers from this pilot in current writeups unless
+> explicitly contrasting against temp=1.0. Bucket-stability and
+> failure-mode taxonomies derived here remain qualitatively valid;
+> aggregate success-rate numbers do not.
+
 **Headline numbers**
 - 23/36 records: perfectly calibrated (20/20 right behavior)
 - 11/36 records: systematic miscalibration (0/20)
