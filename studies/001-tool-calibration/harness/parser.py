@@ -44,21 +44,38 @@ def parse_tool_calls(output: str) -> list[ToolCall]:
     return calls
 
 
-def scored_success(record: dict, output: str) -> bool:
-    """Score a single trial against a record's expected behavior.
+def classify_trial(record: dict, output: str) -> tuple[bool, str | None]:
+    """Classify a single trial against a record's expected behavior.
 
-    Per `calibration_methodology.md`:
-    - expected_tool_call=True: success iff the model invoked
-      `tool_target`.
-    - expected_tool_call=False: success iff the model did NOT invoke
-      `tool_target`.
-    - tool_target=="none": success iff no tools were invoked at all.
+    Returns `(success, error_type)`. `error_type` is None on success;
+    otherwise one of:
+      - `"over_call"` — model invoked a tool when none was warranted.
+        Per reviewer direction (2026-05-12): less undesirable, since
+        the tool typically ensures correctness even on tasks the
+        model could have answered directly.
+      - `"under_call"` — model failed to invoke a warranted tool.
+        More undesirable — likely produces wrong answers.
+
+    Scoring rules (per `calibration_methodology.md`):
+      - `tool_target=="none"`: success iff no tools were invoked.
+      - `expected_tool_call=True`: success iff `tool_target` was
+        invoked; under_call otherwise.
+      - `expected_tool_call=False`: success iff `tool_target` was
+        NOT invoked; over_call otherwise.
     """
     calls = parse_tool_calls(output)
     target = record["tool_target"]
+
     if target == "none":
-        return len(calls) == 0
+        return (len(calls) == 0, None if len(calls) == 0 else "over_call")
+
     invoked_target = any(c.name == target for c in calls)
     if record["expected_tool_call"]:
-        return invoked_target
-    return not invoked_target
+        return (invoked_target, None if invoked_target else "under_call")
+    return (not invoked_target, None if not invoked_target else "over_call")
+
+
+def scored_success(record: dict, output: str) -> bool:
+    """Legacy single-bool scorer. Prefer `classify_trial`."""
+    success, _ = classify_trial(record, output)
+    return success

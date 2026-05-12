@@ -7,6 +7,33 @@ enum happens at analysis time using thresholds defined here, *not* at
 data-write time. Changing the thresholds therefore does not require
 re-running any calibration trials — it's a config change.
 
+## Error-type classification (Decision 2, 2026-05-12)
+
+Beyond success vs. failure, every failed trial is classified as one
+of two error types — distinguishing **how undesirable** the failure
+is. Per reviewer direction:
+
+- **`over_call`** — the model invoked a tool when none was warranted.
+  *Less undesirable.* The tool typically returns the correct answer
+  anyway, so over-calling produces correct outputs at the cost of
+  unnecessary tool invocations. A model that consistently over-calls
+  has a *cost* problem, not an *accuracy* problem.
+
+- **`under_call`** — the model failed to invoke a warranted tool.
+  *More undesirable.* The model likely produced a wrong or
+  fabricated answer in lieu of the lookup/computation it should have
+  used. This is the failure mode the matched-pair design is most
+  worried about.
+
+The runner records `error_type` per trial alongside `success`. The
+analyzer aggregates by record and reports per-record over_call /
+under_call counts at each N checkpoint. Whether to weight these
+asymmetrically in the bucket-assignment thresholds (e.g., penalize
+under-calls more in `calibration_status: contested` detection) is an
+open question — for the first calibration pass we treat both as
+equal failures, with the asymmetry captured in the per-record
+breakdown rather than baked into the bucket boundaries.
+
 ## Per-record success criterion
 
 A trial is **scored success** when the target model's behavior on a
@@ -53,6 +80,16 @@ The minimum sufficient n for a bucket assignment is recorded in
 `difficulty_calibrated[model_id].n`, so downstream analyses can
 filter on confidence.
 
+**Checkpointing for retrospective sufficiency analysis.** The runner
+always writes per-trial data with a stable `trial_idx`, so the
+analyzer can compute success_rate at any sub-N (default checkpoints:
+5, 10, 20). After a full run, retrospective comparison of
+success_rate@5 / @10 / @20 surfaces which records had clean signal
+early (bucket stable across checkpoints) and which were noisy
+(bucket changed with N). This drives future-experiment sizing —
+records that converge at n=5 can be cheaper to recalibrate;
+boundary records may justify n>20.
+
 ## `calibration_status: contested`
 
 A record's bucket is **contested** when, for some target model,
@@ -84,6 +121,14 @@ ambiguity as a separate signal.
 
 ## Open questions
 
+- **N sufficiency for boundary cases.** For records that land near
+  bucket boundaries (e.g., success_rate around 0.30 or 0.70), how
+  many trials are needed to distinguish "this is genuinely boundary"
+  from "we just haven't sampled enough"? After the first full
+  calibration run, sweep the per-record checkpoint data (n=5, 10,
+  20) and characterize convergence-vs-N. If most records stabilize
+  by n=10, default future runs to n=10 and reserve n=20+ for
+  identified boundary records.
 - Should bucket thresholds be tool-agnostic (as drafted) or per-tool?
   Different tools may have different baseline call rates, so the same
   success rate may carry different signal.
