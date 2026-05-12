@@ -7,6 +7,8 @@ children:
   - studies/001-tool-calibration/investigations/001-foundations
   - studies/001-tool-calibration/investigations/002-difficulty-axes
   - studies/001-tool-calibration/investigations/003-bulk-generation
+  - studies/001-tool-calibration/investigations/004-calibration-pilot
+  - studies/001-tool-calibration/investigations/005-tool-spec-optimization
 related: []
 axes:
   llm_capability: medium
@@ -287,8 +289,9 @@ divergence_notes: null
 
 First pilot run of the calibration harness produced findings worth
 flagging at the study level (full breakdown in
-`investigations/002-difficulty-axes/investigation.md` Results
-section):
+`investigations/004-calibration-pilot/investigation.md`, with the
+follow-on prompt-engineering work in
+`investigations/005-tool-spec-optimization/`):
 
 - **4B IT is decisive but mis-mapped.** 23/36 records perfectly
   calibrated, 11/36 perfectly miscalibrated, 2/36 boundary. Behavior

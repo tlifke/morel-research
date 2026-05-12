@@ -98,192 +98,41 @@ _Populate as we go. Pre-A2 sketch:_
 
 ## Results
 
-### Pilot calibration run — Gemma 3 4B IT (QAT Q4_0), n=20 (2026-05-12)
+The substantive results for this investigation are the frozen
+per-tool axes (`difficulty_axes_proposal.md`) and the calibration
+methodology (`calibration_methodology.md` + cost estimate).
+Empirical validation of the axes — i.e. running the corpus against
+target models and measuring success rates — lives in sibling
+investigations:
 
-First end-to-end pilot of the calibration harness against the full
-A1 corpus (18 pairs / 36 records). Ollama on the desktop WSL,
-reachable via Tailscale; runner backend `ollama`.
+- **`004-calibration-pilot/`** — neutral-baseline measurement
+  (the 4B IT pilot run; future 12B and other models). Headline
+  calibration numbers per model.
+- **`005-tool-spec-optimization/`** — how tool-description language
+  affects correct invocation rates; eventual style guide. The
+  A/B experiment that found "REQUIRED whenever..." raises ukl
+  from 0% to 60% lives here.
 
-**Run metadata**
-- model: `gemma3:4b-it-qat`
-- n: 20 trials per record
-- total trials: 720
-- run_id: `9119ff96`
-- date: 2026-05-12
-- results file (gitignored): `studies/001-tool-calibration/results/gemma3_4b-it-qat/2026-05-12.jsonl`
+The split exists so that calibration-of-the-model and
+calibration-of-the-prompt stay distinguishable. Headline numbers
+under neutral prompts (004) measure the model; results under
+optimized prompts (005) measure model + prompt jointly.
 
-**Headline numbers**
-- 23/36 records: perfectly calibrated (20/20 right behavior)
-- 11/36 records: systematic miscalibration (0/20)
-- 2/36 records: near-boundary with 1 outlier each (0.95)
-- 4B IT is decisive — almost no stochastic uncertainty (no records
-  in the 0.30–0.70 middle band)
+### Where the pilot results live
 
-**Convergence finding (answers the methodology Open Question on N
-sufficiency).** 34/36 records were bucket-stable from n=5 onwards.
-Only 2 records drifted between n=5 and n=20, each by exactly one
-outlier trial (0.80→0.90→0.95). **For 4B IT on this corpus, n=10
-would have been sufficient**, saving half the compute. This argues
-for n=10 as the default for future runs against this model class,
-with n=20+ reserved for identified boundary records flagged at n=10.
+The 4B IT pilot results, the tool A/B experiment, and Decisions 2/3
+(wrong_tool error_type; sampling defaults) were originally drafted
+here and have been moved:
 
-**Failure mode taxonomy** (from output-content audit across all
-under- and over-call records — patterns verified consistent across
-all 20 trials of each record):
+- **`../004-calibration-pilot/`** — pilot results, hypotheses,
+  follow-on planning. Headline calibration numbers per model under
+  neutral baseline prompts.
+- **`../005-tool-spec-optimization/`** — A/B experiment on
+  user_knowledge_lookup variants; methodology for varying
+  tool-description language.
 
-| Mode | Records | What the model did |
-|------|---------|--------------------|
-| **Tool-blind deferral** | 3 (all `user_knowledge_lookup` hard halves: anniversary, daughter_school, aunt_nina) | Correctly recognized "I don't have access to your personal profile" but did NOT invoke `user_knowledge_lookup` — appears not to map "need private info" → "use the tool that returns private info" |
-| **Wrong tool selected** | 2 (`python_execute` hard cases: sum-of-primes, SHA-256) | Recognized need for compute, invoked `calculator` with python-style expressions instead of `python_execute` |
-| **Confident confabulation** | 1 (`general_knowledge_lookup` NLA paper hard) | Fabricated a 2020 publication date and an incorrect description of the technique; answered the same wrong answer 20/20 times |
-| **Correct without verification** | 1 (`python_execute` leap-year hard half) | Answered "February 29, 2028" — **correct** 20/20 — without using `python_execute` to verify. Reviewer policy treats this as least-undesirable: under-call but accuracy preserved |
-| **Trivial over-call** | 4 (`calculator` "Compute 4 × 7", `datetime_now` in-prompt date, `unit_convert` "5 m to cm", `general_knowledge_lookup` "decade of Transformer paper") | Invoked the target tool when answering directly would have sufficed. Per reviewer policy, less undesirable than under-call (tool returns the right answer) |
-
-**Per-tool calibration distribution**:
-
-| Tool | Clean | Over-call | Under-call |
-|------|-------|-----------|------------|
-| `calculator` | 5/6 | 1 | 0 |
-| `python_execute` | 3/6 | 0 | 3 |
-| `datetime_now` | 3/4 | 1 | 0 |
-| `unit_convert` | 3/4 | 1 | 0 |
-| `general_knowledge_lookup` | 4/6 | 1 | 1 |
-| `user_knowledge_lookup` | 3/6 | 0 | **3 (all hard halves)** |
-
-The `user_knowledge_lookup` column is the cleanest single research
-finding: 4B IT consistently fails to invoke the persona-lookup tool
-even when the prompt is unambiguously personal and the tool is in
-the available set. Under-calls outweigh over-calls 7:4 across all
-miscalibrated records.
-
-### Notes on scoring gaps surfaced by this run
-
-The current `classify_trial` scoring treats "invoked the wrong tool"
-as `under_call of target` — the SHA-256 and prime-sum cases counted
-as `python_execute` under-calls even though the model *did* invoke
-a tool (just the wrong one). A finer-grained scoring step that
-distinguishes `target_invoked / wrong_tool_invoked / no_tool` is
-worth adding before the 12B run; the JSONL outputs already preserve
-enough information to re-score retrospectively without re-running.
-
-### Hypotheses for follow-up
-
-1. **Tool-blind deferral on personal info is most likely an
-   instruction-tuning overshoot.** Safety / refusal training
-   probably weighted "I cannot access personal information" so
-   heavily that the model learned this is the correct response
-   independent of available tooling. If true, 12B IT (similar
-   post-training but more capacity) would show the same pattern;
-   base (non-IT) variants would not — but base models lack the
-   chat-template / tool-call infrastructure anyway, so testing
-   directly is hard.
-2. **Wrong-tool selection (calculator vs. python_execute) suggests
-   the tool descriptions in system prompts may be too thin.** The
-   prompt distinguishes "arithmetic expression" from "Python
-   snippet" but the model may not be carving the boundary at the
-   right place. Testing variant system prompts with explicit
-   "calculator is for arithmetic only, not lambda/filter/sum
-   expressions" framing could probe this.
-3. **The over-call cluster is heuristic-driven, not knowledge-driven.**
-   "Compute X × Y" triggers `calculator`; "What is X / Y" does not.
-   Suggests training-data surface features rather than reasoning.
-   Likely persists at 12B; can be probed with paraphrase pairs in
-   A3 bulk generation.
-
-### Tool-definition A/B experiment — user_knowledge_lookup (2026-05-12)
-
-Follow-on to the pilot's tool-blind-deferral finding. Probed whether
-the 0/20 under-call on user_knowledge_lookup hard halves could be
-fixed by *only* changing the tool definition in the system prompt
-(not the rest of the prompt). Five variants tested at n=5 across the
-3 ukl hard records; winners re-validated at n=10. Sampling
-temperature=1.0, top_p=0.95 (Decision 3 below).
-
-Variants:
-- **v0_baseline**: original A1 wording — "search the current user's
-  private profile (identity, family, calendar, preferences); same
-  shape as general_knowledge_lookup."
-- **v1_directive**: same tool name + description that begins
-  "REQUIRED whenever the user asks about themselves (their family,
-  schedule, history, preferences, or anything they personally know)..."
-- **v2_renamed**: rename tool to `lookup_user_info`, baseline
-  description.
-- **v3_epistemic**: same tool name + description that addresses the
-  refusal pattern: "Use whenever the user asks about themselves
-  ('I', 'my', 'me'); the tool DOES give you access to this
-  information even though you cannot know it directly."
-- **v4_combined**: rename + directive + epistemic framing.
-
-Results:
-
-| Variant | n=5 overall | n=10 overall | Note |
-|---------|------------:|-------------:|------|
-| v1_directive | 73.3% | 60.0% | Single-variable winner — prescriptive language alone fixes most |
-| v4_combined | 26.7% | 26.7% | Worse than v1; suggests over-cueing confuses |
-| v3_epistemic | 6.7% | — | Addressing refusal directly without prescription barely helps |
-| v0_baseline | 0.0% | — | Control |
-| v2_renamed | 0.0% | — | Naming alone has no effect |
-
-**Conclusion:** the under-call failure is *not* an irreducible
-post-training bias. It can be substantially mitigated by adding
-prescriptive language to the tool description (e.g. "REQUIRED
-whenever..."). Naming, epistemic framing, and combined cues are
-strictly weaker.
-
-**Hypothesis revision:** the original tool-blind-deferral pattern
-isn't "the model can't connect refusal to tooling" — it's "the
-model's prior on refusal is stronger than its prior on tool use,
-unless tool-use is made imperative." The instruction-tuning effect
-is real but defeatable at the prompt layer.
-
-**Practical recommendation for the canonical A1 system prompts:**
-upgrade the user_knowledge_lookup description to v1_directive
-wording. The other tools' descriptions probably benefit from the
-same prescriptive treatment but weren't part of this experiment;
-worth a brief sweep before the bulk A3 generation phase. This is
-a tool-spec edit, not a methodology change — doesn't invalidate
-prior A4 pilot data, but means subsequent A4 runs should use the
-upgraded prompts and we re-baseline against them.
-
-> **Decision 2 — `wrong_tool` error_type added** (2026-05-12)
-> The pilot run surfaced two records (SHA-256 hash, sum-of-primes)
-> where 4B IT invoked `calculator` with python-style expressions
-> instead of `python_execute`. The old classifier scored these as
-> `under_call` (target tool not invoked), conflating "called the
-> wrong tool" with "called nothing." Added a third error_type
-> `wrong_tool` — invoked some tool but not the target — and updated
-> the analyzer to surface it. Reviewer policy on severity (Decision
-> 2 of `calibration_methodology.md`) still has under_call most
-> undesirable, wrong_tool intermediate, over_call least.
-
-> **Decision 3 — switch sampling defaults to temperature=1.0, top_p=0.95** (2026-05-12)
-> The original pilot used temperature=0.0 (greedy). Per reviewer
-> direction, temperature=0 is a legacy convention that doesn't
-> cleanly probe production-typical behavior. New defaults in
-> `harness/inference.py`: temperature=1.0, top_p=0.95. Future
-> runs (including 12B IT) use these. The 4B pilot data was at
-> temp=0 and remains valid as a deterministic baseline; the n=10
-> tool-variant confirmation runs were already at the new defaults.
-
-### Next steps queued
-
-1. ~~Add wrong-tool-selection to the scoring step.~~ (Done —
-   Decision 2.)
-2. Sweep the other tool descriptions for prescriptive-language
-   upgrades analogous to v1_directive — before the bulk A3
-   generation phase. The 4B pilot showed wrong-tool selection on
-   python_execute and confabulation on general_knowledge_lookup
-   ai_tech; the same prescriptive pattern may help both.
-3. Run 12B IT (`gemma3:12b-it-qat`) — same harness, same corpus,
-   same upgraded system prompts. Estimate ~2–3 hours wall time.
-   Compare per-record failure modes to 4B; expect 12B to fix some
-   heuristic over-calls and possibly the wrong-tool selection
-   cases. Open question: does 12B still need the v1_directive
-   upgrade, or does it correctly invoke user_knowledge_lookup on
-   the baseline tool description?
-4. Reset n default to 10 for routine runs; reserve n=20 for
-   records with `expected_call_confidence: low` and any flagged-
-   boundary records.
+The methodology updates (wrong_tool taxonomy; sampling defaults)
+are captured in `calibration_methodology.md`.
 
 ## Forward-looking
 
