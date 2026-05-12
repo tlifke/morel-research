@@ -1,21 +1,27 @@
-% Curator prediction mismatch — one-pager
-% Structure: Research question / Context / Methods / Figure / Takeaways
-% Compile: `make` (latexmk -xelatex, TEXINPUTS set to find ../../../../one-pagers/morel.sty)
+% Curator prediction mismatch — one-pager.
+% Structure: Research question / Context / Methods / Figure / Takeaways.
+% Compile: `make` (pdflatex via latexmk).
 
 \documentclass[10pt]{article}
 
-\usepackage{morel}
+\usepackage[margin=0.9in]{geometry}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{parskip}
 
-\newcommand{\paperRepoShort}{tlifke/morel-research}
+\setlist[itemize]{leftmargin=1.2em,topsep=0.2em,itemsep=0.15em,parsep=0pt}
+
+\pagestyle{empty}
+
+\title{An LLM's hypothesized task difficulties don't predict another LLM's empirical difficulty}
+\author{Tyler Lifke}
+\date{2026-05-12 \quad\textbar\quad \href{https://github.com/tlifke/morel-research}{tlifke/morel-research} \quad\textbar\quad \texttt{\small studies/001 / writeups/001}}
 
 \begin{document}
 
-\moreltitle
-  {An LLM's hypothesized task difficulties don't predict another LLM's empirical difficulty}
-  {Tyler Lifke}
-  {2026-05-12}
-  {\href{https://github.com/tlifke/morel-research}{tlifke/morel-research}}
-  {studies/001 / writeups/001}
+\maketitle
 
 \section*{Research question}
 PROSE GOES HERE.

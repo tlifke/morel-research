@@ -1,6 +1,6 @@
 ---
 name: morel-branding
-description: Apply Morel brand-consistent styling to Plotly figures AND to LaTeX one-pagers / writeups in the morel-research repo. Use whenever creating or modifying a Plotly `Figure`, OR scaffolding/editing a LaTeX writeup under `studies/.../writeups/` or `one-pagers/`. Triggers on phrases like "make a plot", "add a figure", "style this chart", "render a Plotly figure", "use Morel colors", "brand the figure", "compile the one-pager", "style the writeup", "scaffold a one-pager". Also trigger when a figure currently uses default Plotly colors (`#1f77b4` etc.) or ad-hoc hex picks, or when a LaTeX file uses Computer Modern defaults instead of the brand fonts/colors.
+description: Apply Morel brand-consistent styling (colors, typography, layout) to Plotly figures in the morel-research repo. Use whenever creating, modifying, or styling a Plotly figure — including new figures for an investigation, edits to an existing figure script under `studies/.../figures/`, the capability-map plot, or any one-off chart. Triggers on phrases like "make a plot", "add a figure", "style this chart", "update the plot", "render a Plotly figure", "use Morel colors", "brand the figure", or whenever a `plotly.graph_objects.Figure` is being built or modified. Also trigger when a figure currently uses default Plotly colors (`#1f77b4` etc.) or ad-hoc hex picks (`#5B9BD5`, `#A4C5E8`, `#C44E52`, etc.) — those should be replaced. **Do not** apply this skill to LaTeX writeups — those use vanilla LaTeX defaults by convention.
 ---
 
 # morel-branding
@@ -99,82 +99,12 @@ Follow the brand guide's product-data convention:
 - Don't add Morel logos to interior figures; the logo belongs on
   one-pagers (LaTeX template), not on every chart.
 
-## LaTeX one-pagers and writeups
+## LaTeX writeups
 
-The brand also ships as a LaTeX package at `one-pagers/morel.sty`
-(source of truth for typography + colors in printed/PDF artifacts).
-Use it whenever you scaffold or edit a `.tex` file under
-`one-pagers/` or `studies/.../writeups/`.
+By repo convention, LaTeX one-pagers and writeups use **vanilla LaTeX
+defaults** — no brand colors, no custom fonts, no brand styling. Keep
+to the standard `article` class with Computer Modern. See
+`one-pagers/template/one-pager.tex` for the canonical template.
 
-What the package provides:
-
-- Brand palette as `xcolor` names: `morelprimary` (terracotta),
-  `morelaccent` (forest green), `morelslate`, `morelparchment`,
-  `moreldark`, `morelpage`, `morelborder`, `morelmuted`.
-- Brand fonts via `fontspec`: Inter / DM Sans body, DM Serif Display
-  for titles (with Helvetica Neue / Georgia fallbacks for vanilla
-  TeX installs).
-- Section formatting: bold forest-green sans, tight vertical rhythm.
-- Caption styling: bold green "Figure N." label, period separator.
-- Page footer via `fancyhdr`: terracotta **morel** • research on the
-  left, `\paperRepoShort` on the right.
-- `\moreltitle{TITLE}{AUTHORS}{DATE}{REPO}{STUDY-REF-SHORT}` — title
-  block with serif title, muted metadata line, terracotta + cream rules.
-
-How to use from a writeup:
-
-```latex
-\documentclass[10pt]{article}
-\usepackage{morel}
-\newcommand{\paperRepoShort}{tlifke/morel-research}
-
-\begin{document}
-\moreltitle
-  {Title}
-  {Authors}
-  {YYYY-MM-DD}
-  {\href{https://github.com/tlifke/morel-research}{tlifke/morel-research}}
-  {studies/NNN / writeups/NNN}
-
-\section*{Research question}
-...
-\section*{Context}
-...
-\section*{Methods}
-...
-
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=0.95\linewidth]{path/to/figure.png}
-  \caption{One-sentence caption.}
-\end{figure}
-
-\section*{Takeaways}
-\begin{itemize}
-  \item ...
-\end{itemize}
-\end{document}
-```
-
-Compile with **xelatex** (fontspec requires it). The writeup's
-`Makefile` should set `TEXINPUTS` to include the repo's
-`one-pagers/` directory and invoke `latexmk -xelatex`. See
-`one-pagers/template/one-pager.tex` and its Makefile for the
-canonical example.
-
-### Section structure for one-pagers
-
-Fixed order (do not reorder): **Research question · Context ·
-Methods · Figure · Takeaways**. Results live in the figure and
-takeaways; forward-looking notes fold into context or the closing
-takeaway. Keep STUDY-REF-SHORT under ~50 characters in the title
-block or it will crowd the metadata line.
-
-### Don't (LaTeX)
-
-- Don't re-define the brand colors locally in a writeup. Pull from
-  `morel.sty` so changes propagate.
-- Don't use `pdflatex` — fontspec requires xelatex.
-- Don't write prose in scaffolded one-pagers. The human owns the
-  prose; Claude scaffolds structure, fonts, layout, and the figure
-  wiring only.
+Section structure for one-pagers (fixed order): **Research question ·
+Context · Methods · Figure · Takeaways**.
