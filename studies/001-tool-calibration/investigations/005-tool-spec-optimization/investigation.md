@@ -100,55 +100,92 @@ tool-blind-deferral pattern is "the model's prior on refusal is
 stronger than its prior on tool use unless tool use is made
 imperative" — not "the model can't connect refusal to tooling."
 
+### Follow-on A/B experiments (2026-05-12)
+
+Four experiments run at 4B IT, temp=1.0, top_p=0.95, n=5:
+
+| Experiment | Winner | Score | Baseline (temp=1.0) | Headline |
+|------------|--------|------:|--------------------:|----------|
+| `ukl_followup` | v1a_antirefusal | 86.7% | (n/a) | "REQUIRED + 'do NOT respond with "I don't have access"'" beats plain v1 (73.3%) |
+| `python_boundary` | vP1_boundary | 40% | 0% | SHA-256 jumps to 80% target invocation; prime_sum still wrong_tool — "sum" keyword resists |
+| `gkl_temporal` | vG1_temporal | 90% | **70%** | Temporally-anchored description helps; baseline at temp=1.0 is far above the 0% from the temp=0 pilot |
+| `trivial_skip` | vT1_skip_trivial | 93.3% | **47%** | Skip-trivial framing across calc/dt/unit_convert; baseline again well above temp=0 pilot's 0% |
+
+**Methodology caveat surfaced (important for 004):** the original
+4B IT pilot ran at temperature=0, which deterministically suppressed
+several behaviors that are partial at temperature=1.0. The "20/20
+confabulation" findings (gkl NLA paper) and "20/20 over-call"
+findings (trivial_skip cluster) are temp=0 artifacts to a degree
+larger than I had predicted. At temp=1.0, baseline gkl is 70% and
+baseline trivial_skip is 47% — not 0%. The intrinsic-miscalibration
+magnitude is smaller than the original pilot suggested.
+
+**ukl finding (off v1):** strict imperative is essential.
+"Use whenever" (softer) → 27%; "REQUIRED whenever" → 73%;
+"REQUIRED whenever ... do NOT respond with 'I don't have access'" →
+87%. Anti-refusal explicit clause adds meaningful headroom.
+
+**python boundary finding:** boundary-clarification fixed SHA-256
+(0% → 80% target) but not sum-of-primes (still 0% target, 60%
+wrong_tool). The "sum" keyword may need stronger overrides — likely
+needs an explicit "computations involving iteration / filtering /
+generation MUST use python_execute" clause.
+
+**gkl temporal finding:** temporal anchoring helps even though the
+baseline at temp=1.0 is already decent (70% → 90%). The framing
+"REQUIRED for specific values / post-cutoff facts; skip for broad
+historical knowledge" hits both failure modes (under-call on recent
+specific facts, over-call on broad pre-cutoff knowledge).
+
+**trivial_skip finding:** clean lift (47% → 93%). The single
+shared lever "Skip for trivially mental cases — answer those
+directly" works across three different over-call patterns.
+
 ## Forward-looking
 
-- **More variants off the v1 branch.** Worth testing to localize
-  what's load-bearing in "REQUIRED whenever the user asks about
-  themselves...":
-  - `v1a — anti-refusal explicit`: "REQUIRED whenever the user
-    asks about themselves. Do NOT respond with 'I don't have
-    access to personal information' — use the tool instead."
-    Hypothesis: pushes success above 60% by directly suppressing
-    the refusal token-sequence.
-  - `v1b — imperative strength`: "MUST be called whenever..." vs
-    "Use this whenever..." — tests whether strict imperatives
-    matter or whether any directive language works.
-  - `v1c — without enumerated examples`: "REQUIRED whenever the
-    user asks about themselves." (drop "family, schedule, history,
-    preferences") — tests whether the enumeration carries the
-    weight.
+- **prime_sum residue** — the python_boundary winner (vP1) fixed
+  SHA-256 but not the sum-of-primes record. Likely needs an
+  explicit clause naming iteration / filtering / generation as
+  python_execute territory ("computations involving sum-over-a-set,
+  filtering, or iteration MUST use python_execute"). Cheap one-off
+  to test.
 
-- **Apply prescriptive treatment to other tools.** Two known
-  candidates from the 004 pilot:
-  - `python_execute` (wrong-tool failure — model picks calculator
-    for hashing/aggregation). Variant: "Use for any computation
-    involving multi-step logic, hashing, list/string operations, or
-    anything calculator can't do; calculator is **only** for plain
-    arithmetic expressions." Tightens the calc/python boundary.
-  - `general_knowledge_lookup` (mixed failure — confabulation on
-    NLA paper, over-call on Transformer decade). Variant: a
-    temporally-anchored description — "Use for facts dated after
-    [training cutoff] or specific values (price, date, score)
-    where confabulation risk is high; broad historical facts can
-    be answered directly." Addresses both failure modes.
+- **Style guide synthesis.** With 4 experiments run, the consistent
+  patterns are:
+  - Imperative strength matters. "REQUIRED" / "MUST" — works.
+    "Use" / "Use whenever" — much weaker. Style guide should
+    require strict imperatives on under-call-prone tools.
+  - Anti-refusal explicit clauses help on tools where the model
+    has a known refusal mode (user_knowledge_lookup). Generalize:
+    if a tool exists to defeat a refusal pattern, the description
+    should name the refusal pattern and say "use this tool
+    instead."
+  - Boundary-clarification works for over-call-prone tools
+    (trivial_skip) and partly for wrong-tool-prone tools
+    (python_boundary). Style guide should encourage describing
+    BOTH what the tool is FOR and what it is NOT for (with
+    examples).
+  - Temporal anchoring works for lookup tools. Style guide should
+    note when "REQUIRED for facts dated after X" is appropriate.
+  Distill into `tool_description_style_guide.md` after the 4B
+  re-baseline (below).
 
-- **Over-call cluster batch experiment** (`calculator`,
-  `datetime_now`, `unit_convert`). Each had one trivial over-call
-  record. Less urgent than under-call work (over-calls are less
-  undesirable per methodology). Single variant: "Use only when the
-  prompt requires the tool — trivial cases should be answered
-  directly. Skip for: single-digit arithmetic, in-prompt dates,
-  power-of-10 unit conversions."
-
-- **Style guide synthesis.** Once 3–4 tools have been A/B-tested,
-  distill the working patterns into a `tool_description_style_guide.md`
-  that bulk-generation (A3) can reference.
-
-- **Recalibration counterfactual** (feeds back into 004). After
-  the style guide is in place, re-run the 4B IT pilot under
-  optimized prompts. Compare against the 004 baseline. The
-  difference quantifies the prompt-engineering contribution to
-  calibration improvement.
+- **Recalibration counterfactual** (feeds back into 004 — and the
+  reviewer's instruction to lock methodology before escalating).
+  Two-run 4B IT comparison at temp=1.0, n=10, full A1 corpus:
+  - **Run A: neutral baseline at temp=1.0.** Re-baselines the 4B
+    pilot since the original was at temp=0. Gives us the
+    "intrinsic miscalibration" map under production sampling.
+  - **Run B: directive (combined winners).** All four winning
+    variants applied to their tools:
+    - ukl: v1a_antirefusal
+    - python_execute: vP1_boundary (with prime_sum patch above)
+    - general_knowledge_lookup: vG1_temporal
+    - calc / dt / unit_convert: vT1_skip_trivial
+  Delta(B − A) = prompt-engineering contribution. Run both before
+  escalating to 12B; the methodology question "how much of the
+  failure is prompt vs model" is open right now and should be
+  settled at 4B (cheap) before we burn 12B time.
 
 ## Things to flag
 
