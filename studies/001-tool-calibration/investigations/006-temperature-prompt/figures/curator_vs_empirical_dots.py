@@ -172,9 +172,8 @@ def main() -> None:
         fig,
         title="Per-record curator-vs-empirical (Cell C, n=10) — color by tool, shape by model",
         subtitle=(
-            "x: curator-assigned bucket. y: empirical success_rate. "
-            "Bucket reference lines mark methodology thresholds. "
-            "Circles = 4B, diamonds = 12B."
+            "x: curator bucket. y: empirical sr. "
+            "Dotted lines = bucket thresholds. Circles = 4B; diamonds = 12B."
         ),
         attribution="studies/001-tool-calibration / inv 006",
     )

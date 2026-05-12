@@ -139,9 +139,8 @@ def main() -> None:
         fig,
         title="Curator-assigned vs. empirical difficulty (Cell C, n=10)",
         subtitle=(
-            "Rows = curator bucket. Cols = empirical bucket from Cell C success_rate. "
-            "Empirical bucketing is model-relative — sr→bucket thresholds are absolute but the "
-            "underlying success rate depends on the model."
+            "Rows = curator bucket; cols = empirical bucket (Cell C sr). "
+            "Bucketing is model-relative: thresholds are fixed, but sr depends on the model."
         ),
         attribution="studies/001-tool-calibration / inv 006",
     )
