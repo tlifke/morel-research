@@ -123,22 +123,13 @@ def main() -> None:
             hovertemplate="%{hovertext}<extra></extra>",
             xgap=2, ygap=2,
         ), row=1, col=idx)
-        # Diagonal reference: an arrow from top-left to bottom-right of the
-        # ordinal axes (rendered as a Scatter overlay in axis coords).
-        fig.add_trace(go.Scatter(
-            x=BUCKETS,
-            y=BUCKETS,
-            mode="lines",
-            line=dict(color="rgba(0,0,0,0.3)", dash="dash", width=1),
-            showlegend=False,
-            hoverinfo="skip",
-        ), row=1, col=idx)
 
     fig.update_layout(
         title=dict(text=(
             "Curator-assigned vs. empirical difficulty (Cell C, n=10)<br>"
             "<sub>Rows = curator bucket. Cols = empirical bucket from Cell C success_rate. "
-            "Diagonal = perfect prediction.</sub>"
+            "Empirical bucketing is model-relative — sr→bucket thresholds are absolute but the "
+            "underlying success rate depends on the model.</sub>"
         ), y=0.97, x=0.02, xanchor="left", yanchor="top"),
         template="plotly_white",
         width=1080,

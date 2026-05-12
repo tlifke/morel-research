@@ -10,6 +10,7 @@ children:
   - studies/001-tool-calibration/investigations/004-calibration-pilot
   - studies/001-tool-calibration/investigations/005-tool-spec-optimization
   - studies/001-tool-calibration/investigations/006-temperature-prompt
+  - studies/001-tool-calibration/investigations/007-axes-performativity
 related: []
 axes:
   llm_capability: medium

@@ -1,14 +1,48 @@
 # Tool description style guide
 
-Distilled from the 005 single-tool A/B experiments and the 006
-temperature × prompt 2×2 (both against Gemma 3 4B IT, QAT Q4_0).
-These are empirically-grounded patterns for writing tool
-descriptions intended to be invoked correctly by weak-to-mid-size
-instruction-tuned models.
+> **Calibration status (2026-05-12)**: this guide is empirically
+> grounded against **Gemma 3 4B IT (QAT Q4_0)** on the 18-pair A1
+> seed corpus. The 12B IT 2×2 in 006 surfaced that several
+> patterns here interact non-trivially with model scale — see
+> "Scale × directive interaction" below. **Test every pattern at
+> your target model scale before relying on it in production.**
 
-The guide is provisional — current evidence is one model family
-(Gemma 3 4B IT) on the 18-pair A1 seed corpus. Expect revisions as
-12B and other model results come in.
+Distilled from the 005 single-tool A/B experiments and the 006
+temperature × prompt 2×2. These are empirically-grounded patterns
+for writing tool descriptions intended to be invoked correctly by
+instruction-tuned models in the 4B–12B Gemma 3 class. Patterns may
+generalize to other model families but have not been validated
+there.
+
+## Scale × directive interaction (read this first)
+
+The 006 4B-vs-12B comparison found that scaling 4B→12B doesn't
+strictly improve calibration when prescriptive prompts are
+involved. Specific patterns observed at 12B IT under directive:
+
+- **Literal over-application**: "use calculator for arithmetic"
+  caused 12B to call calc on "5 × 9"; 4B respected the
+  accompanying "skip for trivial" clause. The larger model follows
+  the imperative more rigidly.
+- **More escape routes**: 12B invented behaviors 4B did not —
+  Socratic deflection ("could you tell me who Aunt Nina is?"),
+  wrong-tool selection (`general_knowledge_lookup` for personal
+  info), training-distribution confidence bypassing the tool path.
+  Each prescriptive clause that closes one route gives the model
+  more cognitive surface to invent the next.
+- **Confidence under uncertainty**: 12B will answer from training
+  distribution despite anti-refusal framing — it's confident
+  enough in its memory to bypass the tool path.
+
+**Practical guidance:**
+- Test every prescriptive clause at your target model scale. A
+  clause that works on 4B can backfire at 12B.
+- Prefer clauses with explicit *both* sides (positive condition +
+  skip clause) — they're more robust across scale than positive-
+  only directives.
+- If you're targeting a model larger than 12B (or any unfamiliar
+  family), expect the calibration map to shift. Re-run A/B at the
+  target before committing.
 
 ---
 

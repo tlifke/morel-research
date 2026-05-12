@@ -47,8 +47,9 @@ def _safe_model_id(model: str) -> str:
     return re.sub(r"[^a-zA-Z0-9._-]", "_", model)
 
 
-def _load_records() -> list[dict]:
-    return [json.loads(line) for line in SEEDS_PATH.read_text().splitlines() if line]
+def _load_records(path: Path | None = None) -> list[dict]:
+    p = path or SEEDS_PATH
+    return [json.loads(line) for line in p.read_text().splitlines() if line]
 
 
 def main() -> int:
@@ -77,11 +78,17 @@ def main() -> int:
                    help="Optional filename prefix for the results file. Without this, "
                         "results land at results/<model>/<date>.jsonl. With --results-tag X, "
                         "the file becomes results/<model>/<X>_<date>.jsonl.")
+    p.add_argument("--seeds", default=None,
+                   help="Path to the seed corpus JSONL. Defaults to "
+                        "studies/001-tool-calibration/seeds.jsonl (the A1 hand-curated set). "
+                        "Pass `../../bulk_seeds.jsonl` (or any other JSONL conforming to "
+                        "the metadata schema) to grade an alternate corpus.")
     args = p.parse_args()
 
     backend = get_backend(args.backend)
     manifest = load_system_prompt_manifest(SYSTEM_PROMPTS_MANIFEST)
-    records = _load_records()
+    seeds_path = Path(args.seeds).resolve() if args.seeds else None
+    records = _load_records(seeds_path)
     if args.limit is not None:
         records = records[: args.limit]
 

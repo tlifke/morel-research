@@ -87,6 +87,19 @@ is the calibration boundary). Boundaries are defaults — revisit if
 post-hoc analysis on the bulk corpus shows bimodal or non-monotone
 behavior.
 
+**Empirical buckets are model-relative.** The thresholds above are
+applied to a `success_rate` derived from trials against a *specific
+target model*. A record empirically classified as "trivial" for 12B
+IT may be "medium" or "hard" for 4B IT — the same record, different
+model. This is **by design**: the data model already stores
+empirical difficulty per-model (see `difficulty_calibrated`
+schema field, keyed by `model_id`). When citing an empirical
+difficulty in a writeup, always name the model. Curator-assigned
+`difficulty_label.value` remains intended as a model-agnostic
+task-difficulty *hypothesis* (Decision 13 in 001-foundations);
+empirical labels do not replace it but provide a per-model
+counterpart.
+
 ## Trial count
 
 Default `n = 20` per (record, model). Standard error of a binomial
