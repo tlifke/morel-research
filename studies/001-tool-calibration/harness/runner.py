@@ -105,6 +105,10 @@ def main() -> int:
                 over_calls += 1
             elif err == "under_call":
                 under_calls += 1
+            raw = result.raw if isinstance(result.raw, dict) else {}
+            # Ollama duration fields are nanoseconds; convert to ms.
+            def _ns_to_ms(v):
+                return None if v is None else round(v / 1e6, 3)
             with out_path.open("a") as f:
                 f.write(json.dumps({
                     "run_id": run_id,
@@ -119,6 +123,15 @@ def main() -> int:
                     "error_type": err,
                     "output_preview": result.output[:400],
                     "date": today,
+                    # Timing + token telemetry from Ollama. Other
+                    # backends may populate a subset; missing fields
+                    # are None.
+                    "prompt_tokens": raw.get("prompt_eval_count"),
+                    "output_tokens": raw.get("eval_count"),
+                    "total_ms": _ns_to_ms(raw.get("total_duration")),
+                    "load_ms": _ns_to_ms(raw.get("load_duration")),
+                    "prompt_eval_ms": _ns_to_ms(raw.get("prompt_eval_duration")),
+                    "eval_ms": _ns_to_ms(raw.get("eval_duration")),
                 }) + "\n")
         sr = successes / args.n if args.n else 0.0
         err_str = ""
