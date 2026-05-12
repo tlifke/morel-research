@@ -1,0 +1,397 @@
+_metadata:
+  llm_curator_model: claude-opus-4-7
+  llm_curator_date: 2026-05-12
+  random_seed: 20260512
+  notes: |
+    Bulk-generation spec for Phase A3. Each block describes a generation
+    cell: tool, axis-value parameters, and a target count of matched pairs.
+    The runner expands each cell into N pairs (×2 records each).
+
+    Pair type policy:
+      - Calculator, python_execute, unit_convert, datetime_now, gkl, ukl:
+        each cell declares its pair_type. Type B cells reuse the warranted
+        prompt across two halves (with-tool / no-tools).
+
+    Anti-leakage: trivial halves are constructed by the axis_templates
+    module to avoid the surface keywords "calculator", "compute", "search",
+    "lookup".
+
+# ---------- calculator ----------
+cells:
+  - tool: calculator
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: terse
+    axes: {operand_digits: 4, operation: add_sub, precision_decimals: 0}
+    count: 4
+  - tool: calculator
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: terse
+    axes: {operand_digits: 3, operation: mult, precision_decimals: 0}
+    count: 4
+  - tool: calculator
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: terse
+    axes: {operand_digits: 3, operation: mult, precision_decimals: 0}
+    count: 5
+  - tool: calculator
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: terse
+    axes: {operand_digits: 4, operation: mult, precision_decimals: 0}
+    count: 5
+  - tool: calculator
+    pair_type: A
+    frequency_class: edge
+    system_prompt_warranted: sys_calc_only_neutral_v1
+    system_prompt_trivial: sys_calc_only_neutral_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: terse
+    axes: {operand_digits: 5, operation: mult, precision_decimals: 0}
+    count: 4
+  - tool: calculator
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: question
+    register_length: normal
+    axes: {operand_digits: 3, operation: div_decimal, precision_decimals: 4}
+    count: 5
+  - tool: calculator
+    pair_type: A
+    frequency_class: edge
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: question
+    register_length: normal
+    axes: {operand_digits: 4, operation: div_decimal, precision_decimals: 6}
+    count: 4
+  - tool: calculator
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: normal
+    axes: {operand_digits: 2, operation: pow_root, precision_decimals: 0}
+    count: 3
+  - tool: calculator
+    pair_type: A
+    frequency_class: edge
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: technical
+    register_form: question
+    register_length: normal
+    axes: {operand_digits: 3, operation: function, precision_decimals: 4}
+    count: 3
+  # Type B affordance pairs
+  - tool: calculator
+    pair_type: B
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: terse
+    axes: {operand_digits: 4, operation: mult, precision_decimals: 0}
+    count: 8
+  - tool: calculator
+    pair_type: B
+    frequency_class: edge
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: neutral
+    register_form: question
+    register_length: normal
+    axes: {operand_digits: 4, operation: div_decimal, precision_decimals: 4}
+    count: 6
+  - tool: calculator
+    pair_type: B
+    frequency_class: edge
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: terse
+    axes: {operand_digits: 5, operation: mult, precision_decimals: 0}
+    count: 4
+  - tool: calculator
+    pair_type: B
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: technical
+    register_form: question
+    register_length: normal
+    axes: {operand_digits: 3, operation: function, precision_decimals: 4}
+    count: 4
+
+# ---------- python_execute ----------
+  - tool: python_execute
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: question
+    register_length: normal
+    axes: {band: easy}
+    count: 3
+  - tool: python_execute
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: question
+    register_length: normal
+    axes: {band: medium}
+    count: 4
+  - tool: python_execute
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: question
+    register_length: normal
+    axes: {band: hard}
+    count: 4
+  - tool: python_execute
+    pair_type: A
+    frequency_class: edge
+    system_prompt_warranted: sys_py_only_neutral_v1
+    system_prompt_trivial: sys_py_only_neutral_v1
+    register_tone: technical
+    register_form: question
+    register_length: terse
+    axes: {band: extreme}
+    count: 3
+  - tool: python_execute
+    pair_type: B
+    frequency_class: edge
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: normal
+    axes: {band: hard}
+    count: 5
+  - tool: python_execute
+    pair_type: B
+    frequency_class: edge
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: normal
+    axes: {band: extreme}
+    count: 5
+  - tool: python_execute
+    pair_type: B
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: neutral
+    register_form: question
+    register_length: normal
+    axes: {band: medium}
+    count: 4
+
+# ---------- datetime_now ----------
+  - tool: datetime_now
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: casual
+    register_form: question
+    register_length: terse
+    axes: {}
+    count: 5
+  - tool: datetime_now
+    pair_type: A
+    frequency_class: edge
+    system_prompt_warranted: sys_dt_only_neutral_v1
+    system_prompt_trivial: sys_dt_only_neutral_v1
+    register_tone: neutral
+    register_form: question
+    register_length: terse
+    axes: {}
+    count: 3
+  - tool: datetime_now
+    pair_type: B
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: casual
+    register_form: question
+    register_length: terse
+    axes: {}
+    count: 6
+  - tool: datetime_now
+    pair_type: B
+    frequency_class: edge
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: neutral
+    register_form: question
+    register_length: normal
+    axes: {}
+    count: 3
+
+# ---------- unit_convert ----------
+  - tool: unit_convert
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: normal
+    axes: {band: trivial}
+    count: 3
+  - tool: unit_convert
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: normal
+    axes: {band: easy}
+    count: 3
+  - tool: unit_convert
+    pair_type: A
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: normal
+    axes: {band: medium}
+    count: 4
+  - tool: unit_convert
+    pair_type: A
+    frequency_class: edge
+    system_prompt_warranted: sys_uc_only_neutral_v1
+    system_prompt_trivial: sys_uc_only_neutral_v1
+    register_tone: technical
+    register_form: imperative
+    register_length: normal
+    axes: {band: hard}
+    count: 4
+  - tool: unit_convert
+    pair_type: A
+    frequency_class: edge
+    system_prompt_warranted: sys_uc_only_neutral_v1
+    system_prompt_trivial: sys_uc_only_neutral_v1
+    register_tone: technical
+    register_form: imperative
+    register_length: normal
+    axes: {band: extreme}
+    count: 2
+  - tool: unit_convert
+    pair_type: B
+    frequency_class: edge
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: normal
+    axes: {band: hard}
+    count: 6
+  - tool: unit_convert
+    pair_type: B
+    frequency_class: common
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: neutral
+    register_form: imperative
+    register_length: normal
+    axes: {band: medium}
+    count: 4
+
+# ---------- general_knowledge_lookup ----------
+# Each cell picks one KB entry by index; counts always 1 since each entry
+# is unique. We populate many cells to span the entries.
+  - tool: general_knowledge_lookup
+    pair_type: A
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: casual
+    register_form: question
+    register_length: normal
+    entries_mode: type_a
+    count: 12
+  - tool: general_knowledge_lookup
+    pair_type: B
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: neutral
+    register_form: question
+    register_length: normal
+    entries_mode: type_b
+    count: 12
+  - tool: general_knowledge_lookup
+    pair_type: A
+    system_prompt_warranted: sys_gkl_only_neutral_v1
+    system_prompt_trivial: sys_gkl_only_neutral_v1
+    register_tone: technical
+    register_form: question
+    register_length: normal
+    entries_mode: type_a_isolated
+    count: 5
+
+# ---------- user_knowledge_lookup ----------
+  - tool: user_knowledge_lookup
+    pair_type: A
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_all_tools_neutral_v1
+    register_tone: casual
+    register_form: question
+    register_length: terse
+    entries_mode: type_a
+    count: 10
+  - tool: user_knowledge_lookup
+    pair_type: B
+    system_prompt_warranted: sys_all_tools_neutral_v1
+    system_prompt_trivial: sys_no_tools_v1
+    register_tone: casual
+    register_form: question
+    register_length: terse
+    entries_mode: type_b
+    count: 10
+  - tool: user_knowledge_lookup
+    pair_type: A
+    system_prompt_warranted: sys_ukl_only_neutral_v1
+    system_prompt_trivial: sys_ukl_only_neutral_v1
+    register_tone: neutral
+    register_form: question
+    register_length: terse
+    entries_mode: type_a_isolated
+    count: 4
