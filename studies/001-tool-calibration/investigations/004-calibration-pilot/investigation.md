@@ -159,12 +159,32 @@ records.
    Suggests training-data surface features. Likely persists at 12B;
    can be probed with paraphrase pairs in A3 bulk generation.
 
+### 12B IT 2×2 (2026-05-12)
+
+Run as part of 006 (4-cell factorial: prompt × temperature). Full
+methodology + per-record breakdown lives in
+`../006-temperature-prompt/investigation.md`. Headline:
+
+|             | Neutral | Directive |
+|-------------|--------:|----------:|
+| **4B IT, temp=1.0** | 63.1% | 73.9% |
+| **12B IT, temp=1.0** | **79.7%** | **86.9%** |
+
+- Scaling 4B → 12B at neutral baseline: **+16.6 pp**
+- 12B's biggest single fix relative to 4B: confabulation on
+  post-cutoff facts (NLA paper) goes from ~10% target invocation
+  at 4B-neutral to 100% at 12B-neutral. The larger model
+  recognizes "I don't have a recent training signal on this" and
+  reaches for the lookup tool.
+- `wrong_tool` failures nearly vanish: 17 (4B Cell D) → 6 (12B
+  Cell D). Tool-selection confusion is a 4B-class problem.
+- Wall time: ~16 minutes for 1,440 calls on the desktop 3080.
+  The original 2–3 hour estimate was conservative.
+
 ## Forward-looking
 
-- **12B IT run** under the *same neutral baseline* (estimate ~2–3 hr
-  wall time). Comparing 4B vs 12B at neutral isolates the
-  "more parameters → better calibration" question without confound
-  from prompt-engineering.
+- ~~12B IT run under the same neutral baseline~~ — done (above).
+  Headline:  +16.6 pp from scaling at neutral.
 - **Re-pilot at temperature=1.0** for 4B IT. The original run at
   temp=0 was deterministic; production-typical sampling may reveal
   records that were deterministically miscalibrated to be

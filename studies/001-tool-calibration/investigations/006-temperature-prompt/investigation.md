@@ -169,6 +169,87 @@ Records where Δprompt is ≥ +0.50 in at least one temperature row:
 
 The wins cluster on the failure modes 005 was designed to address.
 
+### 12B IT 2×2 — Gemma 3 12B IT (QAT Q4_0), n=10 (2026-05-12)
+
+Same factorial design as 4B IT, same harness, same prompts, same
+seed corpus. Wall time ~16 minutes total across 4 cells (much
+faster than the budgeted 2–3 hours — desktop 3080 chews through
+12B Q4_0 at ~450 ms/call).
+
+**Cell means:**
+
+|              | neutral | directive | Δ prompt |
+|--------------|--------:|----------:|---------:|
+| **temp=0.0** |  0.778  |   0.889   |  +0.111  |
+| **temp=1.0** |  0.797  |   0.869   |  +0.072  |
+| Δ temp       | +0.019  |  -0.019   |          |
+
+**Interaction: −0.039.** At 12B, the directive benefit is
+*smaller* at temp=1.0 than at temp=0 — opposite sign from 4B's
++0.025. The likely explanation: 12B at temp=1.0 already does
+many of the right things at neutral baseline (it gets NLA paper
+right, it handles the trivial halves better), so the directive has
+less room to lift it.
+
+**Error-type counts per cell:**
+
+| cell | over_calls | under_calls | wrong_tool | total |
+|------|-----------:|------------:|-----------:|------:|
+| A — neutral, temp=0 | 40 | 39 | 1 | 80 |
+| B — directive, temp=0 | 20 | 10 | 10 | 40 |
+| C — neutral, temp=1.0 | 39 | 30 | 4 | 73 |
+| D — directive, temp=1.0 | 23 | 18 | 6 | 47 |
+
+**`wrong_tool` nearly vanishes at 12B.** The calc-vs-python
+boundary confusion that drove 4B's SHA-256 and prime_sum failures
+is mostly resolved by scaling. (Curious uptick in Cell B: 1→10
+wrong_tool entries; mostly the directive prompt encouraging the
+model to attempt calls on records where neutral correctly abstained.)
+
+### 4B vs 12B head-to-head (both at temp=1.0)
+
+|             | Neutral | Directive | Δ prompt |
+|-------------|--------:|----------:|---------:|
+| **4B IT**   | 63.1%   | 73.9%     | +10.8 pp |
+| **12B IT**  | 79.7%   | 86.9%     | +7.2 pp  |
+| Δ scale     | +16.6 pp | +13.0 pp |          |
+
+- **Scaling from 4B to 12B at neutral gives +16.6 pp; prompt
+  engineering on 4B gives +10.8 pp.** Scaling wins, but
+  prompt-engineering is non-trivial.
+- The effects roughly stack: 4B neutral → 12B directive is +23.8 pp.
+- Prompt-engineering gives a smaller relative lift at 12B (+13 pp
+  scaling, +7.2 pp prompt at 12B) — diminishing returns as the
+  model becomes more capable.
+
+### Patterns robust across model scale
+
+1. **`python-fibonacci-hard` regresses under directive at temp=0 in
+   both 4B and 12B.** "REQUIRED for any computation calculator
+   cannot do" invites Pisano-period reasoning. Same record, same
+   regression direction, both model sizes. Robust finding about
+   how directive language interacts with computation prompts.
+2. **Trivial-half over-call cluster (calc 4×7, datetime in-prompt
+   date, unit-convert 5m→cm) all respond to directive across
+   both scales.** vT1's skip-trivial framing works consistently.
+
+### Patterns differing across model scale
+
+1. **NLA paper confabulation is a 4B problem only.** At 4B
+   neutral, the model fabricated a 2020 publication date 90% of
+   the time. At 12B neutral, the model correctly invokes
+   `general_knowledge_lookup` 100% of the time.
+2. **Trivial-half regressions are 4B-specific.** `gkl-arsenal-trivial`
+   and `ukl-aunt_nina-trivial` regressed -1.00 at 4B under
+   directive; both are zero-change at 12B. **The directive
+   prompts as drafted break 4B much harder than 12B.** This
+   matters for the style guide — the "REQUIRED whenever +
+   Do NOT call when {trivial}" pattern recommended there is
+   load-bearing primarily for 4B-class models.
+3. **`wrong_tool` count drops from 17 → 6 between 4B and 12B
+   under directive.** Scale fixes most of the tool-selection
+   confusion the directive doesn't address.
+
 ### Methodology findings
 
 1. **Use temp=1.0 going forward** (per reviewer direction; aligns

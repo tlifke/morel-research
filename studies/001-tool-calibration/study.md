@@ -322,6 +322,36 @@ follow-on prompt-engineering work in
   Future routine runs default to n=10 with n=20 reserved for known
   boundary cases.
 
+## Observations from the 4B vs 12B IT comparison (2026-05-12)
+
+Full breakdown in 006. Cells run at temp=1.0 neutral (the
+methodology baseline):
+
+| | Neutral | Directive |
+|---|---|---|
+| 4B IT | 63.1% | 73.9% |
+| 12B IT | **79.7%** | **86.9%** |
+
+- **Scaling wins, but prompt engineering is non-trivial.** 4B→12B
+  at neutral: +16.6 pp. Prompt-engineering on 4B: +10.8 pp. The
+  effects stack (4B-neutral → 12B-directive = +23.8 pp).
+- **Specific failure modes resolve at scale.** Confabulation on
+  post-cutoff facts (4B at 10% target; 12B at 100% on NLA paper
+  trivially). Wrong-tool selection on python_execute records
+  (17 instances at 4B → 6 at 12B). Trivial-half over-call
+  regressions induced by directive prompts at 4B mostly disappear
+  at 12B.
+- **The directive prompts as drafted are calibrated for 4B-class
+  models.** They produce real value but also real regressions at
+  4B; at 12B the regressions mostly vanish. Style guide rule "pair
+  REQUIRED with skip clause" is load-bearing primarily for the
+  smaller model. The same directive prompts give a smaller relative
+  lift at 12B (+7.2 pp vs +10.8 pp at 4B) — diminishing returns.
+- **Persistent across scale:** the fibonacci-Pisano-period regression
+  under py_only directive at temp=0. The model size doesn't change
+  *which way the directive pushes the model*, only the resting
+  baseline.
+
 ## Observations from the 006 temperature × prompt 2×2 (2026-05-12)
 
 Full breakdown in
