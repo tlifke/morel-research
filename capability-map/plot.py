@@ -25,13 +25,17 @@ HERE = Path(__file__).resolve().parent
 TASKS_PATH = HERE / "tasks.yaml"
 OUT_HTML = HERE / "capability-map.html"
 OUT_PNG = HERE / "capability-map.png"
+REPO_ROOT = HERE.parent
+
+sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
+from branding import apply_morel_template, MOREL_COLORS  # noqa: E402
 
 STATUS_STYLE = {
-    "done":         {"color": "#2a9d8f", "symbol": "circle",        "label": "done"},
-    "in-progress":  {"color": "#e9c46a", "symbol": "circle-open",   "label": "in progress"},
-    "hypothesized": {"color": "#264653", "symbol": "triangle-up",   "label": "hypothesized"},
-    "human-only":   {"color": "#e76f51", "symbol": "square",        "label": "human-only"},
-    "blocked":      {"color": "#9b2226", "symbol": "x",             "label": "blocked"},
+    "done":         {"color": MOREL_COLORS["forest_green"],    "symbol": "circle",      "label": "done"},
+    "in-progress":  {"color": MOREL_COLORS["terracotta"],      "symbol": "circle-open", "label": "in progress"},
+    "hypothesized": {"color": MOREL_COLORS["dark_earth"],      "symbol": "triangle-up", "label": "hypothesized"},
+    "human-only":   {"color": MOREL_COLORS["terracotta_light"],"symbol": "square",      "label": "human-only"},
+    "blocked":      {"color": MOREL_COLORS["error_red"],       "symbol": "x",           "label": "blocked"},
 }
 
 
@@ -47,20 +51,20 @@ def build_figure(tasks: list[dict]) -> go.Figure:
     # Diagonal reference: where LLM and human capability are equal.
     fig.add_shape(
         type="line", x0=0, y0=0, x1=1, y1=1,
-        line=dict(color="lightgray", width=1, dash="dot"),
+        line=dict(color=MOREL_COLORS["cream_dark"], width=1, dash="dot"),
         layer="below",
     )
     fig.add_annotation(
         x=0.985, y=1.0, text="LLM = human",
-        showarrow=False, font=dict(size=10, color="gray"),
+        showarrow=False, font=dict(size=10, color=MOREL_COLORS["muted_text"]),
         xanchor="right", yanchor="top", textangle=-45,
     )
 
     # Quadrant guides at 0.5.
     fig.add_shape(type="line", x0=0, y0=0.5, x1=1, y1=0.5,
-                  line=dict(color="lightgray", width=1), layer="below")
+                  line=dict(color=MOREL_COLORS["cream_dark"], width=1), layer="below")
     fig.add_shape(type="line", x0=0.5, y0=0, x1=0.5, y1=1,
-                  line=dict(color="lightgray", width=1), layer="below")
+                  line=dict(color=MOREL_COLORS["cream_dark"], width=1), layer="below")
 
     # Group tasks by status so each status gets one legend entry.
     grouped: dict[str, list[dict]] = {}
@@ -113,12 +117,11 @@ def build_figure(tasks: list[dict]) -> go.Figure:
                 color=style["color"],
                 symbol=style["symbol"],
                 size=14,
-                line=dict(color="black", width=0.8),
+                line=dict(color=MOREL_COLORS["dark_earth"], width=0.8),
             ),
         ))
 
     fig.update_layout(
-        title="Capability map — research tasks in this repo",
         xaxis=dict(
             title="LLM capability  (0 = infeasible, 1 = trivial)",
             range=[-0.05, 1.05],
@@ -130,11 +133,13 @@ def build_figure(tasks: list[dict]) -> go.Figure:
             showgrid=False, zeroline=False,
             scaleanchor="x", scaleratio=1,
         ),
-        template="plotly_white",
         width=1100, height=900,
-        legend=dict(x=0.01, y=0.01, xanchor="left", yanchor="bottom",
-                    bgcolor="rgba(255,255,255,0.9)"),
-        margin=dict(l=70, r=30, t=60, b=60),
+        legend=dict(x=0.01, y=0.01, xanchor="left", yanchor="bottom"),
+    )
+    apply_morel_template(
+        fig,
+        title="Capability map — research tasks in this repo",
+        attribution="morel-research",
     )
     return fig
 
