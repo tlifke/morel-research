@@ -23,9 +23,12 @@ HERE = Path(__file__).resolve().parent
 STUDY_ROOT = HERE.parent.parent.parent
 SEEDS_PATH = STUDY_ROOT / "seeds.jsonl"
 RESULTS_ROOT = STUDY_ROOT / "results"
+REPO_ROOT = Path(__file__).resolve().parents[5]
 
 sys.path.insert(0, str(STUDY_ROOT))
+sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
 from harness.parser import classify_trial  # noqa: E402
+from branding import apply_morel_template, MOREL_COLORS  # noqa: E402
 
 DATE = "2026-05-12"
 BUCKETS = ["trivial", "easy", "medium", "hard", "extreme"]
@@ -64,9 +67,12 @@ def _jitter(rid: str) -> float:
 
 
 CATEGORY = {
-    "overestimated": {"color": "#2E5984", "label": "Opus overestimated (Δ < 0)"},
-    "calibrated":    {"color": "#4A9C4A", "label": "Calibrated (Δ = 0)"},
-    "underestimated":{"color": "#C44E52", "label": "Opus underestimated (Δ > 0)"},
+    "overestimated": {"color": MOREL_COLORS["terracotta_dark"],
+                      "label": "Opus overestimated (Δ < 0)"},
+    "calibrated":    {"color": MOREL_COLORS["forest_green"],
+                      "label": "Calibrated (Δ = 0)"},
+    "underestimated":{"color": MOREL_COLORS["terracotta_light"],
+                      "label": "Opus underestimated (Δ > 0)"},
 }
 
 
@@ -174,25 +180,23 @@ def main() -> None:
         )
 
     fig.update_layout(
-        title=dict(
-            text=(
-                "Slopegraph: Opus 4.7's predicted difficulty vs Gemma's empirical (Cell C, n=10)<br>"
-                "<sub>Each line = one record. Flat = calibrated. Down-slope = Opus overestimated; "
-                "up-slope = Opus underestimated.</sub>"
-            ),
-            y=0.97, x=0.02, xanchor="left", yanchor="top",
-        ),
-        template="plotly_white",
         width=900,
         height=580,
-        margin=dict(l=80, r=30, t=110, b=110),
         legend=dict(
             orientation="h",
             yanchor="bottom", y=-0.18, xanchor="center", x=0.5,
-            bgcolor="rgba(255,255,255,0.85)",
-            bordercolor="lightgray", borderwidth=1,
         ),
     )
+    apply_morel_template(
+        fig,
+        title="Slopegraph: Opus 4.7's predicted difficulty vs Gemma's empirical (Cell C, n=10)",
+        subtitle=(
+            "Each line = one record. Flat = calibrated. "
+            "Down-slope = Opus overestimated; up-slope = Opus underestimated."
+        ),
+        attribution="studies/001-tool-calibration / inv 006",
+    )
+    fig.update_layout(margin=dict(l=80, r=30, t=110, b=110))
 
     out_html = HERE / "prediction_slopegraph.html"
     out_png = HERE / "prediction_slopegraph.png"

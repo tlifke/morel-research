@@ -30,9 +30,12 @@ import plotly.graph_objects as go
 HERE = Path(__file__).resolve().parent
 STUDY_ROOT = HERE.parent.parent.parent
 RESULTS_ROOT = STUDY_ROOT / "results"
+REPO_ROOT = Path(__file__).resolve().parents[5]
 
 sys.path.insert(0, str(STUDY_ROOT))
+sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
 from harness.parser import classify_trial  # noqa: E402
+from branding import apply_morel_template, MOREL_COLORS  # noqa: E402
 
 DATE = "2026-05-12"
 
@@ -87,29 +90,32 @@ def main() -> None:
     # extreme sub-regions of those half-planes.
 
     rects = [
-        ("Both fail",      -0.05, 0.20, -0.05, 0.20, "rgba(200,80,80,0.10)",   0.075, 0.075),
-        ("Both succeed",    0.80, 1.05,  0.80, 1.05, "rgba(80,160,80,0.12)",   0.925, 0.925),
-        ("Scale Solves",   -0.05, 0.25,  0.75, 1.05, "rgba(46,89,132,0.20)",   0.10,  0.90),
-        ("Scale Breaks",    0.75, 1.05, -0.05, 0.25, "rgba(196,78,82,0.20)",   0.90,  0.10),
+        ("Both fail",      -0.05, 0.20, -0.05, 0.20, "rgba(193,79,79,0.10)",   0.075, 0.075),
+        ("Both succeed",    0.80, 1.05,  0.80, 1.05, "rgba(45,80,22,0.12)",    0.925, 0.925),
+        ("Scale Solves",   -0.05, 0.25,  0.75, 1.05, "rgba(45,80,22,0.20)",    0.10,  0.90),
+        ("Scale Breaks",    0.75, 1.05, -0.05, 0.25, "rgba(193,105,79,0.22)",  0.90,  0.10),
     ]
     for name, x0, x1, y0, y1, color, ax, ay in rects:
         fig.add_shape(type="rect", x0=x0, x1=x1, y0=y0, y1=y1,
                       line=dict(width=0), fillcolor=color, layer="below")
         fig.add_annotation(x=ax, y=ay, text=name, showarrow=False,
-                           font=dict(size=11, color="#333"),
-                           bgcolor="rgba(255,255,255,0.78)", borderpad=2)
+                           font=dict(size=11, color=MOREL_COLORS["dark_earth"]),
+                           bgcolor="rgba(255,255,255,0.82)", borderpad=2)
 
     # Labels only for the off-diagonal half-planes — placed in
     # representative spots so the reader knows the dotted lines
     # delimit named territory.
     fig.add_annotation(x=0.42, y=0.92, text="Scale Improves",
-                       showarrow=False, font=dict(size=11, color="#5B9BD5"),
+                       showarrow=False,
+                       font=dict(size=11, color=MOREL_COLORS["forest_green"]),
                        bgcolor="rgba(255,255,255,0.0)", borderpad=2)
     fig.add_annotation(x=0.65, y=0.18, text="Scale Hurts",
-                       showarrow=False, font=dict(size=11, color="#C28B3D"),
+                       showarrow=False,
+                       font=dict(size=11, color=MOREL_COLORS["terracotta_dark"]),
                        bgcolor="rgba(255,255,255,0.0)", borderpad=2)
     fig.add_annotation(x=0.55, y=0.55, text="Similar",
-                       showarrow=False, font=dict(size=11, color="#888"),
+                       showarrow=False,
+                       font=dict(size=11, color=MOREL_COLORS["muted_text"]),
                        bgcolor="rgba(255,255,255,0.0)", borderpad=2,
                        textangle=-45)
 
@@ -117,18 +123,18 @@ def main() -> None:
     fig.add_trace(go.Scatter(
         x=[0, 1], y=[0, 1],
         mode="lines",
-        line=dict(color="gray", dash="dash", width=1),
+        line=dict(color=MOREL_COLORS["muted_text"], dash="dash", width=1),
         showlegend=False,
         hoverinfo="skip",
     ))
     # ±0.2 bands around diagonal (similar performance corridor)
     fig.add_trace(go.Scatter(
         x=[0, 1], y=[0.20, 1.20],
-        mode="lines", line=dict(color="lightgray", dash="dot", width=1),
+        mode="lines", line=dict(color=MOREL_COLORS["cream_dark"], dash="dot", width=1),
         showlegend=False, hoverinfo="skip"))
     fig.add_trace(go.Scatter(
         x=[0.20, 1.20], y=[0, 1],
-        mode="lines", line=dict(color="lightgray", dash="dot", width=1),
+        mode="lines", line=dict(color=MOREL_COLORS["cream_dark"], dash="dot", width=1),
         showlegend=False, hoverinfo="skip"))
 
     # ----- points -----
@@ -137,7 +143,10 @@ def main() -> None:
         h = int(hashlib.sha256(f"{rid}|{axis}".encode()).hexdigest()[:8], 16)
         return (h % 100) / 100 * 0.04 - 0.02
 
-    for prompt_set, color in [("neutral", "#A4C5E8"), ("directive", "#C44E52")]:
+    for prompt_set, color in [
+        ("neutral", MOREL_COLORS["forest_green"]),
+        ("directive", MOREL_COLORS["terracotta"]),
+    ]:
         xs, ys, texts = [], [], []
         for rid in all_rids:
             x = data[("4B", prompt_set)].get(rid)
@@ -162,26 +171,23 @@ def main() -> None:
         ))
 
     fig.update_layout(
-        title=dict(
-            text=(
-                "Per-record success — banded view: 4B IT vs 12B IT (temp=1.0)<br>"
-                "<sub>each dot = one record. Bands carve the plane into named regions for reading."
-                " The diagonal is scale-neutral; ±0.20 dotted lines mark a 'similar performance' corridor.</sub>"
-            ),
-            y=0.97, x=0.02, xanchor="left", yanchor="top",
-        ),
         xaxis_title="4B IT success rate (n=10)",
         yaxis_title="12B IT success rate (n=10)",
         xaxis=dict(range=[-0.05, 1.08], tickformat=".0%"),
         yaxis=dict(range=[-0.05, 1.08], tickformat=".0%"),
-        template="plotly_white",
         width=820,
         height=820,
-        margin=dict(l=70, r=30, t=120, b=70),
         legend=dict(title="prompt set", orientation="v",
-                    yanchor="bottom", y=0.02, xanchor="right", x=0.98,
-                    bgcolor="rgba(255,255,255,0.9)",
-                    bordercolor="lightgray", borderwidth=1),
+                    yanchor="bottom", y=0.02, xanchor="right", x=0.98),
+    )
+    apply_morel_template(
+        fig,
+        title="Per-record success — banded view: 4B IT vs 12B IT (temp=1.0)",
+        subtitle=(
+            "each dot = one record. Bands carve the plane into named regions for reading. "
+            "The diagonal is scale-neutral; ±0.20 dotted lines mark a 'similar performance' corridor."
+        ),
+        attribution="studies/001-tool-calibration / inv 006",
     )
 
     out_html = HERE / "per_record_scatter_banded.html"

@@ -30,20 +30,24 @@ HERE = Path(__file__).resolve().parent
 STUDY_ROOT = HERE.parent.parent.parent
 SEEDS_PATH = STUDY_ROOT / "seeds.jsonl"
 RESULTS_ROOT = STUDY_ROOT / "results"
+REPO_ROOT = Path(__file__).resolve().parents[5]
 
 sys.path.insert(0, str(STUDY_ROOT))
+sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
 from harness.parser import classify_trial  # noqa: E402
+from branding import apply_morel_template, MOREL_COLORS, MOREL_CYCLE  # noqa: E402
 
 DATE = "2026-05-12"
 BUCKETS = ["trivial", "easy", "medium", "hard", "extreme"]
 
+# Six categorical tools mapped onto the Morel brand cycle.
 TOOL_PALETTE = {
-    "calculator":               "#4C78A8",
-    "python_execute":           "#F58518",
-    "datetime_now":             "#54A24B",
-    "unit_convert":             "#B279A2",
-    "general_knowledge_lookup": "#E45756",
-    "user_knowledge_lookup":    "#72B7B2",
+    "calculator":               MOREL_CYCLE[0],
+    "python_execute":           MOREL_CYCLE[1],
+    "datetime_now":             MOREL_CYCLE[2],
+    "unit_convert":             MOREL_CYCLE[3],
+    "general_knowledge_lookup": MOREL_CYCLE[4],
+    "user_knowledge_lookup":    MOREL_CYCLE[5],
 }
 
 # Methodology bucket boundaries on the success_rate axis.
@@ -94,10 +98,10 @@ def main() -> None:
     for y_val, label in BUCKET_LINES:
         fig.add_shape(type="line",
                       x0=-0.5, x1=4.5, y0=y_val, y1=y_val,
-                      line=dict(color="lightgray", dash="dot", width=1))
+                      line=dict(color=MOREL_COLORS["cream_dark"], dash="dot", width=1))
         fig.add_annotation(x=4.4, y=y_val, text=label, showarrow=False,
                            xanchor="right", yanchor="bottom",
-                           font=dict(size=9, color="#888"))
+                           font=dict(size=9, color=MOREL_COLORS["muted_text"]))
 
     for model_label, sr_map, marker_symbol in [
         ("Gemma 3 4B IT", sr_4b, "circle"),
@@ -143,16 +147,6 @@ def main() -> None:
                 ))
 
     fig.update_layout(
-        title=dict(
-            text=(
-                "Per-record curator-vs-empirical (Cell C, n=10) — color by tool, "
-                "shape by model<br>"
-                "<sub>x: curator-assigned bucket. y: empirical success_rate. "
-                "Bucket reference lines mark methodology thresholds. "
-                "Circles = 4B, diamonds = 12B.</sub>"
-            ),
-            y=0.97, x=0.02, xanchor="left", yanchor="top",
-        ),
         xaxis=dict(
             title="curator-assigned difficulty_label.value",
             tickmode="array",
@@ -165,17 +159,26 @@ def main() -> None:
             range=[-0.05, 1.05],
             tickformat=".0%",
         ),
-        template="plotly_white",
         width=1080,
         height=620,
-        margin=dict(l=80, r=240, t=110, b=70),
         legend=dict(
             orientation="v",
             yanchor="top", y=1.0, xanchor="left", x=1.02,
             font=dict(size=10),
-            grouptitlefont=dict(size=11, color="#333"),
+            grouptitlefont=dict(size=11, color=MOREL_COLORS["dark_earth"]),
         ),
     )
+    apply_morel_template(
+        fig,
+        title="Per-record curator-vs-empirical (Cell C, n=10) — color by tool, shape by model",
+        subtitle=(
+            "x: curator-assigned bucket. y: empirical success_rate. "
+            "Bucket reference lines mark methodology thresholds. "
+            "Circles = 4B, diamonds = 12B."
+        ),
+        attribution="studies/001-tool-calibration / inv 006",
+    )
+    fig.update_layout(margin=dict(l=80, r=240, t=110, b=70))
 
     out_html = HERE / "curator_vs_empirical_dots.html"
     out_png = HERE / "curator_vs_empirical_dots.png"
