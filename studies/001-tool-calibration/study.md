@@ -322,6 +322,31 @@ follow-on prompt-engineering work in
   Future routine runs default to n=10 with n=20 reserved for known
   boundary cases.
 
+## Observations from the 006 temperature × prompt 2×2 (2026-05-12)
+
+Full breakdown in
+`investigations/006-temperature-prompt/investigation.md`. Key
+findings worth flagging at the study level:
+
+- **Directive prompts reduce under_calls by ~60% but leave
+  over_calls unchanged.** The "REQUIRED whenever..." style of
+  prescriptive language addresses one failure mode (the model
+  doesn't reach for a needed tool) without affecting the
+  structurally separate over-call mode.
+- **Directive prompts introduce real regressions** — over-calls on
+  3 trivial halves and an under-call on python_execute fibonacci
+  (model reasons in head with Pisano period instead of using the
+  tool). Net effect is +8.3 pp at temp=0, +10.8 pp at temp=1.0,
+  but not strictly Pareto.
+- **temp=0 vs temp=1.0** doesn't dramatically change cell means
+  (-3 pp at neutral, -1 pp at directive). Per-record behavior
+  changes substantially though — temp=1.0 surfaces partial
+  failures that look total at temp=0.
+- **Methodological lock-in**: temp=1.0 with top_p=0.95 is the
+  production-typical baseline. Neutral prompts remain the canonical
+  reference for matched-pair calibration measurements. Directive
+  prompts are a separate research condition, not the default.
+
 ## Observations carried forward from A1
 
 - **Curator-LLM arithmetic errors validate seed design.** During
