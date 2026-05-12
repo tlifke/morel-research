@@ -78,16 +78,14 @@ def main() -> None:
     all_rids = sorted(set().union(*(d.keys() for d in data.values())))
     fig = go.Figure()
 
-    # ----- shaded region polygons -----
-    # Regions are defined relative to the y=x diagonal so they don't
-    # overlap the "similar" corridor. The two large diagonal-aligned
-    # regions ("Scale Improves" / "Scale Hurts") are triangles cut by
-    # y = x ± 0.20 lines. The four corner regions are rectangles for
-    # the extreme cases (both succeed / both fail / Scale Solves /
-    # Scale Breaks).
-    # Layer order: shapes draw under traces in Plotly.
+    # ----- region labels only -----
+    # The dotted ±0.20 diagonal lines (added below) already mark the
+    # "similar" corridor boundaries, so the named regions (Scale
+    # Improves / Scale Hurts) don't need explicit shaded shapes —
+    # they live in the half-planes off the diagonal. Only the four
+    # corner regions stay as shaded rectangles since they pick out
+    # extreme sub-regions of those half-planes.
 
-    # Rectangular regions: (name, x0,x1,y0,y1, color, ax,ay)
     rects = [
         ("Both fail",      -0.05, 0.20, -0.05, 0.20, "rgba(200,80,80,0.10)",   0.075, 0.075),
         ("Both succeed",    0.80, 1.05,  0.80, 1.05, "rgba(80,160,80,0.12)",   0.925, 0.925),
@@ -101,31 +99,19 @@ def main() -> None:
                            font=dict(size=11, color="#333"),
                            bgcolor="rgba(255,255,255,0.78)", borderpad=2)
 
-    # Triangular regions, aligned to the diagonal ±0.20 corridor.
-    # Scale Improves: above y = x+0.20, between Solves corner (x≥0.25)
-    # and Both-Succeed corner (x≤0.80). Triangle (0.25,0.45) →
-    # (0.25,1.0) → (0.80,1.0) closed back to start; (the diagonal
-    # +0.20 line passes through (0.25,0.45) and (0.80,1.00).
-    fig.add_shape(type="path",
-                  path="M 0.25,0.45 L 0.25,1.0 L 0.80,1.0 Z",
-                  line=dict(width=0),
-                  fillcolor="rgba(91,155,213,0.20)",
-                  layer="below")
-    fig.add_annotation(x=0.40, y=0.90, text="Scale Improves",
-                       showarrow=False, font=dict(size=11, color="#333"),
-                       bgcolor="rgba(255,255,255,0.78)", borderpad=2)
-
-    # Scale Hurts: below y = x-0.20, mirror of Scale Improves.
-    # Triangle (0.25,0.05) → (0.80,0.05) → (0.80,0.60) closed; the
-    # diagonal -0.20 line passes through (0.25,0.05) and (0.80,0.60).
-    fig.add_shape(type="path",
-                  path="M 0.25,0.05 L 0.80,0.60 L 0.80,0.05 Z",
-                  line=dict(width=0),
-                  fillcolor="rgba(255,170,70,0.22)",
-                  layer="below")
-    fig.add_annotation(x=0.65, y=0.16, text="Scale Hurts",
-                       showarrow=False, font=dict(size=11, color="#333"),
-                       bgcolor="rgba(255,255,255,0.78)", borderpad=2)
+    # Labels only for the off-diagonal half-planes — placed in
+    # representative spots so the reader knows the dotted lines
+    # delimit named territory.
+    fig.add_annotation(x=0.42, y=0.92, text="Scale Improves",
+                       showarrow=False, font=dict(size=11, color="#5B9BD5"),
+                       bgcolor="rgba(255,255,255,0.0)", borderpad=2)
+    fig.add_annotation(x=0.65, y=0.18, text="Scale Hurts",
+                       showarrow=False, font=dict(size=11, color="#C28B3D"),
+                       bgcolor="rgba(255,255,255,0.0)", borderpad=2)
+    fig.add_annotation(x=0.55, y=0.55, text="Similar",
+                       showarrow=False, font=dict(size=11, color="#888"),
+                       bgcolor="rgba(255,255,255,0.0)", borderpad=2,
+                       textangle=-45)
 
     # Diagonal reference
     fig.add_trace(go.Scatter(
