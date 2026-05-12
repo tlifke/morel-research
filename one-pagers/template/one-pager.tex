@@ -1,7 +1,7 @@
 % One-pager template — morel-research
 %
 % Fixed structure (do not reorder):
-%   1. Title block (title, authors, date, repo, study-ref)
+%   1. Title block (title, authors, date)
 %   2. Research question
 %   3. Context
 %   4. Methods
@@ -11,8 +11,7 @@
 %        - >=1 on key limitations
 %        - any remaining bullets for results that didn't make the figure
 %
-% Compile with: latexmk -xelatex one-pager.tex   (see Makefile).
-% Requires xelatex for fontspec/Morel typography.
+% Compile with `make` (pdflatex via latexmk).
 %
 % Claude scaffolds this file but does NOT write the prose. The human writes
 % the prose. Claude may suggest structure, edits, and questions during
@@ -20,20 +19,24 @@
 
 \documentclass[10pt]{article}
 
-% Morel branding lives in `one-pagers/morel.sty`. The Makefile sets
-% TEXINPUTS so xelatex can find it from any writeup subdirectory.
-\usepackage{morel}
+\usepackage[margin=0.9in]{geometry}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{parskip}
 
-\newcommand{\paperRepoShort}{tlifke/morel-research}
+\setlist[itemize]{leftmargin=1.2em,topsep=0.2em,itemsep=0.15em,parsep=0pt}
+
+\pagestyle{empty}
+
+\title{TITLE GOES HERE}
+\author{Author One, Author Two}
+\date{YYYY-MM-DD \quad\textbar\quad \href{https://github.com/tlifke/morel-research}{tlifke/morel-research} \quad\textbar\quad \texttt{\small studies/NNN-slug / NNN-investigation}}
 
 \begin{document}
 
-\moreltitle
-  {TITLE GOES HERE}
-  {Author One, Author Two}
-  {YYYY-MM-DD}
-  {\href{https://github.com/tlifke/morel-research}{tlifke/morel-research}}
-  {studies/NNN-slug / NNN-investigation}
+\maketitle
 
 \section*{Research question}
 % One short paragraph. State the question and why it matters in one breath.
@@ -52,7 +55,7 @@ PROSE GOES HERE.
   \centering
   % Replace with the actual figure file (PDF or PNG):
   % \includegraphics[width=0.92\linewidth]{figure.pdf}
-  \fcolorbox{morelborder}{morelparchment}{\parbox{0.86\linewidth}{\centering\vspace{2em}\color{morelmuted}FIGURE PLACEHOLDER\vspace{2em}}}
+  \fbox{\parbox{0.86\linewidth}{\centering\vspace{2em}FIGURE PLACEHOLDER\vspace{2em}}}
   \caption{ONE-SENTENCE CAPTION THAT SAYS WHAT TO SEE.}
 \end{figure}
 
