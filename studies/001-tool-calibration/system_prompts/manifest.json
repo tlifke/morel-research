@@ -77,6 +77,38 @@
       "framing": "neutral",
       "version": 1,
       "description": "Only user_knowledge_lookup is exposed. Probes private-context calibration (recognizing the model cannot know the user)."
+    },
+    {
+      "id": "sys_all_tools_directive_v1",
+      "template": "all_tools_directive_v1.txt",
+      "tool_set": ["calculator", "python_execute", "datetime_now", "unit_convert", "general_knowledge_lookup", "user_knowledge_lookup"],
+      "framing": "directive",
+      "version": 1,
+      "description": "Directive variant of all_tools_neutral_v1 — bundles the four winning 005 variants (ukl v1a_antirefusal, python_execute vP1_boundary, gkl vG1_temporal, calc/dt/unit_convert vT1_skip_trivial). Calculator description merges both vP1 (arithmetic-only) and vT1 (skip trivial) guidance."
+    },
+    {
+      "id": "sys_calc_only_directive_v1",
+      "template": "calc_only_directive_v1.txt",
+      "tool_set": ["calculator"],
+      "framing": "directive",
+      "version": 1,
+      "description": "Directive variant of calc_only_neutral_v1 — calc with vP1 + vT1 combined guidance."
+    },
+    {
+      "id": "sys_py_only_directive_v1",
+      "template": "py_only_directive_v1.txt",
+      "tool_set": ["python_execute"],
+      "framing": "directive",
+      "version": 1,
+      "description": "Directive variant of py_only_neutral_v1 — python_execute with vP1-style REQUIRED-for-non-arithmetic guidance."
+    },
+    {
+      "id": "sys_gkl_only_directive_v1",
+      "template": "gkl_only_directive_v1.txt",
+      "tool_set": ["general_knowledge_lookup"],
+      "framing": "directive",
+      "version": 1,
+      "description": "Directive variant of gkl_only_neutral_v1 — gkl with vG1-style temporal anchoring + specificity framing."
     }
   ]
 }

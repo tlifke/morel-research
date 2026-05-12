@@ -65,6 +65,18 @@ def main() -> int:
                    help="Optional cap on record count for quick smoke tests.")
     p.add_argument("--dry-run", action="store_true",
                    help="Build prompts and identify the dispatch but don't call the model.")
+    p.add_argument("--temperature", type=float, default=None,
+                   help="Override sampling temperature (default: backend default, currently 1.0).")
+    p.add_argument("--top-p", type=float, default=None,
+                   help="Override sampling top_p (default: backend default, currently 0.95).")
+    p.add_argument("--prompt-set", default="neutral", choices=["neutral", "directive"],
+                   help="When 'directive', remaps each record's `*_neutral_v1` system_prompt_id "
+                        "to its `*_directive_v1` sibling (see system_prompts/manifest.json). "
+                        "Used for the 006 temperature × prompt 2x2.")
+    p.add_argument("--results-tag", default=None,
+                   help="Optional filename prefix for the results file. Without this, "
+                        "results land at results/<model>/<date>.jsonl. With --results-tag X, "
+                        "the file becomes results/<model>/<X>_<date>.jsonl.")
     args = p.parse_args()
 
     backend = get_backend(args.backend)
@@ -77,7 +89,8 @@ def main() -> int:
     run_id = uuid.uuid4().hex[:8]
     out_dir = RESULTS_ROOT / _safe_model_id(args.model)
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f"{today}.jsonl"
+    fname = f"{args.results_tag}_{today}.jsonl" if args.results_tag else f"{today}.jsonl"
+    out_path = out_dir / fname
 
     print(f"runner: {len(records)} records × n={args.n} trials → {out_path}")
     print(f"run_id={run_id} backend={args.backend} model={args.model} "
@@ -85,6 +98,12 @@ def main() -> int:
 
     for rec in records:
         sys_id = rec["system_prompt_id"]
+        if args.prompt_set == "directive":
+            directive_id = sys_id.replace("_neutral_v1", "_directive_v1")
+            if directive_id in manifest:
+                sys_id = directive_id
+            # If there's no directive variant (e.g. sys_no_tools_v1),
+            # fall through to the original prompt unchanged.
         manifest_entry = manifest[sys_id]
         sys_body = load_system_prompt_body(manifest_entry, SYSTEM_PROMPTS_DIR)
         prompt = build_prompt(rec, system_body=sys_body)
@@ -97,8 +116,13 @@ def main() -> int:
         successes = 0
         over_calls = 0
         under_calls = 0
+        gen_kwargs = {}
+        if args.temperature is not None:
+            gen_kwargs["temperature"] = args.temperature
+        if args.top_p is not None:
+            gen_kwargs["top_p"] = args.top_p
         for trial_idx in range(args.n):
-            result = backend.generate(prompt, model=args.model)
+            result = backend.generate(prompt, model=args.model, **gen_kwargs)
             ok, err = classify_trial(rec, result.output)
             successes += int(ok)
             if err == "over_call":
@@ -119,6 +143,10 @@ def main() -> int:
                     "trial_idx": trial_idx,
                     "model": args.model,
                     "backend": args.backend,
+                    "prompt_set": args.prompt_set,
+                    "resolved_system_prompt_id": sys_id,
+                    "temperature": args.temperature,
+                    "top_p": args.top_p,
                     "success": ok,
                     "error_type": err,
                     "output": result.output,
