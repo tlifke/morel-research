@@ -7,23 +7,42 @@ enum happens at analysis time using thresholds defined here, *not* at
 data-write time. Changing the thresholds therefore does not require
 re-running any calibration trials — it's a config change.
 
+## Sampling defaults (Decision in `004-calibration-pilot`, 2026-05-12)
+
+Default sampling for calibration trials: `temperature=1.0,
+top_p=0.95`. Original pilot used `temperature=0.0` (greedy); reviewer
+flagged this as a legacy convention that doesn't cleanly probe how
+models actually behave in deployment. Future runs use the new
+defaults; the 4B IT pilot data is preserved as a deterministic
+baseline. Captured in `harness/inference.py`.
+
 ## Error-type classification (Decision 2, 2026-05-12)
 
 Beyond success vs. failure, every failed trial is classified as one
-of two error types — distinguishing **how undesirable** the failure
-is. Per reviewer direction:
+of three error types — distinguishing **how undesirable** the
+failure is. Per reviewer direction, severity ordering (worst →
+least undesirable): `under_call > wrong_tool > over_call`.
 
-- **`over_call`** — the model invoked a tool when none was warranted.
-  *Less undesirable.* The tool typically returns the correct answer
-  anyway, so over-calling produces correct outputs at the cost of
-  unnecessary tool invocations. A model that consistently over-calls
-  has a *cost* problem, not an *accuracy* problem.
+- **`over_call`** — the model invoked the target tool when none was
+  warranted (or invoked any tool when none was warranted).
+  *Least undesirable.* The tool typically returns the correct
+  answer anyway, so over-calling produces correct outputs at the
+  cost of unnecessary tool invocations. A model that consistently
+  over-calls has a *cost* problem, not an *accuracy* problem.
 
-- **`under_call`** — the model failed to invoke a warranted tool.
-  *More undesirable.* The model likely produced a wrong or
-  fabricated answer in lieu of the lookup/computation it should have
-  used. This is the failure mode the matched-pair design is most
-  worried about.
+- **`wrong_tool`** — the model invoked some tool, but not the
+  target. *Intermediate.* The model correctly recognized that a
+  tool was needed but picked the wrong one. Surfaced by the
+  SHA-256 / sum-of-primes cases in the 4B IT pilot
+  (`../004-calibration-pilot/`), where the model invoked
+  `calculator` with python-style expressions instead of
+  `python_execute`.
+
+- **`under_call`** — the model invoked no tool when a target was
+  warranted. *Most undesirable.* The model likely produced a wrong
+  or fabricated answer in lieu of the lookup/computation it should
+  have used. This is the failure mode the matched-pair design is
+  most worried about.
 
 The runner records `error_type` per trial alongside `success`. The
 analyzer aggregates by record and reports per-record over_call /
