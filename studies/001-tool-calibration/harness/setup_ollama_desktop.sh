@@ -44,7 +44,7 @@ fi
 
 echo
 echo "==> Step 3: configure Ollama to listen on 0.0.0.0 (Tailscale-reachable)"
-if [ -d "${OLLAMA_OVERRIDE_DIR}" ] || sudo test -d "${OLLAMA_OVERRIDE_DIR}" 2>/dev/null; then
+if command -v systemctl >/dev/null 2>&1 && [ -d /etc/systemd/system ]; then
     sudo mkdir -p "${OLLAMA_OVERRIDE_DIR}"
     sudo tee "${OLLAMA_OVERRIDE_DIR}/override.conf" >/dev/null <<'EOF'
 [Service]
@@ -55,6 +55,12 @@ EOF
     sudo systemctl daemon-reload
     sudo systemctl restart ollama
     echo "    systemd override written; ollama restarted"
+    # Confirm the bind took effect (helps catch silent override misses).
+    if ss -tlnp 2>/dev/null | grep -q "0.0.0.0:11434"; then
+        echo "    confirmed: ollama listening on 0.0.0.0:11434"
+    else
+        echo "    WARNING: ollama still bound to 127.0.0.1 — inspect with: systemctl show ollama | grep Environment"
+    fi
 else
     echo "    systemd not available; export OLLAMA_HOST=0.0.0.0:11434 manually before launching ollama."
 fi
