@@ -82,10 +82,19 @@ _Populate as we go. Pre-A2 sketch:_
 
 ## Decisions
 
-_Populate as work proceeds. Format:_
-
-> **Decision N — short title** (date)
-> What was chosen, alternatives considered, why this won.
+> **Decision 1 — per-tool difficulty axes frozen as drafted** (2026-05-11)
+> The axes in `difficulty_axes_proposal.md` (for all six tools:
+> calculator, python_execute, datetime_now, unit_convert,
+> general_knowledge_lookup, user_knowledge_lookup) are signed off
+> as-is by the human reviewer. The proposal's "Things to flag" list
+> remains open as research questions — particularly:
+> band-shift arithmetic (additive vs. multiplicative vs. table),
+> datetime_now's runtime-dependence floor, python_execute's squishy
+> "steps" axis, and cross-tool axis sharing for `precision_decimals`
+> and `temporal_position`. None of these block downstream work.
+> The performativity of the axes themselves (do they predict
+> empirical difficulty?) is logged as a sibling-investigation
+> Forward-looking entry in `studies/001-tool-calibration/study.md`.
 
 ## Results
 
