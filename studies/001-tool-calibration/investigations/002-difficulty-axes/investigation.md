@@ -190,18 +190,100 @@ enough information to re-score retrospectively without re-running.
    Likely persists at 12B; can be probed with paraphrase pairs in
    A3 bulk generation.
 
+### Tool-definition A/B experiment — user_knowledge_lookup (2026-05-12)
+
+Follow-on to the pilot's tool-blind-deferral finding. Probed whether
+the 0/20 under-call on user_knowledge_lookup hard halves could be
+fixed by *only* changing the tool definition in the system prompt
+(not the rest of the prompt). Five variants tested at n=5 across the
+3 ukl hard records; winners re-validated at n=10. Sampling
+temperature=1.0, top_p=0.95 (Decision 3 below).
+
+Variants:
+- **v0_baseline**: original A1 wording — "search the current user's
+  private profile (identity, family, calendar, preferences); same
+  shape as general_knowledge_lookup."
+- **v1_directive**: same tool name + description that begins
+  "REQUIRED whenever the user asks about themselves (their family,
+  schedule, history, preferences, or anything they personally know)..."
+- **v2_renamed**: rename tool to `lookup_user_info`, baseline
+  description.
+- **v3_epistemic**: same tool name + description that addresses the
+  refusal pattern: "Use whenever the user asks about themselves
+  ('I', 'my', 'me'); the tool DOES give you access to this
+  information even though you cannot know it directly."
+- **v4_combined**: rename + directive + epistemic framing.
+
+Results:
+
+| Variant | n=5 overall | n=10 overall | Note |
+|---------|------------:|-------------:|------|
+| v1_directive | 73.3% | 60.0% | Single-variable winner — prescriptive language alone fixes most |
+| v4_combined | 26.7% | 26.7% | Worse than v1; suggests over-cueing confuses |
+| v3_epistemic | 6.7% | — | Addressing refusal directly without prescription barely helps |
+| v0_baseline | 0.0% | — | Control |
+| v2_renamed | 0.0% | — | Naming alone has no effect |
+
+**Conclusion:** the under-call failure is *not* an irreducible
+post-training bias. It can be substantially mitigated by adding
+prescriptive language to the tool description (e.g. "REQUIRED
+whenever..."). Naming, epistemic framing, and combined cues are
+strictly weaker.
+
+**Hypothesis revision:** the original tool-blind-deferral pattern
+isn't "the model can't connect refusal to tooling" — it's "the
+model's prior on refusal is stronger than its prior on tool use,
+unless tool-use is made imperative." The instruction-tuning effect
+is real but defeatable at the prompt layer.
+
+**Practical recommendation for the canonical A1 system prompts:**
+upgrade the user_knowledge_lookup description to v1_directive
+wording. The other tools' descriptions probably benefit from the
+same prescriptive treatment but weren't part of this experiment;
+worth a brief sweep before the bulk A3 generation phase. This is
+a tool-spec edit, not a methodology change — doesn't invalidate
+prior A4 pilot data, but means subsequent A4 runs should use the
+upgraded prompts and we re-baseline against them.
+
+> **Decision 2 — `wrong_tool` error_type added** (2026-05-12)
+> The pilot run surfaced two records (SHA-256 hash, sum-of-primes)
+> where 4B IT invoked `calculator` with python-style expressions
+> instead of `python_execute`. The old classifier scored these as
+> `under_call` (target tool not invoked), conflating "called the
+> wrong tool" with "called nothing." Added a third error_type
+> `wrong_tool` — invoked some tool but not the target — and updated
+> the analyzer to surface it. Reviewer policy on severity (Decision
+> 2 of `calibration_methodology.md`) still has under_call most
+> undesirable, wrong_tool intermediate, over_call least.
+
+> **Decision 3 — switch sampling defaults to temperature=1.0, top_p=0.95** (2026-05-12)
+> The original pilot used temperature=0.0 (greedy). Per reviewer
+> direction, temperature=0 is a legacy convention that doesn't
+> cleanly probe production-typical behavior. New defaults in
+> `harness/inference.py`: temperature=1.0, top_p=0.95. Future
+> runs (including 12B IT) use these. The 4B pilot data was at
+> temp=0 and remains valid as a deterministic baseline; the n=10
+> tool-variant confirmation runs were already at the new defaults.
+
 ### Next steps queued
 
-1. Add wrong-tool-selection to the scoring step (retrospective on
-   this run's JSONL).
-2. Run 12B IT (`gemma3:12b-it-qat`) — same harness, same corpus.
-   Estimate ~2–3 hours wall time. Compare per-record failure modes
-   to 4B; expect 12B to fix some heuristic over-calls and possibly
-   the wrong-tool selection cases, less expectation of fixing
-   `user_knowledge_lookup` tool-blind deferral.
-3. Reset n default to 10 for routine runs; reserve n=20 for
+1. ~~Add wrong-tool-selection to the scoring step.~~ (Done —
+   Decision 2.)
+2. Sweep the other tool descriptions for prescriptive-language
+   upgrades analogous to v1_directive — before the bulk A3
+   generation phase. The 4B pilot showed wrong-tool selection on
+   python_execute and confabulation on general_knowledge_lookup
+   ai_tech; the same prescriptive pattern may help both.
+3. Run 12B IT (`gemma3:12b-it-qat`) — same harness, same corpus,
+   same upgraded system prompts. Estimate ~2–3 hours wall time.
+   Compare per-record failure modes to 4B; expect 12B to fix some
+   heuristic over-calls and possibly the wrong-tool selection
+   cases. Open question: does 12B still need the v1_directive
+   upgrade, or does it correctly invoke user_knowledge_lookup on
+   the baseline tool description?
+4. Reset n default to 10 for routine runs; reserve n=20 for
    records with `expected_call_confidence: low` and any flagged-
-   boundary records from earlier runs.
+   boundary records.
 
 ## Forward-looking
 

@@ -44,7 +44,8 @@ class InferenceBackend:
         model: str,
         stop: list[str] | None = None,
         max_tokens: int = 512,
-        temperature: float = 0.0,
+        temperature: float = 1.0,
+        top_p: float = 0.95,
     ) -> GenerationResult:
         raise NotImplementedError
 
@@ -70,14 +71,21 @@ class OllamaBackend(InferenceBackend):
         model: str,
         stop: list[str] | None = None,
         max_tokens: int = 512,
-        temperature: float = 0.0,
+        temperature: float = 1.0,
+        top_p: float = 0.95,
     ) -> GenerationResult:
+        # Defaults (temperature=1.0, top_p=0.95) follow current
+        # recommended sampling for production-typical behavior on
+        # modern instruction-tuned models. temperature=0 is a legacy
+        # convention that doesn't cleanly probe how models actually
+        # behave in deployment.
         payload = {
             "model": model,
             "prompt": prompt,
             "stream": False,
             "options": {
                 "temperature": temperature,
+                "top_p": top_p,
                 "num_predict": max_tokens,
             },
         }

@@ -53,15 +53,24 @@ def classify_trial(record: dict, output: str) -> tuple[bool, str | None]:
         Per reviewer direction (2026-05-12): less undesirable, since
         the tool typically ensures correctness even on tasks the
         model could have answered directly.
-      - `"under_call"` — model failed to invoke a warranted tool.
-        More undesirable — likely produces wrong answers.
+      - `"under_call"` — model invoked NO tool when a target was
+        warranted. The most undesirable failure mode — likely
+        produces wrong answers from confabulation.
+      - `"wrong_tool"` — model invoked a tool, but not the target.
+        Recognized a tool was needed; picked the wrong one.
+        Separated from under_call so the SHA-256 / prime-sum
+        pattern (model called `calculator` when `python_execute`
+        was the target) doesn't get conflated with the
+        user_knowledge_lookup pattern (model called nothing).
 
     Scoring rules (per `calibration_methodology.md`):
-      - `tool_target=="none"`: success iff no tools were invoked.
+      - `tool_target=="none"`: success iff no tools were invoked
+        (any invocation → over_call).
       - `expected_tool_call=True`: success iff `tool_target` was
-        invoked; under_call otherwise.
-      - `expected_tool_call=False`: success iff `tool_target` was
-        NOT invoked; over_call otherwise.
+        invoked; `wrong_tool` if some other tool invoked;
+        `under_call` if no tool invoked.
+      - `expected_tool_call=False`: success iff no tool invoked;
+        `over_call` regardless of which tool was invoked.
     """
     calls = parse_tool_calls(output)
     target = record["tool_target"]
@@ -69,10 +78,19 @@ def classify_trial(record: dict, output: str) -> tuple[bool, str | None]:
     if target == "none":
         return (len(calls) == 0, None if len(calls) == 0 else "over_call")
 
+    any_call = len(calls) > 0
     invoked_target = any(c.name == target for c in calls)
+
     if record["expected_tool_call"]:
-        return (invoked_target, None if invoked_target else "under_call")
-    return (not invoked_target, None if not invoked_target else "over_call")
+        if invoked_target:
+            return (True, None)
+        if any_call:
+            return (False, "wrong_tool")
+        return (False, "under_call")
+    # expected_tool_call is False
+    if any_call:
+        return (False, "over_call")
+    return (True, None)
 
 
 def scored_success(record: dict, output: str) -> bool:
