@@ -6,6 +6,7 @@ parents: []
 children:
   - studies/001-tool-calibration/investigations/001-foundations
   - studies/001-tool-calibration/investigations/002-difficulty-axes
+  - studies/001-tool-calibration/investigations/003-bulk-generation
 related: []
 axes:
   llm_capability: medium
@@ -78,6 +79,54 @@ This study is the substrate for several downstream questions:
   the pre-call calibration A1 probes. Inherits the A1 substrate
   (palette, schema, KBs, IDs); pair variation is `tool_helped` /
   `tool_insufficient`.
+
+### IT vs. base: does tool use live in the post-training layer or deeper?
+
+Phase A4 is initially scoped to IT models only (Gemma 3 4B IT and 12B
+IT). Base (pretrained, non-instruct) models are deferred — they're
+not trained on a chat template or tool-call format, so grading them
+on the same seeds needs a different prompt formatter and a more
+permissive parser. But there's a mechanistic-interpretability
+question worth probing once that infrastructure exists:
+
+**Hypothesis:** if there are dedicated "tool use" circuits in a model,
+they should show up in both IT and base variants — instruction
+tuning would surface and condition them, not create them. If
+post-training instead introduces tool-use behavior wholesale, only
+the IT models would exhibit it on this corpus.
+
+Resolution depends on what post-training actually does — full
+fine-tuning that can rewrite deep-layer circuitry (LoRA + extensive
+SFT/RLHF on tool-use traces could in principle reshape deeper than
+"just the last few layers"), or shallower adaptation. Open question
+worth a separate sub-investigation that runs both IT and base on the
+same matched-pair corpus and looks at: (a) raw tool-call rates,
+(b) activation patterns on tool-call vs. no-tool-call inputs (via
+NLA-style techniques, given Anthropic's NLA paper at A1's runtime
+anchor), (c) targeted ablations of identified circuits.
+
+```yaml
+llm_assessment:
+  model: claude-opus-4-7
+  date: 2026-05-11
+  llm_capability: medium
+  human_capability: high
+  confidence: medium
+  reasoning: |
+    Behavioral comparison (a) is LLM-easy once the base-model
+    harness exists. The interpretability work (b, c) is squarely
+    human-driven research; LLM can run pipelines and surface
+    correlations but the framing of "what counts as a tool-use
+    circuit" is a research question that needs human judgment.
+    Confidence medium because the upstream question — does
+    post-training rewrite deep layers — is itself contested in the
+    field; the experiment design depends on which prior the human
+    starts from.
+
+human_assessment: null
+
+divergence_notes: null
+```
 
 ### How performative are the per-tool difficulty axes? (probable sibling investigation)
 
