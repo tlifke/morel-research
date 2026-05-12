@@ -28,7 +28,7 @@ REPO_ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(STUDY_ROOT))
 sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
 from harness.parser import classify_trial  # noqa: E402
-from branding import apply_morel_template, MOREL_COLORS  # noqa: E402
+from branding import apply_morel_template, MOREL_COLORS, horizontal_legend  # noqa: E402
 
 DATE = "2026-05-12"
 BUCKETS = ["trivial", "easy", "medium", "hard", "extreme"]
@@ -67,11 +67,11 @@ def _jitter(rid: str) -> float:
 
 
 CATEGORY = {
-    "overestimated": {"color": MOREL_COLORS["terracotta_dark"],
+    "overestimated": {"color": MOREL_COLORS["slate_blue"],
                       "label": "Opus overestimated (Δ < 0)"},
     "calibrated":    {"color": MOREL_COLORS["forest_green"],
                       "label": "Calibrated (Δ = 0)"},
-    "underestimated":{"color": MOREL_COLORS["terracotta_light"],
+    "underestimated":{"color": MOREL_COLORS["terracotta"],
                       "label": "Opus underestimated (Δ > 0)"},
 }
 
@@ -180,12 +180,9 @@ def main() -> None:
         )
 
     fig.update_layout(
-        width=900,
-        height=580,
-        legend=dict(
-            orientation="h",
-            yanchor="bottom", y=-0.18, xanchor="center", x=0.5,
-        ),
+        width=1080,
+        height=640,
+        legend=horizontal_legend(),
     )
     apply_morel_template(
         fig,
@@ -196,7 +193,10 @@ def main() -> None:
         ),
         attribution="studies/001-tool-calibration / inv 006",
     )
-    fig.update_layout(margin=dict(l=80, r=30, t=110, b=110))
+    fig.update_layout(margin=dict(l=80, r=30, t=110, b=170))
+    for ann in fig.layout.annotations:
+        if ann.text and "001-tool-calibration" in ann.text:
+            ann.y = -0.28
 
     out_html = HERE / "prediction_slopegraph.html"
     out_png = HERE / "prediction_slopegraph.png"

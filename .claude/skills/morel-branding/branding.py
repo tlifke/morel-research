@@ -27,6 +27,7 @@ MOREL_COLORS: dict[str, str] = {
     "dark_earth": "#3B2F2F",
     "off_white": "#FAFAF8",
     "error_red": "#C14F4F",
+    "slate_blue": "#3D6478",
     "muted_text": "#6B5E5E",
     "axis_gridline": "#E8D5BF",
 }
@@ -128,8 +129,8 @@ def apply_morel_template(
             font=dict(family=MOREL_FONT_FAMILY, size=12,
                       color=MOREL_COLORS["dark_earth"]),
             bgcolor="rgba(255,255,255,0.92)",
-            bordercolor=MOREL_COLORS["cream_dark"],
-            borderwidth=1,
+            bordercolor="rgba(0,0,0,0)",
+            borderwidth=0,
         ),
         hoverlabel=dict(
             font=dict(family=MOREL_FONT_FAMILY,
@@ -170,3 +171,23 @@ def style_bars_by_group(
 ) -> dict[str, str]:
     """Map an iterable of group labels to brand colors in cycle order."""
     return {label: cycle_color(i) for i, label in enumerate(labels)}
+
+
+def horizontal_legend(*, y: float = -0.16, x: float = 0.5,
+                      entrywidth: int = 260) -> dict:
+    """Legend config for a horizontal legend placed below the plot.
+
+    Plotly's text-width estimator underestimates Greek/unicode chars
+    (Δ, ∝, etc.), which causes auto-fit horizontal legends to clip
+    the rightmost entry. Setting `entrywidth` with mode="pixels"
+    bypasses the estimator entirely.
+
+    Pair with figure width that comfortably fits `entrywidth * N + slack`
+    where N is the number of legend entries.
+    """
+    return dict(
+        orientation="h",
+        yanchor="top", y=y, xanchor="center", x=x,
+        entrywidthmode="pixels",
+        entrywidth=entrywidth,
+    )

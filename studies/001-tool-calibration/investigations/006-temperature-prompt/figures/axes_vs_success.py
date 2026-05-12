@@ -116,6 +116,19 @@ def main() -> None:
                         line=dict(color="white", width=1)),
             text=hover,
             hovertemplate="%{text}<extra></extra>",
+            showlegend=False,
+        ))
+        # Legend proxy with a fixed-size marker so the legend swatch
+        # isn't blown out by the variable bubble sizes above.
+        fig.add_trace(go.Scatter(
+            x=[None], y=[None],
+            mode="lines+markers",
+            name=model_label,
+            line=dict(color=palette[model_label], width=2),
+            marker=dict(size=10, color=palette[model_label],
+                        line=dict(color="white", width=1)),
+            showlegend=True,
+            hoverinfo="skip",
         ))
 
     fig.update_layout(
@@ -131,7 +144,7 @@ def main() -> None:
         fig,
         title="Curator-assigned difficulty vs. empirical success",
         subtitle=(
-            "Cell C — neutral prompts, temp=1.0, n=10. Marker size ∝ records in bucket. "
+            "Cell C — neutral prompts, temp=1.0, n=10. Marker size scales with records in bucket. "
             "Monotonic decrease = axes predict difficulty."
         ),
         attribution="studies/001-tool-calibration / inv 006",

@@ -90,10 +90,10 @@ def main() -> None:
     # extreme sub-regions of those half-planes.
 
     rects = [
-        ("Both fail",      -0.05, 0.20, -0.05, 0.20, "rgba(193,79,79,0.10)",   0.075, 0.075),
-        ("Both succeed",    0.80, 1.05,  0.80, 1.05, "rgba(45,80,22,0.12)",    0.925, 0.925),
-        ("Scale Solves",   -0.05, 0.25,  0.75, 1.05, "rgba(45,80,22,0.20)",    0.10,  0.90),
-        ("Scale Breaks",    0.75, 1.05, -0.05, 0.25, "rgba(193,105,79,0.22)",  0.90,  0.10),
+        ("Both fail",      -0.05, 0.20, -0.05, 0.20, "rgba(193,105,79,0.35)",  0.075, 0.075),
+        ("Both succeed",    0.80, 1.05,  0.80, 1.05, "rgba(45,80,22,0.28)",    0.925, 0.925),
+        ("Scale Solves",   -0.05, 0.25,  0.75, 1.05, "rgba(107,94,94,0.18)",   0.10,  0.90),
+        ("Scale Breaks",    0.75, 1.05, -0.05, 0.25, "rgba(107,94,94,0.18)",   0.90,  0.10),
     ]
     for name, x0, x1, y0, y1, color, ax, ay in rects:
         fig.add_shape(type="rect", x0=x0, x1=x1, y0=y0, y1=y1,
@@ -175,20 +175,24 @@ def main() -> None:
         yaxis_title="12B IT success rate (n=10)",
         xaxis=dict(range=[-0.05, 1.08], tickformat=".0%"),
         yaxis=dict(range=[-0.05, 1.08], tickformat=".0%"),
-        width=820,
-        height=820,
-        legend=dict(title="prompt set", orientation="v",
-                    yanchor="bottom", y=0.02, xanchor="right", x=0.98),
+        width=920,
+        height=900,
+        legend=dict(title="prompt set", orientation="h",
+                    yanchor="top", y=-0.10, xanchor="center", x=0.5),
     )
     apply_morel_template(
         fig,
         title="Per-record success — banded view: 4B IT vs 12B IT (temp=1.0)",
         subtitle=(
-            "each dot = one record. Bands carve the plane into named regions for reading. "
-            "The diagonal is scale-neutral; ±0.20 dotted lines mark a 'similar performance' corridor."
+            "each dot = one record. Diagonal is scale-neutral; "
+            "±0.20 dotted lines mark a 'similar performance' corridor."
         ),
         attribution="studies/001-tool-calibration / inv 006",
     )
+    fig.update_layout(margin=dict(l=80, r=40, t=110, b=180))
+    for ann in fig.layout.annotations:
+        if ann.text and "001-tool-calibration" in ann.text:
+            ann.y = -0.17
 
     out_html = HERE / "per_record_scatter_banded.html"
     out_png = HERE / "per_record_scatter_banded.png"
