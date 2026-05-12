@@ -121,7 +121,7 @@ def main() -> int:
                     "backend": args.backend,
                     "success": ok,
                     "error_type": err,
-                    "output_preview": result.output[:400],
+                    "output": result.output,
                     "date": today,
                     # Timing + token telemetry from Ollama. Other
                     # backends may populate a subset; missing fields

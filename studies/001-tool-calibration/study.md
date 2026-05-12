@@ -300,13 +300,19 @@ section):
   scoring (`success` vs `error_type`) conflates several of these.
 - **Tool-blind deferral on `user_knowledge_lookup`.** All three
   hard halves (anniversary, daughter's school, Aunt Nina) failed
-  20/20 — model correctly recognizes it can't know personal info
-  but doesn't invoke the persona-lookup tool that's in its
-  available set. Working hypothesis: instruction-tuning safety
-  pressure ("I can't access personal info") overshoots into
-  "regardless of tools." Worth probing with 12B IT (same
-  post-training pressure, more capacity) and base variants (no
-  post-training overshoot, but no tool training either).
+  20/20 in the initial pilot — model correctly recognizes it
+  can't know personal info but doesn't invoke the persona-lookup
+  tool that's in its available set. **Follow-on A/B experiment
+  showed this is defeatable at the prompt layer**: replacing the
+  tool description with prescriptive language ("REQUIRED whenever
+  the user asks about themselves...") shifted success from 0/20
+  baseline to 60/100 at n=10. Naming changes and epistemic
+  framing alone did NOT work. Revised hypothesis: refusal prior
+  is stronger than tool-use prior unless tool-use is made
+  imperative. Practical implication: sweep prescriptive-language
+  upgrades across the other tool descriptions before A3 bulk
+  generation. See `investigations/002-difficulty-axes/
+  investigation.md` Results section for full breakdown.
 - **n=10 is sufficient for 4B IT on this corpus.** 34/36 records
   bucket-stable from n=5; n=20 added zero new bucket assignments.
   Future routine runs default to n=10 with n=20 reserved for known
