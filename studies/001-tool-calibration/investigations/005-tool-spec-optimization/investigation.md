@@ -143,6 +143,25 @@ directly" works across three different over-call patterns.
 
 ## Forward-looking
 
+- **Socratic-deflection escape route** (worth a follow-on probe).
+  v1a_antirefusal's two failing trials were not "I don't have
+  access" refusals — they were clarifying questions back at the
+  user ("Could you please tell me what your daughter's name is?",
+  "Could you please tell me who Aunt Nina is?"). The anti-refusal
+  clause shut down one escape route ("I can't access this"); the
+  model invented a second one (ask the user for more info).
+  This is a *favorable* failure relative to confabulation —
+  deferring to the user is honest behavior — but it's still a
+  failed tool-call for our calibration purposes. Two implications:
+  (a) The optimization landscape may have multiple escape routes;
+  closing one surfaces the next. A clause like "Do NOT ask the
+  user for additional information; use the tool to look up what
+  you need" could be tested as v1a+. (b) The taxonomy of failure
+  modes for under-call situations probably wants
+  `socratic_deflection` as a distinct outcome alongside
+  `tool_blind_deferral`, since the desirability profile differs
+  (Socratic deflection is honest, just inefficient).
+
 - **prime_sum residue** — the python_boundary winner (vP1) fixed
   SHA-256 but not the sum-of-primes record. Likely needs an
   explicit clause naming iteration / filtering / generation as

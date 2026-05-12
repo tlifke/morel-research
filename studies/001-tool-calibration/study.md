@@ -9,6 +9,7 @@ children:
   - studies/001-tool-calibration/investigations/003-bulk-generation
   - studies/001-tool-calibration/investigations/004-calibration-pilot
   - studies/001-tool-calibration/investigations/005-tool-spec-optimization
+  - studies/001-tool-calibration/investigations/006-temperature-prompt
 related: []
 axes:
   llm_capability: medium
