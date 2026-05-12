@@ -80,6 +80,50 @@ This study is the substrate for several downstream questions:
   (palette, schema, KBs, IDs); pair variation is `tool_helped` /
   `tool_insufficient`.
 
+### Routing classifier from the capability boundary
+
+The 4B IT pilot showed that the model's tool-call behavior is highly
+deterministic per record — failures are systematic, not stochastic.
+That makes the per-prompt behavior potentially *predictable*: a
+small classifier trained on prompt features could predict whether a
+target model will under-call, over-call, or correctly invoke its
+tools. Two uses:
+
+1. **Quality assurance**: catch likely failures before deploying.
+2. **Routing**: send prompts predicted to fail to a larger / more
+   capable model, leaving the small model on prompts where it's
+   reliable. Plausible cost/latency win if the boundary is
+   characterizable.
+
+The pilot data already shows the boundary is sharp: 4B IT does well
+on calculator / datetime_now / unit_convert / sports-and-finance
+lookups; struggles systematically on `user_knowledge_lookup` and
+several `python_execute` verification cases. A classifier trained on
+the A3 bulk corpus once available would have plenty of signal.
+
+```yaml
+llm_assessment:
+  model: claude-opus-4-7
+  date: 2026-05-12
+  llm_capability: high
+  human_capability: medium
+  confidence: medium
+  reasoning: |
+    Classifier-on-prompt-features is LLM-friendly work — feature
+    engineering, training, evaluation. The harder question is
+    whether the boundary generalizes: does a classifier trained
+    on A3 corpus prompts transfer to in-the-wild prompts? That's
+    a question of corpus representativeness more than
+    classification skill, and probably needs human judgment to
+    frame. Confidence medium because the value depends entirely
+    on whether the routing/QA application is real for someone
+    using these models in production.
+
+human_assessment: null
+
+divergence_notes: null
+```
+
 ### IT vs. base: does tool use live in the post-training layer or deeper?
 
 Phase A4 is initially scoped to IT models only (Gemma 3 4B IT and 12B
@@ -238,6 +282,35 @@ divergence_notes: null
   bulk generation (A3) is producing records routinely. If schema-bump
   friction starts outweighing typo-protection, loosen at that point
   and use a separate `extra:` object for analysis-only annotations.
+
+## Observations carried forward from the A4 pilot (Gemma 3 4B IT, 2026-05-12)
+
+First pilot run of the calibration harness produced findings worth
+flagging at the study level (full breakdown in
+`investigations/002-difficulty-axes/investigation.md` Results
+section):
+
+- **4B IT is decisive but mis-mapped.** 23/36 records perfectly
+  calibrated, 11/36 perfectly miscalibrated, 2/36 boundary. Behavior
+  is highly stable per record (same output 20/20 trials at
+  temperature 0), so failures are systematic — not noise.
+- **The failure modes are heterogeneous.** Five distinct patterns:
+  tool-blind deferral, wrong-tool selection, confabulation, correct-
+  without-verification, and trivial over-call. The current binary
+  scoring (`success` vs `error_type`) conflates several of these.
+- **Tool-blind deferral on `user_knowledge_lookup`.** All three
+  hard halves (anniversary, daughter's school, Aunt Nina) failed
+  20/20 — model correctly recognizes it can't know personal info
+  but doesn't invoke the persona-lookup tool that's in its
+  available set. Working hypothesis: instruction-tuning safety
+  pressure ("I can't access personal info") overshoots into
+  "regardless of tools." Worth probing with 12B IT (same
+  post-training pressure, more capacity) and base variants (no
+  post-training overshoot, but no tool training either).
+- **n=10 is sufficient for 4B IT on this corpus.** 34/36 records
+  bucket-stable from n=5; n=20 added zero new bucket assignments.
+  Future routine runs default to n=10 with n=20 reserved for known
+  boundary cases.
 
 ## Observations carried forward from A1
 
