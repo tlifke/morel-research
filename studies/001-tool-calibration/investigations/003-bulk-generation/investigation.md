@@ -1,7 +1,7 @@
 ---
 id: studies/001-tool-calibration/investigations/003-bulk-generation
 title: Bulk corpus generation (Phase A3)
-status: planned
+status: in-progress
 parents:
   - studies/001-tool-calibration
 children: []
@@ -19,7 +19,7 @@ aliases:
   - A3
   - phase-a3
 created: 2026-05-11
-updated: 2026-05-11
+updated: 2026-05-12
 ---
 
 # Investigation 3 — Bulk corpus generation (Phase A3)
@@ -73,7 +73,139 @@ _Populate as work proceeds._
 
 ## Results
 
-_To be populated._
+### Pipeline (2026-05-12)
+
+Three artifacts under this directory:
+
+- `axis_templates.py` — per-tool prompt-template library. Each tool
+  exposes a generator function that takes a random source and an
+  axis-value dict, returns warranted + trivial prompts plus
+  difficulty/reasoning/feasibility metadata. Lookup tools
+  (`general_knowledge_lookup`, `user_knowledge_lookup`) are anchored
+  to the existing real KBs — every warranted prompt references an
+  existing entry id/field. No new KB entries were created.
+- `bulk_seeds_spec.yaml` — declarative spec. 32 generation cells across
+  the six tools, weighted toward calculator (10 cells, 47 pairs),
+  general_knowledge_lookup (3 cells, 29 pairs), and user_knowledge_lookup
+  (3 cells, 24 pairs). Each cell carries pair_type, system_prompt_ids
+  for the two halves, register triplet, frequency_class, and target count.
+- `generate.py` — runner. Reads the spec, expands cells via
+  `axis_templates`, validates against the A1 schema (strict,
+  additionalProperties: false), enforces anti-leakage on Type A trivial
+  halves, and writes `../../bulk_seeds.jsonl` plus `spot_review.yaml`.
+
+### Corpus output
+
+`studies/001-tool-calibration/bulk_seeds.jsonl`:
+
+- **183 matched pairs / 366 records.**
+- All records validate against `metadata.schema.json` (strict).
+- All records carry `source: llm_generated`,
+  `difficulty_label.llm_assessment.{model,date} = (claude-opus-4-7, 2026-05-12)`,
+  and `human_review: null` pending Phase A4 / spot review.
+
+Distribution per (tool × difficulty.value):
+
+| tool                          | trivial | easy | medium | hard | extreme |
+|-------------------------------|---------|------|--------|------|---------|
+| calculator                    | 37      | 0    | 13     | 24   | 44      |
+| python_execute                | 14      | 3    | 12     | 14   | 13      |
+| datetime_now                  | 8       | 5    | 3      | 9    | 9       |
+| unit_convert                  | 19      | 3    | 12     | 16   | 2       |
+| general_knowledge_lookup      | 17      | 0    | 5      | 31   | 5       |
+| user_knowledge_lookup         | 14      | 0    | 29     | 2    | 3       |
+
+(values are *records*, not pairs; trivial counts include the
+trivial-sibling halves of every Type A pair.)
+
+- **Type A : Type B = 106 : 77 pairs** (≈58:42), within the 50:50 ±10%
+  target.
+- **frequency_class common : edge = 108 : 75 pairs** (≈59:41), matches
+  the 60:40 target.
+- All five difficulty bands populated.
+
+### Anti-leakage
+
+The runner enforces a hard rule: Type A trivial halves
+(`condition == "tool_trivial"`) must not contain the surface keywords
+`calculator`, `compute`, `search`, or `lookup`. The check passes for
+all 183 pairs.
+
+Type B `no_tools_available` halves are *exempt* by design — Type B
+holds the user_prompt constant across halves to manipulate only the
+affordance, so leakage keywords on those halves are inherited from
+the warranted half (matching the A1 hand-curated convention; see
+`seeds.jsonl` pair `calculator-math-hard-mult_affordance-001`).
+
+### Skipped / infeasible combinations
+
+- **unit_convert × extreme** — only two entries (amu → kg, US fl_oz → imperial
+  fl_oz). The proposal's `precision_decimals = 6+` bucket interacted
+  with `unit_system = cross_system_specialty` to land here, but there
+  are not many natural prompts at that intersection; we cap at 2 cells
+  rather than fabricate awkward conversions.
+- **datetime_now × trivial** — the proposal's worked example flagged
+  this: datetime_now's difficulty floor is `easy` (current date/time
+  request) since the calibration point is *knowability without runtime
+  info*, not date math. Trivials with in-prompt anchor land at
+  `trivial` for the sibling but no "trivial warranted half" cell exists.
+- **user_knowledge_lookup × hard, extreme** — extended `_UKL_ENTRIES`
+  with derived (two-field) and composite (three-field) queries that
+  reuse existing persona fields. Three composite extreme records exist;
+  more would require new persona fields (deferred — bulk corpus aims
+  to stay coherent with A1's Maya Patel persona without amending it).
+- **calculator add_sub at operand_digits=1** — original spec cell
+  removed: the "warranted" half would have been "Compute 9 + 3" which
+  is trivial, making the matched pair structurally degenerate. Bumped
+  to `operand_digits=4, add_sub`.
+
+### Spot review
+
+`spot_review.yaml`: 10 pairs (~5% of 183) selected via the runner's
+sampler. Selection logic biases toward boundary cases:
+
+- ~25% from the `extreme` difficulty band (boundary at the top of the scale)
+- ~25% from Type B affordance pairs (the refusal-vs-fabrication framing
+  is the trickiest call)
+- ~25% from KB-grounded pairs (verify that entry resolves correctly under
+  the live KB ranking)
+- Remaining random across the corpus
+
+### `expected_tool_call` convention
+
+For bulk records, the warranted-half `expected_tool_call` is True only
+when `difficulty_label.value ∈ {medium, hard, extreme}`. For trivial
+and easy warranted halves it is False — a calibrated agent wouldn't
+call on those, so the metric matches reality. This differs slightly
+from the A1 seed convention where every "tool_warranted" half is True
+by curation choice; the bulk corpus is more conservative.
+
+### Things to surface to the human
+
+1. **GKL trivial halves repeat across cells.** Each gkl cell shuffles
+   the trivial-list independently, so the same eight well-known
+   historical facts recur as siblings across many gkl pairs. This is
+   fine for matched-pair structure (the warranted half differs) but
+   the trivial-side population isn't diverse. Consider expanding
+   `_GKL_TRIVIALS` if downstream analysis wants more trivial-side
+   variety.
+2. **UKL derived/composite queries** (hard, extreme bands) are
+   author-introduced compositions over existing persona fields. They
+   were not in the proposal's UKL axis sketch (which capped at
+   medium); flagging so reviewer can accept or reject as part of axis
+   refinement.
+3. **datetime_now extreme** uses a cross-timezone + DST prompt and a
+   "200 business days excluding US federal holidays" prompt. Both are
+   genuinely python-solvable but exceed pure `datetime_now()` — they
+   structurally probe whether the model recognizes `datetime_now`
+   alone isn't enough. May warrant relabeling `tool_target` to
+   `python_execute` or accepting the mismatch as a calibration signal.
+4. **calculator extreme band over-represented** (22 pairs) relative
+   to the proposal's caps. Comes from the operand_digits×precision
+   interaction (band-additive arithmetic). Within the proposal's "cap
+   shifts at +2" rule but still produces a heavier tail than the
+   distribution targets suggested. Recommend the reviewer either
+   accept or trim spec.
 
 ## Forward-looking
 
