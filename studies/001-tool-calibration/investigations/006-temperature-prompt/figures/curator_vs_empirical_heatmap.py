@@ -27,9 +27,12 @@ HERE = Path(__file__).resolve().parent
 STUDY_ROOT = HERE.parent.parent.parent
 SEEDS_PATH = STUDY_ROOT / "seeds.jsonl"
 RESULTS_ROOT = STUDY_ROOT / "results"
+REPO_ROOT = Path(__file__).resolve().parents[5]
 
 sys.path.insert(0, str(STUDY_ROOT))
+sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
 from harness.parser import classify_trial  # noqa: E402
+from branding import apply_morel_template, MOREL_COLORS, MOREL_SEQUENTIAL_SCALE  # noqa: E402
 
 DATE = "2026-05-12"
 BUCKETS = ["trivial", "easy", "medium", "hard", "extreme"]
@@ -105,7 +108,7 @@ def main() -> None:
                         horizontal_spacing=0.15)
 
     for idx, (counts, hover, cmap) in enumerate(
-        [(c4, h4, "Blues"), (c12, h12, "Blues")], start=1
+        [(c4, h4, MOREL_SEQUENTIAL_SCALE), (c12, h12, MOREL_SEQUENTIAL_SCALE)], start=1
     ):
         # text for cell labels
         text = [[str(v) if v > 0 else "" for v in row] for row in counts]
@@ -115,7 +118,7 @@ def main() -> None:
             y=BUCKETS,
             text=text,
             texttemplate="%{text}",
-            textfont=dict(size=14, color="black"),
+            textfont=dict(size=14, color=MOREL_COLORS["dark_earth"]),
             colorscale=cmap,
             zmin=0,
             showscale=(idx == 2),
@@ -125,21 +128,23 @@ def main() -> None:
         ), row=1, col=idx)
 
     fig.update_layout(
-        title=dict(text=(
-            "Curator-assigned vs. empirical difficulty (Cell C, n=10)<br>"
-            "<sub>Rows = curator bucket. Cols = empirical bucket from Cell C success_rate. "
-            "Empirical bucketing is model-relative — sr→bucket thresholds are absolute but the "
-            "underlying success rate depends on the model.</sub>"
-        ), y=0.97, x=0.02, xanchor="left", yanchor="top"),
-        template="plotly_white",
         width=1080,
         height=520,
-        margin=dict(l=70, r=60, t=110, b=70),
     )
     for ax in ("xaxis", "xaxis2"):
         fig.update_layout(**{ax: dict(title="empirical bucket")})
     for ax in ("yaxis", "yaxis2"):
         fig.update_layout(**{ax: dict(title="curator bucket", autorange="reversed")})
+    apply_morel_template(
+        fig,
+        title="Curator-assigned vs. empirical difficulty (Cell C, n=10)",
+        subtitle=(
+            "Rows = curator bucket. Cols = empirical bucket from Cell C success_rate. "
+            "Empirical bucketing is model-relative — sr→bucket thresholds are absolute but the "
+            "underlying success rate depends on the model."
+        ),
+        attribution="studies/001-tool-calibration / inv 006",
+    )
 
     out_html = HERE / "curator_vs_empirical_heatmap.html"
     out_png = HERE / "curator_vs_empirical_heatmap.png"

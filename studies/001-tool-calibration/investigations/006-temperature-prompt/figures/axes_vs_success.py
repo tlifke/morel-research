@@ -29,9 +29,12 @@ HERE = Path(__file__).resolve().parent
 STUDY_ROOT = HERE.parent.parent.parent
 SEEDS_PATH = STUDY_ROOT / "seeds.jsonl"
 RESULTS_ROOT = STUDY_ROOT / "results"
+REPO_ROOT = Path(__file__).resolve().parents[5]
 
 sys.path.insert(0, str(STUDY_ROOT))
+sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
 from harness.parser import classify_trial  # noqa: E402
+from branding import apply_morel_template, MOREL_COLORS  # noqa: E402
 
 DATE = "2026-05-12"
 BUCKETS = ["trivial", "easy", "medium", "hard", "extreme"]
@@ -77,7 +80,10 @@ def main() -> None:
 
     fig = go.Figure()
 
-    palette = {"Gemma 3 4B IT": "#5B9BD5", "Gemma 3 12B IT": "#2E5984"}
+    palette = {
+        "Gemma 3 4B IT": MOREL_COLORS["terracotta_light"],
+        "Gemma 3 12B IT": MOREL_COLORS["terracotta_dark"],
+    }
     for model_label, by_bucket in [
         ("Gemma 3 4B IT", by_bucket_4b),
         ("Gemma 3 12B IT", by_bucket_12b),
@@ -113,26 +119,24 @@ def main() -> None:
         ))
 
     fig.update_layout(
-        title=dict(
-            text=(
-                "Curator-assigned difficulty vs. empirical success<br>"
-                "<sub>Cell C — neutral prompts, temp=1.0, n=10. Marker size ∝ records in bucket. "
-                "Monotonic decrease = axes predict difficulty.</sub>"
-            ),
-            y=0.96, x=0.02, xanchor="left", yanchor="top",
-        ),
         xaxis_title="curator-assigned difficulty_label.value",
         yaxis_title="empirical success rate (Cell C)",
         yaxis_tickformat=".0%",
         yaxis_range=[0, 1.05],
-        template="plotly_white",
         width=860,
         height=560,
-        margin=dict(l=70, r=200, t=110, b=70),
-        legend=dict(yanchor="middle", y=0.5, xanchor="left", x=1.02,
-                    bgcolor="rgba(255,255,255,0.85)",
-                    bordercolor="lightgray", borderwidth=1),
+        legend=dict(yanchor="middle", y=0.5, xanchor="left", x=1.02),
     )
+    apply_morel_template(
+        fig,
+        title="Curator-assigned difficulty vs. empirical success",
+        subtitle=(
+            "Cell C — neutral prompts, temp=1.0, n=10. Marker size ∝ records in bucket. "
+            "Monotonic decrease = axes predict difficulty."
+        ),
+        attribution="studies/001-tool-calibration / inv 006",
+    )
+    fig.update_layout(margin=dict(l=70, r=200, t=110, b=70))
 
     out_html = HERE / "axes_vs_success.html"
     out_png = HERE / "axes_vs_success.png"

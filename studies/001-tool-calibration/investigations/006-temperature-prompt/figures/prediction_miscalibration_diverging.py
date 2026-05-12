@@ -24,9 +24,12 @@ HERE = Path(__file__).resolve().parent
 STUDY_ROOT = HERE.parent.parent.parent
 SEEDS_PATH = STUDY_ROOT / "seeds.jsonl"
 RESULTS_ROOT = STUDY_ROOT / "results"
+REPO_ROOT = Path(__file__).resolve().parents[5]
 
 sys.path.insert(0, str(STUDY_ROOT))
+sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
 from harness.parser import classify_trial  # noqa: E402
+from branding import apply_morel_template, MOREL_COLORS  # noqa: E402
 
 DATE = "2026-05-12"
 BUCKETS = ["trivial", "easy", "medium", "hard", "extreme"]
@@ -90,21 +93,21 @@ def main() -> None:
     # Zero line
     fig.add_shape(type="line",
                   x0=0, x1=0, y0=-1, y1=len(rows),
-                  line=dict(color="rgba(0,0,0,0.4)", width=1, dash="dash"))
+                  line=dict(color=MOREL_COLORS["forest_green"], width=1, dash="dash"))
 
     # Connecting line between 4B and 12B per record (faint)
     for i, (_, a, b) in enumerate(rows):
         if a is not None and b is not None and a != b:
             fig.add_shape(type="line",
                           x0=a, x1=b, y0=i, y1=i,
-                          line=dict(color="lightgray", width=1))
+                          line=dict(color=MOREL_COLORS["cream_dark"], width=1))
 
     # 4B markers
     fig.add_trace(go.Scatter(
         x=d4, y=list(range(len(rows))),
         mode="markers",
         name="Gemma 3 4B IT",
-        marker=dict(symbol="circle", size=11, color="#5B9BD5",
+        marker=dict(symbol="circle", size=11, color=MOREL_COLORS["terracotta_light"],
                     line=dict(color="white", width=1)),
         text=labels,
         hovertemplate="<b>%{text}</b><br>4B Δ: %{x:+d}<extra></extra>",
@@ -115,21 +118,13 @@ def main() -> None:
         x=d12, y=list(range(len(rows))),
         mode="markers",
         name="Gemma 3 12B IT",
-        marker=dict(symbol="diamond", size=12, color="#2E5984",
+        marker=dict(symbol="diamond", size=12, color=MOREL_COLORS["terracotta_dark"],
                     line=dict(color="white", width=1)),
         text=labels,
         hovertemplate="<b>%{text}</b><br>12B Δ: %{x:+d}<extra></extra>",
     ))
 
     fig.update_layout(
-        title=dict(
-            text=(
-                "Per-record miscalibration: how far off was Opus 4.7's prediction?<br>"
-                "<sub>Δ = empirical − predicted, in bucket-band units. "
-                "Left of zero: Opus overestimated. Right: underestimated. On the line: calibrated.</sub>"
-            ),
-            y=0.98, x=0.02, xanchor="left", yanchor="top",
-        ),
         xaxis=dict(
             title="Δ (empirical − predicted)",
             zeroline=False,
@@ -145,12 +140,20 @@ def main() -> None:
             autorange="reversed",
             range=[len(rows), -1],
         ),
-        template="plotly_white",
         width=1050,
         height=max(560, 18 * len(rows) + 130),
-        margin=dict(l=380, r=30, t=100, b=70),
         legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="right", x=1),
     )
+    apply_morel_template(
+        fig,
+        title="Per-record miscalibration: how far off was Opus 4.7's prediction?",
+        subtitle=(
+            "Δ = empirical − predicted, in bucket-band units. "
+            "Left of zero: Opus overestimated. Right: underestimated. On the line: calibrated."
+        ),
+        attribution="studies/001-tool-calibration / inv 006",
+    )
+    fig.update_layout(margin=dict(l=380, r=30, t=100, b=70))
 
     out_html = HERE / "prediction_miscalibration_diverging.html"
     out_png = HERE / "prediction_miscalibration_diverging.png"

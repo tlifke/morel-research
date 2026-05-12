@@ -26,9 +26,12 @@ HERE = Path(__file__).resolve().parent
 STUDY_ROOT = HERE.parent.parent.parent
 SEEDS_PATH = STUDY_ROOT / "seeds.jsonl"
 RESULTS_ROOT = STUDY_ROOT / "results"
+REPO_ROOT = Path(__file__).resolve().parents[5]
 
 sys.path.insert(0, str(STUDY_ROOT))
+sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
 from harness.parser import classify_trial  # noqa: E402
+from branding import apply_morel_template, MOREL_COLORS  # noqa: E402
 
 DATE = "2026-05-12"
 BUCKETS = ["trivial", "easy", "medium", "hard", "extreme"]
@@ -83,7 +86,10 @@ def main() -> None:
     x_vals = list(range(range_min, range_max + 1))
 
     fig = go.Figure()
-    palette = {"Gemma 3 4B IT": "#5B9BD5", "Gemma 3 12B IT": "#2E5984"}
+    palette = {
+        "Gemma 3 4B IT": MOREL_COLORS["terracotta_light"],
+        "Gemma 3 12B IT": MOREL_COLORS["terracotta_dark"],
+    }
     for label, deltas in [("Gemma 3 4B IT", d_4b), ("Gemma 3 12B IT", d_12b)]:
         ys = [deltas.get(d, 0) for d in x_vals]
         fig.add_trace(go.Bar(
@@ -99,14 +105,6 @@ def main() -> None:
                   line=dict(color="rgba(0,0,0,0)", width=0))
 
     fig.update_layout(
-        title=dict(
-            text=(
-                "Curator miscalibration: how far off were Opus 4.7's predictions?<br>"
-                "<sub>Δ = empirical bucket − curator-predicted bucket. "
-                "Δ&lt;0: Opus overestimated difficulty; Δ&gt;0: Opus underestimated; Δ=0: calibrated.</sub>"
-            ),
-            y=0.97, x=0.02, xanchor="left", yanchor="top",
-        ),
         xaxis=dict(
             title="Δ (empirical − predicted), in bucket-band units",
             tickmode="array",
@@ -115,19 +113,27 @@ def main() -> None:
         ),
         yaxis=dict(title="record count"),
         barmode="group",
-        template="plotly_white",
         width=880,
         height=480,
-        margin=dict(l=70, r=30, t=110, b=70),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
 
-    # Highlight the zero column with a subtle vertical band
+    # Highlight the zero column with a subtle vertical band (calibrated = green tint)
     fig.add_shape(type="rect",
                   x0=-0.5, x1=0.5, y0=0, y1=max(d_4b.get(0, 0), d_12b.get(0, 0)) + 2,
                   line=dict(width=0),
-                  fillcolor="rgba(80,160,80,0.06)",
+                  fillcolor="rgba(45,80,22,0.08)",
                   layer="below")
+
+    apply_morel_template(
+        fig,
+        title="Curator miscalibration: how far off were Opus 4.7's predictions?",
+        subtitle=(
+            "Δ = empirical bucket − curator-predicted bucket. "
+            "Δ<0: Opus overestimated difficulty; Δ>0: Opus underestimated; Δ=0: calibrated."
+        ),
+        attribution="studies/001-tool-calibration / inv 006",
+    )
 
     out_html = HERE / "prediction_miscalibration_histogram.html"
     out_png = HERE / "prediction_miscalibration_histogram.png"

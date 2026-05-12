@@ -25,9 +25,12 @@ import plotly.graph_objects as go
 HERE = Path(__file__).resolve().parent
 STUDY_ROOT = HERE.parent.parent.parent
 RESULTS_ROOT = STUDY_ROOT / "results"
+REPO_ROOT = Path(__file__).resolve().parents[5]
 
 sys.path.insert(0, str(STUDY_ROOT))
+sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
 from harness.parser import classify_trial  # noqa: E402
+from branding import apply_morel_template, MOREL_COLORS  # noqa: E402
 
 DATE = "2026-05-12"
 MODELS = ["gemma3:4b-it-qat", "gemma3:12b-it-qat"]
@@ -83,7 +86,7 @@ def main() -> None:
     fig.add_trace(go.Scatter(
         x=[0, 1], y=[0, 1],
         mode="lines",
-        line=dict(color="lightgray", dash="dash", width=1),
+        line=dict(color=MOREL_COLORS["cream_dark"], dash="dash", width=1),
         showlegend=False,
         hoverinfo="skip",
     ))
@@ -96,7 +99,10 @@ def main() -> None:
         h = int(hashlib.sha256(f"{rid}|{axis}".encode()).hexdigest()[:8], 16)
         return (h % 100) / 100 * 0.04 - 0.02   # ± 0.02
 
-    for prompt_set, color in [("neutral", "#A4C5E8"), ("directive", "#C44E52")]:
+    for prompt_set, color in [
+        ("neutral", MOREL_COLORS["forest_green"]),
+        ("directive", MOREL_COLORS["terracotta"]),
+    ]:
         xs, ys, texts = [], [], []
         for rid in all_rids:
             x = data[("4B", prompt_set)].get(rid)
@@ -121,25 +127,20 @@ def main() -> None:
         ))
 
     fig.update_layout(
-        title=dict(
-            text=(
-                "Per-record success: 4B IT vs 12B IT (temp=1.0)<br>"
-                "<sub>each dot = one of 36 records; up/left of dashed line = scaling improvement</sub>"
-            ),
-            y=0.97, x=0.02, xanchor="left", yanchor="top",
-        ),
         xaxis_title="4B IT success rate (n=10)",
         yaxis_title="12B IT success rate (n=10)",
         xaxis=dict(range=[-0.05, 1.08], tickformat=".0%"),
         yaxis=dict(range=[-0.05, 1.08], tickformat=".0%"),
-        template="plotly_white",
         width=720,
         height=760,
-        margin=dict(l=70, r=30, t=110, b=70),
         legend=dict(title="prompt set", orientation="v",
-                    yanchor="bottom", y=0.02, xanchor="right", x=0.98,
-                    bgcolor="rgba(255,255,255,0.85)",
-                    bordercolor="lightgray", borderwidth=1),
+                    yanchor="bottom", y=0.02, xanchor="right", x=0.98),
+    )
+    apply_morel_template(
+        fig,
+        title="Per-record success: 4B IT vs 12B IT (temp=1.0)",
+        subtitle="each dot = one of 36 records; up/left of dashed line = scaling improvement",
+        attribution="studies/001-tool-calibration / inv 006",
     )
 
     out_html = HERE / "per_record_scatter.html"

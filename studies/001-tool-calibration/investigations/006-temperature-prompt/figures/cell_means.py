@@ -23,9 +23,12 @@ HERE = Path(__file__).resolve().parent
 INVESTIGATION_ROOT = HERE.parent
 STUDY_ROOT = INVESTIGATION_ROOT.parent.parent
 RESULTS_ROOT = STUDY_ROOT / "results"
+REPO_ROOT = Path(__file__).resolve().parents[5]
 
 sys.path.insert(0, str(STUDY_ROOT))
+sys.path.insert(0, str(REPO_ROOT / ".claude" / "skills" / "morel-branding"))
 from harness.parser import classify_trial  # noqa: E402
+from branding import apply_morel_template, MOREL_COLORS  # noqa: E402
 
 
 CELLS = {
@@ -84,7 +87,10 @@ def main() -> None:
     cell_order = ["A", "B", "C", "D"]
 
     fig = go.Figure()
-    palette = {"Gemma 3 4B IT": "#5B9BD5", "Gemma 3 12B IT": "#2E5984"}
+    palette = {
+        "Gemma 3 4B IT": MOREL_COLORS["terracotta_light"],
+        "Gemma 3 12B IT": MOREL_COLORS["terracotta_dark"],
+    }
     for model, label in MODELS:
         vals = [cell_means[(model, k)] for k in cell_order]
         fig.add_trace(
@@ -98,17 +104,19 @@ def main() -> None:
             )
         )
     fig.update_layout(
-        title="2×2 cell means — success rate, 4B IT vs 12B IT",
         xaxis_title="condition (prompt-set × temperature)",
         yaxis_title="mean success rate across 36 records",
         yaxis_tickformat=".0%",
         yaxis_range=[0, 1.05],
         barmode="group",
-        template="plotly_white",
         width=900,
         height=520,
-        margin=dict(l=70, r=30, t=70, b=70),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    apply_morel_template(
+        fig,
+        title="2×2 cell means — success rate, 4B IT vs 12B IT",
+        attribution="studies/001-tool-calibration / inv 006",
     )
 
     out_html = HERE / "cell_means.html"
