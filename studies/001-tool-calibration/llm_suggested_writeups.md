@@ -20,60 +20,76 @@ Provenance for the underlying data:
 
 ## Tier 1 — strongest candidates
 
-### (A) "Task difficulty doesn't predict tool-call calibration"
+### (A) "An LLM's hypothesized task difficulties don't predict another LLM's empirical difficulty"
 
 **Source investigations**: 002, 004, 006 (F3/F4/F5), 007.
 
 **Figure**: `investigations/006-temperature-prompt/figures/curator_vs_empirical_heatmap.png`
 — curator-assigned `difficulty_label.value` rows × empirical bucket
-columns, 4B and 12B side by side. Mass concentrates *off* the
-diagonal; the rows expected to predict difficulty instead show the
-opposite signal.
+columns, 4B and 12B side by side. The diagonal (perfect Opus →
+Gemma prediction) is mostly empty; mass concentrates in the lower-
+left where curator-`hard` predictions empirically came out
+`trivial`.
 
-**Research question**: do task-difficulty axes (operand digits,
-algorithmic complexity, fact obscurity) predict whether a model
-correctly invokes a tool?
+**Research question**: when one LLM (Claude Opus 4.7) is asked to
+hypothesize per-prompt difficulty for tool-use tasks, do those
+hypotheses validate against the empirical difficulty measured on
+smaller / different models (Gemma 3 4B IT, 12B IT)?
 
 **Hook (opening paragraph candidate)**:
-We curated a matched-pair seed corpus to study LLM tool-calibration
-and labeled each prompt with a per-tool task-difficulty axis. The
-prediction: hard prompts should drive tool calls; trivial prompts
-should be answered directly. Empirically, that prediction doesn't
-hold — for both Gemma 3 4B IT and 12B IT, prompts labeled `hard`
-by the curator overwhelmingly land in the `trivial` empirical
-bucket (98%+ success). The axes don't measure what the score
-measures.
+Claude Opus 4.7 served as the curator for our matched-pair tool-
+calibration corpus. As part of curation, it assigned each prompt a
+`difficulty_label.value` — its prediction of how hard the task
+would be for an LLM. We then ran the corpus against Gemma 3 4B IT
+and 12B IT and measured empirical difficulty per record per model.
+Opus's predictions don't validate. For both 4B and 12B IT at
+neutral baseline, prompts Opus labeled `hard` overwhelmingly land
+in the empirical `trivial` bucket. The curator's introspective
+model of "this is hard for an LLM" doesn't correspond to how
+specific LLMs actually fail.
 
-**Why this happens** (one-paragraph mechanism):
-Task-difficulty axes describe how hard the underlying problem is to
-solve. Our scoring measures whether the model's tool-call decision
-matches expectation. These are different cognitive moments — the
-model's tool-call decision turns out to be dominated by prompt
-surface features ("Compute X × Y" triggers `calculator`; "today is..."
-triggers `datetime_now`) and refusal priors, not by the model's
-self-assessment of task difficulty.
+**Why this matters**:
+LLMs increasingly serve as judges, evaluators, and curators in
+their own evaluation pipelines. This study has a concrete instance
+of one LLM (Opus 4.7) making structured predictions about another
+LLM (Gemma 3 IT family) and missing systematically. The specific
+mechanism: Opus's difficulty axes (operand digits, algorithmic
+complexity, fact obscurity) target *task difficulty* — could the
+model solve this problem in principle? The empirical score
+captures *tool-call decision quality* — does the model recognize
+when to invoke the tool? Opus implicitly assumed the two are
+correlated; the data says they aren't.
 
 **Candidate takeaways (≥1 figure-linked, ≥1 limitation)**:
-- Curator-`hard` records empirically cluster in the `trivial`
-  bucket for both 4B and 12B at neutral baseline — figure shows
-  9/15 hard records in trivial for 12B.
-- Calibration measurement targets tool-call decision-making, not
-  task-solving ability. These are distinct properties that the
-  literature sometimes conflates.
-- The A1 corpus has no `easy` or `extreme` curator labels — the
-  bulk corpus (A4 pending) will populate these and may shift the
-  picture.
-- Implication for calibration research: design axes that predict
-  the metric you actually measure. Test predictiveness empirically
-  before relying on a-priori difficulty taxonomies.
-- Limitation: 18 pairs / 36 records is small for strong claims;
-  Phase A4 grading of the 366-record bulk corpus is the
-  next-step validation.
+- Opus-`hard` records empirically cluster in `trivial` for both
+  Gemma scales at neutral baseline. The figure shows 9 of 15
+  Opus-`hard` records land in 12B's empirical `trivial` bucket.
+- The diagonal of the curator×empirical matrix is mostly empty —
+  Opus's per-record predictions and Gemma's per-record behavior
+  are not strongly correlated.
+- One concrete failure-mode of LLM-as-curator: predictions are
+  calibrated to an internal model of "LLM difficulty" that does
+  not match the target model's actual behavior.
+- Implication for evaluation-data curation: if an LLM is doing
+  the labeling, validate its labels against the target model
+  empirically before treating them as ground truth. Don't
+  outsource the predicate of the experiment to the curator.
+- Limitation: small corpus (18 pairs / 36 records) and single
+  curator (Opus 4.7) on a single target-model family (Gemma 3 IT).
+  Phase A4 grading of the 366-record bulk corpus is the next-step
+  validation; 007 is the dedicated investigation.
 
 **Caveats / open questions**:
-- Whether the curator-vs-empirical gap generalizes across model
-  families or just within Gemma 3 IT is open. Investigation 007
-  is the right home for the deeper work.
+- Does this generalize? Other curators (smaller LLMs; different
+  families) labeling the same corpus would tell us whether the
+  miscalibration is curator-specific or general to LLM-as-judge.
+- Does Opus's prediction calibrate against Opus's own behavior?
+  We haven't run the corpus against Opus 4.7 as a target. Would
+  illuminate whether Opus's "this is hard" tracks its own
+  difficulty or an abstract notional model.
+- The empirical difficulty is itself model-relative; the same
+  record is "trivial" for 12B and "medium" for 4B. Calibration
+  citations must name the target model.
 
 ---
 
@@ -261,6 +277,207 @@ directive = +23.8 pp.
 
 ---
 
+### (G) "The matched-pair tool-calibration corpus: design, scope, limits, and what to ask next"
+*(reviewer-proposed 2026-05-12)*
+
+**Source**: 001 (substrate), 002 (axes), 003 (bulk corpus), 005
+(tool-spec optimization), 006 (methodology lock). Cross-cutting.
+
+**Figure**: corpus structure diagram. Six tools at the top; two
+KBs (real + fabricated for gkl, persona for ukl); pair structure
+beneath (Type A difficulty manipulation, Type B affordance
+manipulation); the directive vs. neutral prompt-set layer; the
+empirical-grading layer (per model). The diagram doesn't yet
+exist — would need to be drafted.
+
+**Research question (meta)**: what is this corpus actually
+*for*? What can a calibration researcher ask of it? Where does
+it stop working? How would one extend it?
+
+**Hook (opening paragraph candidate)**:
+Most LLM evaluation discusses "what models can do." This study
+takes a different cut: it asks "when do models correctly *decide
+whether to use a tool*?" — and builds a small but tightly-designed
+dataset to probe that decision. The matched-pair design isolates
+specific cognitive moments. The two parallel KBs make
+counterfactual grading possible. The bulk corpus extends the
+substrate to ~200 pairs. This piece walks through the design
+choices, what they enable, and what they don't.
+
+**Content sketch (per-section)**:
+- *What the corpus measures.* Tool-call decision quality, not
+  task-solving ability. Specifically: does the model correctly
+  invoke its tool palette under matched-pair conditions where
+  only one variable changes per pair?
+- *Design choices and their consequences.*
+  - Matched pairs (Type A difficulty manipulation; Type B
+    affordance manipulation). Each pair isolates one cognitive
+    moment.
+  - Six-tool palette covering compute, time, units, world-
+    knowledge, and personal-knowledge cognitive moments.
+  - Two KBs (real + fabricated) for general_knowledge_lookup so
+    counterfactual KB experiments are first-class.
+  - A persona-based user_knowledge_lookup KB (Maya Patel) for
+    private-context probing.
+  - Strict schema with per-record provenance, including LLM-
+    assessment signatures (every label signed by the LLM that
+    produced it).
+- *Questions this corpus enables.*
+  - Cross-model comparison at the per-record level (4B vs 12B
+    figures from 006).
+  - Prompt-engineering A/B with controlled variation (005 → style
+    guide).
+  - Methodology lockdown via factorial design (006 2×2).
+  - LLM-as-curator validation against empirical reality (007).
+- *Where the corpus is insufficient.*
+  - Single-turn only. Multi-turn dialogue calibration is a
+    fundamentally different question.
+  - No long-context probes (all prompts are short).
+  - No tool-output interpretation probes (planned: 004
+    tool-failure-recognition).
+  - Limited to deterministic verifiable answers. Open-ended
+    reasoning isn't tested.
+  - Tool palette is fixed at six; real agent palettes are larger
+    and more dynamic.
+- *Expansion directions.*
+  - More models — non-Gemma families to test generalization.
+  - Older / smaller models for capability-frontier probing.
+  - Multi-turn extension where tool-call decisions accrete over
+    a conversation.
+  - Larger seed pool for the trivial halves of GKL (current
+    cycle is 8 facts).
+  - A complementary axis system that *does* predict tool-call
+    calibration (the 007 outcome).
+
+**Candidate takeaways**:
+- This corpus is calibration-of-tool-use, not capability-of-
+  reasoning. The two should not be confused.
+- Matched-pair design is necessary for clean attribution but
+  costly: ~2 records per cognitive moment. Bulk generation
+  scales the substrate without sacrificing matched-pair structure.
+- LLM-curator artifacts (Opus's `difficulty_label`, generated
+  prompts) carry provenance signatures so future analysts can
+  trace any specific decision back to the curator.
+- Limitation: single-turn, single-language, fixed palette.
+  Generality to broader agent regimes is open.
+
+**Why include**: this is the "dataset paper" of the study. Useful
+both as a standalone publication and as a citable substrate for
+the other writeups (A/B/C/D all reference subsets of the corpus
+this piece describes).
+
+---
+
+### (H) "Case studies in scale-driven behavior change"
+*(reviewer-proposed 2026-05-12)*
+
+**Source**: 006 4B-vs-12B comparison, output samples.
+
+**Figure**: per-case mini-tables of model outputs at temp=1.0
+neutral and directive cells for the 4–6 records of interest.
+Could also be a 3×N small-multiples grid: each row is a record,
+columns are 4B Cell C / 4B Cell D / 12B Cell C / 12B Cell D, with
+representative output snippets. Format depends on case selection.
+
+**Research question**: what specifically changes between Gemma 3
+4B IT and Gemma 3 12B IT on the same tool-calibration prompts?
+Not as aggregate success rates but as concrete behavioral shifts
+on individual records.
+
+**Hook**:
+Aggregate statistics summarize but obscure. Looking at specific
+records where 4B and 12B behave differently surfaces *why* the
+scale gap exists — which is more illuminating than just measuring
+how big the gap is.
+
+**Candidate cases (each ~1 paragraph of the writeup)**:
+
+1. **NLA paper, hard half** — "When did Anthropic publish the
+   Natural Language Autoencoders (NLA) paper?"
+   - 4B neutral, temp=0: 0/20 confabulate "published in 2020...
+     learning representations from noisy text" (same wrong answer
+     20/20 trials).
+   - 12B neutral, temp=1.0: 100% target invocation. Correctly
+     recognizes "this is post-cutoff, look it up."
+   - **Mechanism**: capability for recognizing the limits of
+     training knowledge scales meaningfully between 4B and 12B
+     for this specific case.
+
+2. **SHA-256 hash, hard half** — "Compute the SHA-256 hash of
+   'open-source research collaboration'"
+   - 4B neutral: 0% target. Invokes `calculator(expression=
+     "hash('...', algorithm='sha256')")` — picks the wrong tool.
+   - 12B neutral: 100% target. Correctly invokes
+     `python_execute`.
+   - **Mechanism**: tool-selection accuracy scales. The
+     calc-vs-python boundary that confused 4B is resolved at 12B.
+
+3. **Aunt Nina** — "Is Aunt Nina left-handed?"
+   - 4B neutral: 0% — model refuses ("I don't have access to
+     personal information about Aunt Nina").
+   - 12B neutral: 10% — model mostly refuses too, but partial
+     improvement.
+   - 4B directive (v1a): 87% — anti-refusal clause overrides.
+   - 12B directive: 50% — wider failure-mode diversity (Socratic
+     deflection, wrong-tool selection, intermittent no-call).
+   - **Mechanism**: the refusal prior is similar across scales;
+     the directive lifts both but introduces *new* failure modes
+     in 12B that 4B doesn't exhibit. Scale + directive is a real
+     interaction, not just an additive lift.
+
+4. **mult_isolated trivial half** — "Compute 5 × 9" (calc-only env)
+   - 4B directive: 100% correct (skips trivial mental arithmetic).
+   - 12B directive: 0% — invokes calc on 5 × 9 every trial.
+   - **Mechanism**: 12B reads the calc description's "use for
+     arithmetic" clause more literally. The accompanying "skip
+     for trivial cases" clause is operative for 4B but ignored
+     by 12B.
+
+5. **Fibonacci 1000 mod 1M, hard half** — under py_only directive.
+   - 4B directive, temp=0: 0/20 invocations. Model reasons out
+     the Pisano period theoretically instead of calling python.
+   - 12B directive, temp=0: 0/20 invocations. Same Pisano-period
+     reasoning path.
+   - **Mechanism**: this regression is *scale-invariant*. The
+     directive's "REQUIRED for any computation calculator cannot
+     do" invites a "this is hard, let me think harder" response
+     in both models. Mechanism is the same; outcome is the same.
+
+6. **Anniversary trivial half (in-prompt answer)** — "My wedding
+   anniversary is June 12, 2021. What's my wedding anniversary?"
+   - 4B directive: 100% — correctly extracts from prompt.
+   - 12B directive: 70% — over-eager invocation of
+     `user_knowledge_lookup` despite the answer being in-prompt.
+   - **Mechanism**: 12B's directive-compliance prior partially
+     overrides contextual cues that 4B respects.
+
+**Candidate takeaways**:
+- Aggregate success-rate deltas hide the mechanistic story.
+  Per-record analysis reveals different *kinds* of behavioral
+  change at scale.
+- Three failure modes that scale-fixes-cleanly: confabulation on
+  post-cutoff facts (NLA), wrong-tool selection (SHA-256),
+  partial refusal (Aunt Nina under directive lift).
+- Three failure modes that scale doesn't fix or makes worse:
+  literal over-application of directives (5 × 9), Pisano-period
+  evasion (fibonacci), directive over-compliance ignoring
+  context (anniversary trivial).
+- Implication: scale and prompt-engineering both move calibration
+  but along different dimensions. A model trained at larger scale
+  has stronger instruction-following and stronger introspection;
+  these can fight each other under prescriptive prompts.
+
+**Caveats / open questions**:
+- 6 cases out of 36 records. Selection bias is real; these are
+  the ones where the scale × prompt interaction was loudest.
+- We don't have mechanistic interpretability evidence — only
+  output-content evidence. Real circuit-level analysis would
+  ground the "mechanism" claims more rigorously.
+- Each case study is a small-n probe. Replicating across the
+  bulk corpus once A4 is graded would strengthen the patterns.
+
+---
+
 ### (F) "Building research infrastructure with Claude: a 1-day desktop calibration rig"
 
 **Source**: existing draft at `drafts/desktop-setup-blogpost.md`.
@@ -278,24 +495,38 @@ faster-to-publish piece.
 
 ## Recommendations
 
-If forced to pick: **(A) or (B)**. Both are publishable directions
-backed by data the repo already produced.
+**Tier 1 standalones** (publishable findings): (A), (B).
+- **(A)** Opus's hypothesized difficulties don't predict empirical
+  difficulty on Gemma 3 IT — concrete instance of LLM-as-curator
+  miscalibration. Strengthened substantially by A4-on-bulk
+  results (currently in progress).
+- **(B)** Prescriptive prompts × model scale interaction — surprising,
+  concrete, lands directly in applied-ML / prompt-engineering
+  discourse.
 
-- **(A)** is the more methodologically interesting result — a
-  framing critique that affects how calibration studies should
-  design their predictor axes. Likely interest to
-  evaluation / benchmark researchers.
-- **(B)** is more empirically punchy — surprising, concrete,
-  with a clear "test at target scale" recommendation. Likely
-  interest to applied-ML practitioners doing prompt engineering at
-  scale.
+**Tier 2 standalones** (smaller-scope but cleaner): (C) tool-blind
+deferral A/B, (D) curator confabulation parallel KBs.
 
-Both stand alone; both can land as one-pagers without further data
-collection (007's A4-on-bulk would strengthen (A) substantially —
-worth waiting if (A) is the pick).
+**Methodology / substrate writeup**: (G) describes the corpus
+itself — design choices, what it enables, where it stops working,
+how to extend it. Useful as a citable foundation for the other
+pieces and as a standalone dataset paper. Reviewer-proposed
+2026-05-12.
 
-For a quicker-to-publish piece: **(C)** or **(D)**. Both have
-narrower scope but cleaner single-finding stories.
+**Case studies**: (H) is a cluster of per-record deep-dives at
+the 4B/12B scale gap. Doesn't rest on aggregate statistics; uses
+concrete behavioral differences to surface mechanism. Could be
+its own writeup or supplemental sections within (A) or (B).
+Reviewer-proposed 2026-05-12.
 
-For a non-research-research piece: **(F)** is essentially ready
-for a prose pass.
+**Infrastructure / blog**: (F) is the closest-to-ready prose
+artifact. Draft already exists at `drafts/desktop-setup-blogpost.md`.
+
+**Confirmatory / supporting**: (E) is weakest as a standalone
+but useful as supporting material in any of the above.
+
+For "review what's worth writing up myself": (B), (D), (F) are the
+human-flagged interesting set. (A) reframed in agent-centered
+terms also worth the human's eye. (G) is a substantial piece worth
+considering for the dataset-paper slot. (H) is the most fun if the
+human enjoys concrete mechanism-hunting.
