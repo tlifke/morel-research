@@ -6,12 +6,9 @@ deviating defeats the purpose of the format.
 ## Structure
 
 1. **Title block** — title, author(s), date.
-2. **Research question** — what you asked and why it matters.
-3. **Methods** — what you did, on what, with what.
-4. **Results** — headline first; supporting numbers after.
-5. **Forward-looking** — one or two sentences on what this enables next.
-6. **Figure** — exactly one. It carries the message.
-7. **Takeaways** — 3 to 5 bullets:
+2. **Summary** — one paragraph: question, what you did, what you found.
+3. **Figure** — exactly one. It carries the message.
+4. **Recommendations and Limitations** — 3 to 5 bullets:
    - at least one tied to the figure,
    - at least one on key limitations,
    - any remaining bullets for results that didn't fit the figure.
