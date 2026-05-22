@@ -9,6 +9,7 @@ related:
   - studies/001-tool-calibration/investigations/002-difficulty-axes
   - studies/001-tool-calibration/investigations/004-calibration-pilot
   - studies/001-tool-calibration/investigations/006-temperature-prompt
+  - studies/002-principle-bootstrapped-difficulty
 axes:
   llm_capability: medium
   human_capability: high
@@ -20,10 +21,23 @@ aliases:
   - 007
   - axes-perf
 created: 2026-05-12
-updated: 2026-05-12
+updated: 2026-05-22
 ---
 
 # Investigation 7 — Axes performativity
+
+> **Scope update (2026-05-22).** This investigation now owns only the
+> *diagnostic* question — establishing empirically that the difficulty
+> axes from investigation 002 do not predict tool-call success. The
+> *reformulation* question — what axes / features / principles would
+> predict difficulty for a target model — has moved to
+> `studies/002-principle-bootstrapped-difficulty` as its own study,
+> since the approach (model self-prediction + auditable principle
+> registry + nested actor-critic refinement) is methodologically
+> distinct from the rest of study 001 and feeds back into it as input
+> rather than as a sibling investigation. The `AuditablePrinciple` /
+> `AuditableResponse` primitives that were scaffolded here have moved
+> to `studies/002-principle-bootstrapped-difficulty/models.py`.
 
 ## Scope
 
