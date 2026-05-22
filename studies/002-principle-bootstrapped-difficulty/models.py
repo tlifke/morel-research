@@ -130,7 +130,15 @@ class AuditablePrinciple(BaseModel):
     )
 
 
+class PredictedBehavior(str, Enum):
+    CALL_TOOL = "call_tool"
+    ANSWER_DIRECTLY = "answer_directly"
+
+
 class PredictedOutcome(str, Enum):
+    """Derived outcome class — not emitted by the model. Computed by
+    comparing SelfPredictionResponse fields to curator-specified
+    expected_tool_call and tool_target."""
     SUCCESS = "success"
     OVER_CALL = "over_call"
     UNDER_CALL = "under_call"
@@ -144,21 +152,38 @@ class PredictionConfidence(str, Enum):
 
 
 class SelfPredictionResponse(BaseModel):
-    predicted_outcome: PredictedOutcome = Field(
+    """What the target model emits when asked to predict its own behavior.
+
+    Critical: the model is NOT told the curator-expected behavior — that
+    would anchor the prediction. The model emits what it thinks IT would
+    do; the analyzer derives the outcome class by comparing to curator
+    metadata downstream.
+    """
+    predicted_behavior: PredictedBehavior = Field(
+        description="Would the model invoke a tool, or answer directly?",
+    )
+    predicted_tool: Optional[str] = Field(
+        default=None,
         description=(
-            "The model's prediction of which outcome class it would produce "
-            "on a single trial at temperature 1.0 against the supplied "
-            "(system_prompt, user_prompt) pair."
+            "Name of the tool the model would invoke, if predicted_behavior "
+            "is 'call_tool'. Must match one of the tools the system prompt "
+            "made available. Null if predicted_behavior is 'answer_directly'."
+        ),
+    )
+    predicted_success: bool = Field(
+        description=(
+            "Does the model believe its single-attempt response would be "
+            "correct, independent of which path it would take?"
         ),
     )
     confidence: PredictionConfidence = Field(
-        description="Subjective certainty about the prediction.",
+        description="Subjective certainty about the prediction overall.",
     )
     reasoning: str = Field(
         description=(
             "One to three sentences naming the features of the situation "
-            "that drive the prediction. Source material for principle "
-            "extraction (see investigations/001-self-prediction-baseline)."
+            "that drive the prediction. Source material for the eventual "
+            "principle-extraction work in later investigations."
         ),
     )
 

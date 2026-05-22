@@ -7,6 +7,7 @@ parents:
 children: []
 related:
   - studies/001-tool-calibration/investigations/004-calibration-pilot
+  - studies/001-tool-calibration/investigations/006-temperature-prompt
   - studies/001-tool-calibration/investigations/007-axes-performativity
 axes:
   llm_capability: medium
@@ -14,7 +15,7 @@ axes:
 tags:
   - methodology
   - self-prediction
-  - baseline
+  - control-group
 aliases:
   - 002-001
   - self-pred-baseline
@@ -26,70 +27,96 @@ updated: 2026-05-22
 
 ## Scope
 
-Before introducing any principle-library machinery, establish the
-empirical baseline: **how well does the target model predict its own
-tool-call success?**
+A **control-group experiment** for [[study-002-principle-bootstrapped-difficulty]].
+Strip away every part of the study's eventual methodology — no principles,
+no researcher-LLM critic, no actor-critic loop. The single question:
 
-Concretely, for each (record, model) pair in the bulk corpus, prompt the
-model — once — with the user query, the available tools, and a
-structured-output request:
+> **Does the target model know what's hard for itself?**
 
-```
-predicted_outcome: success | over_call | under_call | wrong_tool
-confidence: low | medium | high
-reasoning: <prose>
-```
+We already have empirical labels for what each Gemma model does on the
+bulk corpus (n=10 trials per record under neutral baseline, temp=1.0, via
+A4 grading). What we don't have is what each Gemma model **thinks** it
+will do. This investigation gets that data and compares the two.
 
-Compare each prediction to the empirical success rate from
-[[investigation-007]]'s A4 grading (n=10 trials per record under neutral
-baseline, temp=1.0).
+Result of investigation 1 is the floor for everything else study 002
+might do. If the model has no useful self-prediction signal, the
+principle-extraction premise is weakened (though not killed —
+researcher-extractable signal in the reasoning text could survive even
+when the predicted class is noise). If it has signal, we have something
+to bootstrap from.
 
-This investigation introduces no principles. It tests only the raw
-self-assessment capability — a calibration of the calibrator. Whatever
-predictive accuracy the model achieves here is the baseline that
-principle-library work needs to beat.
+## Primary question
 
-## Questions
+**Q1 — Does Gemma's self-prediction correlate with empirical outcome,
+and how does that vary across tools?**
 
-1. **Headline accuracy.** Across the bulk corpus, what fraction of
-   predictions match the empirical modal outcome?
-2. **Confidence calibration.** Does `confidence=high` predict accuracy
-   better than `confidence=low`? Or is the confidence signal noise?
-3. **Per-tool breakdown.** Is the model better at predicting its own
-   behavior on some tool families than others? (Hypothesis from
-   [[investigation-007]]: `general_knowledge_lookup` and
-   `user_knowledge_lookup` are easier to self-predict than
-   `python_execute` — the latter requires two recognitions, not one.)
-4. **Per-model comparison.** Does 12B IT self-predict more accurately
-   than 4B IT? If yes — by how much, and is the gain uniform across
-   tools?
-5. **Error-mode prediction.** Beyond `predicted_outcome`, the model
-   predicts the *kind* of failure. When the model says "under_call,"
-   does it actually under-call? Diagnostic for which failure modes the
-   model is self-aware about.
-6. **Reasoning quality.** Qualitative: when the model is correct, does
-   the reasoning surface anything coherent? When wrong, is there a
-   pattern? This seeds the first batch of candidate principles for
-   investigation 002.
+For each (record, model) pair:
+
+- Ask the target model to predict what it would do on the task and
+  whether it would handle it correctly. n=1 sample.
+- Compare the prediction to the empirical modal outcome from A4
+  grading (10 trials/record under the same prompt and sampling).
+- Aggregate per tool: precision and recall against the empirical
+  outcome, with bootstrap CIs.
+- Aggregate per model: 4B vs 12B head-to-head.
+
+This mirrors the per-tool analysis structure used for Opus's external
+predictions in 006, so results drop cleanly alongside them.
+
+## Secondary question
+
+**Q2 — Where Gemma's self-prediction is correlated with outcome, is
+that signal different from what Opus extracts from the same prompt?**
+
+We already have Opus's external predictions for every record (the same
+data analyzed in 006). Gemma's self-prediction and Opus's external
+prediction are both functions of the same prompt — if they agree on
+which records are trivial, self-prediction may just be reading surface
+features the way Opus does, not the model knowing itself. If Gemma adds
+signal on tools where Opus doesn't (especially the math-adjacent Group B
+tools where Opus is at baseline), that's a more interesting finding.
+
+Q1 is the headline; Q2 is a free secondary analysis since we have the
+Opus data already. Don't overweight it in the writeup.
 
 ## Methods
 
-1. **Build the self-prediction prompt.** A new prompt template
-   `prompts/self_predict_v1.txt` that frames the task: "Here is a user
-   query and the tools available to you. You will not actually answer.
-   Predict whether you would handle this correctly..." Structured
-   output via the existing Pydantic shape (see `models.py` — define a
-   `SelfPredictionResponse` extending the structured-output pattern).
-2. **Run once per record per model.** n=1 is sufficient for the baseline
-   — we are not measuring stochasticity of the prediction, we are
-   measuring whether one sample correlates with empirical mode.
-   Stochasticity of self-prediction is a follow-on question.
-3. **Align with empirical labels.** Empirical bucketing is per-model;
-   read it from [[investigation-007]] output. A record's "empirical
-   outcome" is the modal `error_type` (or `success`) across its 10
-   neutral-baseline trials.
-4. **Score.** Per-record agreement, per-tool agreement, confusion
-   matrices, per-confidence-band accuracy.
+1. **Self-prediction prompt** (`prompts/self_predict_v1.txt`). Embed the
+   task's `system_prompt` and `user_prompt` as data. Frame the prediction
+   as meta — "predict what you would do; do not actually do it." Use
+   JSON output with the `SelfPredictionResponse` schema (see
+   `../../models.py`).
+
+   Critical design choice: **do not tell the model the expected
+   behavior.** That would anchor the prediction. The model predicts its
+   own `(predicted_behavior, predicted_tool, predicted_success)`; the
+   analyzer compares those to the curator-specified
+   `(expected_tool_call, tool_target)` to derive the predicted outcome
+   class.
+
+2. **Run once per record per model.** n=1 sample is sufficient — we are
+   not measuring stochasticity of the self-prediction, we are measuring
+   whether one sample correlates with the empirical mode. Stochasticity
+   of self-prediction is a follow-on question.
+
+3. **Score against empirical mode.** A record's empirical outcome for a
+   model is the modal `error_type` (or `success`) across its 10 trials
+   from A4. The predicted outcome class for a record is derived from
+   `(predicted_behavior, predicted_tool, expected_tool_call,
+   tool_target)`:
+   - `predicted_behavior=call_tool ∧ expected_tool_call=true ∧ predicted_tool=tool_target` → success
+   - `predicted_behavior=call_tool ∧ expected_tool_call=false` → over_call
+   - `predicted_behavior=answer_directly ∧ expected_tool_call=true` → under_call
+   - `predicted_behavior=call_tool ∧ expected_tool_call=true ∧ predicted_tool ≠ tool_target` → wrong_tool
+   - `predicted_behavior=answer_directly ∧ expected_tool_call=false` → success
+
+4. **Per-tool stats.** Same analysis shape as 006's
+   `prediction_agreement_per_tool.py`: precision/baseline/lift on the
+   trivial endpoint, recall, bootstrap CIs, paired 12B − 4B Δ.
+
+5. **Confidence calibration (sub-question).** Does `confidence=high`
+   predict accuracy better than `confidence=low`? Treat as a small
+   secondary analysis, not headline.
 
 ## Decisions
 
@@ -97,39 +124,49 @@ _Populate as work proceeds._
 
 ## Results
 
-_Pending. Gated on [[investigation-007]] A4 grading completing for both
-4B IT and 12B IT on the bulk corpus._
+_Pending. Self-prediction harness ready; A4 grading already in hand._
 
 ## Forward-looking
 
-Whatever the headline accuracy turns out to be, the *reasoning* outputs
-are the seed material for investigation 002. Specifically:
+The result of this investigation is a real go/no-go gate for the rest of
+study 002:
 
-- Where reasoning correctly identifies a load-bearing feature →
-  candidate principle.
-- Where the prediction is wrong but the reasoning sounds plausible →
-  candidate principle that needs an empirical check to distinguish
-  rationalization from insight.
-- Where the prediction is right but the reasoning is incoherent → flag
-  for the "citation faithfulness" thread (study.md motivation §).
+- **Gemma self-prediction at chance or worse.** Principle-extraction
+  premise is wounded. Reasoning text might still contain useful features
+  — could pivot the study toward "what does it take to give a model
+  self-prediction signal?" — but the current methodology weakens.
+- **Gemma self-prediction meaningfully above chance.** Proceed to
+  investigation 2 (single-principle ablations using Gemma's self-
+  explanations as source material).
+
+Reasoning outputs are kept regardless of how Q1 lands. Even when
+Q1 is null, the reasoning text is qualitative seed material for the
+principle work — flagged as exploratory, not load-bearing.
 
 ## Things to flag
 
-- Self-prediction prompt phrasing has known sensitivity. The wording
-  here will be a confound. Worth a small prompt-variation A/B before
-  treating the baseline as authoritative.
-- The model's `predicted_outcome` is over a 4-class label
-  (success/over/under/wrong_tool). Disagreement at the failure-mode
-  level (predicted over_call, actually under_call) is informative even
-  when the binary success/fail prediction matches.
+- Self-prediction prompt phrasing has known sensitivity. The current
+  wording is a single best-guess design; a prompt-variation A/B is a
+  worthwhile follow-up if results are equivocal.
 - Empirical "modal outcome" can be ambiguous when n=10 splits 5-5.
-  Treat those as "uncertain ground truth" and exclude from headline
-  accuracy; report them separately.
+  Treat those records as "uncertain ground truth," exclude from headline
+  precision, and report separately.
+- Don't anchor the self-prediction by exposing the expected behavior in
+  the meta-prompt (see Methods §1). The whole control-group claim
+  depends on this.
+- Q2 (Gemma-vs-Opus comparison) is a free analysis since we have the
+  Opus data, but the comparison is sensitive to prompt design: Gemma's
+  self-prediction prompt and Opus's prediction prompt aren't identical,
+  so any difference is partly methodological. Caveat appropriately.
 
 ## Limitations
 
-- One-shot prediction. Whether the prediction is stable across
-  resamples is a separate question.
-- Gemma-only. Cross-family self-prediction is a future-direction.
-- Per-record labels are model-relative. The "same" record has different
-  ground-truth labels for 4B vs 12B; that's correct and intended.
+- n=1 self-prediction per (record, model). Stochasticity of the
+  prediction itself is not measured here.
+- Gemma-only. Cross-family self-prediction is a future direction.
+- Per-record empirical labels are model-relative — same record has
+  different ground-truth labels for 4B vs 12B; correct and intended.
+- The derived "predicted outcome class" is a function of the model's
+  three structured-output fields plus curator metadata. If the model
+  produces malformed JSON, that trial is excluded — track and report
+  the parse-failure rate.
