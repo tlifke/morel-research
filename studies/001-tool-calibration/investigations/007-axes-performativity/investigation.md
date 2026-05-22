@@ -1,7 +1,7 @@
 ---
 id: studies/001-tool-calibration/investigations/007-axes-performativity
 title: Axes performativity — do our difficulty axes predict tool-call calibration?
-status: planned
+status: in-progress
 parents:
   - studies/001-tool-calibration
 children: []
@@ -110,7 +110,30 @@ _Populate as work proceeds._
 
 ## Results
 
-_Pending Phase A4 grading of `bulk_seeds.jsonl`._
+> **Status update (2026-05-22).** Phase A4 grading on `bulk_seeds.jsonl`
+> was in fact completed under this investigation's 2026-05-12 rollout
+> (`results/gemma3_{4b,12b}-it-qat/007_bulk_neutral_temp1_2026-05-12.jsonl`).
+> The "pending A4" framing below predates that run. The corresponding
+> analyses live at:
+>
+> - `../006-temperature-prompt/results-analysis/prediction_agreement_summary.md`
+>   — corpus-wide agreement between Opus difficulty labels and empirical
+>   success. Headline: Opus's predictions function as a trivial-task
+>   detector, not an ordinal scale. 12B precision 0.83 vs 0.67 baseline;
+>   4B essentially at noise; `extreme` anti-informative for 4B.
+> - `../006-temperature-prompt/results-analysis/prediction_agreement_per_tool_summary.md`
+>   — per-tool breakdown of the same data. Headline: the trivial detector
+>   is tool-conditioned. `python_execute` precision 1.00 on both models;
+>   `gkl`/`ukl` strong on both; `calculator` and `datetime_now` are
+>   anti-informative or at baseline. The corpus-wide 4B-vs-12B gap is
+>   largely an artifact of where the trivial baseline is already high.
+>
+> Both summaries materially sharpen this investigation's diagnostic
+> finding from "axes don't predict" to "the predictive structure that
+> exists lives at the tool-family level, not the ordinal axis level."
+> Reformulation work moved to `studies/002-principle-bootstrapped-difficulty`.
+
+_Original (pre-A4) preliminary signal preserved below._
 
 Preliminary signal already visible in 006 F3/F4/F5 (n=18 corpus):
 - Curator `hard` → empirical `trivial` for ~9/15 records at 12B,

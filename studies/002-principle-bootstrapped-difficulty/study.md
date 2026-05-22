@@ -122,6 +122,42 @@ This study takes a more nuanced position:
   giving descriptive tooling that supports both behavioral and (eventual)
   mechanistic interventions.
 
+## Likely outcomes to be honest about up front
+
+The corpus-wide and per-tool agreement analyses from
+[[investigation-006]] (see
+`../001-tool-calibration/investigations/006-temperature-prompt/results-analysis/`)
+establish strong priors on what this study's results will look like, and
+those priors should shape what we promise:
+
+1. **Likely outcome: a structured trivial detector, not a 5-band
+   ordinal classifier.** Opus — a substantially stronger model than the
+   target Gemmas — produces predictions that function as a trivial-task
+   detector with no surviving ordinal signal. Expecting a Gemma actor
+   plus a principle library to outperform Opus on the *ordinal* task is
+   ambitious. The realistic deliverable is a high-quality
+   *trivial-detector with structure*: principles that explain **why** a
+   record will be trivial for a given model, conditioned on tool target.
+   This is a narrower claim than "model-specific ordinal difficulty
+   labels" — and a more defensible one.
+
+2. **Principles will likely be tool-conditioned, not global.** The
+   per-tool breakdown shows the trivial detector behaves in two regimes:
+   near-perfect for `python_execute`, strong for `gkl`/`ukl`,
+   anti-informative for `calculator`/`datetime_now`. A single global
+   principle library would average over those regimes. Plan for
+   per-tool principle sets (or principles with explicit tool scope, per
+   the `scope` field on `AuditablePrinciple`) from the start.
+
+3. **The "extreme" / "impossible" endpoint will likely stay noisy.**
+   Opus is anti-informative at the impossible endpoint for 4B and at
+   noise for 12B. The signal that *will* exist is at the trivial
+   endpoint. Don't burn cycles trying to bootstrap impossible-prediction
+   first.
+
+These are priors, not predictions. Investigation 001's self-prediction
+baseline is what makes them empirical for the Gemma actor specifically.
+
 ## Investigations
 
 - `001-self-prediction-baseline` — does the target model know what's
