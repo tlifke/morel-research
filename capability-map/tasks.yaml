@@ -209,6 +209,44 @@ tasks:
       Gemini API stub), runner with sampling + prompt-set controls,
       analyzer with retroactive rescoring. Built into A4 pilot.
 
+  # ----- Study 2: principle-bootstrapped difficulty ------------------------
+  - id: model-self-predict-difficulty
+    label: Model self-predicts tool-call success
+    study: 002-principle-bootstrapped-difficulty
+    investigation: 001-self-prediction-baseline
+    llm_capability: 0.4
+    human_capability: 0.5
+    status: hypothesized
+    notes: Subject model emits {predicted_outcome, confidence, reasoning}
+      for each (record, model) pair; compared to empirical mode from A4
+      grading. Open whether small models have any useful self-prediction
+      signal. Coordinate is a guess — baseline run will land the actual
+      number.
+
+  - id: principle-bootstrapped-labeling
+    label: Bootstrap difficulty principles from model traces
+    study: 002-principle-bootstrapped-difficulty
+    investigation: null
+    llm_capability: 0.5
+    human_capability: 0.6
+    status: hypothesized
+    notes: Nested actor-critic — target-model actor + researcher-LLM
+      critic for difficulty classification; researcher-LLM actor + human
+      critic for principle design. Methodological research about
+      LLM-driven research methodology; negative result is itself a
+      finding.
+
+  - id: difficulty-targeted-pair-generation
+    label: Generate tool-call pairs at requested difficulty
+    study: 002-principle-bootstrapped-difficulty
+    investigation: null
+    llm_capability: 0.4
+    human_capability: 0.5
+    status: hypothesized
+    notes: Downstream of validated principle library — use principles to
+      construct held-out pairs at requested difficulty levels for a
+      target model. Second of study 002's two top-level goals.
+
   # ----- Cross-cutting -----------------------------------------------------
   - id: write-one-pager-prose
     label: Write one-pager prose
