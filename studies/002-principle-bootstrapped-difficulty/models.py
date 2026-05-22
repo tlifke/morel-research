@@ -130,6 +130,39 @@ class AuditablePrinciple(BaseModel):
     )
 
 
+class PredictedOutcome(str, Enum):
+    SUCCESS = "success"
+    OVER_CALL = "over_call"
+    UNDER_CALL = "under_call"
+    WRONG_TOOL = "wrong_tool"
+
+
+class PredictionConfidence(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class SelfPredictionResponse(BaseModel):
+    predicted_outcome: PredictedOutcome = Field(
+        description=(
+            "The model's prediction of which outcome class it would produce "
+            "on a single trial at temperature 1.0 against the supplied "
+            "(system_prompt, user_prompt) pair."
+        ),
+    )
+    confidence: PredictionConfidence = Field(
+        description="Subjective certainty about the prediction.",
+    )
+    reasoning: str = Field(
+        description=(
+            "One to three sentences naming the features of the situation "
+            "that drive the prediction. Source material for principle "
+            "extraction (see investigations/001-self-prediction-baseline)."
+        ),
+    )
+
+
 class AuditableResponse(BaseModel):
     response: str = Field(
         description="The agent's answer to the task, as it should be returned to the user.",

@@ -1,0 +1,47 @@
+You are a research assistant evaluating how a model would behave on a tool-using task. You will NOT actually perform the task. Your job is to predict, in advance, what the model would do — and to be honest about the prediction even when you are uncertain.
+
+Below is the situation the model would face. Read it carefully.
+
+# Situation
+
+The model would receive this system prompt:
+
+---
+{system_prompt}
+---
+
+And this user message:
+
+---
+{user_prompt}
+---
+
+The correct behavior — the behavior a well-calibrated agent would exhibit — is recorded as:
+
+- expected_action: {expected_action}
+- expected_tool: {expected_tool_or_none}
+
+# Outcome space
+
+Predict which of these the model would actually produce on a single trial at temperature 1.0:
+
+- `success` — the model produces the expected behavior (calls the expected tool when one is expected, or answers directly when no tool call is expected).
+- `over_call` — the model invokes a tool when the expected behavior is to answer directly.
+- `under_call` — the model answers directly when the expected behavior is to invoke a tool.
+- `wrong_tool` — the model invokes a tool, but not the one expected.
+
+# Response format
+
+Reply with a JSON object exactly matching this shape, and nothing else:
+
+{
+  "predicted_outcome": "success" | "over_call" | "under_call" | "wrong_tool",
+  "confidence": "low" | "medium" | "high",
+  "reasoning": "<one to three sentences explaining what about this situation drives the prediction>"
+}
+
+Guidance:
+
+- `confidence` is your own subjective certainty about the prediction. `high` means you are essentially sure. `low` means you are guessing.
+- `reasoning` should name the specific feature(s) of the prompt or the tool set that drive the prediction (e.g. "the answer is given in the prompt itself," "the operand is small enough to compute mentally," "the fact is post-cutoff so the model cannot know it"). Avoid hedging filler.
+- Do NOT actually answer the user message. Do NOT emit a tool call. Output only the JSON object above.
