@@ -1,7 +1,7 @@
 ---
 id: studies/002-principle-bootstrapped-difficulty/investigations/001-self-prediction-baseline
 title: Self-prediction baseline — does the target model know what's hard for itself?
-status: planned
+status: in-progress
 parents:
   - studies/002-principle-bootstrapped-difficulty
 children: []
@@ -216,6 +216,103 @@ Opus data already. Don't overweight it in the writeup.
 >   trivial-half over-calling). Cross-model comparison is a follow-on.
 >
 > Full corpus run pending.
+
+> ### Full corpus — Gemma 3 4B IT, n=3 per question (2026-05-22)
+>
+> Run metadata:
+> - model: `gemma3:4b-it-qat`
+> - corpus: full bulk_seeds (366 records)
+> - n: 3 self-prediction trials per (record, question), 4,392 calls total
+> - sampling: temp=1.0, top_p=0.95
+> - concurrency: 4 (OLLAMA_NUM_PARALLEL=4 on desktop)
+> - wall time: ~36 min
+> - parse failures: 4/4,392 (0.09%); validate failures: 9/4,392 (0.20%)
+> - results files (gitignored): `results/gemma3_4b-it-qat/q{1,2,3,4}_n3_2026-05-22.jsonl`
+> - analysis: `results-analysis/self_prediction_2026-05-22.json`
+> - figure: `figures/out/f3_behavior_by_tool.{png,pdf,html}`
+>
+> #### F3 — behavior prediction (Q3 vs A4 modal empirical behavior)
+>
+> 9 records excluded as empirically ambiguous (mode count < 60% of trials).
+>
+> | tool                       | n   | accuracy | 95% CI            | error direction       |
+> |---                         |---: |---:      |---                |---                    |
+> | user_knowledge_lookup      |  48 | 0.875    | [0.771, 0.958]    | 4 under, 2 over       |
+> | unit_convert               |  51 | 0.824    | [0.706, 0.922]    | 9 under, 0 over       |
+> | general_knowledge_lookup   |  57 | 0.789    | [0.684, 0.895]    | **3 under, 9 over**   |
+> | python_execute             |  65 | 0.692    | [0.585, 0.800]    | 16 under, 4 over      |
+> | datetime_now               |  25 | 0.600    | [0.400, 0.800]    | 10 under, 0 over      |
+> | calculator                 | 111 | **0.432**| **[0.342, 0.523]**| **61 under, 2 over**  |
+> | **overall**                | 357 | 0.664    | [0.616, 0.711]    | 103 under, 17 over    |
+>
+> Headlines:
+>
+> 1. **Calculator behavior prediction is at chance.** Accuracy 0.432, CI
+>    includes 0.5 from below — Gemma 4B fundamentally does not know what
+>    it would do on calculator records. 61 of 63 errors are
+>    "I would answer directly" → empirically calls the tool.
+>
+> 2. **The directional error pattern holds at full corpus, 85.8% under.**
+>    Pre-experiment finding from n=24 (60% directional) was conservative;
+>    at the full sample, the asymmetry is stronger. For Gemma 3 4B IT,
+>    when self-prediction fails on tool-use behavior, it is almost
+>    always because the model underestimates how often it will reach
+>    for the tool.
+>
+> 3. **general_knowledge_lookup is the inverse — 75% of errors are over-predictions.**
+>    On gkl, Gemma predicts it would call the tool but empirically
+>    answers from memory. Different self-knowledge failure than the
+>    math-adjacent tools. Stated tool-orientation > demonstrated
+>    behavior.
+>
+> 4. **ukl is the most self-predictable tool family (0.875).** Where
+>    the model has a clear personal-data-vs-prompt-data asymmetry to
+>    read, its self-prediction is reliable.
+>
+> Two distinct failure modes of self-knowledge by tool family:
+>
+> - **Math-adjacent (calc, datetime, unit_convert, python):** stated
+>   competence (Q1=yes, Q3=answer_directly) > demonstrated behavior
+>   (model calls the tool anyway). Echoes the over-call cluster from
+>   006.
+> - **Knowledge (gkl):** stated tool-orientation > demonstrated
+>   behavior (model answers from memory despite predicting it would
+>   look it up).
+>
+> These have different corrective principle shapes, validating the
+> per-tool `scope` decision in [[study-002]].
+>
+> #### F4 — tool selection given empirical tool call
+>
+> 194 records excluded (empirical behavior was answer_directly, so F4
+> is undefined). On the remaining 172 records:
+>
+> | tool                       | n   | accuracy | 95% CI            |
+> |---                         |---: |---:      |---                |
+> | general_knowledge_lookup   |  20 | 1.000    | [1.000, 1.000]    |
+> | unit_convert               |  28 | 0.964    | [0.893, 1.000]    |
+> | calculator                 |  72 | 0.958    | [0.903, 1.000]    |
+> | datetime_now               |  17 | 0.941    | [0.824, 1.000]    |
+> | python_execute             |  30 | 0.767    | [0.600, 0.900]    |
+> | user_knowledge_lookup      |   5 | 0.600    | [0.200, 1.000]    |
+> | **overall**                | 172 | 0.919    | [0.878, 0.959]    |
+>
+> Tool selection is mostly solved — where Gemma does invoke a tool, it
+> picks the right one. python_execute is the only meaningfully weaker
+> case (0.767), consistent with the calc-vs-python boundary confusion
+> documented in 006. ukl's n=5 makes its number uninterpretable.
+>
+> #### F1 and F2 deferred
+>
+> F1 (capability without tools) and F2 (capability with tools) need
+> answer-correctness ground truth, which `classify_trial` does not
+> provide. The grading workflow is sketched in `GRADING.md` but not
+> yet implemented. Whether to build it depends on whether the F3 result
+> alone is enough for now; see "Forward-looking" below.
+>
+> Q1 verdict distribution does sanity-check well even without scoring:
+> `i_cannot_know` is heavily used on gkl/ukl/datetime_now (where it
+> should be) and absent on unit_convert (where it shouldn't be).
 
 ## Forward-looking
 

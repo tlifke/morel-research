@@ -143,6 +143,23 @@ def score_f3_behavior(self_pred_modal: str | None, emp: dict, seed: dict) -> tup
     return (1 if self_pred_modal == emp["behavior_mode"] else 0), None
 
 
+def f3_error_direction(self_pred_modal: str | None, emp: dict) -> str | None:
+    """For F3, classify the error direction. Returns one of
+    {'correct', 'under_predicted_tool_use', 'over_predicted_tool_use'} or None."""
+    if self_pred_modal is None:
+        return None
+    if emp["behavior_mode_count"] / emp["n_trials"] < 0.6:
+        return None
+    emp_b = emp["behavior_mode"]
+    if self_pred_modal == emp_b:
+        return "correct"
+    if self_pred_modal == "answer_directly" and emp_b == "call_tool":
+        return "under_predicted_tool_use"
+    if self_pred_modal == "call_tool" and emp_b == "answer_directly":
+        return "over_predicted_tool_use"
+    return None
+
+
 def score_f4_tool(self_pred_modal: str | None, emp: dict, seed: dict) -> tuple[int | None, str | None]:
     """F4: did Q4's predicted tool match the A4 modally-invoked tool?
     Only defined when the empirical behavior was 'call_tool'."""
@@ -224,17 +241,29 @@ def main(model: str = "gemma3:4b-it-qat") -> None:
             continue
         modal, mcount, n = _modal_self_pred(trials, ("predicted_behavior",))
         score, reason = score_f3_behavior(modal, emp[rid], seeds[rid])
+        direction = f3_error_direction(modal, emp[rid])
         f3_rows.append({
             "record_id": rid,
             "tool": seeds[rid]["tool_target"] or "none",
             "score": score,
             "exclude_reason": reason,
+            "direction": direction,
             "self_pred_modal": modal,
             "self_pred_modal_count": mcount,
             "self_pred_total": n,
             "empirical_mode": emp[rid]["behavior_mode"],
         })
     out["facets"]["F3_behavior"] = _per_tool_facet(f3_rows, "F3_behavior")
+
+    direction_counts: dict[str, dict[str, int]] = defaultdict(lambda: {"correct": 0, "under_predicted_tool_use": 0, "over_predicted_tool_use": 0})
+    overall_dir = {"correct": 0, "under_predicted_tool_use": 0, "over_predicted_tool_use": 0}
+    for row in f3_rows:
+        if row["direction"] is None:
+            continue
+        direction_counts[row["tool"]][row["direction"]] += 1
+        overall_dir[row["direction"]] += 1
+    out["facets"]["F3_behavior"]["direction_per_tool"] = dict(direction_counts)
+    out["facets"]["F3_behavior"]["direction_overall"] = overall_dir
 
     f4_rows = []
     for rid, trials in self_preds["q4"].items():
@@ -291,6 +320,13 @@ def _print_facet(facet: dict) -> None:
               f"CI=[{ci['lo']:.3f},{ci['hi']:.3f}]")
     if facet["excluded"]:
         print(f"  excluded: {facet['excluded']}")
+    if "direction_overall" in facet:
+        d = facet["direction_overall"]
+        total_err = d["under_predicted_tool_use"] + d["over_predicted_tool_use"]
+        if total_err:
+            pct_under = 100 * d["under_predicted_tool_use"] / total_err
+            print(f"  error direction: under={d['under_predicted_tool_use']} "
+                  f"over={d['over_predicted_tool_use']} ({pct_under:.1f}% under)")
 
 
 if __name__ == "__main__":
