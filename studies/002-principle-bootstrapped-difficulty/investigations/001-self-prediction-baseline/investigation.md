@@ -313,6 +313,104 @@ Opus data already. Don't overweight it in the writeup.
 > Q1 verdict distribution does sanity-check well even without scoring:
 > `i_cannot_know` is heavily used on gkl/ukl/datetime_now (where it
 > should be) and absent on unit_convert (where it shouldn't be).
+>
+> #### Inter-question consistency (4B, no grading required)
+>
+> Analysis script: `analyze_consistency.py`. Joint distributions over
+> the four questions and A4 empirical behavior, no answer-correctness
+> grading needed.
+>
+> **Q1 × Q3 joint distribution (n=357, decisive empirical mode only):**
+>
+> | Q1 verdict | Q3=call_tool | Q3=answer_directly |
+> |---|---:|---:|
+> | yes (could do without tools) | 18 | 157 |
+> | no (would get wrong) | 22 | 53 |
+> | i_cannot_know | 41 | 66 |
+>
+> The dominant joint cell is **Q1=yes ∧ Q3=answer_directly: 157 records
+> (44% of all)**. Of those, **38.9% empirically call the tool** — the
+> "I could do this and I would answer directly" claim, then the model
+> reaches for the tool anyway. By tool:
+>
+> | tool | call_tool / direct |
+> |---|---|
+> | calculator | **40 / 33** |
+> | unit_convert | 8 / 21 |
+> | python_execute | 4 / 17 |
+> | datetime_now | 5 / 3 |
+> | user_knowledge_lookup | 3 / 7 |
+> | general_knowledge_lookup | 1 / 15 |
+>
+> Calculator dominates the "stated competence > demonstrated behavior"
+> pattern — 40 calculator records sit in this self-contradictory cell.
+>
+> **Q1=i_cannot_know cluster (n=107):**
+>
+> | Q3 | empirical | n |
+> |---|---|---:|
+> | answer_directly | answer_directly | 56 |
+> | call_tool | call_tool | 28 |
+> | call_tool | answer_directly | 13 |
+> | answer_directly | call_tool | 10 |
+>
+> When Gemma says "I cannot know this," **84/107 = 78.5% of cases are
+> internally consistent** (Q3 prediction matches empirical behavior).
+> This is the model's *most reliable* epistemic state — when it claims
+> epistemic limitation, the rest of the prediction stack aligns with
+> behavior. Suggests `i_cannot_know` is a more honest self-signal than
+> Q1=yes is.
+>
+> **Q4 tool-selection consistency:**
+>
+> When Q3=`call_tool` AND empirical=`call_tool`, Q4's predicted tool
+> matches the empirically-invoked tool 59/64 = **92.2%**. The model
+> picks the right tool when the prediction chain commits to calling
+> one.
+>
+> **Q2 capability-with-tools — direction matters by tool:**
+>
+> Mean A4 empirical success rate, split by Q2 verdict:
+>
+> | tool | Q2=yes (n, sr) | Q2=no (n, sr) | direction |
+> |---|---|---|---|
+> | calculator | 108, 0.843 | 3, 0.667 | aligned |
+> | general_knowledge_lookup | 32, 0.875 | 25, 0.672 | aligned |
+> | user_knowledge_lookup | 12, 0.808 | 36, 0.406 | aligned (large gap) |
+> | datetime_now | 15, 0.460 | 10, 0.940 | **inverted** |
+> | python_execute | 44, 0.500 | 21, 0.652 | **inverted** |
+> | unit_convert | 49, 0.782 | 2, 0.950 | **inverted (small n=no)** |
+>
+> On three tool families, Q2's "I could do this with tools" verdict
+> *anti-correlates* with empirical success. The model is most successful
+> on records where it expected to fail with tools. Two-failure-mode
+> hypothesis for this:
+>
+> 1. **Q2-overclaim on python_execute and unit_convert:** model claims
+>    capability for hard records (e.g., complex python computations,
+>    obscure unit conversions) where it then empirically fails. Q2=no
+>    cases happen to be the simpler records.
+> 2. **datetime_now**: Q2=no may actually capture a refusal/abstention
+>    pattern — model thinks even with tools it can't be sure, but the
+>    tool resolves it cleanly.
+>
+> Either way, Q2 verdicts are not a clean capability signal across all
+> tools. Useful for calc/gkl/ukl, anti-informative on
+> datetime/python/unit_convert.
+>
+> **Implications for principle work:**
+>
+> - The Q1=yes ∧ Q3=answer_directly ∧ empirical=call_tool cell on
+>   calculator (40 records) is a concentrated target — principle
+>   would say "on simple arithmetic you predict you'd answer directly
+>   but you actually call the tool; commit to one or the other."
+> - Q1=i_cannot_know is the most reliable self-knowledge marker.
+>   Principles that *defer to* `i_cannot_know` rather than override it
+>   are likely safer than principles that ask the model to claim
+>   capability.
+> - Q2's inverted direction on three tools is a finding about
+>   *introspection failure mode* and probably not principle-fixable —
+>   the model literally doesn't know which records are hard with tools.
 
 ## Forward-looking
 
