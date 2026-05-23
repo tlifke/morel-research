@@ -1,0 +1,31 @@
+--- w2s_research/ideas/vanilla_w2s/run.py.orig
++++ w2s_research/ideas/vanilla_w2s/run.py
+@@ -134,7 +134,7 @@
+         weak_model=config.weak_model,
+         dataset_name=dataset_name,
+         seed=config.seed,
+-        batch_size=config.batch_size,
++        batch_size=32,
+         lr=config.lr,
+         scheduler=config.lr_schedule,
+     )
+@@ -169,7 +169,7 @@
+         seed=config.seed,
+         # epochs defaults to BASELINE_EPOCHS
+         lr=config.lr,
+-        batch_size=config.batch_size,
++        batch_size=32,
+         scheduler=config.lr_schedule,
+     )
+
+--- w2s_research/core/train.py.orig
++++ w2s_research/core/train.py
+@@ -617,7 +617,7 @@
+             print(f"Using checkpoint for final evaluation: {latest_checkpoint}")
+             # Add buffer for special tokens and safety margin (vLLM needs max_model_len >= prompt length)
+             # max_ctx is used for Unsloth training, but vLLM evaluation needs extra headroom for long critiques
+-            max_model_len = max(max_ctx + 500, 10240) if max_ctx else 10240
++            max_model_len = (max_ctx + 500) if max_ctx else 4096
+
+             if aar_mode:
+                 # AAR Mode: Generate predictions only (no ground truth labels available)
