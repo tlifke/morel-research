@@ -135,57 +135,76 @@ class PredictedBehavior(str, Enum):
     ANSWER_DIRECTLY = "answer_directly"
 
 
-class PredictedOutcome(str, Enum):
-    """Derived outcome class — not emitted by the model. Computed by
-    comparing SelfPredictionResponse fields to curator-specified
-    expected_tool_call and tool_target."""
-    SUCCESS = "success"
-    OVER_CALL = "over_call"
-    UNDER_CALL = "under_call"
-    WRONG_TOOL = "wrong_tool"
-
-
 class PredictionConfidence(str, Enum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
 
 
-class SelfPredictionResponse(BaseModel):
-    """What the target model emits when asked to predict its own behavior.
+class Q1Verdict(str, Enum):
+    """Q1 (capability without tools) verdict space.
 
-    Critical: the model is NOT told the curator-expected behavior — that
-    would anchor the prediction. The model emits what it thinks IT would
-    do; the analyzer derives the outcome class by comparing to curator
-    metadata downstream.
+    `i_cannot_know` is distinct from `no`: the latter is 'I might get this
+    wrong'; the former is 'I have no access to this in principle' (personal
+    data, real-time facts, post-cutoff). The distinction matters for ukl
+    and certain gkl records.
     """
-    predicted_behavior: PredictedBehavior = Field(
-        description="Would the model invoke a tool, or answer directly?",
-    )
-    predicted_tool: Optional[str] = Field(
-        default=None,
+    YES = "yes"
+    NO = "no"
+    I_CANNOT_KNOW = "i_cannot_know"
+
+
+class Q1Response(BaseModel):
+    """Could the model answer correctly with NO tools available?"""
+    verdict: Q1Verdict
+    confidence: PredictionConfidence
+    reasoning: str = Field(description="One to three sentences.")
+
+
+class Q2Verdict(str, Enum):
+    YES = "yes"
+    NO = "no"
+
+
+class Q2Response(BaseModel):
+    """If the model USED the appropriate tool from a provided list, would
+    the final answer be correct? (Tool-utilization confidence, not 'do
+    you have access to tools'.)
+    """
+    verdict: Q2Verdict
+    confidence: PredictionConfidence
+    reasoning: str = Field(description="One to three sentences.")
+
+
+class Q3Response(BaseModel):
+    """Behavioral prediction: would the model reach for a tool on this task?"""
+    predicted_behavior: PredictedBehavior
+    confidence: PredictionConfidence
+    reasoning: str = Field(description="One to three sentences.")
+
+
+class Q4Response(BaseModel):
+    """Tool selection conditional on reaching for a tool. Always emitted —
+    even on tasks where the model would answer directly, Q4 records what
+    tool it would *hypothetically* pick if forced to choose. That makes
+    Q3 and Q4 cleanly independent."""
+    predicted_tool: str = Field(
         description=(
-            "Name of the tool the model would invoke, if predicted_behavior "
-            "is 'call_tool'. Must match one of the tools the system prompt "
-            "made available. Null if predicted_behavior is 'answer_directly'."
+            "Exact tool name from the provided list. The runner validates "
+            "the name against the available tool set for this record."
         ),
     )
-    predicted_success: bool = Field(
-        description=(
-            "Does the model believe its single-attempt response would be "
-            "correct, independent of which path it would take?"
-        ),
-    )
-    confidence: PredictionConfidence = Field(
-        description="Subjective certainty about the prediction overall.",
-    )
-    reasoning: str = Field(
-        description=(
-            "One to three sentences naming the features of the situation "
-            "that drive the prediction. Source material for the eventual "
-            "principle-extraction work in later investigations."
-        ),
-    )
+    confidence: PredictionConfidence
+    reasoning: str = Field(description="One to three sentences.")
+
+
+class PredictedOutcome(str, Enum):
+    """Derived outcome class — computed by the analyzer from Q3+Q4 +
+    curator-specified expected_tool_call and tool_target."""
+    SUCCESS = "success"
+    OVER_CALL = "over_call"
+    UNDER_CALL = "under_call"
+    WRONG_TOOL = "wrong_tool"
 
 
 class AuditableResponse(BaseModel):

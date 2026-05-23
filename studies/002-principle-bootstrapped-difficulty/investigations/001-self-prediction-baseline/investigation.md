@@ -120,11 +120,102 @@ Opus data already. Don't overweight it in the writeup.
 
 ## Decisions
 
-_Populate as work proceeds._
+> **Decision 1 — four-question ladder over single-shot prediction** (2026-05-22)
+> The original design was a single structured prediction emitting
+> `(predicted_behavior, predicted_tool, predicted_success, confidence,
+> reasoning)`. Restructured into four independent questions (Q1: could
+> you answer without tools / Q2: could you answer with the appropriate
+> tool / Q3: would you reach for a tool / Q4: which tool). Independent
+> calls — no shared conversation context. Reason: the single-shot
+> version conflated capability self-knowledge with behavioral
+> self-prediction. The ladder separates them, and the (Q1, Q2, Q3, Q4)
+> × (actual behavior, actual answer correctness) cross-product is
+> where the diagnostic structure lives.
+
+> **Decision 2 — Q1 includes `i_cannot_know` as a distinct verdict** (2026-05-22)
+> Distinct from `no` (which means "I'd attempt it but probably be
+> wrong"). The new option covers cases where the task asks for
+> information the model has no access to in principle — personal data,
+> real-time facts, post-cutoff knowledge. Necessary for ukl records
+> where "cannot know" and "would get wrong" are different cognitive
+> moments. Adds a third class to Q1's analysis but the signal is worth
+> it.
+
+> **Decision 3 — sweep n=3 uniformly across all four questions** (2026-05-22)
+> Stochasticity pre-experiment (24 records × 4 questions × n=5)
+> showed Q2 and Q3 are essentially deterministic (mean entropy 0.030,
+> 22–23/24 unanimous), Q1 mildly noisy (entropy 0.121, 20/24
+> unanimous), Q4 noisiest (entropy 0.242, 17/24 unanimous, 7/24 split
+> ≤4/5). n=3 gives Q4 the precision it needs without overspending on
+> the deterministic questions. Records with split modal predictions at
+> n=3 can be re-run at higher n if they fall in load-bearing positions
+> for the analysis.
 
 ## Results
 
-_Pending. Self-prediction harness ready; A4 grading already in hand._
+> ### Pre-experiment: stochasticity (n=24 records × n=5 trials, 2026-05-22)
+>
+> Quick check before committing to the full corpus run. Per-question
+> stability of the model's structured-output answer across 5 trials:
+>
+> | Question | Unanimous | 4/5 | 3/5 | Mean entropy | Parse fail |
+> |---|---|---|---|---|---|
+> | Q1 (capability, no tools) | 20/24 | 1 | 3 | 0.121 | 1/120 |
+> | Q2 (capability, with tools) | 22/24 | 2 | 0 | 0.030 | 1/120 |
+> | Q3 (behavior) | 23/24 | 1 | 0 | 0.030 | 0/120 |
+> | Q4 (tool selection) | 17/24 | 4 | 3 | 0.242 | 0/120 |
+>
+> Parse-failure rate: 2/480 = 0.4%. Meta-prompts elicit reliable JSON
+> from 4B IT.
+>
+> ### Pre-experiment side finding: directional Q3 error pattern (n=24)
+>
+> While the pre-experiment was scoped to stochasticity, the sample
+> also lets us peek at Q3 accuracy against A4 empirical behavior.
+> **Result on n=24: 15/24 = 62.5% accuracy** — modestly above the
+> better naive baseline ("always predict call_tool" = 58.3% on this
+> stratified sample). Wide CI at this n; not the headline number.
+>
+> What is interesting at n=24: **the Q3 errors cluster directionally.**
+> Of 9 mispredictions, **6 are records where Gemma predicted
+> `answer_directly` but empirically called the tool** (under-prediction
+> of own tool use). Only 2 are the reverse (predicted `call_tool`,
+> actually answered directly). One was a wash.
+>
+> Specific records worth highlighting (gemma3:4b-it-qat):
+>
+> - `datetime_now-time-easy-current_date-002`: Q1 says `i_cannot_know`,
+>   Q3 says `answer_directly`, **empirically calls the tool 10/10**.
+>   The model says it can't know the current date AND that it would
+>   answer directly — and then empirically reaches for the tool every
+>   time.
+> - `datetime_now-time-hard-biz_days_30-001`: same pattern,
+>   `i_cannot_know` → `answer_directly` → 10/10 tool calls empirically.
+> - `calculator-math-medium-mult_3d_p0-005` and `-009`: Q1=yes
+>   ("I can do this in my head"), Q3=`answer_directly`, **empirically
+>   calls calculator 9/10 and 10/10**. Mirrors the
+>   `calculator-math-trivial` 006 over-call cluster — but now with
+>   evidence that the model itself believes it would behave correctly.
+>
+> **Implications, n=24 anecdotal but directional:**
+>
+> - The error pattern in Gemma 3 4B IT is *systematically directional*,
+>   not random. The model under-predicts its own tool-calling behavior.
+>   This is *principle-extractable* — a principle that captures the
+>   gap ("on calculator and datetime_now trivial cases, you predict
+>   you'll answer directly but you actually call the tool") would have
+>   a clear behavioral target.
+> - The Q1 ↔ Q3 disagreement (model says it could answer / model says
+>   it wouldn't reach for a tool / model empirically reaches for the
+>   tool) is a *three-way mismatch* worth analyzing in its own right.
+>   It separates "I have the capability" from "I would invoke that
+>   capability" from "I actually do invoke that capability." The full
+>   corpus run should make this visible at scale.
+> - This is a finding about Gemma 3 4B IT specifically. The pattern
+>   may not transfer to 12B IT (which 006 showed fixes most
+>   trivial-half over-calling). Cross-model comparison is a follow-on.
+>
+> Full corpus run pending.
 
 ## Forward-looking
 

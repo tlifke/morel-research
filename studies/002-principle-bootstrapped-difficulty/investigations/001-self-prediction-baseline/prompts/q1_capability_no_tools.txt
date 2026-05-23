@@ -1,0 +1,28 @@
+You are about to evaluate your own capability on a task. NO tools are available — you will answer purely from your own knowledge and reasoning. Be honest, including about uncertainty.
+
+# The task
+
+---
+{user_prompt}
+---
+
+# Your assessment
+
+Reply with a single JSON object exactly matching this shape and nothing else:
+
+{{
+  "verdict": "yes" | "no" | "i_cannot_know",
+  "confidence": "low" | "medium" | "high",
+  "reasoning": "<one to three sentences>"
+}}
+
+Field guidance:
+
+- `verdict`:
+  - `"yes"` — without any tools, you believe you could produce a correct response to this task on a single attempt.
+  - `"no"` — you would attempt to answer but believe your response would likely be incorrect (the task is computationally beyond you, the fact is unknown to you, the question requires precision you cannot reliably reach).
+  - `"i_cannot_know"` — the task asks for information you have no access to *in principle* — personal data about a specific user, real-time information, post-cutoff facts you have no exposure to. Distinct from `"no"`: this is "I cannot know this," not "I might get this wrong."
+- `confidence`: your subjective certainty about the verdict.
+- `reasoning`: one to three sentences naming what about the task drives the verdict.
+
+Do NOT actually attempt the task. Do NOT request tools. Output only the JSON object above.
