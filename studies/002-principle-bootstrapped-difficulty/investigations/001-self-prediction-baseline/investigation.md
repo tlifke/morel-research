@@ -20,7 +20,7 @@ aliases:
   - 002-001
   - self-pred-baseline
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-05-23
 ---
 
 # Investigation 1 — Self-prediction baseline
@@ -411,6 +411,117 @@ Opus data already. Don't overweight it in the writeup.
 > - Q2's inverted direction on three tools is a finding about
 >   *introspection failure mode* and probably not principle-fixable —
 >   the model literally doesn't know which records are hard with tools.
+
+## Case studies
+
+Two ukl records hand-pulled because Q3 modal disagrees with empirical
+behavior. Both turn out to surface the same failure mode — and that
+failure mode is **not** what the F3 aggregate suggests. Worth recording
+verbatim before any parser refinement smooths it away.
+
+### Case 1 — `user_knowledge_lookup-personal-hard-daughter_age_on_vacation-001-8f995e64`
+
+**Prompt:** *"How old will my daughter be when we go on our summer vacation?"*
+(tool_target=ukl, expected_tool_call=True, difficulty=hard)
+
+Self-prediction is uniformly correct and coherent across all four
+questions:
+
+- **Q1:** 3/3 trials `i_cannot_know`, high confidence. Reasoning cites
+  not having the daughter's age or the vacation dates.
+- **Q2:** 3/3 trials `no`, high confidence. Same reasoning.
+- **Q3:** 2/3 `call_tool`, 1/3 `answer_directly`. Modal = call_tool.
+- **Q4:** 3/3 `user_knowledge_lookup`, high confidence. Reasoning
+  explicitly names ukl as the right channel.
+
+Meta-knowledge is essentially perfect: the model knows it doesn't know,
+knows ukl is the channel, and names the tool.
+
+**A4 empirical, 10/10 trials:** identical pattern — ask the user a
+clarifying question:
+
+> *"I need a little more information to answer that question. Could you
+> tell me your daughter's current age and the date of your summer
+> vacation?"*
+
+Zero tool calls. Zero hallucinations. Every trial recognizes the
+information gap, then resolves it by **asking the user** rather than by
+**calling ukl**.
+
+The parser currently classifies this as `answer_directly`, which makes
+the F3 number read "Q3 over-predicted tool use." That's misleading. The
+model isn't answering directly; it's choosing a third resolution path
+the parser doesn't distinguish from a direct answer.
+
+### Case 2 — `user_knowledge_lookup-personal-medium-brother_city-001-577edafe`
+
+**Prompt:** *"What city does my brother live in?"*
+(tool_target=ukl, expected_tool_call=True, difficulty=medium)
+
+Self-prediction again unanimous across trials:
+
+- **Q1:** 3/3 `i_cannot_know`, high confidence.
+- **Q2:** 3/3 `no`, high confidence. Interesting failure: reasoning
+  claims "tools can't retrieve such private details" — wrong, ukl is
+  exactly that tool and is in the system prompt.
+- **Q3:** 3/3 `call_tool` (modal). One trial returns the malformed
+  value `predicted_behavior: "user_knowledge_lookup"` — a tool name
+  leaking into the behavior field. Validator gap; see follow-up.
+- **Q4:** 3/3 `user_knowledge_lookup`, high confidence.
+
+**A4 empirical, 10 trials, mixed:**
+
+- 4 trials called ukl (sometimes also asking for the brother's name in
+  the same turn).
+- 6 trials asked the user for clarification — *"Could you tell me your
+  brother's name?"* — with no tool call.
+- 0 trials hallucinated an answer.
+
+Same dominant resolution as Case 1: when the prompt is under-specified,
+the model often defers to the user instead of invoking the tool it
+correctly identified.
+
+### Shared finding
+
+Both records show a **third behavior** the parser lumps into
+`answer_directly`: the model recognizes the knowledge gap, names ukl as
+the right channel during self-prediction, then empirically resolves by
+asking the user a clarifying question. This is distinct from:
+
+- *Hallucinated answer* (confidently wrong, no tool, no clarification).
+- *Refusal* ("I can't help with that").
+- *Tool call.*
+
+Implication: the F3=0.875 ukl number — and specifically the two
+"over-prediction" cases — is partly an artifact of binary
+`call_tool`/`answer_directly` classification. The "F3 over-prediction"
+bucket on ukl is plausibly dominated by clarifying-question behavior,
+which is *not* a meta-knowledge failure. The principle that would
+intervene on this is qualitatively different ("call ukl immediately on
+under-specified private-fact prompts; don't pre-clarify") from one that
+would intervene on hallucination.
+
+### Follow-ups directly from these cases
+
+1. **Parser refinement.** Empirical `answer_directly` needs to split
+   into `hallucinated_answer`, `clarifying_question`, `refusal`, with
+   `direct_confident_answer` as the residual. Probably feasible
+   programmatically on the clarifying/refusal pattern (lexical
+   heuristics on "could you tell me", "I don't have access", question
+   marks at end), with a small Haiku judge sample to validate.
+2. **F3 recompute** after the parser refinement. Expect the ukl
+   over-prediction count to drop to near-zero. Whether the calculator
+   under-prediction story is similarly affected is a separate question
+   — at a glance, calculator empirical outputs look like genuine
+   silent tool use, not clarifying questions.
+3. **Q3 validator** should reject `predicted_behavior` values outside
+   `{call_tool, answer_directly}`. Brother-city case shows the current
+   validator accepts tool names in this field.
+4. **Testable principle** for ukl: prepend "if a private fact is
+   missing from the prompt, call user_knowledge_lookup immediately
+   rather than asking the user for clarification first." Run on a
+   held-out subset of ukl records; measure whether the
+   ask-clarifying-question fraction drops without inflating hallucination.
 
 ## Forward-looking
 

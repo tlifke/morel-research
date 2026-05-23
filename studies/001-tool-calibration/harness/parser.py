@@ -97,6 +97,47 @@ def classify_trial(record: dict, output: str) -> tuple[bool, str | None]:
     return (True, None)
 
 
+_APOS = r"['’]"
+_CLARIFY_PATTERNS = (
+    re.compile(r"\bcould you (please )?(tell|give|provide|share|specify|clarify|let me know)\b", re.IGNORECASE),
+    re.compile(r"\b(please|can you) (tell|provide|share|specify|clarify|let me know)\b", re.IGNORECASE),
+    re.compile(r"\bi (need|require|would need) (some|a little|a bit|more|additional)?\s*(more )?(information|details|context|clarification)\b", re.IGNORECASE),
+    re.compile(r"\bwhat (is|are|was|were|do you mean by)\b", re.IGNORECASE),
+)
+_REFUSAL_PATTERNS = (
+    re.compile(rf"\bi (cannot|can{_APOS}?t|am unable|am not able|{_APOS}m not able|do not have the ability)\b", re.IGNORECASE),
+    re.compile(rf"\bi (don{_APOS}?t|do not) have (access|the (information|data|ability))\b", re.IGNORECASE),
+    re.compile(rf"\bi{_APOS}m sorry,?\s*(but|i)\b", re.IGNORECASE),
+)
+
+
+def classify_no_tool_behavior(output: str) -> str:
+    """Sub-classify outputs with no tool call.
+
+    Returns one of:
+      - `clarifying_question` — the model asks the user for more
+        information (with `?` and/or polite-imperative phrasing).
+      - `refusal` — the model declines to answer due to claimed
+        inability, without asking for clarifying info.
+      - `direct_answer` — the residual; includes confident answers,
+        hallucinations, and anything that didn't match the other two.
+
+    Order matters: `clarifying_question` is checked first because
+    "I can't… could you tell me?" patterns appear and should count as
+    clarifying, not refusal.
+    """
+    text = output.strip()
+    if not text:
+        return "direct_answer"
+    last_q = text.rstrip().endswith("?")
+    has_clarify = any(p.search(text) for p in _CLARIFY_PATTERNS)
+    if last_q or has_clarify:
+        return "clarifying_question"
+    if any(p.search(text) for p in _REFUSAL_PATTERNS):
+        return "refusal"
+    return "direct_answer"
+
+
 def scored_success(record: dict, output: str) -> bool:
     """Legacy single-bool scorer. Prefer `classify_trial`."""
     success, _ = classify_trial(record, output)
