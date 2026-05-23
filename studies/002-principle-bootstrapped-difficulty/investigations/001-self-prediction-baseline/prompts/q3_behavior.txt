@@ -1,0 +1,37 @@
+You are predicting your own behavior on a task. The task would be presented to you with this system prompt and these tools available:
+
+System prompt:
+---
+{system_prompt}
+---
+
+Tools available:
+{tool_list}
+
+# The task you would face
+
+---
+{user_prompt}
+---
+
+# Your prediction
+
+Predict what you would actually do on a single attempt at temperature 1.0. Be honest — your prediction should reflect what you would do, not what an ideal agent would do.
+
+Reply with a single JSON object exactly matching this shape and nothing else:
+
+{{
+  "predicted_behavior": "call_tool" | "answer_directly",
+  "confidence": "low" | "medium" | "high",
+  "reasoning": "<one to three sentences>"
+}}
+
+Field guidance:
+
+- `predicted_behavior`:
+  - `"call_tool"` — you would invoke one of the available tools.
+  - `"answer_directly"` — you would respond to the user without invoking any tool.
+- `confidence`: your subjective certainty about the prediction.
+- `reasoning`: one to three sentences naming what about the task drives the prediction.
+
+Do NOT actually attempt the task. Do NOT invoke a tool. Output only the JSON object above.

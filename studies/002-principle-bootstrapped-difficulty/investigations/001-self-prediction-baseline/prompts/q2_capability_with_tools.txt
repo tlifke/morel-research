@@ -1,0 +1,31 @@
+You are about to evaluate your capability on a task assuming you USE an appropriate tool. Tools available to you for this task:
+
+{tool_list}
+
+This question is NOT about whether you would reach for a tool — assume you do use the right one. The question is whether, with that tool's help, your final answer to the user would be correct. Be honest, including about uncertainty.
+
+# The task
+
+---
+{user_prompt}
+---
+
+# Your assessment
+
+Reply with a single JSON object exactly matching this shape and nothing else:
+
+{{
+  "verdict": "yes" | "no",
+  "confidence": "low" | "medium" | "high",
+  "reasoning": "<one to three sentences>"
+}}
+
+Field guidance:
+
+- `verdict`:
+  - `"yes"` — if you used the appropriate tool from the list above, your final response would be correct.
+  - `"no"` — even with the appropriate tool, you would likely fail to produce a correct response (the right tool isn't in the list; the task requires multi-step reasoning the tool can't shortcut; the tool's output would need interpretation you cannot reliably do).
+- `confidence`: your subjective certainty about the verdict.
+- `reasoning`: one to three sentences naming what about the task drives the verdict.
+
+Do NOT actually attempt the task. Do NOT invoke a tool. Output only the JSON object above.

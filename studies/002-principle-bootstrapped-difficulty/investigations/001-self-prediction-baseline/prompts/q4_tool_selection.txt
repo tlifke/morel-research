@@ -1,0 +1,34 @@
+You are predicting which tool you would invoke for a task — given that you WOULD invoke some tool. Tools available:
+
+{tool_list}
+
+System prompt the task would give you:
+---
+{system_prompt}
+---
+
+# The task
+
+---
+{user_prompt}
+---
+
+# Your prediction
+
+Assume that on a single attempt at temperature 1.0 you would invoke some tool. Predict which one. Be honest — name the tool you would actually reach for, not the one a calibrated agent should reach for.
+
+Reply with a single JSON object exactly matching this shape and nothing else:
+
+{{
+  "predicted_tool": "<tool name from the list above>",
+  "confidence": "low" | "medium" | "high",
+  "reasoning": "<one to three sentences>"
+}}
+
+Field guidance:
+
+- `predicted_tool`: the exact name of the tool you would invoke. Must match one of the names in the list above.
+- `confidence`: your subjective certainty about the prediction.
+- `reasoning`: one to three sentences naming what about the task drives the prediction.
+
+Do NOT actually invoke a tool. Output only the JSON object above.
