@@ -17,6 +17,24 @@
 +        batch_size=32,
          scheduler=config.lr_schedule,
      )
+@@ -270,7 +270,7 @@
+         fixed_weak_mean, fixed_weak_se, weak_num_seeds = get_fixed_weak_baseline(
+             weak_model=config.weak_model,
+             dataset_name=dataset_name,
+-            batch_size=config.batch_size,
++            batch_size=32,
+             lr=config.lr,
+             scheduler=config.lr_schedule,
+         )
+@@ -279,7 +279,7 @@
+         fixed_strong_mean, fixed_strong_se, strong_num_seeds = get_fixed_ceiling_baseline(
+             strong_model=config.strong_model,
+             dataset_name=dataset_name,
+-            batch_size=config.batch_size,
++            batch_size=32,
+             lr=config.lr,
+             scheduler=config.lr_schedule,
+         )
 
 --- w2s_research/core/train.py.orig
 +++ w2s_research/core/train.py
