@@ -18,6 +18,7 @@ tags:
   - capability-floor
 created: 2026-05-25
 updated: 2026-05-25
+
 ---
 
 # Investigation 4 — Qwen researcher floor
@@ -257,6 +258,143 @@ viable structural fixes, both larger than 4a scope:
 stopped here without proceeding to 4b. Recommendation in Forward-
 looking.
 
+**Upstream patch — os.execv subprocess wrapper (2026-05-25, second attempt).**
+The prior in-process `subprocess.run` design (still blocking the
+parent's CUDA context) reduced the KV deficit from −2 to −4 GiB
+(in-process eval) down to −0.73 GiB (subprocess) but didn't cross
+zero — the parent's `import unsloth` allocates a primary CUDA
+context that survives `del + gc + empty_cache`. Replaced with
+`os.execv` after the training phase serializes the eval inputs
+(pickled `test_formatted`, tokenizer, label token ids, checkpoint
+path, model name, capped `max_model_len`) to
+`<output_dir>/.eval_inputs/inputs.pkl`. The training process is
+then *replaced* by a new Python interpreter running
+`python -m w2s_research.core.train_eval`, which loads the inputs,
+runs vLLM, and writes `eval_output.json`. Parent process exits
+fully before vLLM init; the eval child has a clean CUDA context.
+
+Also capped `max_model_len = min((max_ctx + 500) if max_ctx else 4096, 3600)`.
+At this cap, vLLM reports `Available KV cache memory: 0.50 GiB`,
+`GPU KV cache size: 3,600 tokens`, `Maximum concurrency 1.00x` —
+exactly the limit vLLM previously suggested when failing.
+
+Dropped the `gpu_memory_utilization=0.5` plumb from the prior
+failed patch (no longer needed — the structural release is what
+matters, not the budget knob). Dropped `del trainer` as well
+(redundant with the subprocess exit). Kept `del model + gc.collect
++ empty_cache` as before for hygiene.
+
+**Verification (sharp criterion).** Direct Bash invocation on the
+desktop of:
+
+```
+python -m w2s_research.ideas.vanilla_w2s.run \
+  --data-dir $DATA_DIR --weak-model Qwen/Qwen1.5-0.5B-Chat \
+  --strong-model Qwen/Qwen3-4B-Base \
+  --train-size 64 --test-size 1315 --epochs 1 --seed 42 \
+  --batch-size 4 --load-in-4bit
+```
+
+ran to completion: 16 SFT steps in 42 s → LoRA checkpoint written →
+parent `os.execv`'d into `train_eval` → vLLM init succeeded → 1315
+prompts processed (~10 s at ~6.5 it/s) → `eval_output.json`
+written. Manual `POST /api/evaluate-predictions` to the Flask
+server with the integer-list submission **accepted**:
+
+```
+{"correct":672,"fixed_strong_acc":0.7176,"fixed_weak_acc":0.5360,
+ "label_distribution":{"0":647,"1":668},"pgr":-0.1377,
+ "pred_distribution":{"0":100,"1":1215},"total":1315,
+ "transfer_acc":0.5110}
+```
+
+Sharp criterion met: a single direct-Bash invocation produces a
+checkpoint AND `evaluate_predictions` accepts the resulting
+integer-list submission. 4b unblocked.
+
+**Bonus upstream patch — ThinkingBlock capture in agent.py
+(2026-05-25).** While the upstream patch was in flight, also lifted
+the bundled shim's `ThinkingBlock` support into
+`w2s_research/research_loop/agent.py`. `ThinkingBlock` was already
+exported from the shim (`claude_agent_sdk_shim` merged it on commit
+276a3dd, worktree-agent-a964229e7e68cc1a4). Agent.py changes:
+
+- Defensive import: `try: from claude_agent_sdk import ThinkingBlock
+  except ImportError: class ThinkingBlock: pass`.
+- `_format_message`: added `elif isinstance(content, ThinkingBlock):
+  parts.append(f"[{ts}] [{self.name}] [thinking] {thinking_text[:200]}")`.
+- `_extract_output`: added `thinking_outputs: List[str]` key,
+  populated when ThinkingBlock instances appear in assistant
+  content.
+
+Verified via a synthetic AssistantMessage with a `ThinkingBlock(thinking="thought-text", signature="sig")`:
+`_format_message` returns `'[HH:MM:SS] [r] [thinking] thought-text'`
+and `_extract_output` returns `{'text_outputs': [], 'tool_uses':
+[], 'thinking_outputs': ['thought-text']}`.
+
+Combined patch file (replaces all prior inv 4a entries): see
+`investigations/001-hardware-derisk/scripts/upstream_patches.diff`.
+Committed upstream as `004/upstream-patch: vLLM subprocess wrapper
++ ThinkingBlock capture in agent.py` (+ defensive-import follow-up).
+
+### 4b — Prompt induction
+
+**Patch 1 — QwenCode-style prompt scaffolding (2026-05-25).**
+Per 4c's Reading-A recommendation, lifted QwenCode's hard tool-name
+pinning + worked examples + anti-narration clause into a
+`tool_invocation_hint`. Specifics (full text:
+`one-pagers/.../patch1_hint.txt` once carried into a writeup; or
+just inline in the smoke runner script):
+
+- Canonical tool names listed by name in canonical case (Bash, Read,
+  Write, Edit, Glob, Grep) with a one-line use-case for each.
+- Explicit "Tools vs. Text" clause naming the failure mode by
+  example ("If you write `python script.py` inside ```bash ... ```
+  and then stop, nothing happens").
+- Three worked tool-call examples: training command (with
+  `--load-in-4bit`), Read of `run.py`, and
+  `evaluate_predictions({ "predictions": [0, 1, 0, ...] })` with
+  the integer-list type pinned in the example payload.
+- Anti-hallucination clause: `terminal`, `shell`, `execute`,
+  `get_file`, `share_finding` named explicitly as NOT available.
+- One-line `--load-in-4bit` requirement clause (per inv 4a issue #1).
+
+Smoke run: `qwen3.5:4b` + patch 1 via
+`CLAUDE_AGENT_SDK_SHIM_TOOL_INVOCATION_HINT`, `MAX_RUNTIME_SECONDS=1500`,
+dataset=math, fresh workspace, upstream-venv env.
+
+Patch text: `patches/patch_1_qwencode_density.txt` (commit `673a54e`,
+plumbing fix `3c1c377`). Smoke log:
+`/home/tlifke/inv003_shim/logs/4b_patch_1_qwencode_qwen3.5_4b_20260525_140718/`
+(three sessions, workspace remained empty).
+
+Observed (partial — does NOT cross stopping criterion):
+
+- ✅ Canonical `Bash`, `Write`, `get_leaderboard` fired in canonical
+  case in session 0. The QwenCode-style name-pinning worked for the
+  tools the agent reached for first.
+- ❌ Agent hallucinated a `Python` tool despite the hint listing only
+  the canonical six. Hit "unknown tool" errors twice; in session 0
+  the agent misdiagnosed as "all tools are broken" ("both Bash and
+  Python are returning 'unknown tool' errors. This appears to be a
+  temporary environmental issue") and gave up rather than picking
+  a different canonical tool.
+- ❌ Lowercase `read` invocations (the case-tolerance failure mode
+  already known from inv 003).
+- ❌ Session 1 finally constructed the correct training command via
+  canonical `Bash` (`python -m w2s_research.ideas.vanilla_w2s.run
+  --data-dir ...`) but the workspace stayed empty and no
+  `evaluate_predictions` submission landed — the session ran out
+  before the training command's ~84 s cycle could complete.
+
+**Verdict — partial.** Patch 1 advances the floor (canonical Bash
+fires) but does NOT cross the stopping criterion (no
+`evaluate_predictions` submission). Two distinct failure classes to
+address in patch 2: anti-hallucination (the `Python` tool the agent
+invented despite the hint enumerating six names) and error recovery
+(agent treats one "unknown tool" as a global tool-system failure and
+gives up).
+
 **Upstream patch attempt — subprocess vLLM eval (2026-05-25).**
 Lifted the eval path out of `train.py`'s parent process into a fresh
 Python subprocess (`w2s_research/core/train_eval.py`, new module). The
@@ -357,9 +495,10 @@ Full writeup: [`qwencode-wrapping-read.md`](qwencode-wrapping-read.md).
 
 ## Forward-looking
 
-The 4a SFT→vLLM upstream patch did not pass its direct-Bash
-verification on this 12 GB 3080 at any `gpu_memory_utilization`
-setting. 4b is blocked until the SFT→vLLM memory handoff is resolved.
+**Updated (2026-05-25):** 4a's sharp criterion is now met via the
+`os.execv` subprocess-wrapper patch (see Results above). The
+original two next-moves below are now historical context only:
+
 Two next moves, in priority order:
 
 1. **Subprocess vLLM eval.** Smallest structurally-different fix:
