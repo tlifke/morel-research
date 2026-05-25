@@ -13,14 +13,18 @@ def main_sync() -> int:
     run_dir = Path(os.environ["GATE5_RUN_DIR"]).resolve()
     run_dir.mkdir(parents=True, exist_ok=True)
 
+    model = os.environ.get("MODEL", "qwen3:4b")
     config = {
-        "model": "qwen3:4b",
+        "model": model,
         "dataset": os.environ.get("DATASET_NAME", "math"),
         "weak_model": os.environ.get("WEAK_MODEL", "Qwen/Qwen1.5-0.5B-Chat"),
         "strong_model": os.environ.get("STRONG_MODEL", "Qwen/Qwen3-4B-Base"),
         "max_runtime_seconds": int(os.environ.get("MAX_RUNTIME_SECONDS", "1800")),
         "local_mode": True,
         "timestamp": timestamp,
+        "tool_invocation_hint_active": bool(
+            os.environ.get("CLAUDE_AGENT_SDK_SHIM_TOOL_INVOCATION_HINT")
+        ),
     }
     (run_dir / "config.yaml").write_text(
         "\n".join(f"{k}: {v}" for k, v in config.items()) + "\n"
@@ -44,7 +48,7 @@ def main_sync() -> int:
         idea_name=idea_name,
         logs_dir=run_dir / "logs",
         max_runtime_seconds=config["max_runtime_seconds"],
-        model="qwen3:4b",
+        model=model,
         local_mode=True,
     )
 
