@@ -53,3 +53,5 @@ class ClaudeAgentOptions:
     base_url: Optional[str] = None
     api_key: Optional[str] = None
     tool_invocation_hint: Optional[str] = None
+    bash_cwd: Optional[str] = None
+    bash_env: Optional[Dict[str, str]] = None
