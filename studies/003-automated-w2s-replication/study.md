@@ -7,6 +7,7 @@ children:
   - studies/003-automated-w2s-replication/investigations/001-hardware-derisk
   - studies/003-automated-w2s-replication/investigations/002-vanilla-w2s-replication
   - studies/003-automated-w2s-replication/investigations/003-claude-sdk-shim-and-researcher-swap
+  - studies/003-automated-w2s-replication/investigations/004-qwen-researcher-floor
 related:
   - studies/002-principle-bootstrapped-difficulty
 tags:
