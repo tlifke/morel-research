@@ -77,6 +77,10 @@ def main_sync() -> int:
         "IDEA_NAME": idea_name,
         "RUN_ID": os.environ["RUN_ID"],
         "LOCAL_MODE": "true",
+        "WANDB_MODE": os.environ.get("WANDB_MODE", "offline"),
+        "WANDB_SILENT": "true",
+        "TRANSFORMERS_NO_ADVISORY_WARNINGS": "1",
+        "HF_HUB_DISABLE_PROGRESS_BARS": "1",
     }
     loop.mcp_servers["builtin"] = create_builtin_tools_server(
         cwd=str(workspace),
