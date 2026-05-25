@@ -416,6 +416,55 @@ targeting the two patch-1 failure modes:
 
 Patch text: `patches/patch_2_anti_hallucination.txt`. Smoke run via
 `scripts/run_4b_patch.sh` with `PATCH_NUM=2 PATCH_SLUG=anti_hallucination`.
+Smoke log:
+`/home/tlifke/Projects/morel-research/studies/003-automated-w2s-replication/investigations/004-qwen-researcher-floor/logs/4b_patch_2_anti_hallucination_20260525_141629/`.
+
+Observed — **REGRESSION** (worse than patch 1):
+
+- ❌ Zero native tool calls fired across 26 sessions. Every session
+  ended with `tools=0` after 3-15 s.
+- ❌ Agent emitted JSON descriptions of tool calls inside markdown
+  fences (`{"tool_calls":[{"name":"Read",...}]}`,
+  ` ```bash\nBash -- command=...\n``` `, ` ```\n<B>Read ...</B>\n``` `)
+  rather than invoking the SDK tool mechanism. This is the exact
+  "JSON in text" anti-pattern explicitly forbidden by both patches.
+- ❌ Workspace empty. No training run started. No
+  `evaluate_predictions` submission.
+
+**Root cause hypothesis: context budget.** The Ollama
+`/api/ps` payload reports `context_length: 4096` for qwen3.5:4b.
+Patch 2 is ~130 lines / ~700 tokens; combined with the upstream
+system prompt and the agent's session bootstrap, the input alone
+fills enough of the 4 k window that the model has no headroom to
+reason and instead immediately attempts the lowest-effort response
+(narrating a JSON tool-call description). Patch 1 (~60 lines /
+~350 tokens) left enough budget for canonical tool fires.
+
+**Verdict — regression.** Patch 2 fails the stopping criterion
+*more severely* than patch 1. The lesson is that prompt density
+helps QwenCode-style only up to the context budget; past that
+threshold, longer prompts displace the model's working memory.
+Patch 3 must be **shorter than patch 1**, not longer.
+
+**Patch 3 — patch 1 + minimal tight anti-`Python` and error-recovery
+clauses (2026-05-25).** Reverted to patch 1's base structure (which
+demonstrably produced canonical Bash fires) and added only two
+one-line clauses targeting patch 1's specific failure modes:
+
+- Anti-`Python` one-liner appended to the canonical-names paragraph:
+  "There is no `Python` tool — run python via `Bash` (`command:
+  python -m ...`)."
+- Error-recovery one-liner appended to the worked-examples section:
+  "If a tool call returns 'unknown tool', the name was wrong — pick
+  another canonical tool from the list above; the tool system is
+  fine. Do not stop. Do not apologize."
+
+No new sections, no negative lists, no re-statement of the canonical
+six. Total length: patch 1 + ~3 lines.
+
+Patch text: `patches/patch_3_minimal_extension.txt`. Smoke run via
+`scripts/run_4b_patch.sh` with `PATCH_NUM=3
+PATCH_SLUG=minimal_extension`.
 
 **Upstream patch attempt — subprocess vLLM eval (2026-05-25).**
 Lifted the eval path out of `train.py`'s parent process into a fresh
