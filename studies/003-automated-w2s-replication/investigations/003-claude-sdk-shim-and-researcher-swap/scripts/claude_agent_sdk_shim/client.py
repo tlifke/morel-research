@@ -101,6 +101,13 @@ class ClaudeSDKClient:
                 assistant_content_for_history: List[Dict[str, Any]] = []
                 known_tool_names = set(self._tool_index.keys())
                 synthesized_any = False
+                if os.getenv("SHIM_DEBUG"):
+                    import sys as _sys
+                    print(f"[SHIM_DEBUG] turn: known_tools={sorted(known_tool_names)} stop_reason={response.stop_reason} n_blocks={len(response.content)}", file=_sys.stderr, flush=True)
+                    for _i, _b in enumerate(response.content):
+                        _bt = getattr(_b, 'type', '?')
+                        _txt = getattr(_b, 'text', None) or getattr(_b, 'thinking', None) or ''
+                        print(f"[SHIM_DEBUG]   block[{_i}] type={_bt} text_preview={_txt[:200]!r}", file=_sys.stderr, flush=True)
                 for block in response.content:
                     btype = getattr(block, "type", None)
                     if btype == "text":
