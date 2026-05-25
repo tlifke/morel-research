@@ -127,6 +127,32 @@ _Populate as work proceeds. Format:_
 _To be populated. One section per sub-part. Each section ends with
 "verdict" against its sharp criterion._
 
+### 4c — QwenCode wrapping read
+
+Verdict: **Reading A.** QwenCode (`QwenLM/qwen-code` @ `331f45e9`) is
+structurally isomorphic to our shim modulo OpenAI-vs-Anthropic wire
+dialect — both bet on native tool-call tokens emitted by the model and
+translated by the endpoint. The only material delta is the system
+prompt: QwenCode names canonical tool identifiers (`Shell`, `ReadFile`,
+`WriteFile`) constantly, in canonical case, with worked examples and an
+explicit "Tools vs. Text" anti-narration clause. The upstream
+automated-w2s prompt names them once. That maps 1:1 onto our cell-2/3
+result where the `tool_invocation_hint` patch (which names canonical
+tools) was the only thing that landed `qwen3.5:4b`. The Claude-SDK
+protocol shape is not depressing Qwen's measured capability; the
+prompt density is. Qwen-Agent's nous `<tool_call>{json}</tool_call>`
+text-mode template is the only structurally different idiom and (a)
+lives outside qwen-code, (b) is a fallback for when native tool_calls
+aren't available, and (c) our shim's Path A already covers it.
+
+**Recommendation: collapse 4d to a paragraph.** Right follow-on is a
+prompt-side extension of 4b (lift QwenCode's name-pinning + worked
+examples + anti-narration clause) rather than a Qwen-native harness
+spike. Revisit only if 4b exhausts its 5-patch budget *and* failures
+look shape-coupled rather than prompt-coupled.
+
+Full writeup: [`qwencode-wrapping-read.md`](qwencode-wrapping-read.md).
+
 ## Forward-looking
 
 If 4a and 4b both succeed with a 4B-class Qwen reaching one valid
