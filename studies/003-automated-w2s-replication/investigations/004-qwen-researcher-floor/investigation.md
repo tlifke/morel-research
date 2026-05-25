@@ -464,7 +464,72 @@ six. Total length: patch 1 + ~3 lines.
 
 Patch text: `patches/patch_3_minimal_extension.txt`. Smoke run via
 `scripts/run_4b_patch.sh` with `PATCH_NUM=3
-PATCH_SLUG=minimal_extension`.
+PATCH_SLUG=minimal_extension`. Smoke log:
+`/home/tlifke/Projects/morel-research/studies/003-automated-w2s-replication/investigations/004-qwen-researcher-floor/logs/4b_patch_3_minimal_extension_20260525_142013/`.
+
+Observed (partial — recovers from patch 2 regression but does NOT
+cross stopping criterion):
+
+- ✅ Tool firing restored. 11 sessions, ~65 total tool calls: 19
+  Read, 15 Bash (canonical), 11 get_leaderboard, 14 `bash`
+  (lowercase — case issue persists), plus 1-2 `read_file`,
+  `write_file`, `execute_code` hallucinations.
+- ✅ Session 3 fired the canonical training Bash command with
+  `--load-in-4bit` exactly once at 14:22:57.
+- ❌ Training command did not produce a checkpoint (`find
+  results/math_vanilla_w2s -newer /tmp/patch3_smoke.log` returned
+  empty). The Bash call returned in ~6 s suggesting the command
+  failed pre-training; the embedded `\\n` newlines in earlier
+  attempts also broke the shell parse. Agent did not recover —
+  reverted to `ls`/`pwd` loops to "verify" the environment.
+- ❌ Session 3 ended with explicit narration: "If you're running
+  this in a local terminal, you can execute this command
+  directly" — the agent's exact failure mode is "give up via text
+  back to a human."
+- ❌ Most other sessions (0, 1, 2, 4, 5, 6, 7, 8, 9, 10) burn
+  exactly 2 tool calls (Read notebook.json + get_leaderboard)
+  followed by a summary-text response, which terminates the
+  session at `tools=2`. The agent never makes it past the
+  "investigate" phase into training in those sessions.
+
+**Verdict — partial recovery, still no submission.** Patch 3
+disprovse the patch 2 regression (tools fire correctly at this
+length) but exposes two distinct underlying failure modes that
+no name-pinning prompt patch can fix: (a) the agent reads the
+upstream system prompt's Workflow steps 0-3 (Review → Propose →
+Plan → De-risk) as instructions and exits after the first two
+steps with a leaderboard summary, never reaching Step 4
+(Implement / Run); (b) when it does try the training command, it
+gives up on the first error rather than persisting.
+
+**Patch 4 — directive-first-action + anti-narration persistence
+(2026-05-25).** Patch text targets the two patch 3 failure modes
+with a direct over-ride of the upstream workflow:
+
+- *Direct first-action directive.* Explicit "Step 1: invoke Bash
+  with this exact command" embedded inline, with a "skip
+  workflow steps 0-3" clause. Tells the agent the task is a
+  smoke test that bypasses Review/Propose/Plan/Implement entirely.
+- *Wait clause.* "This command takes 5-10 minutes. Do NOT call
+  any other tool while it is running" — addresses the agent's
+  tendency to fire `ls`/`pwd` retries before Bash has a chance
+  to return.
+- *Anti-narration persistence.* Names the patch 3 quote verbatim
+  ("If you're running this in a local terminal...") as the
+  failure mode, and forbids it. Says the human is not in the
+  loop and not reading agent text — only the
+  `evaluate_predictions` submission counts.
+- *Step 2 schema example.* Inline `{"predictions": [0, 1, 0, 1,
+  ...]}` payload shape, addressed at the integer-list submission
+  step.
+
+Length: 76 lines (between patch 1's 62 and patch 2's 129) —
+chosen to stay under the 4 k context-budget threshold patch 2
+crossed.
+
+Patch text: `patches/patch_4_directive_first_action.txt`. Smoke
+run via `scripts/run_4b_patch.sh` with `PATCH_NUM=4
+PATCH_SLUG=directive_first_action`.
 
 **Upstream patch attempt — subprocess vLLM eval (2026-05-25).**
 Lifted the eval path out of `train.py`'s parent process into a fresh
