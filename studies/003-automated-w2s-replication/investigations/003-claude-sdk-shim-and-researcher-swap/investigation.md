@@ -629,11 +629,36 @@ met (subprocess returned rc=143 = SIGTERM). The 24-hour run remains
 not authorized per spec.
 
 **New observation worth flagging:** cell 3 also produced 26 calls under
-the lowercase name `bash`. The shim's tool index is case-sensitive, so
-those didn't fire — they returned "unknown tool: bash" and the model
-retried. A trivial follow-up: register tool-name aliases in the shim
-(`bash → Bash`, `shell → Bash`). Not load-bearing for gate 5 but free
-robustness.
+the lowercase name `bash` alongside 58 calls under the canonical `Bash`.
+The shim's tool index is case-sensitive, so the lowercase variants
+didn't fire — they returned "unknown tool: bash" and the model retried.
+The shim is being left as-is (no alias) — see the principles note
+below.
+
+#### Principle note — prompt specificity vs. harness case-tolerance
+
+The case-fold to `bash` happens under load: the same model on the same
+turn emits both `Bash` and `bash`. Two readings are available and both
+are defensible:
+
+- **Harness's job.** Tool naming is a wire-protocol concern; user-facing
+  prompts should describe a "shell" capability and the harness should
+  case-fold / alias / fuzzy-match before dispatch. Argument: real CLIs
+  do this; case sensitivity here is an accident of the Python dict
+  lookup, not a design choice.
+- **Prompt's job.** The model's name-emission is signal — it's telling
+  us how strongly the tool name binds. If the prompt has to pin
+  `Bash` (capital B) to land reliably, that's a fact about how
+  precisely the agent prompt needs to specify tool surfaces, and the
+  harness shouldn't paper over it. Argument: lowering the binding bar
+  with aliases makes a related class of name-drift failure (the
+  cell-2 invented names: `run_shell_command`, `run_command`,
+  `run_python_code`) easier to mask too.
+
+Open question, not a TODO: which side should absorb the fuzziness?
+Logged here so the question is visible when a later investigation
+revisits tool-name handling — it shouldn't be silently resolved by
+shipping an alias map.
 
 **Open shim-side question (not blocking):** cell 1's single bare-JSON
 Bash emission in session_000 should have been synthesized by
@@ -651,10 +676,15 @@ prompt patch. Reasonable next investigation (004 scope):
    completion or first `evaluate_predictions` hit. Confirm the agent
    can actually train + evaluate end-to-end before committing the
    24-hour budget.
-2. Add `bash → Bash` (and similar) tool-name aliases to the shim.
-3. Once (1) is green, schedule the 24-hour run with qwen3.5:4b +
-   patch as the variant. Hold qwen3:4b as a contrast point (we have
-   a confirmed-failing baseline now).
+2. Larger-model gate-5 cells (qwen3:8b, qwen3.5:9b) with the patch on,
+   to see whether the 4B-divergent failure modes (narration vs.
+   invented names) collapse or persist at 8B-class.
+3. Once (1) is green, schedule the 24-hour run with the right variant.
+   Hold qwen3:4b as a contrast point (we have a confirmed-failing
+   baseline now).
+
+Lowercase-`bash` aliasing is held as an open prompt-vs-harness
+question; see the principle note above.
 
 
 
