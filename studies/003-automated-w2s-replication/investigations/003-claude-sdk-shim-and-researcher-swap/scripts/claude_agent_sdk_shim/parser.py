@@ -22,8 +22,12 @@ def _synth_id() -> str:
     return f"toolu_synth_{uuid.uuid4().hex[:16]}"
 
 
+_NAME_KEYS = ("name", "function", "function_name", "tool", "tool_name")
+_ARG_KEYS = ("arguments", "parameters", "input", "args")
+
+
 def _extract_arguments(obj: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    for key in ("arguments", "parameters", "input", "args"):
+    for key in _ARG_KEYS:
         if key in obj:
             val = obj[key]
             if isinstance(val, dict):
@@ -36,13 +40,16 @@ def _extract_arguments(obj: Dict[str, Any]) -> Optional[Dict[str, Any]]:
                 except Exception:
                     return None
             return None
+    remainder = {k: v for k, v in obj.items() if k not in _NAME_KEYS}
+    if remainder:
+        return remainder
     return None
 
 
 def _extract_name(obj: Any) -> Optional[str]:
     if not isinstance(obj, dict):
         return None
-    for key in ("name", "function", "function_name", "tool", "tool_name"):
+    for key in _NAME_KEYS:
         val = obj.get(key)
         if isinstance(val, str) and val:
             return val

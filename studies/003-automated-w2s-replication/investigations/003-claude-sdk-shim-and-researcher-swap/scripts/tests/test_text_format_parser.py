@@ -119,6 +119,31 @@ def test_function_key_alias():
     _assert(calls[0]["arguments"]["dataset"] == "math", calls[0])
 
 
+def test_flat_command_shape_qwen3_8b():
+    text = (
+        "```json\n"
+        '{"tool": "Bash", "command": "python -m w2s_research.ideas.vanilla_w2s.run --train-size 64"}\n'
+        "```"
+    )
+    _, calls = extract_tool_calls(text)
+    _assert(len(calls) == 1, calls)
+    _assert(calls[0]["name"] == "Bash", calls[0])
+    _assert(calls[0]["arguments"]["command"].startswith("python -m"), calls[0])
+
+
+def test_flat_shape_bare_json_gated_by_known_tools():
+    text = '{"tool": "Bash", "command": "ls /tmp"}'
+    _, calls = extract_tool_calls(text, known_tool_names={"Bash"})
+    _assert(len(calls) == 1, calls)
+    _assert(calls[0]["arguments"]["command"] == "ls /tmp", calls[0])
+
+
+def test_flat_shape_bare_json_rejected_when_unknown():
+    text = '{"tool": "MysteryTool", "command": "anything"}'
+    _, calls = extract_tool_calls(text, known_tool_names={"Bash"})
+    _assert(len(calls) == 0, calls)
+
+
 def test_real_qwen_failure_payload():
     text = (
         "I will evaluate now.\n"
@@ -148,6 +173,9 @@ def main():
         test_parameters_key_alias,
         test_arguments_as_stringified_json,
         test_function_key_alias,
+        test_flat_command_shape_qwen3_8b,
+        test_flat_shape_bare_json_gated_by_known_tools,
+        test_flat_shape_bare_json_rejected_when_unknown,
         test_multiple_calls_in_one_text,
         test_synthesize_returns_tool_use_blocks,
         test_no_match_returns_text_unchanged,
