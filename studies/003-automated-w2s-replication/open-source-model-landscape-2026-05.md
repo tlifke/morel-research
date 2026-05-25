@@ -70,6 +70,50 @@ Sources for table: per HF model cards (Qwen, Gemma, Ministral, Phi),
 - **Tool-calling format details per family** — deliberately out of scope for this
   scan; that's the next read.
 
+## Follow-up: families flagged by the LMArena-style tier list
+
+Quick scan of GLM, StepFun, MiMo, GPT-OSS, MiniMax, Kimi, and Nemotron for
+~4B-class siblings that fit our budget.
+
+- **NVIDIA Nemotron 3 Nano 4B** — *strong fit, add to primary candidates.*
+  Released ~March 2026. Hybrid Mamba-2 + MLP + 4 attention layers; compressed
+  from Nemotron-Nano-9B-v2 via NVIDIA's "Nemotron Elastic" framework. Unified
+  reasoning + non-reasoning model with explicit "excellent tool-use" framing
+  from NVIDIA. Runs in **5GB** RAM/VRAM. Open weights + open training data +
+  open recipes on HF. This is the most agentic-focused 4B in the scan.
+  ([HF blog](https://huggingface.co/blog/nvidia/nemotron-3-nano-4b),
+  [HF GGUF](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF))
+- **GLM-4.6V-Flash (9B)** — *fits at Q4, worth a deeper read.* MIT-licensed,
+  native multimodal **function calling** baked into the architecture, 128K
+  context. The 4.6V series explicitly markets "tools can consume and return
+  images, video frames, document pages." No GLM model below 9B as of May 2026;
+  GLM-5 itself is 744B MoE, out of budget.
+  ([VentureBeat](https://venturebeat.com/ai/z-ai-debuts-open-source-glm-4-6v-a-native-tool-calling-vision-model-for),
+  [MarkTechPost](https://www.marktechpost.com/2025/12/09/zhipu-ai-releases-glm-4-6v-a-128k-context-vision-language-model-with-native-tool-calling/))
+- **Step-3.5-Flash** — *does not fit.* 196B total / 11B active sparse MoE. The
+  "Flash" name is misleading at our scale — 11B active is the *routing* cost,
+  but you still need to hold the full ~196B of weights in memory. Apache 2.0,
+  agentic-focused, but skip for the 3080.
+  ([HF model card](https://huggingface.co/stepfun-ai/Step-3.5-Flash))
+- **MiniMax M2.5 / Kimi K2.5 / MiMo-V2-Flash** — *no first-party 4B siblings
+  located.* All three labs ship 200B+ MoE flagships. Earlier-generation small
+  variants (e.g. MiMo-7B) exist but aren't part of the current strong release.
+  Skip for now; revisit if these labs ship small siblings.
+- **gpt-oss-20b** — *does not fit at Q4.* 20B dense, OpenAI's open-weights
+  model. ~12GB at Q4_K_M is tight on a 12GB card and leaves no headroom for KV
+  cache at meaningful context. Mentioned for completeness; not a primary
+  candidate.
+
+### Revised top picks for the weak-researcher role
+
+1. **Qwen 3.5 4B** (current default — keep)
+2. **Nemotron 3 Nano 4B** (new addition — NVIDIA's stated tool-use focus +
+   5GB VRAM + Mamba hybrid is a genuinely different architectural sample than
+   the Qwen/Gemma transformer baseline)
+3. **Gemma 4 E4B** (fallback)
+4. **GLM-4.6V-Flash 9B** at Q4 if we want a multimodal tool-calling
+   datapoint with a different lineage
+
 ## Things I made up that you should review
 
 - Treated several 2026-dated third-party blog posts as authoritative for release
