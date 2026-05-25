@@ -559,6 +559,103 @@ scoped narrowly to: (i) try prompt patch (1), (ii) if that fails,
 swap to 8B and re-test gate 5. Skip the scaffold (2) unless both
 fail.
 
+### Gate 5 retry — prompt-patch + qwen3.5:4b model swap (PASS, 2026-05-24)
+
+After (1) and the qwen3.5:4b model swap were authorized:
+
+- **Prompt patch as a stripable parameter.** Added `tool_invocation_hint:
+  Optional[str]` to `ClaudeAgentOptions`, with an
+  `CLAUDE_AGENT_SDK_SHIM_TOOL_INVOCATION_HINT` env-var fallback so the
+  gate-5 harness can A/B patched vs unpatched without touching upstream
+  `agent.py`. When set, the shim appends the hint to the system prompt
+  per turn. Default `None` → unpatched runs are byte-identical to
+  before. Patch text (5 sentences, ≤500 chars): "you MUST invoke the
+  corresponding tool (Bash, Read, Write, ...) via a real tool call; do
+  not write shell commands in markdown code blocks or prose."
+- **Matrix runner.** `scripts/gate_5_matrix.py` sweeps three cells
+  sequentially with smoke config (train_size=64, epochs=1,
+  max_runtime_seconds=600) and stops at the first cell whose agent
+  fires at least one real `Bash` tool call.
+
+| cell | model | patch | sessions | Bash | Read | evaluate_predictions | gate 5 |
+|---|---|---|---:|---:|---:|---:|---|
+| 1 | qwen3:4b | on | 8 | 0 | 0 | 4 | FAIL |
+| 2 | qwen3.5:4b | off | 3 | 0 | 0 | 1 | FAIL |
+| 3 | qwen3.5:4b | on | 4 | **58** | 14 | 0 | **PASS** |
+
+Cell 3 also produced 1 `Write` call. Logs:
+`logs/gate_5_run_20260524_*_<model>_<patch|nopatch>/`. Per-cell matrix
+JSON snapshots in `logs/gate_5_matrix_*.json`.
+
+**What each cell tells us:**
+
+- **Cell 1 (qwen3:4b + patch, FAIL).** The patch alone doesn't unblock
+  qwen3:4b. The model continued to either narrate shell commands in
+  markdown fences (parser intentionally doesn't catch those — they're
+  shell, not JSON), emit single-shot bare-JSON tool calls that didn't
+  propagate (one session_000 emitted `{"function": "Bash", ...}` that
+  the parser handles correctly in standalone tests; need to chase the
+  runtime path that swallowed it — possible Ollama block-type variant
+  or response-shape edge case), or call `evaluate_predictions` with
+  dummy 0..63 predictions. 0 Bash invocations across 8 sessions in
+  379 s. The patch text appears in `prompt_resolved.md`'s sibling
+  request payload (verified via `tool_invocation_hint_active: True`
+  in `config.yaml`), so it reached the model — it just didn't bind.
+- **Cell 2 (qwen3.5:4b + no patch, FAIL).** Categorically different
+  failure from qwen3:4b. qwen3.5:4b natively invokes structured tool
+  calls (Anthropic-compat `tool_use` blocks) but under invented names:
+  `run_shell_command` (21x), `run` (13x), `run_command` (9x),
+  `run_python_code` (7x), `read_file` (8x), `read_directory` (2x),
+  `read_notebook` (2x), `create_script` (1x). Each gets "unknown tool"
+  from the shim, and the model cycles to another invented name rather
+  than reading the schema. Also hallucinated PGR numbers via
+  `share_finding` without any actual training run. The model's prior
+  is "I should call tools" — the right register — but it doesn't
+  recover the right names from the upstream agent prompt alone.
+- **Cell 3 (qwen3.5:4b + patch, PASS).** 58 `Bash` invocations across
+  4 sessions, plus 14 `Read` and 1 `Write`. The patch text supplies
+  exactly the missing piece: the names `Bash, Read, Write, Edit,
+  Glob, Grep`. Sample commands the agent ran:
+  `cat .../research_loop/notebook.json`, `ls -la
+  .../research_loop/`, `env | grep -E "(ORCHESTRATOR|SERVER)"`,
+  `pwd`. Still ~half-circular (a lot of `ls` / `pwd` retries),
+  workspace stayed empty in the smoke window, and the agent didn't
+  reach `evaluate_predictions` before manual stop — but **the loop
+  closes**: the shim is no longer the blocker and the agent is now
+  in the right register. Gate 5 PASS.
+
+Cell 3 was stopped manually after 353 s once the pass criterion was
+met (subprocess returned rc=143 = SIGTERM). The 24-hour run remains
+not authorized per spec.
+
+**New observation worth flagging:** cell 3 also produced 26 calls under
+the lowercase name `bash`. The shim's tool index is case-sensitive, so
+those didn't fire — they returned "unknown tool: bash" and the model
+retried. A trivial follow-up: register tool-name aliases in the shim
+(`bash → Bash`, `shell → Bash`). Not load-bearing for gate 5 but free
+robustness.
+
+**Open shim-side question (not blocking):** cell 1's single bare-JSON
+Bash emission in session_000 should have been synthesized by
+`parser.synthesize_tool_use_blocks` (verified against the exact byte
+string in standalone, with `known_tool_names={'Bash'}`). It wasn't —
+suggesting either a runtime difference in what `block.text` actually
+contained vs the session log, or a block-type that we don't currently
+handle (we route only `type == "text"`). Worth instrumenting next time
+the matrix runs.
+
+**Recommendation for next step.** The unblock is qwen3.5:4b + the
+prompt patch. Reasonable next investigation (004 scope):
+
+1. Sharper smoke iteration with the same config, run to natural
+   completion or first `evaluate_predictions` hit. Confirm the agent
+   can actually train + evaluate end-to-end before committing the
+   24-hour budget.
+2. Add `bash → Bash` (and similar) tool-name aliases to the shim.
+3. Once (1) is green, schedule the 24-hour run with qwen3.5:4b +
+   patch as the variant. Hold qwen3:4b as a contrast point (we have
+   a confirmed-failing baseline now).
+
 
 
 ## Forward-looking
@@ -604,6 +701,14 @@ Investigation 004 should target this directly: prompt-patch first
 (cheap), then an 8B+ model swap if needed (accepts GPU-serialization
 cost per [[003-001]]). The 24-hour Qwen 3 4B run as originally
 scoped remains not viable.
+
+**Update (gate 5 retry, qwen3.5:4b model swap + prompt patch):** the
+3-cell matrix landed `qwen3.5:4b + patch` as the cheapest unblock —
+no model-size jump required, no GPU-serialization tax. The patch is
+a strippable `tool_invocation_hint` option on `ClaudeAgentOptions`.
+qwen3:4b remains stuck (patch alone insufficient). See the
+"Gate 5 retry — prompt-patch + qwen3.5:4b model swap" section
+above for the full matrix and per-cell failure-mode analysis.
 
 ## Open questions
 
