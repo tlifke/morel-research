@@ -1,0 +1,42 @@
+[
+  {
+    "model": "qwen3:8b",
+    "patch_on": true,
+    "sessions": 18,
+    "tools": {},
+    "bash_lowercase": 0,
+    "bash_capital": 0,
+    "evaluate_predictions_calls": 0,
+    "share_finding_calls": 0,
+    "workspace_files": [],
+    "passed_gate_5": false,
+    "elapsed_sec": 902.55,
+    "rc": 143,
+    "run_dir": "/home/tlifke/inv003_shim/logs/gate_5_run_20260524_222820_qwen3_8b_patch",
+    "notes": "Same failure mode as cell 1 (qwen3:4b + patch). 18 sessions, 0 ToolUseBlocks across all. Model emits training command as fenced shell or JSON-in-fence with name='Bash'. Standalone parser test extracts correctly; runtime path does not. Open question: SHIM_DEBUG dump per turn needed to identify the gap."
+  },
+  {
+    "model": "qwen3.5:9b",
+    "patch_on": true,
+    "sessions": 1,
+    "tools": {
+      "share_finding": 8,
+      "read": 1,
+      "get_leaderboard": 1,
+      "bash": 25,
+      "fs_read": 2,
+      "fs_list": 1,
+      "run_shell_command": 1
+    },
+    "bash_lowercase": 25,
+    "bash_capital": 0,
+    "evaluate_predictions_calls": 0,
+    "share_finding_calls": 8,
+    "workspace_files": [],
+    "passed_gate_5": false,
+    "elapsed_sec": 360,
+    "rc": 137,
+    "run_dir": "/home/tlifke/inv003_shim/logs/gate_5_run_20260524_224917_qwen3.5_9b_patch",
+    "notes": "Same failure mode as cell 2 (qwen3.5:4b + no patch). Native tool_use blocks but exclusively lowercase 'bash' (25x) plus invented names. Patch text mentions 'Bash' (cap) and 'Read' (cap); 9b ignores the casing. Hallucinated 8 share_finding entries with no real training. Workspace empty. Manually stopped after ~6 min wall — failure mode confirmed; no point burning more GPU."
+  }
+]

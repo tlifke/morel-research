@@ -582,6 +582,8 @@ After (1) and the qwen3.5:4b model swap were authorized:
 | 1 | qwen3:4b | on | 8 | 0 | 0 | 4 | FAIL |
 | 2 | qwen3.5:4b | off | 3 | 0 | 0 | 1 | FAIL |
 | 3 | qwen3.5:4b | on | 4 | **58** | 14 | 0 | **PASS** |
+| 4 | qwen3:8b | on | 18 | 0 | 0 | 0 | FAIL |
+| 5 | qwen3.5:9b | on | 1 (manual stop) | 0 | 0 | 0 | FAIL |
 
 Cell 3 also produced 1 `Write` call. Logs:
 `logs/gate_5_run_20260524_*_<model>_<patch|nopatch>/`. Per-cell matrix
@@ -685,6 +687,107 @@ prompt patch. Reasonable next investigation (004 scope):
 
 Lowercase-`bash` aliasing is held as an open prompt-vs-harness
 question; see the principle note above.
+
+### Gate 5 — 8B-class follow-on cells (FAIL, 2026-05-24)
+
+Per the prior recommendation (point 2 above), both 8B-class
+tool-tagged models were tested with the patch on, 900-second budget,
+same smoke config. Logs:
+`logs/gate_5_run_20260524_222820_qwen3_8b_patch/` and
+`logs/gate_5_run_20260524_224917_qwen3.5_9b_patch/`.
+
+| cell | model | patch | sessions | Bash (cap) | bash (low) | other-tool | evaluate_predictions | gate 5 |
+|---|---|---|---:|---:|---:|---:|---:|---|
+| 4 | qwen3:8b | on | 18 | 0 | 0 | 0 | 0 | FAIL |
+| 5 | qwen3.5:9b | on | 1 (manual stop after ~6 min) | 0 | 25 | `run_shell_command`×1, `fs_read`×2, `read`×1, `fs_list`×1 | 0 | FAIL |
+
+**Headline:** the 4B-divergent failure modes do **not** collapse at
+8B-class. They persist — and qwen3.5:9b's failure even sharpens the
+case-tolerance question.
+
+- **Cell 4 (qwen3:8b + patch, FAIL).** Same failure mode as cell 1.
+  18 sessions in 635 s, zero ToolUseBlocks emitted across all of
+  them. The model narrates the training command as a fenced
+  ```bash``` shell block, or as a JSON object with key `"tool"`:
+  `"Bash"` inside a ```json``` fence. Standalone testing of the
+  parser confirms it extracts the `{"tool":"Bash",...}` form
+  correctly (`known_tool_names` contains `"Bash"`); the runtime path
+  produces zero tool calls regardless. This re-surfaces the
+  previously-logged open shim-side question: `block.text` at runtime
+  may not match the session-logged text, or a block-type beyond
+  `type=="text"` may carry the content. Worth instrumenting before
+  drawing a stronger conclusion. Either way, qwen3:8b is not a
+  drop-in unblock — the patch alone does not bind.
+- **Cell 5 (qwen3.5:9b + patch, FAIL).** Same failure mode as cell 2,
+  not cell 1: qwen3.5:9b natively invokes Anthropic-compat `tool_use`
+  blocks, but exclusively under invented or lowercase names —
+  25 calls to lowercase `bash`, plus `run_shell_command`, `fs_read`,
+  `fs_list`, `read`. Zero calls to canonical `Bash`. The patch
+  enumerates `Bash, Read, Write, Edit, Glob, Grep` and the model
+  still emits `bash`. After repeated "unknown tool: bash" errors the
+  model narrates "I see bash isn't available" and resorts to
+  hallucinated `share_finding` calls (8 of them, all
+  fabricated-metric content, with no training actually executed).
+  Workspace remained empty for the full run.
+
+**What this reveals.** The two failure modes are model-family
+properties, not model-size properties:
+
+1. **qwen3 family (`qwen3:4b`, `qwen3:8b`) under this prompt:**
+   prefers free-form narration / fenced shell blocks / fenced-JSON
+   over native `tool_use`. The patch text does not shift this. Bigger
+   model does not shift this.
+2. **qwen3.5 family (`qwen3.5:4b`, `qwen3.5:9b`):** natively
+   tool-calls but under wrong / lowercase / invented names. The patch
+   text helps qwen3.5:4b (it cleanly emits `Bash`) but qwen3.5:9b
+   reverts to lowercase `bash` despite the same patch — possibly
+   because 9b is more confident in its tool-name prior and weights
+   the patch text less.
+
+**Decision implication for the 24-hour run.** qwen3.5:4b + patch
+remains the only PASSing configuration. The case-tolerance question
+is now load-bearing: qwen3.5:9b would be the obvious capability
+upgrade except that it spends its turns colliding with the shim's
+case-sensitive tool index. The prompt-vs-harness principle note
+(above) is no longer hypothetical — it directly determines whether
+9b is usable.
+
+**Recommendation for next investigation (004 scope, revised):**
+
+1. **Resolve the case-tolerance principle question first.** Either
+   (a) the shim adopts case-fold + a curated synonym map
+   (`bash`→`Bash`, `run_shell_command`→`Bash`, `fs_read`→`Read`,
+   etc.) — opens qwen3.5:9b cleanly, but masks a real signal about
+   how strongly tool names bind, and risks masking genuinely-novel
+   tool-name hallucinations; or (b) the prompt is sharpened to pin
+   names harder ("the tool is named exactly `Bash` with capital B"),
+   and the shim stays strict. Plausibly worth A/B'ing both.
+2. **Instrument the qwen3:8b runtime gap** (open shim-side question
+   on block-type / block.text). A 10-line `SHIM_DEBUG` dump per turn
+   would tell us whether qwen3:8b's content is arriving as `text`,
+   `thinking`, or something else, and whether the parser is even
+   being invoked. Cheap; resolves whether qwen3:8b is permanently
+   stuck or just shim-blind.
+3. **Longer smoke on qwen3.5:4b + patch** to confirm it can actually
+   reach `evaluate_predictions` on the target idea (the 4-session
+   cell-3 run did not — it spent its budget in `ls`/`pwd`/`cat
+   notebook.json` loops; workspace remained empty). 30-45 min is the
+   minimum before committing the 24-hour budget. **Held for the next
+   investigation** because the lowercase-bash drag (27 lowercase
+   `bash` calls in cell 3 alongside 58 canonical `Bash`) suggests
+   even the passing cell is paying a tax that compounds over longer
+   runs.
+
+**24-hour-run recommendation.** **Do not launch the 24-hour run
+yet.** The matrix shows no configuration where the agent reaches
+`evaluate_predictions` on the actual target idea within smoke
+budget. Launching 24 hours of qwen3.5:4b+patch would burn GPU on a
+loop that may never close. Sequence the unblocks first
+(case-tolerance decision → longer smoke → confirmed
+evaluate_predictions hit → then 24-hour). If forced to pick now,
+qwen3.5:4b + patch is the only candidate; qwen3.5:9b becomes
+preferred conditional on resolving (1a) — its native tool-use
+register is the right one, just mis-named.
 
 
 
