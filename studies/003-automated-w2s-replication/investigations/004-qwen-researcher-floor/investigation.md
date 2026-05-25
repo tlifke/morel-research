@@ -1,7 +1,7 @@
 ---
 id: studies/003-automated-w2s-replication/investigations/004-qwen-researcher-floor
 title: Qwen researcher floor — machinery, prompt induction, harness shape
-status: planned
+status: in-progress
 parents:
   - studies/003-automated-w2s-replication
 children: []
@@ -124,8 +124,83 @@ _Populate as work proceeds. Format:_
 
 ## Results
 
-_To be populated. One section per sub-part. Each section ends with
-"verdict" against its sharp criterion._
+### 4a — Machinery
+
+**Plumbing changes (landed).**
+
+- `ClaudeAgentOptions` gained `bash_cwd: Optional[str]` and
+  `bash_env: Optional[Dict[str, str]]` fields (shim `types.py`). Both
+  default to `None` so the control run is byte-identical when neither
+  is set.
+- `create_builtin_tools_server(...)` accepts `bash_cwd` and `bash_env`
+  kwargs (shim `builtins.py`). The `Bash` tool now starts subprocesses
+  with `cwd=bash_cwd` (falls back to the general `cwd`) and an env
+  built from `os.environ` merged with `bash_env`. Read/Write/Edit/Glob
+  /Grep still use the general `cwd` so workspace isolation is
+  preserved.
+- `tests/test_gate_5_full_loop.py` plumbs the upstream-venv PATH plus
+  the env vars upstream `agent.py`, `config.py`, `http_utils.py` and
+  `train.py` read: `VIRTUAL_ENV`, `WORKSPACE_DIR`,
+  `ORCHESTRATOR_API_URL`, `SERVER_URL`, `DATASET_NAME`, `DATA_DIR`,
+  `GROUND_TRUTH_DIR`, `WEAK_MODEL`, `STRONG_MODEL`, `IDEA_UID`,
+  `IDEA_NAME`, `RUN_ID`, `LOCAL_MODE`, plus `WANDB_MODE=offline`
+  (training imports wandb unconditionally; `WANDB_DISABLED=true`
+  conflicts with `transformers`' `report_to='wandb'`).
+
+**Verification.** Direct shim-tool test on the desktop invoked the
+exact training command the gate-5 agent constructed in the 003 longer
+smoke: `python -m w2s_research.ideas.vanilla_w2s.run --data-dir ...
+--weak-model Qwen/Qwen1.5-0.5B-Chat --strong-model Qwen/Qwen3-4B-Base
+--train-size 64 --test-size 64 --epochs 1 --seed 42 --batch-size 4
+--load-in-4bit`.
+
+- `which python` → resolves to `.venv/bin/python` ✓
+- `import w2s_research` → ok ✓
+- training executes the full SFT loop, **writes a LoRA checkpoint** at
+  `results/math_vanilla_w2s/.../seed_42/checkpoint-16/adapter_model.safetensors`
+  ✓ (84 s wall, 16 SFT steps, weights + tokenizer + scheduler +
+  optimizer state all on disk).
+
+The plumbing has done its job. The agent's command, plus the right
+env, plus the right cwd, actually trains and produces a checkpoint.
+
+**What's still in the way of an end-to-end iteration** (not 4a's
+scope; flagging for 4b/005+):
+
+1. *`--load-in-4bit` required on a 12 GB 3080*: without it, unsloth's
+   fused CE loss hits `ZeroDivisionError` because
+   `_get_chunk_multiplier` reads zero free VRAM at the call site (the
+   model fills VRAM before the loss computes). The agent's first-try
+   command in the 003 longer smoke did **not** pass `--load-in-4bit`.
+   So even with all plumbing right, on this GPU the command-as-
+   constructed fails on first call. 4b should weigh whether to nudge
+   the prompt toward 4-bit hyperparams or treat this as a real
+   inductive challenge for the researcher.
+2. *flashinfer JIT*: vLLM's first call into `flashinfer.sampling`
+   triggers a ninja-driven nvcc compile that errors `fatal error:
+   math.h: No such file or directory` even though `/usr/include/math.h`
+   exists — nvcc on this WSL2 host isn't picking up the standard C
+   include path. Setting `VLLM_USE_FLASHINFER_SAMPLER=0` +
+   `VLLM_DISABLE_FLASHINFER_PREFILL=1` +
+   `VLLM_ATTENTION_BACKEND=FLASH_ATTN` bypasses flashinfer.
+3. *KV-cache OOM*: with flashinfer bypassed, vLLM init fails because
+   "1.20 GiB KV cache is needed; 0.50 GiB available." The SFT model
+   isn't released before vLLM allocates strong-model weights for
+   inference; upstream `train.py` lacks an explicit `gc.collect()` /
+   `torch.cuda.empty_cache()` between SFT and inference. Either an
+   upstream tweak or `--gpu-memory-utilization` / `--max-model-len`
+   overrides plumbed through.
+
+**Verdict (sharp criterion: a single `Bash` invocation produces a
+model checkpoint AND `evaluate_predictions` accepts the integer-list
+submission).** *Partial.* Checkpoint is produced from a clean
+workspace via the shim's Bash tool with the new plumbing. The
+integer-list submission to `evaluate_predictions` is not reached, but
+the remaining gap is upstream environment / GPU-budget issues
+(flashinfer JIT, SFT→vLLM memory handoff), not the Claude-SDK harness
+the shim is responsible for. 4a's plumbing change unblocks 4b: the
+agent now has a tool that can actually execute the training pipeline
+rather than spiraling on broken `python` resolution.
 
 ### 4c — QwenCode wrapping read
 
