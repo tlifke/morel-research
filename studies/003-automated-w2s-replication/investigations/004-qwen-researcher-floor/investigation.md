@@ -202,6 +202,61 @@ the shim is responsible for. 4a's plumbing change unblocks 4b: the
 agent now has a tool that can actually execute the training pipeline
 rather than spiraling on broken `python` resolution.
 
+**Upstream patch attempt — SFT → vLLM memory handoff (2026-05-25).**
+Issue #3 from 4a (KV-cache OOM at vLLM init) was the precondition for
+4b. Patched upstream `w2s_research/core/train.py`:
+
+- `import gc`
+- After `trainer.train()`: `del trainer; del model; gc.collect();
+  torch.cuda.empty_cache()` (was: `del model; torch.cuda.empty_cache()`,
+  i.e. trainer + gc.collect were missing).
+- `gpu_memory_utilization` plumbed into both `generate_predictions` and
+  `evaluate_model` call sites in `train.py`.
+
+The patch was appended to
+`studies/003-automated-w2s-replication/investigations/001-hardware-derisk/scripts/upstream_patches.diff`
+and applied on the desktop. Three direct-Bash verification runs of
+`python -m w2s_research.ideas.vanilla_w2s.run --train-size 64
+--test-size 64 --epochs 1 --batch-size 4 --load-in-4bit` (with the
+4a env vars + `VLLM_USE_FLASHINFER_SAMPLER=0` etc.) at
+`gpu_memory_utilization` ∈ {0.5, 0.85, 0.95}:
+
+| util | result                              | KV available reported by vLLM |
+|------|-------------------------------------|-------------------------------|
+| 0.5  | Engine core init fail               | −4.33 GiB                     |
+| 0.85 | Engine core init fail               | −1.98 GiB                     |
+| 0.95 | Engine core init fail (pre-load)    | "Free 10.81 GiB < 11.4 GiB"   |
+
+Each run completed SFT cleanly (`[Memory] GPU memory freed`, parent
+process reporting 0.83 GiB allocated / 0.94 GiB reserved). vLLM
+loaded Qwen3-4B-Base weights (7.63 GiB) in its spawned child every
+time. The deficit is in the **child-process budget**, not the
+parent's reported allocations: vLLM's spawned worker needs its own
+CUDA context (~500 MB) + cached kernels + library state, and the
+combination plus the model weights overruns whatever the parent didn't
+hand back to the driver. `nvidia-smi` shows ~10.8 GiB free immediately
+before vLLM launches; vLLM's per-process budget after subtracting
+its own init overhead leaves ~−2 to −4 GiB for KV cache at any util
+that doesn't trip the "Free < desired util" guard.
+
+The prior agent's plan (`gpu_memory_utilization=0.5`, in-place `del +
+gc.collect`) was the canonical fix shape but doesn't clear the
+structural barrier on a 12 GB 3080: there is no util value that
+simultaneously (a) stays below `free_memory_at_startup` and (b) leaves
+enough headroom after vLLM loads the strong-model weights. Two
+viable structural fixes, both larger than 4a scope:
+
+1. Spawn vLLM evaluation in a fresh Python subprocess so the SFT
+   parent's CUDA context is fully released. (`subprocess.run` invoking
+   a small `python -m w2s_research.core.eval_only` entrypoint.)
+2. Switch the strong-model inference path to a 4-bit quantized vLLM
+   load (`--quantization bitsandbytes` or similar), trading runtime
+   for a much smaller weight footprint.
+
+**Sharp criterion not met.** Per inv 4 anti-stall protocol the run
+stopped here without proceeding to 4b. Recommendation in Forward-
+looking.
+
 ### 4c — QwenCode wrapping read
 
 Verdict: **Reading A.** QwenCode (`QwenLM/qwen-code` @ `331f45e9`) is
@@ -229,6 +284,28 @@ look shape-coupled rather than prompt-coupled.
 Full writeup: [`qwencode-wrapping-read.md`](qwencode-wrapping-read.md).
 
 ## Forward-looking
+
+The 4a SFT→vLLM upstream patch did not pass its direct-Bash
+verification on this 12 GB 3080 at any `gpu_memory_utilization`
+setting. 4b is blocked until the SFT→vLLM memory handoff is resolved.
+Two next moves, in priority order:
+
+1. **Subprocess vLLM eval.** Smallest structurally-different fix:
+   move the `generate_predictions` / `evaluate_model` call sites to
+   a fresh Python subprocess that the SFT parent exits before
+   launching. Releases the CUDA context fully. Suggested as an
+   upstream patch under inv 001 with the same diff-append pattern.
+2. **Quantized vLLM load.** Pass `--quantization` (bnb-int4 or
+   awq-int4) so the strong model weights occupy ~2 GiB in vLLM
+   instead of 7.63. Cheaper to plumb (one kwarg) but may impact
+   prediction quality vs. the Claude/Opus baseline.
+
+Either resolves 4a's sharp criterion. Once 4a is green, 4b's
+QwenCode-style prompt patches (per `qwencode-wrapping-read.md`) run
+as originally scoped. If both 4a fixes prove costly enough that the
+research question shifts, pivot to 4d (Qwen-native harness spike) or
+inv 005's Nemotron swap — the prompt-induction question becomes
+secondary to the substrate question.
 
 If 4a and 4b both succeed with a 4B-class Qwen reaching one valid
 end-to-end iteration, investigation 005 measures the 24-hour run with
