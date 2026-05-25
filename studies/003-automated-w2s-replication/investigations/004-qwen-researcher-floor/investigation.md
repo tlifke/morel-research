@@ -529,7 +529,81 @@ crossed.
 
 Patch text: `patches/patch_4_directive_first_action.txt`. Smoke
 run via `scripts/run_4b_patch.sh` with `PATCH_NUM=4
-PATCH_SLUG=directive_first_action`.
+PATCH_SLUG=directive_first_action`. Smoke log:
+`logs/4b_patch_4_directive_first_action_20260525_143042/`.
+
+Observed (partial — persistence achieved, substrate blocks
+completion):
+
+- ✅ First tool call of session 0, with no preamble: canonical
+  `Bash` invoking the exact training command from the directive.
+  The patch successfully short-circuited the upstream
+  Review/Propose/Plan workflow.
+- ✅ Persistence dramatically improved. Single session 0 ran 3+
+  minutes and fired 49 tool calls (vs patch 3's pattern of 2-call
+  sessions). 10 canonical `Bash` + 29 lowercase `bash` + 4 Write
+  + scattered `run_bash`, `run_tool`, `glob` retries — all
+  targeting the same training command.
+- ❌ Each `Bash` call returned in 5-7 s rather than the
+  expected ~84 s for one SFT step. The training command itself
+  is verified working when run directly (this agent's session
+  produced `wandb` and `results/.../seed_42/` directories at
+  14:33, confirming the python process did start), but the
+  agent's Bash invocations return early with what the agent
+  interprets as failure.
+- ❌ Zero `evaluate_predictions` calls. Workspace empty. No new
+  checkpoint produced (verified via `find results/ -newer
+  /tmp/patch4_smoke.log` empty).
+
+**Root cause of the early Bash return: GPU OOM via Ollama
+keep-alive.** During the agent loop, qwen3.5:4b is held resident
+in ~5.7 GiB VRAM by Ollama. With Q4_K_M weights + activation
+buffers, the desktop's 12 GB 3080 has ~6.4 GiB free. The
+training command's strong-model load (Qwen3-4B-Base at 4-bit
+needs ~3 GiB plus unsloth/torch overhead) intermittently fails
+to allocate, producing a fast-fail exit that the agent
+interprets as the Bash tool being unreachable. Direct verification:
+the same command run from a shell with Ollama unloaded
+completes training in 84 s (see inv 4a Verification block);
+under the live agent loop it does not.
+
+**Verdict — partial.** Patch 4 solves the prompt-induction
+problem (directive-first-action + persistence both land). The
+remaining blocker is substrate, not prompt: the agent's own
+serving model competes with the training process for VRAM on a
+single 12 GB GPU.
+
+Tool-call density:
+
+| name | count |
+|------|-------|
+| `bash` (lowercase) | 29 |
+| `Bash` (canonical) | 10 |
+| `Write` | 4 |
+| `Read` | 2 |
+| `run_bash`, `run_tool`, `glob`, `Edit` | 1 each |
+
+**Stopping at patch 4.** Per inv 4 protocol the budget is 5
+patches max; patch 4 advances persistence and tool-call shape
+about as far as a prompt-only intervention can. The remaining
+gap is the single-GPU resource contention between Ollama and
+training — not addressable by `tool_invocation_hint`. A patch 5
+would only re-test prompt variants on the same broken substrate.
+
+### Stopping criterion — not met
+
+The 4b stopping criterion (one valid `evaluate_predictions`
+submission against the real target idea) was not crossed in
+four patches. The trajectory across patches was:
+
+| patch | hypothesis                              | outcome                                                                                            |
+|-------|-----------------------------------------|----------------------------------------------------------------------------------------------------|
+| 1     | QwenCode-density tool-name pinning      | Partial. Canonical `Bash`/`Write` fired; agent hallucinated `Python`, gave up on "unknown tool".  |
+| 2     | + anti-hallucination + error-recovery   | Regression. 26 sessions, zero native tool calls (context-budget overflow, JSON-in-markdown).      |
+| 3     | Minimal one-line extensions to patch 1  | Partial recovery. Tools fire; agent reverts to summary-text after 2 calls; one session tried train.|
+| 4     | Directive-first-action + persistence    | Partial. Right first-action, 49 tool retries, but every Bash returns in 5-7 s (GPU contention).   |
+
+### 4c — QwenCode wrapping read
 
 **Upstream patch attempt — subprocess vLLM eval (2026-05-25).**
 Lifted the eval path out of `train.py`'s parent process into a fresh
