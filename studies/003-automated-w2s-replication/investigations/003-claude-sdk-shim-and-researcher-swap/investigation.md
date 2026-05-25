@@ -789,7 +789,121 @@ qwen3.5:4b + patch is the only candidate; qwen3.5:9b becomes
 preferred conditional on resolving (1a) — its native tool-use
 register is the right one, just mis-named.
 
+### Gate 5 — longer smoke on qwen3.5:4b + patch (PARTIAL, 2026-05-24)
 
+Per the user-approved task 3, the only passing cell was given ~49
+minutes of wall clock (`max_runtime_seconds=2400`, observed elapsed
+2917 s). Smoke training config unchanged (train_size=64, epochs=1).
+Goal: see whether the loop produces meaningful work, not just
+closes — does the agent read the target idea, write Python, run
+training, submit predictions, read the result, and propose a
+refinement?
+
+Log: `logs/gate_5_run_20260524_224946_qwen3.5_4b_patch/`.
+
+Headline numbers (`stop_reason=timeout`, 5 sessions, 290 total tool
+calls):
+
+| metric | cell 3 (10-min smoke) | longer smoke (49-min) |
+|---|---:|---:|
+| sessions | 4 | 5 |
+| `Bash` (canonical) | 58 | 141 |
+| `bash` (lowercase) | 27 | 16 |
+| `Read` | 14 | 17 |
+| `Write` | 1 | 15 |
+| `evaluate_predictions` | 0 | **2** |
+| `share_finding` | 13 | 40 |
+| `get_leaderboard` | 5 | 12 |
+| invented tool names | low | 20 `terminal`, 7 `get_file`, 4 `read_file`, 4 `python`, 3 `eval`, 2 `WriteFile`, 1 `glob`, 1 `Share Finding` |
+| workspace files at end | empty | empty |
+
+**Qualitative read (what the agent actually did).**
+
+Session 0 (~26 min, 644 log lines) — the agent read the target idea
+via `Read` on `research_loop/notebook.json`, summarized it correctly
+(captured train_size=64, epochs=1, seed=42, weak/strong models, math
+dataset, "validate before novel ideas"), and constructed a plausible
+training command on the first try:
+
+```
+cd /home/tlifke/Projects/automated-w2s-research/w2s_research && \
+  python -m w2s_research.ideas.vanilla_w2s.run \
+  --data-dir .../data/math \
+  --weak-model Qwen/Qwen1.5-0.5B-Chat \
+  --strong-model Qwen/Qwen3-4B-Base \
+  --train-size 64 --test-size 64 --epochs 1 --seed 42 --batch-size 4
+```
+
+But the command failed (`python` resolves to the system interpreter,
+not the upstream `.venv`; the agent's `Bash` runs in
+`$GATE5_WORKSPACE` which is outside the project's venv path), and
+from there session 0 spiraled into 100+ `ls`/`pwd`/`cat`/`which
+python` exploration calls without ever recovering the training run.
+It emitted a single early `share_finding` with hallucinated
+`pgr=0, strong_acc=0, ...` and `worked=false` before any training
+ran.
+
+Sessions 1–3 (~10 min total) — model treats the prior session's
+config errors as the research subject, drafts a long markdown
+"status: BLOCKED" report attributing failure to missing
+`ORCHESTRATOR_API_URL`/`SERVER_URL` env vars (which the harness in
+this `local_mode=True` configuration explicitly bypasses), and
+`share_finding`s about config rather than W2S.
+
+Session 4 (~21 min, 613 log lines) — first and only `evaluate_predictions`
+calls fire, but with **malformed payloads**: `{"prediction": "The
+user has shared research ideas about ..."}` — a free-text English
+description, not a list of integer predictions. The Flask server
+presumably rejected (no PGR returned; agent didn't read or condition
+on a result).
+
+**What this means.**
+
+- The loop **closes** (gate 5 PASS criterion holds across 5 sessions
+  and 49 min). The shim is no longer the blocker.
+- The agent **reads the target idea correctly** and **constructs the
+  right command on the first try**. That's a non-trivial capability
+  win — under the 10-min cell-3 budget this never happened.
+- The agent **does not recover from a single subprocess failure**.
+  Once `python` returns nonzero, qwen3.5:4b has no strategy for
+  inspecting the upstream's `.venv`/`uv run`/`pyproject.toml`; it
+  retries `cat notebook.json` instead.
+- The agent **drifts into invented tool names** (`terminal`,
+  `get_file`, `read_file`, `python`, `eval`, etc.) under longer
+  context — same failure mode as cell 5 / qwen3.5:9b, just lower
+  rate. The patch's name-pinning effect fades as the conversation
+  grows.
+- The agent **calls `evaluate_predictions` with the wrong type
+  signature** when it eventually gets there — passing a prose
+  "prediction" instead of a list. No PGR ever produced; loop does
+  not close on the actual research goal.
+
+**Next blocker after gate 5.** Two distinct issues compound:
+
+1. **Training execution.** The agent needs to actually run vanilla_w2s
+   end-to-end. Likely fixes: workspace cwd should be the upstream
+   project root (not an empty workspace dir); preamble the system
+   prompt with a `uv run python -m ...` invocation pattern; or
+   provide a pre-baked shell wrapper.
+2. **Tool-name drift over long conversations.** The 8B-style failure
+   shows up in 4B too, just slower. The case-tolerance / synonym-map
+   principle question (see note above) becomes load-bearing for any
+   multi-hour run — the longer the loop, the more the patch text's
+   binding effect decays.
+
+**24-hour-run recommendation, updated.** **Still do not launch.**
+Even the passing configuration cannot complete a single end-to-end
+training run in 49 min. 24 hours would buy more `cat notebook.json`
+retries, not more PGR data points. Sequence:
+
+- Fix the training-execution path (workspace cwd, `uv run`, or
+  wrapper) — that is the next concrete unblock and likely belongs in
+  investigation 004 alongside the case-tolerance decision.
+- Re-run the 49-min smoke after the fix. Pass criterion: at least
+  one full vanilla_w2s training completes and `evaluate_predictions`
+  is called with a real predictions list.
+- Only after that pass: 24-hour run, qwen3.5:4b + patch as the
+  baseline candidate, qwen3.5:9b conditional on the synonym map.
 
 ## Forward-looking
 
