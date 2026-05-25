@@ -52,3 +52,4 @@ class ClaudeAgentOptions:
     max_tokens: int = 8192
     base_url: Optional[str] = None
     api_key: Optional[str] = None
+    tool_invocation_hint: Optional[str] = None
