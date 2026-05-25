@@ -1,6 +1,133 @@
---- w2s_research/ideas/vanilla_w2s/run.py.orig
-+++ w2s_research/ideas/vanilla_w2s/run.py
-@@ -134,7 +134,7 @@
+diff --git a/w2s_research/core/train.py b/w2s_research/core/train.py
+index 14a5285..c3e4bfb 100644
+--- a/w2s_research/core/train.py
++++ b/w2s_research/core/train.py
+@@ -5,6 +5,7 @@ This approach treats classification as autoregressive generation:
+ - Input: "Question? (A) opt1 (B) opt2\nAnswer:"
+ - Target: " B" (only compute loss on label token)
+ """
++import gc
+ import torch
+ from pathlib import Path
+ from transformers import Trainer, TrainingArguments, TrainerCallback, AutoTokenizer, DataCollatorForSeq2Seq, AutoModelForSequenceClassification
+@@ -580,6 +581,7 @@ def train_model(
+     train_result = trainer.train()
+ 
+     del model
++    gc.collect()
+     torch.cuda.empty_cache()
+     print(f"[Memory] GPU memory freed")
+ 
+@@ -593,12 +595,10 @@ def train_model(
+         "tokenizer": tokenizer,
+     }
+ 
+-    # Add evaluation results if callback was used
+     if eval_callback is not None and len(eval_callback.eval_results) > 0:
+         result["eval_results"] = eval_callback.eval_results
+         result['final_eval'] = result['eval_results'][-1]
+     elif test_formatted is not None:
+-        # Final evaluation with detailed metrics (when no callback or eval_strategy="no")
+         print("\n" + "="*80)
+         if aar_mode:
+             print("FINAL EVALUATION (AAR Mode - Predictions Only)")
+@@ -606,48 +606,55 @@ def train_model(
+             print("FINAL EVALUATION")
+         print("="*80)
+ 
+-        # Clear GPU cache before final evaluation to prevent OOM
+         torch.cuda.empty_cache()
+ 
+-        # Find the latest checkpoint for vLLM evaluation
+         latest_checkpoint = find_latest_checkpoint(output_dir)
+         print(f"model_name: {model_name}")
+-        print(f"tokenizer: {tokenizer}")
+         if latest_checkpoint:
+             print(f"Using checkpoint for final evaluation: {latest_checkpoint}")
+-            # Add buffer for special tokens and safety margin (vLLM needs max_model_len >= prompt length)
+-            # max_ctx is used for Unsloth training, but vLLM evaluation needs extra headroom for long critiques
+-            max_model_len = max(max_ctx + 500, 10240) if max_ctx else 10240
+-            
+-            if aar_mode:
+-                # AAR Mode: Generate predictions only (no ground truth labels available)
+-                pred_result = generate_predictions(
+-                    test_dataset=test_formatted,
+-                    label_token_ids=label_token_ids,
+-                    tokenizer=tokenizer,
+-                    model_name=model_name,
+-                    lora_checkpoint=latest_checkpoint,
+-                    max_model_len=max_model_len,
+-                )
+-                result['predictions'] = pred_result['predictions']
+-                final_eval = {
+-                    "num_samples": pred_result['num_samples'],
+-                    "pred_distribution": pred_result['pred_distribution'],
+-                    "aar_mode": True,
+-                }
+-                print(f"  [AAR Mode] Generated {len(result['predictions'])} predictions")
+-                print(f"  Prediction distribution: {pred_result['pred_distribution']}")
+-            else:
+-                # Normal mode: Evaluate with ground truth labels
+-                final_eval = evaluate_model(
+-                    test_dataset=test_formatted,
+-                    label_token_ids=label_token_ids,
+-                    tokenizer=tokenizer,
+-                    model_name=model_name,
+-                    lora_checkpoint=latest_checkpoint,
+-                    original_dataset=test_dataset,  # Pass original dataset for efficient label extraction
+-                    max_model_len=max_model_len,
+-                )
++            max_model_len = min((max_ctx + 500) if max_ctx else 4096, 3600)
++
++            import pickle
++            import sys
++
++            eval_inputs_dir = Path(output_dir) / ".eval_inputs"
++            eval_inputs_dir.mkdir(parents=True, exist_ok=True)
++            eval_output_json = eval_inputs_dir / "eval_output.json"
++            if eval_output_json.exists():
++                eval_output_json.unlink()
++
++            eval_inputs = {
++                "aar_mode": aar_mode,
++                "test_formatted": test_formatted,
++                "test_dataset": test_dataset if not aar_mode else None,
++                "original_dataset": test_dataset if not aar_mode else None,
++                "label_token_ids": label_token_ids,
++                "tokenizer": tokenizer,
++                "model_name": model_name,
++                "lora_checkpoint": latest_checkpoint,
++                "max_model_len": max_model_len,
++            }
++            with open(eval_inputs_dir / "inputs.pkl", "wb") as f:
++                pickle.dump(eval_inputs, f)
++
++            try:
++                if wandb.run is not None:
++                    wandb.finish()
++            except Exception:
++                pass
++
++            print(f"[Subprocess eval] os.execv -> {sys.executable} -m w2s_research.core.train_eval")
++            print(f"[Subprocess eval] eval_output_json={eval_output_json}")
++            sys.stdout.flush()
++            sys.stderr.flush()
++            os.execv(
++                sys.executable,
++                [
++                    sys.executable, "-m", "w2s_research.core.train_eval",
++                    "--inputs-dir", str(eval_inputs_dir),
++                    "--output-json", str(eval_output_json),
++                ],
++            )
+         else:
+             print("Warning: No checkpoint found for final evaluation")
+             if aar_mode:
+diff --git a/w2s_research/ideas/vanilla_w2s/run.py b/w2s_research/ideas/vanilla_w2s/run.py
+index d920407..a3da415 100644
+--- a/w2s_research/ideas/vanilla_w2s/run.py
++++ b/w2s_research/ideas/vanilla_w2s/run.py
+@@ -134,7 +134,7 @@ def run_experiment(config: RunConfig):
          weak_model=config.weak_model,
          dataset_name=dataset_name,
          seed=config.seed,
@@ -9,7 +136,7 @@
          lr=config.lr,
          scheduler=config.lr_schedule,
      )
-@@ -169,7 +169,7 @@
+@@ -169,7 +169,7 @@ def run_experiment(config: RunConfig):
          seed=config.seed,
          # epochs defaults to BASELINE_EPOCHS
          lr=config.lr,
@@ -17,70 +144,131 @@
 +        batch_size=32,
          scheduler=config.lr_schedule,
      )
-@@ -270,7 +270,7 @@
-         fixed_weak_mean, fixed_weak_se, weak_num_seeds = get_fixed_weak_baseline(
+     
+@@ -271,7 +271,7 @@ def run_experiment(config: RunConfig):
              weak_model=config.weak_model,
              dataset_name=dataset_name,
+             # epochs defaults to BASELINE_EPOCHS
 -            batch_size=config.batch_size,
 +            batch_size=32,
              lr=config.lr,
              scheduler=config.lr_schedule,
          )
-@@ -279,7 +279,7 @@
-         fixed_strong_mean, fixed_strong_se, strong_num_seeds = get_fixed_ceiling_baseline(
+@@ -280,7 +280,7 @@ def run_experiment(config: RunConfig):
              strong_model=config.strong_model,
              dataset_name=dataset_name,
+             # epochs defaults to BASELINE_EPOCHS
 -            batch_size=config.batch_size,
 +            batch_size=32,
              lr=config.lr,
              scheduler=config.lr_schedule,
          )
+diff --git a/w2s_research/research_loop/agent.py b/w2s_research/research_loop/agent.py
+index bcc5bd8..b72a5bc 100644
+--- a/w2s_research/research_loop/agent.py
++++ b/w2s_research/research_loop/agent.py
+@@ -23,6 +23,7 @@ from claude_agent_sdk import (
+     AssistantMessage,
+     ResultMessage,
+     TextBlock,
++    ThinkingBlock,
+     ToolUseBlock,
+ )
+ 
+@@ -237,6 +238,9 @@ class BaseAgent:
+             for content in message.content:
+                 if isinstance(content, TextBlock):
+                     parts.append(f"[{ts}] [{self.name}] {content.text[:200]}")
++                elif isinstance(content, ThinkingBlock):
++                    thinking_text = getattr(content, "thinking", "") or getattr(content, "text", "")
++                    parts.append(f"[{ts}] [{self.name}] [thinking] {thinking_text[:200]}")
+                 elif isinstance(content, ToolUseBlock):
+                     tool_input = content.input or {}
+                     detail = ""
+@@ -251,12 +255,15 @@ class BaseAgent:
+         return None
+ 
+     def _extract_output(self, messages) -> Dict[str, Any]:
+-        output = {"text_outputs": [], "tool_uses": []}
++        output = {"text_outputs": [], "tool_uses": [], "thinking_outputs": []}
+         for msg in messages:
+             if isinstance(msg, AssistantMessage):
+                 for content in msg.content:
+                     if isinstance(content, TextBlock):
+                         output["text_outputs"].append(content.text)
++                    elif isinstance(content, ThinkingBlock):
++                        thinking_text = getattr(content, "thinking", "") or getattr(content, "text", "")
++                        output["thinking_outputs"].append(thinking_text)
+                     elif isinstance(content, ToolUseBlock):
+                         output["tool_uses"].append({"tool": content.name, "input": content.input})
+             if isinstance(msg, ResultMessage):
 
---- w2s_research/core/train.py.orig
-+++ w2s_research/core/train.py
-@@ -617,7 +617,7 @@
-             print(f"Using checkpoint for final evaluation: {latest_checkpoint}")
-             # Add buffer for special tokens and safety margin (vLLM needs max_model_len >= prompt length)
-             # max_ctx is used for Unsloth training, but vLLM evaluation needs extra headroom for long critiques
--            max_model_len = max(max_ctx + 500, 10240) if max_ctx else 10240
-+            max_model_len = (max_ctx + 500) if max_ctx else 4096
-
-             if aar_mode:
-                 # AAR Mode: Generate predictions only (no ground truth labels available)
-
---- w2s_research/core/train.py.orig
-+++ w2s_research/core/train.py
-@@ -5,6 +5,7 @@
- - Input: "Question? (A) opt1 (B) opt2\nAnswer:"
- - Target: " B" (only compute loss on label token)
- """
-+import gc
- import torch
- from pathlib import Path
- from transformers import Trainer, TrainingArguments, TrainerCallback, AutoTokenizer, DataCollatorForSeq2Seq, AutoModelForSequenceClassification
-@@ -579,7 +580,9 @@
-
-     train_result = trainer.train()
-
-+    del trainer
-     del model
-+    gc.collect()
-     torch.cuda.empty_cache()
-     print(f"[Memory] GPU memory freed")
-
-@@ -628,6 +631,7 @@
-                     model_name=model_name,
-                     lora_checkpoint=latest_checkpoint,
-                     max_model_len=max_model_len,
-+                    gpu_memory_utilization=0.5,
-                 )
-                 result['predictions'] = pred_result['predictions']
-                 final_eval = {
-@@ -647,6 +651,7 @@
-                     lora_checkpoint=latest_checkpoint,
-                     original_dataset=test_dataset,  # Pass original dataset for efficient label extraction
-                     max_model_len=max_model_len,
-+                    gpu_memory_utilization=0.5,
-                 )
-         else:
-             print("Warning: No checkpoint found for final evaluation")
+diff --git a/w2s_research/core/train_eval.py b/w2s_research/core/train_eval.py
+new file mode 100644
+index 0000000..0000000
+--- /dev/null
++++ b/w2s_research/core/train_eval.py
+@@ -0,0 +1,63 @@
++"""
++Out-of-process evaluation entrypoint.
++
++Invoked via `python -m w2s_research.core.train_eval --inputs-dir <dir> --output-json <path>`.
++The parent process (train.py) writes serialized eval inputs into <inputs-dir>, exits its
++own training pipeline, and launches this subprocess. Running vLLM in a fresh Python
++process guarantees a clean CUDA context (the parent's training-time context is not
++released by `del model + gc.collect + empty_cache` alone — that's a process-lifetime
++property on a 12 GB GPU where the strong-model weights leave no headroom otherwise).
++"""
++import argparse
++import json
++import pickle
++import sys
++from pathlib import Path
++
++from .eval import evaluate_model, generate_predictions
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--inputs-dir", required=True)
++    parser.add_argument("--output-json", required=True)
++    args = parser.parse_args()
++
++    inputs_dir = Path(args.inputs_dir)
++    with open(inputs_dir / "inputs.pkl", "rb") as f:
++        inputs = pickle.load(f)
++
++    aar_mode = inputs["aar_mode"]
++    common_kwargs = dict(
++        test_dataset=inputs["test_formatted"],
++        label_token_ids=inputs["label_token_ids"],
++        tokenizer=inputs["tokenizer"],
++        model_name=inputs["model_name"],
++        lora_checkpoint=inputs["lora_checkpoint"],
++        max_model_len=inputs["max_model_len"],
++        gpu_memory_utilization=inputs.get("gpu_memory_utilization", 0.8),
++    )
++
++    if aar_mode:
++        pred_result = generate_predictions(**common_kwargs)
++        output = {
++            "aar_mode": True,
++            "predictions": pred_result["predictions"],
++            "num_samples": pred_result["num_samples"],
++            "pred_distribution": pred_result["pred_distribution"],
++        }
++    else:
++        final_eval = evaluate_model(
++            original_dataset=inputs["original_dataset"],
++            **common_kwargs,
++        )
++        output = {"aar_mode": False, "final_eval": final_eval}
++
++    with open(args.output_json, "w") as f:
++        json.dump(output, f)
++
++    sys.exit(0)
++
++
++if __name__ == "__main__":
++    main()
