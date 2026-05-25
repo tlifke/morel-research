@@ -347,6 +347,220 @@ Headline observations:
 Proceeding to gate 4 (full upstream tool surface against the Flask
 server).
 
+### Gate 4 — multi-tool against running Flask server (PASS, 2026-05-24)
+
+- wall-time: 37.1 sec
+- model: `qwen3:4b` (thinking enabled, native)
+- tool calls invoked, in order:
+  1. `get_leaderboard` (no args)
+  2. `evaluate_predictions` with `{predictions:[0,1,0,1,0], dataset:'math', weak_model:'Qwen/Qwen1.5-0.5B-Chat', strong_model:'Qwen/Qwen3-4B-Base'}`
+- final synthesized text: noted the server returned HTTP 404 for the
+  math evaluation (no pre-cached baselines for math/Qwen on the server
+  at gate-4 time), and that the leaderboard entries were chat-only.
+  Final answer correctly cited the 404 rather than fabricating a PGR.
+- pass criteria: both tools invoked at least once each, final response
+  includes a numeric value from the server. Met.
+- caveats:
+  - Required `max_tokens` ≥ 8192 for Qwen 3 4B in thinking mode; the
+    initial run at 4096 exhausted the budget entirely on
+    `<think>...</think>` reasoning before any tool call was emitted.
+    Shim default raised from 2048 → 8192 to absorb this.
+  - First attempt with `/no_think` (thinking disabled) produced
+    confident hallucinated tool-result narration *without* actually
+    calling the tools. Thinking is load-bearing for tool selection
+    here. Re-enabling thinking + a stronger "you MUST call tools, do
+    not guess" system prompt fixed it.
+- shim behavior: multi-tool sequencing worked first try once token
+  budget and thinking were correct. Tool-result-injection into the
+  conversation is sound at multi-tool scale; the assistant correctly
+  conditioned on the prior tool result when choosing the next call.
+- ran on the desktop (`/home/tlifke/inv003_shim/`) because port 8000
+  isn't forwarded to the Tailnet. Mac → desktop runs are only
+  reachable for Ollama (11434).
+
+Proceeding to gate 5.
+
+### Gate 5 — full loop micro-iteration (FAIL, 2026-05-24)
+
+- wall-time: ~90 sec elapsed (killed early; failure mode confirmed in
+  first 4 sessions; no point burning more GPU time)
+- sessions completed: 4 (each ~27-30 sec)
+- evaluate_predictions hits on Flask server: **0**
+- stop reason: manually terminated; would have run to 25-min timeout
+  with the same per-session failure mode repeating
+- model: `qwen3:4b` via shim, `local_mode=True`, dataset=math, smoke
+  task targeting train_size=64 etc.
+
+**Specific failure mode: tool-call format mismatch.**
+
+The shim correctly serializes the upstream tools, sets
+`tools=[...]` on the Anthropic-compat request, and Ollama accepts it
+(gate 3 + gate 4 confirmed this round-trip). But on the
+full-system-prompt agent run, Qwen 3 4B chose to emit tool calls
+**as free-form JSON text** inside its response body rather than via
+native Anthropic `tool_use` blocks. Three of four sessions produced
+text like:
+
+```
+{
+  "name": "evaluate_predictions",
+  "arguments": {
+    "dataset": "math",
+    "predictions": [0,1,0,1,...],
+    ...
+  }
+}
+```
+
+(One session also wrapped this in a `<function_call>...</function_call>`
+tag, the Qwen-native fine-tuned format.) The shim sees only
+`TextBlock`, no `ToolUseBlock`, so no tool actually fires. The Flask
+server received zero requests across the entire run.
+
+Session 0 was silent — empty `AssistantMessage` after 27s. Consistent
+with the gate-4-observed pattern where thinking consumes the full
+output budget on first contact with a complex prompt.
+
+**This is not a shim bug.** Gates 3 and 4 both invoked native tool_use
+correctly under shorter / more prescriptive prompts. The behavior is
+the model's: the upstream agent prompt is dense, Claude-tuned, and
+asks the agent to "consult /research-thinking skill" and read/write
+files via `Read`/`Write`/`Bash` tools that the shim does not provide
+(because they're built-in tools of the real `claude` CLI, not MCP
+servers). With no `Bash` to actually run the smoke training command,
+Qwen falls back to its template-native function-call text format and
+calls it a turn.
+
+**What this reveals about the integration:**
+
+1. **Built-in tool gap.** The upstream agent assumes `Read`, `Write`,
+   `Bash`, `Glob`, `Grep`, `WebSearch`, `WebFetch` are available — they
+   are provided by the `claude` CLI binary, not by `claude_agent_sdk`.
+   The shim, pointed at Ollama, has no way to expose these to Qwen.
+   Without `Bash` the agent cannot actually run the smoke training
+   command — the loop is uncloseable as currently constructed.
+2. **Tool-format hallucination.** Even for the MCP tools that *are*
+   wired up, Qwen 3 4B under this prompt prefers its instruction-tuned
+   text-format function-call output over the native tool_use API. The
+   Ollama Anthropic-compat layer faithfully forwards whatever the
+   model produces; it does not retrofit text-format calls into
+   `tool_use` blocks.
+3. **Thinking-budget pressure.** Even at `max_tokens=8192`, the
+   first-contact session burned the whole budget thinking and
+   produced an empty response. Later sessions reached an output;
+   per-iteration latency is dominated by reasoning, not action.
+
+Gate 5 verdict: **harness-integration failure, predictable in
+hindsight.** The shim's surface is sound. The upstream agent harness
+assumes capabilities (Bash, Read/Write, native Anthropic tool_use)
+that don't transfer to a 4B Ollama-served model without additional
+shim engineering. The 24-hour run is not authorized.
+
+**What would unblock gate 5 (not done here — for human review):**
+
+- (a) Add MCP-backed `Bash`/`Read`/`Write` tools to the shim so the
+  agent has *some* execution surface. Substantial scope creep — these
+  are non-trivial to do safely.
+- (b) Switch the shim to use Ollama's native `/api/chat` and parse
+  text-format function calls into `ToolUseBlock`s before yielding them
+  upstream. Catches Qwen's preferred format but requires per-model
+  parsing rules.
+- (c) Rewrite the upstream agent loop to use only MCP tools (drop the
+  built-in dependency). Breaks the "tight shim" framing of Decision 1
+  but is honest about what the harness actually needs.
+- (d) Use a model that more reliably emits native `tool_use` under
+  long prompts (Qwen 3 8B+, Llama 3.1 8B). Bigger model → can't
+  co-reside with training → loop becomes serialized differently.
+
+Recommend (b) then (a) as the next investigation's scope. (c) is
+philosophically cleanest but discards the bulk of the upstream prompt
+engineering, which is the thing we wanted to study.
+
+### Gate 5 retry — paths A + B implemented (PARTIAL, 2026-05-24)
+
+After (a) and (b) were both authorized, the shim was extended:
+
+- **Path A (text-format tool call parsing).** `parser.py` synthesizes
+  `ToolUseBlock` instances from `TextBlock` content when the model
+  emits tool calls as `<function_call>{...}</function_call>`,
+  `<tool_call>{...}</tool_call>`, fenced ```json blocks, or bare
+  JSON objects (gated on the known tool-name set). Recognises `name`,
+  `function`, `function_name`, `tool`, `tool_name` as the name key
+  and `arguments`, `parameters`, `input`, `args` as the argument key.
+  Synthesized turns are treated as `stop_reason='tool_use'` so the
+  agent loop continues. 13 unit tests under
+  `scripts/tests/test_text_format_parser.py`.
+- **Path B (MCP-backed built-ins).** `builtins.py` exposes an
+  `SdkMcpServer` named `builtin` containing `Bash`, `Read`, `Write`,
+  `Edit`, `Glob`, `Grep` (`WebSearch`/`WebFetch` stubbed to a clear
+  error). Bash runs via `asyncio.create_subprocess_shell` in a
+  configurable cwd with default timeout 1800s for training commands.
+  The server is registered through the existing
+  `loop.mcp_servers["builtin"] = ...` plumbing — no new public API on
+  `ClaudeSDKClient`. Filtering also accepts bare tool names in
+  `allowed_tools` so the unqualified upstream entries (`Bash`,
+  `Read`, ...) match. 8 unit tests under
+  `scripts/tests/test_builtins.py`.
+
+Both unit-test suites pass locally and on the desktop.
+
+**Retry run** (`logs/gate_5_run_20260524_203736_pathAB/`):
+qwen3:4b, smoke config, 7 sessions in ~6.5 min before manual stop.
+
+| metric | gate 5 first attempt | gate 5 retry (A+B) |
+|---|---:|---:|
+| sessions completed | 4 | 7 |
+| `evaluate_predictions` tool calls fired | 0 | 8 |
+| Bash/Read/Write tool calls fired | 0 | 0 |
+| training command actually executed | no | no |
+
+**What improved.** Path A is working: the shim now reliably
+synthesizes tool_use blocks from Qwen's text-format emissions across
+multiple variants (`{"name":...}`, `{"function":...}`,
+`{"function_name":..., "arguments":...}`, naked
+`<function_call>` tags). 8 of 7 sessions produced at least one
+genuine tool call hitting the Flask server (gate-5 first attempt had
+zero). The agent reads tool results and reasons about them.
+
+**Where it still fails.** A third class of issue surfaces, distinct
+from paths A and B: even with Bash now available and listed in
+`allowed_tools`, the model **never emits a Bash tool call**. It
+instead writes the shell commands it wants to run as markdown code
+blocks inside its narration (`\`\`\`bash mkdir -p ...\`\`\``). Across
+all 7 sessions the agent called only `evaluate_predictions`
+(repeatedly, with dummy 0..63 predictions), never `Bash`, `Read`, or
+`Write`. The workspace remained empty. So the loop still cannot
+close: no training command runs, so there is nothing real to
+evaluate, so PGR cannot be produced.
+
+This is a model-behavior failure under a long Claude-tuned system
+prompt, not a shim gap. Possible interventions, in increasing scope:
+
+1. Prompt patch — append an explicit "you must call the Bash tool to
+   execute commands; do not write commands in markdown" instruction
+   to the system prompt. Cheapest; may simply not stick on a 4B
+   model.
+2. Force-loop scaffold — if a session produces no tool calls, inject
+   a user-turn nudge ("you wrote shell commands but did not invoke
+   Bash; please call Bash to execute them"). Slightly heavier; biases
+   the loop further from the upstream behavior.
+3. Model swap — Qwen 3 8B or larger; sacrifices GPU-co-residency
+   with the student (see [[003-001]] hardware verdict, the training
+   phase will need to fully swap out the researcher).
+
+Per the operating constraint ("don't fix more than one new class of
+issue without checking back"), stopping here. The 24-hour run remains
+not-authorized.
+
+**Gate 5 verdict update.** Paths A + B unblock the shim-side
+failures. The loop-closure failure is model-side
+(commands-as-narration). Recommend a follow-on investigation 004
+scoped narrowly to: (i) try prompt patch (1), (ii) if that fails,
+swap to 8B and re-test gate 5. Skip the scaffold (2) unless both
+fail.
+
+
+
 ## Forward-looking
 
 After this investigation, depending on outcome:
@@ -372,6 +586,24 @@ After this investigation, depending on outcome:
 The shim is the durable contribution. Once built and tested, it
 makes future investigations (Qwen-researcher, smaller-model
 floors, parallel-agent diversity) drop-in.
+
+**Post-gate-5 update (2026-05-24):** Gate 5's first run surfaced
+two shim-side gaps (text-format tool calls; missing built-in tools).
+The retry implemented both (paths A and B above). Result:
+
+- Both shim gaps are closed. Tool calls now fire correctly, including
+  against the Flask server (8 `evaluate_predictions` invocations
+  across the 7-session retry). The shim is no longer the blocker.
+- A third gap emerged that is **not** shim-side: even with Bash
+  exposed and listed in `allowed_tools`, Qwen 3 4B writes shell
+  commands as markdown code blocks in its narration and never
+  actually invokes Bash. The loop cannot close because no training
+  command runs.
+
+Investigation 004 should target this directly: prompt-patch first
+(cheap), then an 8B+ model swap if needed (accepts GPU-serialization
+cost per [[003-001]]). The 24-hour Qwen 3 4B run as originally
+scoped remains not viable.
 
 ## Open questions
 

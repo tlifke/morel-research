@@ -49,6 +49,6 @@ class ClaudeAgentOptions:
     setting_sources: Optional[List[str]] = None
     betas: Optional[List[str]] = None
     cli_path: Optional[str] = None
-    max_tokens: int = 2048
+    max_tokens: int = 8192
     base_url: Optional[str] = None
     api_key: Optional[str] = None

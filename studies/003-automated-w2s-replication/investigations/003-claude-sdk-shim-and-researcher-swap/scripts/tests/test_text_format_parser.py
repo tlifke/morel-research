@@ -111,6 +111,14 @@ def test_ignores_non_tool_json():
     _assert(calls == [], calls)
 
 
+def test_function_key_alias():
+    text = '<function_call>{"function": "evaluate_predictions", "arguments": {"dataset": "math"}}</function_call>'
+    _, calls = extract_tool_calls(text)
+    _assert(len(calls) == 1, calls)
+    _assert(calls[0]["name"] == "evaluate_predictions", calls[0])
+    _assert(calls[0]["arguments"]["dataset"] == "math", calls[0])
+
+
 def test_real_qwen_failure_payload():
     text = (
         "I will evaluate now.\n"
@@ -139,6 +147,7 @@ def main():
         test_bare_json_filtered_when_unknown,
         test_parameters_key_alias,
         test_arguments_as_stringified_json,
+        test_function_key_alias,
         test_multiple_calls_in_one_text,
         test_synthesize_returns_tool_use_blocks,
         test_no_match_returns_text_unchanged,
