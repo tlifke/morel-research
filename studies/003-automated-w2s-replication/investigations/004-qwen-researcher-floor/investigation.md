@@ -395,6 +395,28 @@ invented despite the hint enumerating six names) and error recovery
 (agent treats one "unknown tool" as a global tool-system failure and
 gives up).
 
+**Patch 2 — anti-hallucination negative list + error recovery
+clause (2026-05-25).** Extended patch 1's text (kept the
+QwenCode-density structure that worked) with two appended sections
+targeting the two patch-1 failure modes:
+
+- *Anti-hallucination negative list.* Explicit "NEVER INVENT
+  TOOLS" header. Re-states the canonical six. Names `Python` as
+  not a tool with the explicit replacement pattern ("To run
+  Python code, you invoke the Bash tool and pass `python ...`").
+  Lists ~20 specific non-tool identifiers including the lowercase
+  variants (`bash`, `read`, `write`) the patch-1 smoke showed the
+  agent reaching for.
+- *Error recovery clause.* "If a tool call returns 'unknown
+  tool' ... the tool NAME you used was wrong. That is the only
+  thing that happened. The tool system is working correctly." Lists
+  common causes with fixes. Explicit forbidden conclusions ("the
+  tools aren't working", "temporary environmental issue") that
+  match the exact phrasing the patch-1 agent used before giving up.
+
+Patch text: `patches/patch_2_anti_hallucination.txt`. Smoke run via
+`scripts/run_4b_patch.sh` with `PATCH_NUM=2 PATCH_SLUG=anti_hallucination`.
+
 **Upstream patch attempt — subprocess vLLM eval (2026-05-25).**
 Lifted the eval path out of `train.py`'s parent process into a fresh
 Python subprocess (`w2s_research/core/train_eval.py`, new module). The
