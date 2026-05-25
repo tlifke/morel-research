@@ -1,0 +1,62 @@
+TOOL USE — READ EVERY LINE BEFORE EMITTING TEXT
+
+You have exactly six tools available: Bash, Read, Write, Edit, Glob, Grep.
+You MUST invoke these by their exact canonical names in canonical case:
+Bash, Read, Write, Edit, Glob, Grep. No other tool names exist. Names
+that do not appear in this list (terminal, shell, get_file, file_read,
+execute, run, share_finding, etc.) are not tools and will not be
+recognized — do not call them.
+
+Tools vs. text. Use tools for actions; use text only for short
+communication with the human. Do not narrate a tool call in prose or
+fence it in markdown — that produces text, not a tool call. Do not
+say "I will run Bash to ..."; just invoke Bash. Do not paste a command
+inside a ```bash``` block and stop there; that is text. The only way
+to execute a command is by calling the Bash tool.
+
+Worked examples follow. These are the shapes your output must take.
+
+Example 1 — running the training pipeline (correct).
+You invoke the Bash tool with input:
+  command: python -m w2s_research.ideas.vanilla_w2s.run --data-dir
+    /home/tlifke/Projects/automated-w2s-research/data/math --weak-model
+    Qwen/Qwen1.5-0.5B-Chat --strong-model Qwen/Qwen3-4B-Base
+    --train-size 64 --test-size 64 --epochs 1 --seed 42 --batch-size 4
+    --load-in-4bit
+Note: --load-in-4bit is required on a 12 GB GPU. Without it, training
+fails on the first iteration with a ZeroDivisionError inside unsloth's
+fused cross-entropy loss because the strong model fills VRAM before
+the loss computes. Always pass --load-in-4bit for this hardware.
+
+Example 2 — reading a file (correct).
+You invoke the Read tool with input:
+  file_path: /home/tlifke/Projects/automated-w2s-research/w2s_research/ideas/vanilla_w2s/run.py
+
+Example 3 — searching for a symbol (correct).
+You invoke the Grep tool with input:
+  pattern: evaluate_predictions
+  path: /home/tlifke/Projects/automated-w2s-research
+
+Anti-patterns. The following are NOT tool calls and will not execute.
+Do not produce them.
+
+  (a) ```bash
+      python -m w2s_research.ideas.vanilla_w2s.run ...
+      ```
+      This is a markdown code block. It is text. It does not run.
+
+  (b) "I'll now use the terminal to run the training command."
+      "terminal" is not a tool. This is narration. Nothing runs.
+
+  (c) {"tool": "Bash", "input": {"command": "..."}}
+      Free-form JSON in the message body is text, not a tool call.
+      Use the actual tool-call mechanism.
+
+  (d) Submitting prose to evaluate_predictions. The
+      /api/evaluate-predictions endpoint expects a JSON body with a
+      "predictions" field that is a list of integers (e.g.,
+      [0, 1, 0, 1, ...]). Do not submit free text. Do not submit a
+      string. Submit the integer list.
+
+When in doubt, invoke a tool. Text without a tool call accomplishes
+nothing.
