@@ -15,6 +15,12 @@ class ToolUseBlock:
 
 
 @dataclass
+class ThinkingBlock:
+    text: str
+    source: str = "block"
+
+
+@dataclass
 class ToolResultBlock:
     tool_use_id: str
     content: Any
@@ -23,7 +29,7 @@ class ToolResultBlock:
 
 @dataclass
 class AssistantMessage:
-    content: List[Union[TextBlock, ToolUseBlock]]
+    content: List[Union[TextBlock, ToolUseBlock, ThinkingBlock]]
     model: Optional[str] = None
 
 
@@ -55,3 +61,39 @@ class ClaudeAgentOptions:
     tool_invocation_hint: Optional[str] = None
     bash_cwd: Optional[str] = None
     bash_env: Optional[Dict[str, str]] = None
+    model_family: Optional[str] = None
+    thinking_mode: Optional[str] = None
+    model_notes: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        from .model_registry import get_model_entry
+
+        if not self.model:
+            return
+        entry = get_model_entry(self.model)
+        if entry is None:
+            return
+        if self.model_family is None:
+            self.model_family = entry.family
+        if self.thinking_mode is None:
+            self.thinking_mode = entry.thinking_mode
+        if self.model_notes is None:
+            self.model_notes = entry.notes
+
+    @classmethod
+    def from_registry(cls, name: str, **overrides: Any) -> "ClaudeAgentOptions":
+        from .model_registry import get_model_entry
+
+        entry = get_model_entry(name)
+        if entry is None:
+            raise KeyError(f"unknown model registry key: {name}")
+        defaults: Dict[str, Any] = {
+            "model": entry.ollama_tag,
+            "max_tokens": entry.max_tokens_default,
+            "tool_invocation_hint": entry.recommended_hint,
+            "model_family": entry.family,
+            "thinking_mode": entry.thinking_mode,
+            "model_notes": entry.notes,
+        }
+        defaults.update(overrides)
+        return cls(**defaults)

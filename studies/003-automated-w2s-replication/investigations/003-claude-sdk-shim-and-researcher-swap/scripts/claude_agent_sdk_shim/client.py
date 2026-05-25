@@ -12,6 +12,7 @@ from .types import (
     ClaudeAgentOptions,
     ResultMessage,
     TextBlock,
+    ThinkingBlock,
     ToolUseBlock,
 )
 from .tools import SdkMcpServer, SdkTool
@@ -110,7 +111,23 @@ class ClaudeSDKClient:
                         print(f"[SHIM_DEBUG]   block[{_i}] type={_bt} text_preview={_txt[:200]!r}", file=_sys.stderr, flush=True)
                 for block in response.content:
                     btype = getattr(block, "type", None)
-                    if btype == "text":
+                    sidecar_thinking = getattr(block, "thinking", None)
+                    if sidecar_thinking and btype != "thinking":
+                        tb = ThinkingBlock(text=sidecar_thinking, source="sidecar")
+                        blocks_out.append(tb)
+                        assistant_content_for_history.append({
+                            "type": "thinking",
+                            "thinking": sidecar_thinking,
+                        })
+                    if btype == "thinking":
+                        thinking_text = getattr(block, "thinking", None) or getattr(block, "text", "") or ""
+                        tb = ThinkingBlock(text=thinking_text, source="block")
+                        blocks_out.append(tb)
+                        assistant_content_for_history.append({
+                            "type": "thinking",
+                            "thinking": thinking_text,
+                        })
+                    elif btype == "text":
                         residual, synth = synthesize_tool_use_blocks(
                             block.text, known_tool_names=known_tool_names
                         )

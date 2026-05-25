@@ -10,6 +10,7 @@ from claude_agent_sdk_shim import (
     ClaudeAgentOptions,
     AssistantMessage,
     TextBlock,
+    ThinkingBlock,
     ToolUseBlock,
     tool,
     create_sdk_mcp_server,
@@ -35,6 +36,7 @@ async def main() -> int:
     saw_correct_answer = False
     tool_call_inputs = []
     text_chunks = []
+    thinking_blocks = []
 
     async with ClaudeSDKClient(options) as client:
         await client.query("Use the add tool to compute 5+3. Report the result.")
@@ -49,11 +51,14 @@ async def main() -> int:
                         text_chunks.append(block.text)
                         if "8" in block.text:
                             saw_correct_answer = True
+                    if isinstance(block, ThinkingBlock):
+                        thinking_blocks.append({"source": block.source, "len": len(block.text)})
 
     elapsed = time.time() - start
     print(f"wall_time_sec={elapsed:.2f}")
     print(f"tool_calls={tool_call_inputs}")
     print(f"text_chunks={text_chunks}")
+    print(f"thinking_blocks={thinking_blocks}")
     print(f"saw_tool_call={saw_tool_call}")
     print(f"saw_correct_answer={saw_correct_answer}")
     assert saw_tool_call, "Model did not invoke the add tool"
