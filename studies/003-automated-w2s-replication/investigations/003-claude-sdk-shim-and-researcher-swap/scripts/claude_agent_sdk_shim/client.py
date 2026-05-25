@@ -15,6 +15,7 @@ from .types import (
     ToolUseBlock,
 )
 from .tools import SdkMcpServer, SdkTool
+from .parser import synthesize_tool_use_blocks
 
 
 DEFAULT_BASE_URL = os.getenv("OLLAMA_ANTHROPIC_BASE_URL", "http://100.97.4.17:11434")
@@ -37,7 +38,7 @@ class ClaudeSDKClient:
                 continue
             for tool_name, t in server.tools.items():
                 qualified = f"mcp__{server_key}__{tool_name}"
-                if allowed and qualified not in allowed:
+                if allowed and qualified not in allowed and t.name not in allowed:
                     continue
                 self._tool_index[t.name] = t
                 self._anthropic_tools.append({
@@ -92,11 +93,31 @@ class ClaudeSDKClient:
                 blocks_out: List[Any] = []
                 tool_uses: List[ToolUseBlock] = []
                 assistant_content_for_history: List[Dict[str, Any]] = []
+                known_tool_names = set(self._tool_index.keys())
+                synthesized_any = False
                 for block in response.content:
                     btype = getattr(block, "type", None)
                     if btype == "text":
-                        blocks_out.append(TextBlock(text=block.text))
-                        assistant_content_for_history.append({"type": "text", "text": block.text})
+                        residual, synth = synthesize_tool_use_blocks(
+                            block.text, known_tool_names=known_tool_names
+                        )
+                        if synth:
+                            synthesized_any = True
+                            if residual:
+                                blocks_out.append(TextBlock(text=residual))
+                                assistant_content_for_history.append({"type": "text", "text": residual})
+                            for tu in synth:
+                                blocks_out.append(tu)
+                                tool_uses.append(tu)
+                                assistant_content_for_history.append({
+                                    "type": "tool_use",
+                                    "id": tu.id,
+                                    "name": tu.name,
+                                    "input": tu.input,
+                                })
+                        else:
+                            blocks_out.append(TextBlock(text=block.text))
+                            assistant_content_for_history.append({"type": "text", "text": block.text})
                     elif btype == "tool_use":
                         tu = ToolUseBlock(id=block.id, name=block.name, input=block.input or {})
                         blocks_out.append(tu)
@@ -110,7 +131,11 @@ class ClaudeSDKClient:
 
                 await queue.put(AssistantMessage(content=blocks_out, model=response.model))
 
-                if not tool_uses or response.stop_reason != "tool_use":
+                effective_stop = response.stop_reason
+                if synthesized_any and effective_stop != "tool_use":
+                    effective_stop = "tool_use"
+
+                if not tool_uses or effective_stop != "tool_use":
                     self._history.append({"role": "assistant", "content": assistant_content_for_history})
                     await queue.put(ResultMessage(stop_reason=response.stop_reason))
                     await queue.put(None)
