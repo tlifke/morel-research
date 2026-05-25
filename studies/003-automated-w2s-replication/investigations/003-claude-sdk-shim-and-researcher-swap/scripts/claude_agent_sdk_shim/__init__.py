@@ -9,6 +9,7 @@ from .types import (
 )
 from .client import ClaudeSDKClient
 from .tools import tool, create_sdk_mcp_server, SdkMcpServer
+from .builtins import create_builtin_tools_server
 
 __all__ = [
     "ClaudeSDKClient",
@@ -22,4 +23,5 @@ __all__ = [
     "tool",
     "create_sdk_mcp_server",
     "SdkMcpServer",
+    "create_builtin_tools_server",
 ]
