@@ -27,7 +27,11 @@ def _resolve(path: str, cwd: Path) -> Path:
     return p
 
 
-def _make_bash_tool(cwd: Path, default_timeout: int) -> SdkTool:
+def _make_bash_tool(
+    cwd: Path,
+    default_timeout: int,
+    extra_env: Optional[Dict[str, str]] = None,
+) -> SdkTool:
     async def handler(args: Dict[str, Any]) -> Dict[str, Any]:
         command = args.get("command")
         if not command or not isinstance(command, str):
@@ -35,12 +39,17 @@ def _make_bash_tool(cwd: Path, default_timeout: int) -> SdkTool:
         timeout = int(args.get("timeout", default_timeout))
         run_cwd = args.get("cwd")
         wd = _resolve(run_cwd, cwd) if run_cwd else cwd
+        env = None
+        if extra_env:
+            env = dict(os.environ)
+            env.update(extra_env)
         try:
             proc = await asyncio.create_subprocess_shell(
                 command,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 cwd=str(wd),
+                env=env,
             )
             try:
                 stdout, stderr = await asyncio.wait_for(
@@ -283,10 +292,13 @@ def create_builtin_tools_server(
     cwd: Optional[str] = None,
     bash_timeout: int = DEFAULT_BASH_TIMEOUT_SEC,
     include_stubs: bool = True,
+    bash_cwd: Optional[str] = None,
+    bash_env: Optional[Dict[str, str]] = None,
 ) -> SdkMcpServer:
     base = Path(cwd).resolve() if cwd else Path.cwd()
+    bash_base = Path(bash_cwd).resolve() if bash_cwd else base
     tools = [
-        _make_bash_tool(base, bash_timeout),
+        _make_bash_tool(bash_base, bash_timeout, extra_env=bash_env),
         _make_read_tool(base),
         _make_write_tool(base),
         _make_edit_tool(base),

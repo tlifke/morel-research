@@ -54,9 +54,35 @@ def main_sync() -> int:
 
     workspace = Path(os.environ.get("GATE5_WORKSPACE", str(run_dir / "workspace")))
     workspace.mkdir(parents=True, exist_ok=True)
+
+    upstream_dir = os.environ.get(
+        "UPSTREAM_DIR", "/home/tlifke/Projects/automated-w2s-research"
+    )
+    venv_bin = f"{upstream_dir}/.venv/bin"
+    orchestrator = os.environ.get(
+        "ORCHESTRATOR_API_URL", "http://localhost:8000"
+    )
+    bash_env = {
+        "PATH": f"{venv_bin}:{os.environ.get('PATH', '')}",
+        "VIRTUAL_ENV": f"{upstream_dir}/.venv",
+        "WORKSPACE_DIR": upstream_dir,
+        "ORCHESTRATOR_API_URL": orchestrator,
+        "SERVER_URL": orchestrator,
+        "DATASET_NAME": config["dataset"],
+        "DATA_DIR": f"{upstream_dir}/data/{config['dataset']}",
+        "GROUND_TRUTH_DIR": f"{upstream_dir}/labeled_data",
+        "WEAK_MODEL": config["weak_model"],
+        "STRONG_MODEL": config["strong_model"],
+        "IDEA_UID": idea_uid,
+        "IDEA_NAME": idea_name,
+        "RUN_ID": os.environ["RUN_ID"],
+        "LOCAL_MODE": "true",
+    }
     loop.mcp_servers["builtin"] = create_builtin_tools_server(
         cwd=str(workspace),
         bash_timeout=int(os.environ.get("BASH_TIMEOUT", "1800")),
+        bash_cwd=upstream_dir,
+        bash_env=bash_env,
     )
 
     start = time.time()
