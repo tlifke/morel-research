@@ -257,6 +257,78 @@ viable structural fixes, both larger than 4a scope:
 stopped here without proceeding to 4b. Recommendation in Forward-
 looking.
 
+**Upstream patch attempt — subprocess vLLM eval (2026-05-25).**
+Lifted the eval path out of `train.py`'s parent process into a fresh
+Python subprocess (`w2s_research/core/train_eval.py`, new module). The
+parent serializes eval inputs to `<output_dir>/.eval_inputs/inputs.pkl`,
+calls `wandb.finish()`, then `os.execv`s into
+`python -m w2s_research.core.train_eval --inputs-dir <dir>
+--output-json <path>`. The subprocess loads the pickle, runs
+`generate_predictions` / `evaluate_model` in a fresh CUDA context, and
+writes a JSON payload (`predictions`, `pred_distribution`, or
+`final_eval`) before exiting. Also: `import gc; del trainer; del model;
+gc.collect()` after `trainer.train()`, and `max_model_len` clamped to
+3600 in the eval inputs.
+
+Direct-Bash verification, same env as the 2026-05-25 13:22 run plus
+`AAR_MODE=true`:
+
+```
+python -m w2s_research.ideas.vanilla_w2s.run \
+  --train-size 64 --test-size 1315 --epochs 1 --seed 42 \
+  --batch-size 4 --load-in-4bit
+```
+
+- SFT completed cleanly (16 steps, 42 s wall, parent memory freed
+  reporting `Allocated: 0.83 GB / Reserved: 0.94 GB`).
+- `os.execv` handoff to `train_eval` succeeded; vLLM
+  `EngineCore_DP0` initialized, loaded Qwen3-4B-Base weights
+  (7.63 GiB) in the fresh process, allocated ~3.7 GiB KV cache, and
+  generated 1315 predictions in ~3 min.
+- Subprocess wrote `eval_output.json`: 1315 integer predictions,
+  distribution `{1: 1215, 0: 100}`.
+
+Manual submission of the resulting integer list to the Flask
+`/api/evaluate-predictions` endpoint:
+
+```json
+POST /api/evaluate-predictions  →  200 OK
+{"correct":672,"total":1315,"transfer_acc":0.5110,
+ "fixed_weak_acc":0.5360,"fixed_strong_acc":0.7176,
+ "pgr":-0.1377,"label_distribution":{"0":647,"1":668},
+ "pred_distribution":{"0":100,"1":1215}}
+```
+
+**Sharp criterion met.** One `Bash` invocation of the constructed
+training command produces a model checkpoint AND `evaluate_predictions`
+accepts the resulting integer-list submission. `pgr=-0.14` is a real
+experimental result (a 1-epoch transfer on 64 unlabeled samples
+underperforms the weak baseline, expected at this smoke size), not a
+harness failure.
+
+Caveat: `os.execv` replaces the parent Python process, so
+`run.py`'s post-`train_model` flow (PGR compute against fixed
+baselines, wandb logging, server submission via
+`call_remote_evaluation`) does **not** run when triggered through the
+upstream entrypoint. The agent in 4b must either (a) read
+`<output_dir>/.eval_inputs/eval_output.json` directly and POST to
+`/api/evaluate-predictions` itself, or (b) we swap `os.execv` for
+`subprocess.run` so `train_model` returns a populated `result` dict
+and `run.py` proceeds normally. (b) is preferable; the verification
+above used (a) for expedience. The captured patch in
+`upstream_patches.diff` reflects the as-tested `os.execv` shape; the
+swap to `subprocess.run` is a one-line refactor at the
+patch-application point.
+
+Patches captured in
+`studies/003-.../investigations/001-hardware-derisk/scripts/upstream_patches.diff`:
+new `w2s_research/core/train_eval.py`; subprocess handoff in
+`w2s_research/core/train.py`; `ThinkingBlock` capture in
+`w2s_research/research_loop/agent.py`; fixed-baseline `batch_size=32`
+in `w2s_research/ideas/vanilla_w2s/run.py` (the cached weak / ceiling
+artifacts use `bs32` regardless of the transfer model's
+`--batch-size`, so the baseline-lookup calls must pin the cache key).
+
 ### 4c — QwenCode wrapping read
 
 Verdict: **Reading A.** QwenCode (`QwenLM/qwen-code` @ `331f45e9`) is
