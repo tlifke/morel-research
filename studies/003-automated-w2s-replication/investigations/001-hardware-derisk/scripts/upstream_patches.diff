@@ -164,18 +164,22 @@ index d920407..a3da415 100644
              scheduler=config.lr_schedule,
          )
 diff --git a/w2s_research/research_loop/agent.py b/w2s_research/research_loop/agent.py
-index bcc5bd8..b72a5bc 100644
+index bcc5bd8..ae4006b 100644
 --- a/w2s_research/research_loop/agent.py
 +++ b/w2s_research/research_loop/agent.py
-@@ -23,6 +23,7 @@ from claude_agent_sdk import (
-     AssistantMessage,
-     ResultMessage,
+@@ -25,6 +25,11 @@ from claude_agent_sdk import (
      TextBlock,
-+    ThinkingBlock,
      ToolUseBlock,
  )
++try:
++    from claude_agent_sdk import ThinkingBlock
++except ImportError:
++    class ThinkingBlock:
++        pass
  
-@@ -237,6 +238,9 @@ class BaseAgent:
+ from w2s_research.config import (
+     WORKSPACE_DIR,
+@@ -237,6 +242,9 @@ class BaseAgent:
              for content in message.content:
                  if isinstance(content, TextBlock):
                      parts.append(f"[{ts}] [{self.name}] {content.text[:200]}")
@@ -185,7 +189,7 @@ index bcc5bd8..b72a5bc 100644
                  elif isinstance(content, ToolUseBlock):
                      tool_input = content.input or {}
                      detail = ""
-@@ -251,12 +255,15 @@ class BaseAgent:
+@@ -251,12 +259,15 @@ class BaseAgent:
          return None
  
      def _extract_output(self, messages) -> Dict[str, Any]:
@@ -205,7 +209,6 @@ index bcc5bd8..b72a5bc 100644
 
 diff --git a/w2s_research/core/train_eval.py b/w2s_research/core/train_eval.py
 new file mode 100644
-index 0000000..0000000
 --- /dev/null
 +++ b/w2s_research/core/train_eval.py
 @@ -0,0 +1,63 @@
