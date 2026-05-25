@@ -83,8 +83,14 @@ class ClaudeSDKClient:
                     "max_tokens": self.options.max_tokens,
                     "messages": self._history,
                 }
-                if self.options.system_prompt:
-                    kwargs["system"] = self.options.system_prompt
+                hint = self.options.tool_invocation_hint or os.getenv(
+                    "CLAUDE_AGENT_SDK_SHIM_TOOL_INVOCATION_HINT"
+                )
+                base_system = self.options.system_prompt or ""
+                if hint:
+                    base_system = (base_system + "\n\n" + hint).strip() if base_system else hint
+                if base_system:
+                    kwargs["system"] = base_system
                 if self._anthropic_tools:
                     kwargs["tools"] = self._anthropic_tools
 
