@@ -15,6 +15,12 @@ class ToolUseBlock:
 
 
 @dataclass
+class ThinkingBlock:
+    text: str
+    source: str = "block"
+
+
+@dataclass
 class ToolResultBlock:
     tool_use_id: str
     content: Any
@@ -23,7 +29,7 @@ class ToolResultBlock:
 
 @dataclass
 class AssistantMessage:
-    content: List[Union[TextBlock, ToolUseBlock]]
+    content: List[Union[TextBlock, ToolUseBlock, ThinkingBlock]]
     model: Optional[str] = None
 
 

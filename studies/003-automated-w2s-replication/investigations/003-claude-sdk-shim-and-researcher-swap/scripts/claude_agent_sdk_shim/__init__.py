@@ -4,6 +4,7 @@ from .types import (
     UserMessage,
     ResultMessage,
     TextBlock,
+    ThinkingBlock,
     ToolUseBlock,
     ToolResultBlock,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "UserMessage",
     "ResultMessage",
     "TextBlock",
+    "ThinkingBlock",
     "ToolUseBlock",
     "ToolResultBlock",
     "tool",
