@@ -39,11 +39,20 @@ def _extract_arguments(obj: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     return None
 
 
+def _extract_name(obj: Any) -> Optional[str]:
+    if not isinstance(obj, dict):
+        return None
+    for key in ("name", "function", "function_name", "tool", "tool_name"):
+        val = obj.get(key)
+        if isinstance(val, str) and val:
+            return val
+    return None
+
+
 def _is_tool_call_obj(obj: Any) -> bool:
     if not isinstance(obj, dict):
         return False
-    name = obj.get("name")
-    if not isinstance(name, str) or not name:
+    if _extract_name(obj) is None:
         return False
     return _extract_arguments(obj) is not None
 
@@ -51,7 +60,7 @@ def _is_tool_call_obj(obj: Any) -> bool:
 def _candidate_to_call(obj: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     if not _is_tool_call_obj(obj):
         return None
-    return {"name": obj["name"], "arguments": _extract_arguments(obj) or {}}
+    return {"name": _extract_name(obj), "arguments": _extract_arguments(obj) or {}}
 
 
 def _find_balanced_json_objects(text: str) -> List[Tuple[int, int, str]]:
