@@ -193,6 +193,22 @@ Default applies, with these specifics:
   cloud researcher, time-multiplexed local) is its own design space
   worth comparing.
 
+### Operational note on Anthropic-API researcher runs
+
+API-tier researcher cells (Haiku 4.5, etc.) are **deferred until
+2026-06-15** when Anthropic Pro/Max subscriptions start including
+Agent SDK API credits ($20/$100/$200 monthly on Pro/Max5x/Max20x).
+That's a ~3-week wait; local-hardware work (inv 004, inv 005's
+local-weak cell) continues in the meantime. Full ToS read at
+[`anthropic-tos-haiku-researcher.md`](anthropic-tos-haiku-researcher.md);
+verdict was yellow on one AUP clause ("utilization of inputs and
+outputs to train an AI model … without prior authorization"). Plan
+is to send Anthropic T&S a clarifying inquiry about whether
+orchestrator-only use (Claude writes code; Qwen teacher labels;
+Qwen student trains) requires authorization beyond standard ToS
+acceptance, well before the credits launch so the answer is in
+hand when we want to run.
+
 ## Open questions
 
 - After mechanical replication, do we pursue **harness engineering**
