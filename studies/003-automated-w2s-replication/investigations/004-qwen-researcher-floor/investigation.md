@@ -746,9 +746,64 @@ exactly once on matching command, never on `ls`/`echo`/`python -c`;
 POST shape (URL, method, JSON payload with `keep_alive=0`); skipped
 when flag is True but `ollama_model` is None (defensive).
 
-**Verification.** [pending — smoke runs after option-2 (quantized
-vLLM) parallel agent signals done; will populate this paragraph
-with the gate-5 outcome, latency cost, and recommendation].
+**Verification (2026-05-26).** Gate-5-style smoke executed with
+`qwen3.5:4b` + patch 4 hint + `unload_ollama_on_long_bash=True`,
+`MAX_RUNTIME_SECONDS=1500`, fresh workspace. Pre-launch state: GPU
+11849 MiB free, Ollama models=[].
+
+Run summary (log dir
+`logs/option_3a_time_multiplex_20260526_094451/`):
+
+| dimension | reading |
+|-----------|---------|
+| Wall clock | 1798 s (30 min, ran to timeout) |
+| Sessions | 14 |
+| `Bash` canonical | 208 |
+| `bash` / `BASH` / `Python` / `Code` hallucinations | 111 / 7 / 6 / 2 |
+| `evaluate_predictions` calls | **0** |
+| Checkpoints written during run | **0** |
+| `eval_output.json` produced | **0** |
+| Server submissions (leaderboard created_at > smoke start) | **0** |
+| Stop reason | `timeout` |
+
+**Sharp criterion: FAIL.** Zero valid `evaluate_predictions`
+submissions against the real target idea; server returned no 200 OK.
+
+**Qualitative read.** Patch 4's directive-first-action transferred
+cleanly — every session's first tool call was canonical `Bash`
+with the exact training command from the hint, no preamble. The
+unload-on-long-bash heuristic fires correctly on those calls
+(regex matches `python -m w2s_research`). But the agent emits
+multiple Bash invocations 2-3 s apart — much faster than the 84 s
+SFT cycle can complete — and Ollama's lazy reload between turns
+re-pins the researcher in VRAM before each `Bash` subprocess
+finishes booting. The result is the same fast-fail pattern from
+patch 4: Bash returns in 2-5 s, agent treats it as "tool error,"
+hallucinates a lowercase or uppercase variant, and the loop
+continues without ever crossing the substrate. Session 0 ended
+with explicit "I cannot execute code directly in this
+environment" narration after 17 tool calls in 51 s.
+
+Time-multiplex as currently implemented does not resolve
+substrate contention because the time slice the agent gives the
+subprocess (~2-3 s) is too short for the unload to translate
+into a usable training window. Two structural follow-ons would
+be needed:
+
+1. **Synchronous unload-and-wait**: block the agent step until
+   Ollama confirms the model is fully unloaded AND the Bash
+   subprocess has either completed or run for ≥ N seconds. The
+   current shim POSTs unload and immediately spawns Bash; the
+   model is gone by the next Ollama call but the agent already
+   fired the next Bash retry by then.
+2. **Per-Bash-call session locking**: prevent the agent loop from
+   emitting a follow-up turn until the current Bash returns.
+   Likely lives in `AutonomousAgentLoop`, not the shim.
+
+Neither fits inv 4's 5-patch budget. Recommendation in Forward-
+looking: hardware swap (16+ GB GPU) or split-host (researcher
+serving on a separate box) is now the cheapest path to inv-005
+measurement.
 
 ### 4b — Option 2: quantized vLLM eval (PGR comparability test, 2026-05-26)
 
