@@ -654,6 +654,26 @@ research question shifts, pivot to 4d (Qwen-native harness spike) or
 inv 005's Nemotron swap — the prompt-induction question becomes
 secondary to the substrate question.
 
+## One-pager
+
+Investigation 4 is likely one-pager territory regardless of how the
+Nemotron drop-in resolves. The headline shape is already clear:
+
+- **If Nemotron unblocks:** "Substrate contention, not model capability,
+  was the binding constraint for a 4B-class autonomous researcher on
+  consumer 12 GB hardware. A model-footprint swap (qwen3.5:4b →
+  nemotron-3-nano:4b) freed enough VRAM for the loop to close."
+- **If Nemotron also contends:** "The 'single researcher + training on
+  one 12 GB GPU' substrate is infeasible regardless of 4B-class model
+  choice; meaningful weak-researcher work requires either bigger
+  hardware or split-host (researcher and training on separate
+  machines)."
+
+Either result is publishable. Scaffold lives at
+`one-pagers/inv004-floor-substrate.tex` (human writes prose; figure
+candidate is the gate-5 matrix from inv 003 extended with the patch
+trajectory + Nemotron cell).
+
 If 4a and 4b both succeed with a 4B-class Qwen reaching one valid
 end-to-end iteration, investigation 005 measures the 24-hour run with
 the anchored baselines (vanilla_w2s, Opus 4.6, human, student-start).
