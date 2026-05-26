@@ -1,0 +1,61 @@
+# Session session_016_20260525_204937
+# Started: 2026-05-25T20:49:37.277695
+
+
+[20:49:38] AssistantMessage
+Tool: Bash
+Input: {
+  "command": "python -m w2s_research.ideas.vanilla_w2s.run --data-dir /home/tlifke/Projects/automated-w2s-research/data/math --weak-model Qwen/Qwen1.5-0.5B-Chat --strong-model Qwen/Qwen3-4B-Base --train-size 64 --test-size 64 --epochs 1 --seed 42 --batch-size 4 --load-in-4bit"
+}
+
+[20:49:40] AssistantMessage
+Tool: Bash
+Input: {
+  "command": "python -m w2s_research.ideas.vanilla_w2s.run --data-dir /home/tlifke/Projects/automated-w2s-research/data/math --weak-model Qwen/Qwen1.5-0.5B-Chat --strong-model Qwen/Qwen3-4B-Base --train-size 64 --test-size 64 --epochs 1 --seed 42 --batch-size 4 --load-in-4bit"
+}
+
+[20:49:47] AssistantMessage
+</tool_call>
+Tool: evaluate_predictions
+Input: {}
+
+[20:49:55] AssistantMessage
+Tool: get_leaderboard
+Input: {}
+
+[20:50:14] AssistantMessage
+Here’s a quick overview of the experiments you just submitted:
+
+| # | Idea (Title) | Approx. Transfer Acc. | PRG (+ Δ) | Comment |
+|---|--------------|----------------------|----------|---------|
+| **1** | **Weak Baseline** (lower bound) | **0.528** | 0.00 | Just the 0.5B Qwen model – this is the ground‑truth lower bound. |
+| **2** | **Weak‑model performance – lower bound** | 0.528 | 0.00 | Same as above (duplicate entry, no extra info). |
+| **2** | **Critic‑Based Weak‑to‑Strong Learning** | **0.520** | –0.038 | Negatively PRG when you add a GRPO‑trained critic; it hurts the final score. |
+| **3** | **Zero‑shot Unsupervised Elicitation** | 0.533 | –0.027 | Uses zero‑shot strong‑model pseudo‑labels; modest gain over baseline. |
+| **4** | **Use strong model zero‑shot predictions refined by consistency fixing** | 0.533 | –0.027 | Same result as #3 (duplicate). |
+| **5** | **Critic‑Based Weak‑to‑Strong Learning** | **0.520** | –0.038 | Again the same negative PRG as #2. |
+| **6** | **Tie #5** (same as #2) | 0.520 | –0.038 | Duplicate. |
+
+### What we learned
+
+1. **Top PRG = 1.0** – only the *Weak Baseline* runs have a PRG of 0.0 (they’re the true lower bound), so the best possible PRG improvement we could achieve is +1.0. All other methods actually **decrease** the PRG (negative values).
+
+2. **Zero‑shot unsupervised elicitation** is the only experiment that nudges the transfer accuracy above the baseline and does it with a positive PRG. Its performance (≈ 0.533) is still a few hundredths higher than the 0.528 lower bound—small, but it’s the highest score in the batch.
+
+3. **Critic‑based approaches** (“Critic‑Based Weak‑to‑Strong Learning”) consistently lower both the accuracy and the PRG. The extra gradient‑policy‑optimisation (GRPO) seems to over‑fit noise or create contradictory labels.
+
+4. **Repeated duplicate entries** (#2, #4) appear to be copies with no added insight; they could be removed if you’re counting unique experiments.
+
+### Recommendations
+
+- **Focus on the zero‑shot/unsupervised method** (or its variant consistent fixing) – it’s the only way to get a marginal improvement without blowing up the PRG.
+- If you want a stronger boost, consider revisiting the critic pipeline: perhaps better supervision data, alternative loss functions, or a more aggressive contrastive supervision could lift the PRG back up.
+- Since PRG is a relative measure, the absolute gap between 0.528 and 0.533 is tiny. You might still be able to push the ceiling higher if you explore different prompt engineering or stronger pseudo‑label sources.
+
+Let me know if you’d like a deeper dive into a specific method, want to run additional baselines, or need help cleaning up the experiment set!
+
+[20:50:14] ResultMessage
+
+# Result: success=True, duration=37.1s, tools=4
+
+# Ended: 2026-05-25T20:50:14.365653

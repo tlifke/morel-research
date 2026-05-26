@@ -17,7 +17,7 @@ tags:
   - weak-researcher
   - capability-floor
 created: 2026-05-25
-updated: 2026-05-25
+updated: 2026-05-26
 
 ---
 
@@ -602,6 +602,112 @@ four patches. The trajectory across patches was:
 | 2     | + anti-hallucination + error-recovery   | Regression. 26 sessions, zero native tool calls (context-budget overflow, JSON-in-markdown).      |
 | 3     | Minimal one-line extensions to patch 1  | Partial recovery. Tools fire; agent reverts to summary-text after 2 calls; one session tried train.|
 | 4     | Directive-first-action + persistence    | Partial. Right first-action, 49 tool retries, but every Bash returns in 5-7 s (GPU contention).   |
+
+### 4b — Nemotron drop-in (diagnostic, 2026-05-25)
+
+**Hypothesis.** Patch 4 hit a substrate-contention wall: Ollama
+serving qwen3.5:4b (~5.7 GiB resident) + SFT (~3 GiB) + vLLM eval
+(~7.6 GiB strong-model weights) cannot all fit on a 12 GB 3080.
+Nemotron 3 Nano 4B is ~2.8 GiB on disk and may free enough
+headroom for one full train+eval cycle to complete. **Diagnostic
+of contention, not prompt.** Patch 4's text is reused verbatim.
+
+**Setup.** `MODEL=nemotron-3-nano:4b`, patch 4 hint via
+`CLAUDE_AGENT_SDK_SHIM_TOOL_INVOCATION_HINT`, same
+`run_4b_patch.sh` plumbing (`bash_cwd`, `bash_env`, upstream-venv
+PATH), same training command shape (agent reproduced the
+smoke-shaped `--train-size 64 --test-size 64 --epochs 1
+--batch-size 4 --load-in-4bit` directly from the patch text).
+`MAX_RUNTIME_SECONDS=1500`. Gate-3 re-verified PASS against
+`nemotron-3-nano:4b` (`tool_use` round-trip via `add`, ~2 s).
+Pre-launch: GPU 11.96 GiB free; Ollama empty.
+
+**Observed runtime VRAM.** Once nemotron loads via Ollama:
+`size_vram=5,214,214,272` (~4.86 GiB) — **only ~500 MiB smaller
+than qwen3.5:4b's runtime footprint**, not half. The "2.8 GiB
+on-disk" figure understates the resident size after Ollama
+allocates a 4096-token context plus activation buffers.
+
+**Smoke log.** `logs/4b_patch_4_nemotron_dropin_20260525_204557/`.
+23 sessions, run halted at ~7 min when the <10 s-Bash hard-stop
+fired. Tool-call distribution:
+
+| tool | count |
+|------|-------|
+| `Bash` (canonical) | 25 |
+| `Read` | 2 |
+| `get_leaderboard` | 2 |
+| `evaluate_predictions` | 2 |
+
+Session durations bimodal: a cluster at 5-15 s (Bash returns
+early, no checkpoint), a smaller cluster at 30-50 s (Bash runs
+SFT but vLLM child fails). Workspace state: empty. Checkpoint
+state: one `adapter_model.safetensors` written during
+session 020 at 20:51 (SFT completed, ~16 steps), but no
+`eval_output.json` accompanies it — vLLM phase did not
+produce predictions.
+
+**Server submission state.** The orchestrator
+(`GET /api/leaderboard`) shows **zero new experiments** in
+the 20:45-20:53 window. Both `evaluate_predictions` calls
+(sessions 016 and 020) invoked the tool with **empty input**
+(`Input: {}` and `Input: {"action": "invoke", "params": {}}`)
+— the predictions field was never populated because the agent
+had no eval output to read.
+
+**Direct repro of the failure mode.** Outside the agent loop,
+the same training command run from a shell (with nemotron
+resident in Ollama) reproduces the failure:
+
+- SFT completes (~16 steps, LoRA adapter written).
+- `os.execv` into `train_eval` succeeds.
+- vLLM `EngineCore` init **fails** with
+  `RuntimeError: Engine core initialization failed`. Free VRAM
+  at vLLM-launch time is ~6.85 GiB; vLLM's per-process budget
+  needs ~7.6 GiB for Qwen3-4B-Base weights plus KV cache. The
+  `os.execv` patch from 4a releases the parent's CUDA context
+  fully, but **Ollama's nemotron resident allocation is not
+  releasable** without unloading the researcher model — which
+  the agent has no mechanism to do.
+
+This is the **same KV-cache deficit** from 4a issue #3, just
+shifted by the model swap: qwen3.5:4b left ~5.6 GiB free
+post-SFT, nemotron leaves ~6.85 GiB. Neither is enough for
+the 7.6 GiB+ vLLM budget. The deficit dropped from ~−2 GiB
+to ~−0.75 GiB — close, but not zero.
+
+**Matrix-cell summary** (mirroring the prior patches' shape):
+
+| dimension | reading |
+|-----------|---------|
+| Bash count (canonical) | 25 across 23 sessions |
+| evaluate_predictions count (valid) | **0** (2 with empty input) |
+| Checkpoint written | yes, 1 (LoRA adapter only, no predictions) |
+| Workspace state | empty |
+| Bash duration profile | 5-15 s most calls (contention signature), with rare 30-50 s outliers when SFT got far enough to attempt vLLM |
+| Server submissions | 0 |
+| Qualitative read | Prompt-fit is fine — nemotron immediately fires the canonical training Bash with no preamble, similar to patch-4 persistence. Substrate is **still binding**, at vLLM-init rather than at unsloth-init. |
+
+**Verdict — CONTENTION STILL BINDING.** The substrate-contention
+hypothesis is **partially confirmed but not resolved**:
+nemotron's runtime footprint (~4.86 GiB) is too close to
+qwen3.5:4b's (~5.7 GiB) to free the ~2 GiB needed for vLLM to
+allocate Qwen3-4B-Base weights + KV cache. Stopping criterion
+not met. Two viable next moves:
+
+1. **Hardware**: 16+ GB GPU eliminates the budget altogether
+   (recommended). Until then no 4B-class researcher Ollama
+   model leaves enough room for vLLM eval on this card.
+2. **Quantized vLLM load**: `--quantization bitsandbytes` for
+   Qwen3-4B-Base in vLLM would drop weights from 7.6 GiB to
+   ~2 GiB, fitting the nemotron headroom. Plumbing-only, no
+   research-quality tradeoff yet measured. Cheaper than option 1.
+
+Prompt-fit was **not** the failure mode. Patch 4's
+QwenCode-style hint transferred cleanly to Nemotron's tool-call
+idiom (canonical Bash, first-action directive obeyed, no
+hallucinated `Python` tool, no narration revert). A
+Nemotron-specific patch is not needed.
 
 ### 4c — QwenCode wrapping read
 

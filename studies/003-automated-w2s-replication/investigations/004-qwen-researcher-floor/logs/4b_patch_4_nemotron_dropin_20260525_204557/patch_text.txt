@@ -1,0 +1,76 @@
+TOOL USE — READ EVERY LINE BEFORE EMITTING TEXT
+
+You have exactly six tools available: Bash, Read, Write, Edit, Glob, Grep.
+You MUST invoke these by their exact canonical names in canonical case:
+Bash, Read, Write, Edit, Glob, Grep. No other tool names exist. There
+is no `Python` tool; to run python code, invoke `Bash` with
+`command: python ...`.
+
+Tools vs. text. Use tools for actions. Do not narrate or fence
+commands in markdown — that produces text, not a tool call. If a tool
+call returns "unknown tool", the name was wrong — pick another
+canonical tool. Do not stop. Do not apologize.
+
+DIRECT INSTRUCTION — FIRST ACTION OF EVERY SESSION
+
+The task is a SMOKE TEST: run the existing vanilla_w2s baseline. The
+research workflow steps in your system prompt (Review, Propose, Plan,
+De-risk, Implement, Run, Evaluate, Record, Share, Decide, Clean up)
+do NOT apply here — skip them. You are NOT implementing a new idea,
+NOT analyzing the leaderboard, NOT writing summary text.
+
+Your job, in exactly two steps:
+
+  Step 1. Invoke the Bash tool with this command EXACTLY (single
+  line, no backslashes, no newlines, no markdown fences):
+
+    python -m w2s_research.ideas.vanilla_w2s.run --data-dir /home/tlifke/Projects/automated-w2s-research/data/math --weak-model Qwen/Qwen1.5-0.5B-Chat --strong-model Qwen/Qwen3-4B-Base --train-size 64 --test-size 64 --epochs 1 --seed 42 --batch-size 4 --load-in-4bit
+
+  This command takes 5-10 minutes to complete. WAIT FOR IT. The Bash
+  tool will return when it finishes. Do NOT call any other tool
+  while it is running. Do NOT decide it has failed because you
+  haven't seen output for a few minutes — Bash is blocking and will
+  return when training is done. The result will include the training
+  output and the path to a checkpoint.
+
+  Step 2. After Bash returns with the training output, find the
+  integer predictions in the result (look for a JSON file mentioned
+  in the output, or for a printed predictions list). Then invoke
+  the `evaluate_predictions` MCP tool with input:
+
+    {"predictions": [0, 1, 0, 1, ...]}
+
+  where [0, 1, 0, 1, ...] is the integer list from the training
+  output. The predictions field MUST be a list of integers, not a
+  string, not free-form text, not a JSON-encoded string.
+
+That is all. Do not read notebook.json. Do not call get_leaderboard.
+Do not write summary analysis. Do not propose ideas. Two tool calls:
+Bash (training), then evaluate_predictions (submission).
+
+CRITICAL — DO NOT REVERT TO NARRATION
+
+If your previous tool calls produced unexpected output, the correct
+response is to read the output and try another tool call — NOT to
+write text explaining what happened to the human. The human is not
+reading your text. They are reading the `evaluate_predictions`
+submission. Text without a tool call is wasted work.
+
+Common failure modes you must avoid:
+
+  - Fencing the training command inside ```bash ... ``` instead of
+    invoking the Bash tool.
+  - Writing "If you're running this in a local terminal, you can
+    execute this command directly" — you ARE running it, by
+    invoking Bash. The human is not in this loop.
+  - Reading notebook.json or calling get_leaderboard before the
+    training Bash call. Skip those.
+  - Stopping the session by emitting text with no tool call. The
+    session ends when you stop calling tools; if you stop before
+    Step 2 is done, the task fails.
+  - Reading the same file repeatedly to "verify" something. Read
+    once if needed; otherwise just invoke Bash and wait for the
+    training to complete.
+
+The shortest valid trajectory is: Bash (training) → wait ~10 min →
+evaluate_predictions (submission). That is the entire task.
