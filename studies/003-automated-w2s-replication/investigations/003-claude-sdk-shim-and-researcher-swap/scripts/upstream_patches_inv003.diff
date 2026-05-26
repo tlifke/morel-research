@@ -1,0 +1,14 @@
+Upstream changes made during investigation 003:
+
+1) Wrote a NEW file (not a patch):
+   /home/tlifke/Projects/automated-w2s-research/w2s_research/research_loop/target_idea/idea.json
+
+   Content: a smoke-sized research direction telling the agent to run
+   vanilla_w2s on math with train_size=64, test_size=64, epochs=1, seed=42.
+   Required because agent.py reads TARGET_IDEA_FILE at session start and
+   warns when it is absent. No existing upstream code modified.
+
+2) No edits to upstream Python source files. The shim is injected via
+   PYTHONPATH so `import claude_agent_sdk` resolves to our package at
+   /home/tlifke/inv003_shim/shim_pkg/claude_agent_sdk before falling
+   through to the venv's site-packages copy.
