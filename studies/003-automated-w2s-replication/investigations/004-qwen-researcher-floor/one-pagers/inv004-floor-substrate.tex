@@ -1,0 +1,68 @@
+% One-pager template — morel-research
+%
+% Fixed structure (do not reorder):
+%   1. Title block (title, authors, date)
+%   2. Summary
+%   3. ONE figure carrying the message
+%   4. Recommendations and Limitations (3-5 bullets):
+%        - >=1 tied to the figure
+%        - >=1 on key limitations
+%        - any remaining bullets for results that didn't make the figure
+%
+% Compile with `make` (pdflatex via latexmk).
+%
+% Claude scaffolds this file but does NOT write the prose. The human writes
+% the prose. Claude may suggest structure, edits, and questions during
+% drafting; the human decides what to incorporate.
+
+\documentclass[10pt]{article}
+
+\usepackage[margin=0.9in]{geometry}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{parskip}
+
+\setlist[itemize]{leftmargin=1.2em,topsep=0.2em,itemsep=0.15em,parsep=0pt}
+
+\pagestyle{empty}
+
+\begin{document}
+
+% ----- Title block (centered, preprint style) -----
+\begin{center}
+{\Large\bfseries TITLE GOES HERE\par}
+\vspace{0.4em}
+Author One, Author Two\\[0.15em]
+{\small YYYY-MM-DD \,\textbullet\, \href{https://github.com/tlifke/morel-research}{tlifke/morel-research} \,\textbullet\, Study NNN: Investigation NNN}
+\end{center}
+\vspace{0.8em}
+
+\section*{Summary}
+\vspace{-0.2em}
+\hrule
+\vspace{0.6em}
+% One short paragraph: the question, what you did, and what you found.
+PROSE GOES HERE.
+
+\begin{figure}[h]
+  \centering
+  % Replace with the actual figure file (PDF or PNG):
+  % \includegraphics[width=0.92\linewidth]{figure.pdf}
+  \fbox{\parbox{0.86\linewidth}{\centering\vspace{2em}FIGURE PLACEHOLDER\vspace{2em}}}
+  \caption{ONE-SENTENCE CAPTION THAT SAYS WHAT TO SEE.}
+\end{figure}
+
+\section*{Recommendations and Limitations}
+\vspace{-0.2em}
+\hrule
+\vspace{0.6em}
+\begin{itemize}
+  \item TAKEAWAY TIED TO THE FIGURE.
+  \item TAKEAWAY ON A KEY LIMITATION.
+  \item OPTIONAL: ADDITIONAL RESULT THAT DIDN'T MAKE THE FIGURE.
+  \item OPTIONAL: ADDITIONAL TAKEAWAY (3--5 total).
+\end{itemize}
+
+\end{document}
