@@ -709,6 +709,87 @@ idiom (canonical Bash, first-action directive obeyed, no
 hallucinated `Python` tool, no narration revert). A
 Nemotron-specific patch is not needed.
 
+### 4b — Option 3a: same-hardware time-multiplex (2026-05-25)
+
+**Hypothesis.** The Nemotron drop-in confirmed
+substrate-contention as the binding constraint (~0.75 GiB short of
+the vLLM budget after SFT). Hardware swap or quantized vLLM both
+work, but a third option costs nothing: **time-multiplex the GPU**.
+Unload the resident Ollama researcher before any long-running Bash
+command (training + vLLM eval) fires, then let Ollama lazy-load on
+the next agent turn. Same desktop, same 3080, same 4B-class
+qwen3.5:4b — researcher and training process never co-resident in
+VRAM.
+
+**Shim feature (landed).** New opt-in
+`ClaudeAgentOptions.unload_ollama_on_long_bash: bool = False`
+plus `ollama_unload_base_url: Optional[str] = None`. When the flag
+is True and a Bash command matches the long-bash heuristic (regex
+`python\s+...\s+-m\s+w2s_research\b`, covering bare
+`python -m w2s_research.ideas.vanilla_w2s.run`, absolute interpreter
+paths, and `uv run python -m ...` wrappers), the shim POSTs to
+`<ollama_base_url>/api/generate` with `{"model": <model>,
+"keep_alive": 0, "prompt": ""}` before launching the subprocess.
+No-op when False — byte-identical to prior behavior. Reload is
+implicit on the next agent step (~10-20 s latency hit).
+
+Plumbed through `create_builtin_tools_server(...)` with
+`unload_ollama_on_long_bash`, `ollama_model`,
+`ollama_unload_base_url` kwargs. The runner script
+(`option_3a_runner.py`) passes `options.model` as the
+`ollama_model` so unload targets whichever tag is serving the
+researcher.
+
+Unit tests (`scripts/tests/test_ollama_unload.py`): detection
+heuristic positive/negative; default-off invariant; unload fires
+exactly once on matching command, never on `ls`/`echo`/`python -c`;
+POST shape (URL, method, JSON payload with `keep_alive=0`); skipped
+when flag is True but `ollama_model` is None (defensive).
+
+**Verification.** [pending — smoke runs after option-2 (quantized
+vLLM) parallel agent signals done; will populate this paragraph
+with the gate-5 outcome, latency cost, and recommendation].
+
+### 4b — Option 2: quantized vLLM eval (PGR comparability test, 2026-05-26)
+
+**Setup.** Upstream patch (`a161ae8`) plumbs `--quantization
+{none,bitsandbytes,awq}` through `train_eval.py` →
+`generate_predictions`/`evaluate_model` → `predict_batch_labels`,
+where the kwarg is conditionally inserted into the `LLM(...)`
+constructor only when not None/"none". Patch appended to
+`investigations/001-hardware-derisk/scripts/upstream_patches.diff`.
+
+Paired evaluation against the inv 4a checkpoint
+(`results/math_vanilla_w2s/Qwen_Qwen3_4B_Base_..._bs4_..._test_size1315_train_size64/seed_42/`)
+with `train_eval` invoked twice against the same pickled inputs,
+`--gpu-mem-util 0.9`, flashinfer bypassed as in 4a.
+
+| cell | quantization | transfer_acc | PGR | pred_dist (0/1) | correct |
+|------|--------------|--------------|-----|------------------|---------|
+| A    | none         | 0.5125       | −0.1293 | 100 / 1215    | 674 / 1315 |
+| B    | bitsandbytes | 0.5202       | −0.0874 | 138 / 1177    | 684 / 1315 |
+| Δ    | —            | +0.0076      | **+0.0419** | +38 zeros | +10 |
+
+Prediction agreement A vs B: **1271 / 1315 = 96.65%** (44 flipped
+predictions, all in the 0→1 / 1→0 direction with a net shift toward
+predicting class 0 under quantization).
+
+**Verdict — CONFOUND.** |ΔPGR| = 0.042 exceeds the 0.02
+acceptability threshold by ~2×. Quantization shifts a meaningful
+fraction of predictions (3.3%) on a fixed checkpoint, large enough
+that PGR differences in any downstream inv-005 measurement would
+not be cleanly attributable to weak-researcher behavior versus
+substrate. The 96.65% agreement rate masks the directionality of
+the disagreement: bitsandbytes systematically predicts class 0
+more often, lowering the absolute |PGR| but not random-walk-style
+— a real shift. Option 2 is **not acceptable** as the inv-005
+measurement substrate without further work (recalibrating
+baselines under quantization, or constraining the quantization to
+the strong-ceiling baseline as well so the comparison is symmetric).
+
+Logs: `~/Projects/morel-research-runs/option2/{eval_A,eval_B}.{log,json}`
++ `paired_summary.json` on the desktop.
+
 ### 4c — QwenCode wrapping read
 
 Verdict: **Reading A.** QwenCode (`QwenLM/qwen-code` @ `331f45e9`) is

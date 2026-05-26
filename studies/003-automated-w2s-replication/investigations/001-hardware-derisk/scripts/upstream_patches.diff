@@ -275,3 +275,105 @@ new file mode 100644
 +
 +if __name__ == "__main__":
 +    main()
+
+
+# === 004/option-2: --quantization flag in train_eval.py (commit a161ae8) ===
+# Adds opt-in vLLM weight quantization to the eval subprocess, plumbed end-to-end:
+# eval.py {evaluate_model, generate_predictions} accept `quantization` kwarg and pass
+# through to predict_batch_labels. vllm_inference.predict_batch_labels conditionally
+# inserts the `quantization` LLM kwarg only when not None/"none" (preserves baseline
+# byte-identical behavior). train_eval.py exposes --quantization CLI flag.
+diff --git a/w2s_research/core/eval.py b/w2s_research/core/eval.py
+index 8d42f75..24a6d7b 100644
+--- a/w2s_research/core/eval.py
++++ b/w2s_research/core/eval.py
+@@ -25,6 +25,7 @@ def evaluate_model(
+     original_dataset: Optional[Dataset] = None,
+     max_model_len: Optional[int] = None,
+     gpu_memory_utilization: float = 0.8,
++    quantization: Optional[str] = None,
+ ) -> Dict[str, Any]:
+     """
+     Evaluate model on test dataset with detailed metrics using vLLM.
+@@ -67,6 +68,7 @@ def evaluate_model(
+         return_probabilities=False,
+         max_model_len=max_model_len,
+         gpu_memory_utilization=gpu_memory_utilization,
++        quantization=quantization,
+     )
+ 
+     predictions = result['predictions']
+@@ -134,6 +136,7 @@ def generate_predictions(
+     lora_checkpoint: Optional[str] = None,
+     max_model_len: Optional[int] = None,
+     gpu_memory_utilization: float = 0.8,
++    quantization: Optional[str] = None,
+ ) -> Dict[str, Any]:
+     """
+     Generate predictions on test dataset WITHOUT requiring ground truth labels.
+@@ -172,6 +175,7 @@ def generate_predictions(
+         return_probabilities=False,
+         max_model_len=max_model_len,
+         gpu_memory_utilization=gpu_memory_utilization,
++        quantization=quantization,
+     )
+ 
+     predictions = result['predictions']
+diff --git a/w2s_research/core/train_eval.py b/w2s_research/core/train_eval.py
+index be7c0c9..a2d6d62 100755
+--- a/w2s_research/core/train_eval.py
++++ b/w2s_research/core/train_eval.py
+@@ -21,6 +21,8 @@ def main():
+     parser = argparse.ArgumentParser()
+     parser.add_argument("--inputs-dir", required=True)
+     parser.add_argument("--output-json", required=True)
++    parser.add_argument("--quantization", default=None, choices=[None, "none", "bitsandbytes", "awq"], help="vLLM weight quantization")
++    parser.add_argument("--gpu-mem-util", type=float, default=None)
+     args = parser.parse_args()
+ 
+     inputs_dir = Path(args.inputs_dir)
+@@ -35,7 +37,8 @@ def main():
+         model_name=inputs["model_name"],
+         lora_checkpoint=inputs["lora_checkpoint"],
+         max_model_len=inputs["max_model_len"],
+-        gpu_memory_utilization=inputs.get("gpu_memory_utilization", 0.8),
++        gpu_memory_utilization=(args.gpu_mem_util if args.gpu_mem_util is not None else (inputs.get("gpu_memory_utilization") or 0.8)),
++        quantization=args.quantization if args.quantization and args.quantization != "none" else inputs.get("quantization"),
+     )
+ 
+     if aar_mode:
+diff --git a/w2s_research/core/vllm_inference.py b/w2s_research/core/vllm_inference.py
+index c209477..b89ecce 100644
+--- a/w2s_research/core/vllm_inference.py
++++ b/w2s_research/core/vllm_inference.py
+@@ -54,6 +54,7 @@ def predict_batch_labels(
+     current_labels: Optional[List[int]] = None,
+     gpu_memory_utilization: float = 0.8,
+     max_model_len: Optional[int] = None,
++    quantization: Optional[str] = None,
+ ) -> Dict:
+     """
+     Convenience function for one-off vLLM inference with automatic batch sizing.
+@@ -96,16 +97,20 @@ def predict_batch_labels(
+     print(f"Using max_model_len={max_model_len} for vLLM")
+     
+     # Create engine
+-    llm = LLM(
++    llm_kwargs = dict(
+         model=model_name,
+         max_model_len=max_model_len,
+         tensor_parallel_size=1,
+         enable_lora=lora_checkpoint is not None,
+         max_loras=1,
+-        max_lora_rank=max_lora_rank,  # Use rank from checkpoint to avoid dimension mismatch
++        max_lora_rank=max_lora_rank,
+         enforce_eager=True,
+         gpu_memory_utilization=gpu_memory_utilization,
+     )
++    if quantization is not None and quantization.lower() != "none":
++        llm_kwargs["quantization"] = quantization
++        print(f"Using vLLM quantization={quantization}")
++    llm = LLM(**llm_kwargs)
+     
+     prompts = []
+     for i in range(len(formatted_dataset)):
