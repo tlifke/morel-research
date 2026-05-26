@@ -1,8 +1,11 @@
 import asyncio
 import fnmatch
+import json
 import os
 import re
 import subprocess
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -10,6 +13,30 @@ from .tools import SdkMcpServer, SdkTool, create_sdk_mcp_server
 
 
 DEFAULT_BASH_TIMEOUT_SEC = 1800
+DEFAULT_OLLAMA_BASE_URL = "http://127.0.0.1:11434"
+LONG_BASH_PATTERN = re.compile(r"python(?:\s+\S+)*\s+-m\s+w2s_research\b")
+
+
+def is_long_bash_command(command: str) -> bool:
+    if not isinstance(command, str):
+        return False
+    return bool(LONG_BASH_PATTERN.search(command))
+
+
+def unload_ollama_model(model: str, base_url: str, timeout: float = 10.0) -> Dict[str, Any]:
+    url = base_url.rstrip("/") + "/api/generate"
+    payload = json.dumps({"model": model, "keep_alive": 0, "prompt": ""}).encode("utf-8")
+    req = urllib.request.Request(
+        url, data=payload, headers={"Content-Type": "application/json"}, method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            body = resp.read().decode("utf-8", errors="replace")
+            return {"ok": True, "status": resp.status, "body": body[:500]}
+    except urllib.error.HTTPError as e:
+        return {"ok": False, "status": e.code, "error": str(e)}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 
 
 def _ok(text: str) -> Dict[str, Any]:
@@ -31,6 +58,9 @@ def _make_bash_tool(
     cwd: Path,
     default_timeout: int,
     extra_env: Optional[Dict[str, str]] = None,
+    unload_ollama: bool = False,
+    ollama_model: Optional[str] = None,
+    ollama_base_url: Optional[str] = None,
 ) -> SdkTool:
     async def handler(args: Dict[str, Any]) -> Dict[str, Any]:
         command = args.get("command")
@@ -43,6 +73,13 @@ def _make_bash_tool(
         if extra_env:
             env = dict(os.environ)
             env.update(extra_env)
+        if unload_ollama and ollama_model and is_long_bash_command(command):
+            base_url = ollama_base_url or os.environ.get(
+                "OLLAMA_UNLOAD_BASE_URL", DEFAULT_OLLAMA_BASE_URL
+            )
+            await asyncio.get_event_loop().run_in_executor(
+                None, unload_ollama_model, ollama_model, base_url
+            )
         try:
             proc = await asyncio.create_subprocess_shell(
                 command,
@@ -294,11 +331,21 @@ def create_builtin_tools_server(
     include_stubs: bool = True,
     bash_cwd: Optional[str] = None,
     bash_env: Optional[Dict[str, str]] = None,
+    unload_ollama_on_long_bash: bool = False,
+    ollama_model: Optional[str] = None,
+    ollama_unload_base_url: Optional[str] = None,
 ) -> SdkMcpServer:
     base = Path(cwd).resolve() if cwd else Path.cwd()
     bash_base = Path(bash_cwd).resolve() if bash_cwd else base
     tools = [
-        _make_bash_tool(bash_base, bash_timeout, extra_env=bash_env),
+        _make_bash_tool(
+            bash_base,
+            bash_timeout,
+            extra_env=bash_env,
+            unload_ollama=unload_ollama_on_long_bash,
+            ollama_model=ollama_model,
+            ollama_base_url=ollama_unload_base_url,
+        ),
         _make_read_tool(base),
         _make_write_tool(base),
         _make_edit_tool(base),
