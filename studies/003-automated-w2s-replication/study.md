@@ -192,6 +192,44 @@ Default applies, with these specifics:
   and student-training across hosts (Tailscale-attached MacBook,
   cloud researcher, time-multiplexed local) is its own design space
   worth comparing.
+- **Long-running-tool harness design.** Inv 004's Option 3a (time-multiplex)
+  surfaced a harness bug that's structurally distinct from substrate
+  contention and prompt induction: the shim's `Bash` returns in seconds
+  for a multi-minute subprocess, so the agent retries the same training
+  command hundreds of times instead of waiting on a single invocation.
+  Both qwen3.5:4b and Nemotron 3 Nano 4B emit fluent canonical `Bash`
+  calls at this stage — the floor here is the *harness*, not the model.
+
+  Likely the scope of its own investigation (or a sibling study about
+  harness affordances for local-LLM researchers). Four candidate paths,
+  roughly ordered cheap-to-structural:
+
+  - **(A) Synchronous-blocking Bash** — add `bash_max_wait: int | None`
+    to `ClaudeAgentOptions`; when set, the shim blocks on subprocess
+    completion up to the timeout before returning. MVP unblock; doesn't
+    generalize beyond a single long-running tool slot.
+  - **(B) Detached Bash + `check_job` tool** — Bash returns a job id
+    immediately; agent calls a separate `check_job` (or `await_job`)
+    tool to poll. Mirrors how Claude Code itself handles
+    `run_in_background`. Structurally the right answer; biggest prompt
+    surface change.
+  - **(C) Streaming-progress Bash** — Bash returns incrementally
+    (lines or chunks) until the subprocess exits, with the model
+    receiving progress as tool-result deltas. Best UX for human
+    observers; most invasive on the shim and on Ollama's response
+    handling.
+  - **(D) Job-queue orchestrator** — a thin out-of-loop process owns
+    long-running jobs and exposes status over an MCP-style interface.
+    Cleanest separation; pushes the most complexity into infra; the
+    natural endpoint if the researcher needs to manage *several*
+    concurrent training runs (the paper's nine-agent setup).
+
+  Recommendation: land (A) as the immediate unblock so we can get a
+  closed-loop inv-005 reading on whether prompt-fluent qwen3.5:4b
+  can drive a real PGR iteration at all. (B) and (D) are the
+  structurally right long-term answers and belong in a follow-on
+  investigation or harness-design study. (C) is a UX nice-to-have,
+  not load-bearing.
 
 ### Operational note on Anthropic-API researcher runs
 

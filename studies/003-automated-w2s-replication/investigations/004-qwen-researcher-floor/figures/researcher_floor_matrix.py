@@ -174,11 +174,11 @@ group_boundaries = [
 fig.update_layout(
     barmode="stack",
     annotations=annotations,
-    xaxis=dict(title="tool calls observed per smoke", range=[0, 360]),
+    xaxis=dict(title="tool calls observed per smoke", range=[0, 460]),
     yaxis=dict(autorange="reversed", title=None, tickfont=dict(size=11)),
-    height=620,
-    legend=dict(orientation="h", yanchor="bottom", y=-0.22, xanchor="center", x=0.5),
-    margin=dict(l=260, r=380, t=110, b=130),
+    height=760,
+    legend=dict(orientation="h", yanchor="bottom", y=-0.13, xanchor="center", x=0.5),
+    margin=dict(l=260, r=80, t=110, b=240),
 )
 
 for i, (boundary_y, group_title) in enumerate(group_boundaries):
@@ -193,27 +193,44 @@ for i, (boundary_y, group_title) in enumerate(group_boundaries):
         line=dict(color=MOREL_COLORS["axis_gridline"], width=1, dash="dot"),
     )
 
-footer_lines = [
-    "<b>Failure-mode legend</b>",
-    f"<span style='color:{FAILURE_MODES['prompt']['color']}'>● prompt / tool-name failure</span>",
-    f"<span style='color:{FAILURE_MODES['structural_pass']['color']}'>● loop closes; no useful work</span>",
-    f"<span style='color:{FAILURE_MODES['substrate']['color']}'>● substrate contention (VRAM)</span>",
-    f"<span style='color:{FAILURE_MODES['async_bash']['color']}'>● async-Bash agent-loop</span>",
-    "",
-    "<b>Direct-Bash control (no LLM in loop)</b>",
-    "Option 2: paired vLLM eval (unquantized vs bnb int4)",
-    "→ ΔPGR = 0.042 on identical checkpoint = <b>CONFOUND</b>",
-    "(quantization is not viable for the inv-5 measurement plan)",
+mode_legend_lines = [
+    "<b>Failure-mode legend (verdict label colors)</b>",
+    "&nbsp;&nbsp;"
+    + f"<span style='color:{FAILURE_MODES['prompt']['color']}'>● prompt / tool-name failure</span>"
+    + "&nbsp;&nbsp;&nbsp;"
+    + f"<span style='color:{FAILURE_MODES['structural_pass']['color']}'>● loop closes; no useful work</span>"
+    + "&nbsp;&nbsp;&nbsp;"
+    + f"<span style='color:{FAILURE_MODES['substrate']['color']}'>● substrate contention (VRAM)</span>"
+    + "&nbsp;&nbsp;&nbsp;"
+    + f"<span style='color:{FAILURE_MODES['async_bash']['color']}'>● async-Bash agent-loop</span>",
 ]
 
 fig.add_annotation(
-    text="<br>".join(footer_lines),
+    text="<br>".join(mode_legend_lines),
     xref="paper", yref="paper",
-    x=1.02, y=1.0,
-    xanchor="left", yanchor="top",
-    align="left",
+    x=0.5, y=-0.22,
+    xanchor="center", yanchor="top",
+    align="center",
     showarrow=False,
-    font=dict(size=11, color=MOREL_COLORS["muted_text"]),
+    font=dict(size=12, color=MOREL_COLORS["muted_text"]),
+    bgcolor="rgba(0,0,0,0)",
+)
+
+control_lines = [
+    "<b>Direct-Bash control (LLM out of loop)</b>",
+    "Option 2: paired vLLM eval, unquantized vs bnb int4, identical checkpoint &nbsp;→&nbsp; "
+    "ΔPGR = 0.042 &nbsp; (96.7% prediction agreement, 44 directional flips) &nbsp;=&nbsp; "
+    f"<span style='color:{FAILURE_MODES['substrate']['color']}'><b>quantization is a CONFOUND, not viable for inv-5</b></span>",
+]
+
+fig.add_annotation(
+    text="<br>".join(control_lines),
+    xref="paper", yref="paper",
+    x=0.5, y=-0.30,
+    xanchor="center", yanchor="top",
+    align="center",
+    showarrow=False,
+    font=dict(size=12, color=MOREL_COLORS["muted_text"]),
     bgcolor="rgba(0,0,0,0)",
 )
 
@@ -226,5 +243,5 @@ apply_morel_template(
 
 png_path = OUT_DIR / "researcher_floor_matrix.png"
 html_path = OUT_DIR / "researcher_floor_matrix.html"
-fig.write_image(str(png_path), width=1500, height=620, scale=2, engine="kaleido")
+fig.write_image(str(png_path), width=1500, height=760, scale=2, engine="kaleido")
 fig.write_html(str(html_path), include_plotlyjs="cdn")
