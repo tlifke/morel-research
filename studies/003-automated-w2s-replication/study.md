@@ -164,6 +164,34 @@ Default applies, with these specifics:
   do the harness components generalize off the W2S task? This is
   where the study could connect back to [[study-002]]'s principle
   framework.
+- **Researcher-capability spectrum.** Inv 004 surfaced that local 4B-class
+  Qwen/Nemotron can't drive a complete PGR iteration on a single 12 GB
+  GPU — substrate contention is binding. A natural follow-on is to
+  hold the W2S student/teacher fixed (Qwen 0.5B / Qwen 4B per the
+  paper) and vary the researcher across a capability/cost spectrum:
+
+  - **Local-weak end:** Qwen 3.5 4B / Nemotron 3 Nano 4B (inv 004 —
+    bounded by hardware on consumer GPU).
+  - **API-cheap middle:** Claude Haiku 4.5, Gemini 3.1 Flash Lite,
+    GPT-5 Mini equivalents. Tens-to-low-hundreds of dollars per
+    24h run; high signal-to-cost ratio.
+  - **API-frontier end:** Claude Opus 4.6 (paper's baseline),
+    Gemini 3 Pro, GPT-5. Comparable to the paper's headline.
+  - **Larger-but-local middle:** Nemotron 70B, Qwen 3 32B, Gemma 4
+    27B — fit on rented A100/H100 spot capacity ($0.50-2/hr); good
+    for ablations the API tier can't cheaply support.
+
+  The reframed research question becomes: **how much of the
+  Opus-4.6 PGR can each tier recover, and what's the cost
+  curve?** Implementation note: build hard $-budget gates into
+  the runner (max total token spend, max wall-clock per
+  researcher), and treat the budget itself as a research
+  parameter — different tiers will hit different walls.
+- **Substrate-aware decoupling.** Inv 004 also surfaced that the
+  paper's setup conflates two roles on one GPU. Splitting researcher
+  and student-training across hosts (Tailscale-attached MacBook,
+  cloud researcher, time-multiplexed local) is its own design space
+  worth comparing.
 
 ## Open questions
 
