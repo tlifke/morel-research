@@ -395,6 +395,85 @@ localized client-side bug, not a substrate/model question.
    `evaluate_predictions` call → orchestrator accepts integer-list
    submission → session ends with a real result.
 
+#### Finding 6 — Reference-returning Bash patch landed, hang still reproduces (2026-05-31 PM)
+
+Implemented the Anthropic-style "tools return small structured
+summaries; full artifacts live on disk" pattern as planned. The shim's
+`_make_bash_tool` now returns a body containing exit_code, elapsed,
+stdout/stderr byte counts, path to the full log, detected event
+markers via regex, and the last 40 lines of stdout — typically ~1,500
+chars instead of 31K+. Implementation verified in isolation: markers
+detect correctly (`LORA_ADAPTER_WRITTEN`, `EVAL_PREDICTIONS_WRITTEN`,
+`VLLM_EVAL_COMPLETE`, etc.); summary length scales as expected.
+
+**The turn-1 hang reproduced with the small-summary payload.** That
+falsifies the "tool-result size triggers an anthropic-SDK
+serialization issue" hypothesis (finding 5's hypothesis (a)). The
+root cause is something else.
+
+#### Finding 7 — Thinking-block handling in shim was incomplete; fixing it did NOT resolve the hang
+
+Captured via `SHIM_DEBUG=1` that nemotron's first response is two
+blocks: `thinking` then `tool_use`. The shim's `_run_turn` response
+loop had no branch for `btype == "thinking"`, so thinking blocks were
+silently dropped from both `blocks_out` (session log) and
+`assistant_content_for_history` (what goes into the next POST).
+Theory: anthropic SDK 0.78 client-side validates the history shape
+and rejects/hangs on tool_use that isn't paired with the preceding
+thinking block + signature.
+
+Patched: added a `thinking` branch that captures the block text +
+signature into both the session-log Frontier and the history dict.
+Added `ThinkingBlock` to `types.py` and re-exported from
+`__init__.py`. Patches captured in
+[`scripts/upstream_shim_patches/`](scripts/upstream_shim_patches/).
+
+**Hang still reproduces with the thinking-preservation fix landed.**
+So the thinking-handling bug was real (and worth fixing on its own
+merits — reasoning models lose information without it), but it's not
+the trigger for the turn-1 async hang.
+
+Remaining open hypotheses for the turn-1 hang:
+
+- **anthropic SDK 0.78 thinking-feature gating**: the SDK may require
+  a specific beta header (e.g. `extended-thinking-2025-XX-XX`) to
+  send thinking blocks; without it the SDK silently drops or
+  validation-fails. Worth checking the SDK source for `thinking`
+  handling on the request side.
+- **httpx connection pool semantics**: the first request's response
+  may not be fully released, leaving the pool empty when turn 1's
+  POST tries to acquire a connection. Worth inspecting via
+  `httpx` event hooks or by setting `limits=httpx.Limits(...)`.
+- **Ollama Anthropic-compat output shape**: maybe Ollama's thinking
+  block omits a field the anthropic SDK depends on at deserialize
+  time, leaving the SDK's internal state inconsistent.
+- **Shim coercion vs. native protocol** (tracked separately):
+  Tyler's question of whether the whole shim approach is the
+  problem. The Anthropic Messages API is rich (signatures, betas,
+  rich content blocks) and Ollama's Anthropic-compat layer is newer
+  than its OpenAI-compat layer. A shim that talks OpenAI-compat to
+  Ollama and presents Anthropic-shape upstream might dodge an entire
+  class of these bugs. Worth scoping as inv 006 candidate before any
+  reliable 24-hour run.
+
+**Q1 sharp criterion status**: still not met. We have a clean
+end-to-end turn-0 → real Bash subprocess → real eval_output.json
+on disk, captured ground-truth. We don't have the agent's
+`evaluate_predictions` submission because the agent hangs after the
+Bash tool result returns.
+
+**Files committed for this iteration**:
+
+- `scripts/upstream_shim_patches/builtins_summary.diff` — reference-
+  returning Bash tool
+- `scripts/upstream_shim_patches/client_thinking.diff` — thinking
+  block branch in response handler
+- `scripts/upstream_shim_patches/types_thinking.diff` —
+  `ThinkingBlock` added
+- `scripts/upstream_shim_patches/init_thinking.diff` — re-export
+- `handoff-artifact-design.md` — proposed context-reset / handoff
+  pattern, to be tried after the hang is unblocked
+
 The per-model specs at
 [`../../model-specs/`](../../model-specs/) document both models'
 conventions and quirks so the next investigation doesn't pay this

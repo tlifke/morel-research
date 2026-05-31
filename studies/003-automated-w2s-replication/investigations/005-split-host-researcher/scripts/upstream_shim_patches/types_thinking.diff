@@ -1,0 +1,15 @@
+--- types_pre_thinking.py	2026-05-31 14:05:30.149608185 -0500
++++ /home/tlifke/inv003_shim/shim_pkg/claude_agent_sdk/types.py	2026-05-31 13:59:56.216179057 -0500
+@@ -15,6 +15,12 @@
+ 
+ 
+ @dataclass
++class ThinkingBlock:
++    thinking: str = ""
++    signature: Optional[str] = None
++
++
++@dataclass
+ class ToolResultBlock:
+     tool_use_id: str
+     content: Any
