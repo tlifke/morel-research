@@ -277,7 +277,54 @@ is to change `DEFAULT_BASE_URL` from a module-level constant to a
 function call evaluated per-`ClaudeSDKClient`-instance — also flagged
 for inv 001's upstream-patch tracker.
 
-#### Bug 3 — debug instrumentation for future agent-loop runs
+#### Finding 3 — Ollama's qwen3.5 tool renderer is mismatched
+
+After bugs 1 and 2 were fixed and a v5 split-host smoke ran cleanly
+(Mac Ollama getting traffic, 8 tools registered in `_tool_index`,
+patch-4 hint injected into the system prompt), qwen3.5:4b still
+emitted **markdown ```bash code fences** rather than structured
+`tool_use` blocks or any of the patterns the shim's
+`parser.synthesize_tool_use_blocks` recognizes (`<function_call>`,
+`<tool_call>`, fenced JSON).
+
+Cause traced to a known Ollama upstream issue:
+[`ollama/ollama#14601`](https://github.com/ollama/ollama/issues/14601),
+filed 2026-03-03. Ollama renders Qwen3.5 tool prompts using the
+**Qwen3 Hermes JSON renderer** instead of the **Qwen3-Coder XML
+renderer** the Qwen3.5 family was actually trained on. The result is
+that tool definitions arrive at the model in a format it doesn't
+recognize, so it falls back to writing example commands as markdown
+inside narration text. Inv 005 confirms the bug also affects the
+Anthropic-compat `/v1/messages` path (shared final prompt
+construction).
+
+Full details, the workaround (embed tool definitions in the system
+prompt as Hermes-style JSON), and references are in
+[`../../model-specs/qwen3.5-4b.md`](../../model-specs/qwen3.5-4b.md).
+
+**Why this changes inv 004's read again.** Inv 004's substrate-
+contention conclusion was based on the assumption that the model's
+patch-trajectory `Tool: Bash` log lines represented structured
+`tool_use` blocks being dispatched and failing. We now think most of
+those were narration-text matches on the string `Bash` (in markdown
+fences), not structured calls. The substrate conclusion may still be
+right — vLLM eval needing >12 GiB co-resident is independent
+arithmetic — but the *path* by which inv 004 reached it (counting
+"Bash fires" per patch) was measuring something else entirely.
+
+**Path forward for inv 005's Q3**: switch to nemotron first (per Q4),
+since its native format (OpenAI `tool_calls`) is well-supported by
+Ollama's translator. If nemotron emits structured `tool_use` and Bash
+subprocess logs appear in `BASH_DEBUG_LOG_DIR`, that's a clean Q3
+baseline. The Qwen3.5 path then becomes a separate work item:
+implement the system-prompt-embed workaround in the shim's client.py.
+
+The per-model specs at
+[`../../model-specs/`](../../model-specs/) document both models'
+conventions and quirks so the next investigation doesn't pay this
+diagnostic cost again.
+
+#### Bug 4 — debug instrumentation for future agent-loop runs
 
 The shim's `_make_bash_tool` handler was patched (in both shim_pkg/
 and scripts/ copies) to write subprocess `stdout`/`stderr`/`exit_code`/
