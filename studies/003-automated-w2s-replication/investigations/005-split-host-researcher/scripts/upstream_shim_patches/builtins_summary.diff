@@ -1,0 +1,147 @@
+--- builtins_pre_summary.py	2026-05-31 14:05:30.133608098 -0500
++++ /home/tlifke/inv003_shim/shim_pkg/claude_agent_sdk/builtins.py	2026-05-31 13:50:21.149577247 -0500
+@@ -1,6 +1,7 @@
+ import asyncio
+ import fnmatch
+ import os
++import re
+ import subprocess
+ from pathlib import Path
+ from typing import Any, Dict, List, Optional
+@@ -26,11 +27,118 @@
+     return p
+ 
+ 
++_BASH_MARKER_PATTERNS = [
++    (re.compile(r"adapter_model\.safetensors"), "LORA_ADAPTER_WRITTEN"),
++    (re.compile(r"\[Memory\] GPU memory freed"), "SFT_MEMORY_FREED"),
++    (re.compile(r"^\s*100%\|.+?\|\s*(\d+)/(\d+) \[", re.MULTILINE),
++     "PROGRESS_COMPLETE"),
++    (re.compile(r"Engine core initialization failed"), "VLLM_INIT_FAIL"),
++    (re.compile(r"math\.h: No such file or directory"), "FLASHINFER_JIT_FAIL"),
++    (re.compile(r"eval_output\.json"), "EVAL_PREDICTIONS_WRITTEN"),
++    (re.compile(r"Processed prompts:\s*100%"), "VLLM_EVAL_COMPLETE"),
++    (re.compile(r"CUDA out of memory|torch\.OutOfMemoryError"), "CUDA_OOM"),
++    (re.compile(r"redis not available but required for remote cache"),
++     "BENIGN_REDIS_WARNING"),
++]
++
++
++def _detect_bash_markers(out, err):
++    text = out + "\n" + err
++    markers = []
++    for pattern, label in _BASH_MARKER_PATTERNS:
++        m = pattern.search(text)
++        if not m:
++            continue
++        groups = m.groups()
++        if groups:
++            try:
++                markers.append(label + ": " + "/".join(str(g) for g in groups if g))
++            except Exception:
++                markers.append(label)
++        else:
++            markers.append(label)
++    return markers
++
++
++def _tail_lines(text, n):
++    lines = text.rstrip().split("\n")
++    if len(lines) <= n:
++        return text.rstrip()
++    return "\n".join(lines[-n:])
++
++
++def _summarize_bash_result(*, command, out, err, exit_code, elapsed, stdout_path):
++    """Inv 005 reference-returning summary: small structured body; full log on disk."""
++    tail_lines_n = int(os.environ.get("BASH_RESULT_TAIL_LINES", "40"))
++    small_threshold = int(os.environ.get("BASH_RESULT_SMALL_BYTES", "2000"))
++    out_bytes = len(out.encode("utf-8", errors="replace"))
++    err_bytes = len(err.encode("utf-8", errors="replace"))
++
++    lines = [
++        f"exit_code: {exit_code}",
++        f"elapsed: {elapsed:.2f}s",
++    ]
++    if stdout_path:
++        lines.append(f"stdout: {out_bytes} bytes -> {stdout_path}")
++    else:
++        lines.append(f"stdout: {out_bytes} bytes (set BASH_DEBUG_LOG_DIR to persist)")
++    if err.strip():
++        lines.append(f"stderr: {err_bytes} bytes")
++    else:
++        lines.append("stderr: (empty)")
++
++    markers = _detect_bash_markers(out, err)
++    if markers:
++        lines.append("")
++        lines.append("detected:")
++        for m in markers:
++            lines.append(f"  - {m}")
++
++    if out_bytes <= small_threshold:
++        lines.append("")
++        lines.append("--- stdout ---")
++        lines.append(out.rstrip())
++    else:
++        lines.append("")
++        lines.append(f"--- stdout: last {tail_lines_n} lines ---")
++        lines.append(_tail_lines(out, tail_lines_n))
++        if stdout_path:
++            lines.append("")
++            lines.append(
++                f"(full {out_bytes} bytes on disk; "
++                f"Read {stdout_path} for complete log)"
++            )
++        else:
++            lines.append("")
++            lines.append(
++                f"(stdout was {out_bytes} bytes; only the tail shown — "
++                "set BASH_DEBUG_LOG_DIR to persist the full log)"
++            )
++
++    if err.strip():
++        if err_bytes <= small_threshold:
++            lines.append("")
++            lines.append("--- stderr ---")
++            lines.append(err.rstrip())
++        else:
++            lines.append("")
++            lines.append(f"--- stderr: last {tail_lines_n} lines ---")
++            lines.append(_tail_lines(err, tail_lines_n))
++            if stdout_path:
++                lines.append(
++                    f"(full {err_bytes} bytes alongside stdout at {stdout_path})"
++                )
++
++    return "\n".join(lines)
++
++
+ def _make_bash_tool(
+     cwd: Path,
+     default_timeout: int,
+     extra_env: Optional[Dict[str, str]] = None,
+ ) -> SdkTool:
++    _bash_call_counter = {"n": 0}
++
+     async def handler(args: Dict[str, Any]) -> Dict[str, Any]:
+         command = args.get("command")
+         if not command or not isinstance(command, str):
+@@ -107,9 +215,14 @@
+                     f.write(f"\n--- stderr ({len(err)} chars) ---\n{err}\n")
+             except Exception:
+                 pass
+-        body = f"exit_code: {proc.returncode}\n\n--- stdout ---\n{out}"
+-        if err.strip():
+-            body += f"\n--- stderr ---\n{err}"
++        body = _summarize_bash_result(
++            command=command,
++            out=out,
++            err=err,
++            exit_code=proc.returncode,
++            elapsed=elapsed,
++            stdout_path=debug_path,
++        )
+         if proc.returncode != 0:
+             return {"content": [{"type": "text", "text": body}], "is_error": False}
+         return _ok(body)

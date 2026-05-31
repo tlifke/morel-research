@@ -1,0 +1,31 @@
+--- client_pre_thinking.py	2026-05-31 14:05:30.141608140 -0500
++++ /home/tlifke/inv003_shim/shim_pkg/claude_agent_sdk/client.py	2026-05-31 13:59:40.671823791 -0500
+@@ -150,6 +150,28 @@
+                         else:
+                             blocks_out.append(TextBlock(text=block.text))
+                             assistant_content_for_history.append({"type": "text", "text": block.text})
++                    elif btype == "thinking":
++                        # Inv 005 finding 7: nemotron and other reasoning models
++                        # emit thinking blocks alongside tool_use. The shim must
++                        # preserve them in history; otherwise the next turn's
++                        # POST is malformed (tool_use without paired thinking)
++                        # and the anthropic SDK hangs client-side without
++                        # sending the request. The thinking signature, when
++                        # present, must travel with the block.
++                        thinking_text = getattr(block, "thinking", None) or getattr(block, "text", "") or ""
++                        signature = getattr(block, "signature", None)
++                        try:
++                            from .types import ThinkingBlock as _TB
++                            blocks_out.append(_TB(thinking=thinking_text, signature=signature))
++                        except Exception:
++                            # types.py may not define ThinkingBlock yet; this is
++                            # a no-op for the session log but doesn't affect
++                            # the history shape.
++                            pass
++                        _hist_entry = {"type": "thinking", "thinking": thinking_text}
++                        if signature:
++                            _hist_entry["signature"] = signature
++                        assistant_content_for_history.append(_hist_entry)
+                     elif btype == "tool_use":
+                         tu = ToolUseBlock(id=block.id, name=block.name, input=block.input or {})
+                         blocks_out.append(tu)
