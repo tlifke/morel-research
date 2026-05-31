@@ -319,6 +319,82 @@ subprocess logs appear in `BASH_DEBUG_LOG_DIR`, that's a clean Q3
 baseline. The Qwen3.5 path then becomes a separate work item:
 implement the system-prompt-embed workaround in the shim's client.py.
 
+#### Finding 4 — Ollama context length and tool-result size
+
+Two related discoveries while running the nemotron smoke:
+
+- **Ollama default context (4096 tokens) is too small for any
+  w2s-loop turn.** Even turn 0 (system prompt + tool definitions +
+  user kick-off) hit 4,336 tokens. Ollama silently truncates with a
+  WARN in the runner log; the API still returns 200 OK so the agent
+  sees a malformed response. Verified at 4K (truncates turn 0), 16K
+  (turn 0 succeeds, turn 1 truncates), and 64K (both turns succeed in
+  inv 005's nemotron smoke). `OLLAMA_CONTEXT_LENGTH=65536` is the
+  inv 005 minimum.
+- **Bash tool results in this codebase are huge.** A single
+  `python -m w2s_research.ideas.vanilla_w2s.run --train-size 64
+  --test-size 64 --load-in-4bit` returns ~31,250 chars (~7K tokens)
+  of unsloth boilerplate + training progress + vLLM logs. With the
+  system prompt + tools + assistant history, turn 1 lands at ~30K
+  tokens. By turn 3 we'd be at 50K+.
+
+The right long-term fix is shim-side truncation of `Bash` tool
+results (return only the last N lines + `...truncated...`), with the
+agent's session log preserving the full output via
+`BASH_DEBUG_LOG_DIR`. Tracked separately. For now, 64K context is the
+operating floor for any w2s-loop research model.
+
+Both findings are documented in
+[`../../model-specs/nemotron-3-nano-4b.md`](../../model-specs/nemotron-3-nano-4b.md).
+
+#### Finding 5 — Nemotron + split-host produces a real end-to-end Bash cycle (but the agent hangs after the result)
+
+The 2026-05-31 nemotron split-host smoke (run dir
+`q3_smoke_nemotron-3-nano_4b_p4_20260531_131319`) achieved the
+following on a single agent-fired Bash:
+
+- **Q3 behavioral parity at turn 0**: 1 canonical `Tool: Bash`, 0
+  lowercase variants, 0 invented names, 0 markdown narration. No
+  preamble. Exact match for the predicted Q3 shape, contrasting
+  sharply with inv 004's reported numbers (which are now suspected
+  to have measured rejected tool_use blocks).
+- **Real subprocess**: shim's patched Bash tool ran for 94.56 s,
+  exit_code 0. SFT 16 steps completed, LoRA adapter on disk.
+  `os.execv` → vLLM eval phase, 64 prompts processed, `eval_output
+  .json` with `pred_distribution {1: 59, 0: 5}` on the math dataset.
+- **VRAM trace as predicted by inv 004's figures**: idle 537 MiB →
+  SFT peak 9.3 GiB → vLLM peak 10.6 GiB. No co-resident researcher
+  consuming desktop VRAM; comfortable headroom throughout.
+
+**Then the agent went idle after `_invoke_tool` returned the 31K-char
+tool result.** Process state: `S (sleeping)` in `do_epoll_wait`, 0%
+CPU, no second POST to Mac in 138+ seconds. Mac Ollama TCP connection
+established but Recv-Q=0, Send-Q=0, no new bytes sent. Not a hang
+inside the shim's Bash handler (which returned with the result on
+disk); not a hang on Mac (which is idle); appears to be an async
+client/queue interaction with very large tool results.
+
+**Q1 sharp criterion status**: not yet met (no `evaluate_predictions`
+submission against the orchestrator), but every structural piece up
+to and including the eval cycle is verified. The remaining gap is a
+localized client-side bug, not a substrate/model question.
+
+**Next work**:
+
+1. Debug the agent's post-tool-result async hang. Hypotheses to test:
+   (a) anthropic AsyncClient body-serialization issue with very large
+   tool_result blocks; (b) queue.put deadlock in the shim's
+   `_run_turn`; (c) the upstream agent.py consumer broke silently on
+   message_callback or `_format_message`.
+2. Implement the shim-side `Bash` tool-result truncation (e.g. last
+   2K chars + `...truncated, full log at <path>...`). This both
+   removes the hang's trigger and reduces context cost for later
+   turns — the model rarely needs unsloth progress bars to decide
+   next action.
+3. With (1) or (2) in place, complete the Q1 cycle:
+   `evaluate_predictions` call → orchestrator accepts integer-list
+   submission → session ends with a real result.
+
 The per-model specs at
 [`../../model-specs/`](../../model-specs/) document both models'
 conventions and quirks so the next investigation doesn't pay this

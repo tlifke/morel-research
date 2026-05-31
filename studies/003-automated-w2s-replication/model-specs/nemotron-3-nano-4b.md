@@ -8,7 +8,10 @@
   (Nemotron-H family — NVIDIA's hybrid SSM design).
 - **Parameters**: 3.97B.
 - **Context**: up to 262K tokens per the model card; runner registers
-  4096 KV by default in Ollama unless overridden.
+  4096 KV by default in Ollama unless overridden. Inv 005 found 4K is
+  far too small for the w2s research loop — even a single agent turn
+  with system prompt + tool definitions overflows it. See "Required
+  context length" below.
 - **Quantization on disk**: Q4_K_M, ~2.84 GB.
 - **VRAM resident**: ~4.86 GiB on a 3080 with default settings, ~5.25
   GiB on M2 (verified 2026-05-31). Higher than the on-disk size because
@@ -84,6 +87,44 @@ some clients. That's the *older* Llama-3.1-based Nemotron Nano, not
 the Nemotron-3 (Nemotron-H) generation we're using. Separate model;
 separate behavior.
 
+## Required context length
+
+The w2s research loop pumps **large** tool results back into the
+model's context — a single `Bash` running the smoke training command
+returns ~31,250 chars of stdout (~7K tokens of unsloth boilerplate +
+training progress + vLLM logs). Combined with the upstream system
+prompt + patch-4 hint + tool definitions + assistant history, a single
+round-trip can exceed:
+
+| Turns | Approx prompt tokens |
+|------:|---------------------:|
+| 0 (system + tools + user kick-off) | ~4,300 |
+| 1 (above + Bash result for smoke training) | ~30,000 |
+| 2-3 (with multiple tool round-trips) | 50K+ |
+
+**Inv 005 default**: Ollama on the Mac must be started with
+`OLLAMA_CONTEXT_LENGTH=65536` (64K) at minimum. 4K and 16K both
+silently truncated the prompt (Ollama drops the oldest tokens with
+`"truncating input prompt"` in the runner log; the API still returns
+200 OK so the agent never sees the error). Verified 2026-05-31:
+
+- `OLLAMA_CONTEXT_LENGTH=4096` (default): truncated at turn 0 with the
+  system prompt + tools alone (4,336 → 4,096). Agent produces zero
+  output, run hangs in retry storm.
+- `OLLAMA_CONTEXT_LENGTH=16384`: turn 0 succeeded; turn 1 truncated
+  (30,076 → 16,384) when the Bash result came back.
+- `OLLAMA_CONTEXT_LENGTH=65536`: passing turn 0 and turn 1 cleanly in
+  the inv 005 nemotron smoke (run dir
+  `q3_smoke_nemotron-3-nano_4b_p4_20260531_*`).
+
+**KV cache cost on Mac M2 16GB**: At Q8_0 quant with flash attention,
+~2 GiB at 4K → ~5–6 GiB at 64K. Comfortable on a 16 GB M2.
+
+**Better long-term fix**: truncate or summarize `Bash` tool results in
+the shim before passing to the model (only the last N lines + a
+"...truncated..." marker), so 64K is bounded headroom rather than
+required minimum. Tracked separately.
+
 ## Sampling recommendations
 
 **Authors' Ollama defaults**: `temp=1, top_p=1`. The Nemotron-3 paper
@@ -118,8 +159,29 @@ that creates latency problems in inv 005's Q2.
   retroactive read**: same SdkMcpServer identity bug present; those
   "Bash calls" may have been intent that bounced off `_invoke_tool`,
   not real subprocess runs.
-- **Inv 005**: not yet tested with the harness fixes applied. Up next
-  per the inv 005 Q4 plan.
+- **Inv 005 split-host smoke** (2026-05-31, run dir
+  `q3_smoke_nemotron-3-nano_4b_p4_20260531_131319`):
+  - Mac-hosted nemotron at 64K context emitted structured `Tool: Bash`
+    as first action with the exact patch-4 training command, zero
+    preamble or narration.
+  - Patched shim Bash tool spawned the real subprocess, captured
+    `bash_0001.log` with full stdout/stderr/exit_code/elapsed.
+    Subprocess ran 94.56 s end-to-end: 16 SFT steps, LoRA adapter
+    written, `os.execv` → vLLM eval, 64 prompts processed at ~6.5
+    it/s, `eval_output.json` produced with `pred_distribution {1: 59,
+    0: 5}`.
+  - Desktop VRAM during the run: idle 537 MiB → SFT peak 9.3 GiB →
+    `os.execv` drop → vLLM peak 10.6 GiB. Headroom comfortable
+    throughout because the researcher is off-host.
+  - **Q3 behavioral parity at turn 0**: 1 canonical Bash, 0 lowercase
+    variants, 0 invented names, 0 markdown narration. Exact match for
+    the predicted Q3 shape.
+  - **Agent hang after tool result return**: after the 31,250-char
+    Bash result returned, the agent went idle in async (0% CPU, 0
+    bytes sent on the Mac socket for 138 s+). Never emitted the
+    second POST to Mac. No `evaluate_predictions` call. Separate
+    client-side async bug to chase before Q1's sharp criterion can
+    close.
 
 ## Why nemotron may behave better than qwen3.5 in this harness
 
