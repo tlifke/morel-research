@@ -494,25 +494,349 @@ contained the model's `tool_use` blocks (`AssistantMessage`), not the
 `tool_result` content (`UserMessage`). Without it, we'd be guessing at
 what the subprocess actually did — exactly the gap that hid bug 1.
 
-### Q1 — Substrate sharp criterion
+#### Finding 8 — Agent-team debugging: the "turn-1 hang" was likely a misdiagnosis (2026-05-31 PM)
 
-_To be populated once bugs 1 and 2 are fixed and we have one clean
-end-to-end run on the split-host substrate._
+Three sub-agents ran in parallel against this investigation: (a) a
+focused debug agent on the turn-1 hang, (b) a designer for a v2
+shim, (c) an implementer for the handoff-artifact module from
+finding 6's Anthropic-essay design. Their findings together reframe
+the inv 005 narrative.
+
+##### Sub-agent 1 — could not reproduce the hang
+
+Three reproducers exercising progressively more of the real code
+path all PASS:
+
+1. `debug-notes/inv005_repro.py` — direct anthropic 0.78 client,
+   turn 0 with `[thinking, tool_use]` against Mac Ollama, turn 1
+   with tool_result. PASS, ~6s.
+2. `debug-notes/inv005_repro2.py` — same plus 95-second
+   `asyncio.sleep` between turns to mimic Bash, 1.2 KB tool_result
+   body, full httpx/httpcore DEBUG. PASS, ~108s. `httpcore` correctly
+   closes the stale keepalive socket after the 95-second idle gap
+   and opens a fresh one for turn 1. No pool deadlock.
+3. `debug-notes/inv005_repro3.py` — full shim lifecycle, two
+   back-to-back `ClaudeSDKClient` sessions with consumer break-on-
+   `ResultMessage`. PASS.
+
+Re-reading the run that originally surfaced the hang
+(`q3_smoke_nemotron-3-nano_4b_p4_20260531_140053`), the session
+actually progressed past turn 1 through **three** tool calls (Bash
+→ Grep → Read) before the external `pkill`. The "no `# Ended` line"
+in the log signals an external kill, not an in-loop hang. Findings
+5–7 above attribute the observed behavior to a hang the sub-agent
+could not reproduce.
+
+##### Three earlier hypotheses falsified with direct evidence
+
+- **anthropic SDK beta gating**. The shim's `_run_turn`
+  (`client.py:99-114`) never forwards `options.betas` to
+  `messages.create`. The wire request has no beta header in either
+  direction; repro 1 sends thinking blocks without any beta and
+  Mac returns 200.
+- **httpx connection pool**. Repro 2's `httpcore` DEBUG logs show
+  `close.started` → `close.complete` → `connect_tcp.started` after
+  the long idle. No pool deadlock.
+- **Ollama Anthropic-compat thinking shape**. Confirmed via direct
+  curl: Mac returns `{"type":"thinking","thinking":"..."}` with
+  no `signature` field. But `ThinkingBlockParam.signature: Required`
+  in anthropic 0.78 is a `typing_extensions.Required` *type hint
+  only* — not enforced at runtime. The unsigned thinking block
+  flows out and Ollama accepts it on the way back. Repro 1 confirms
+  the round-trip works. So the thinking-handling patch (finding 7)
+  was a real bug fix on its own merits — reasoning models lose
+  information without it — but it was not the hang trigger.
+
+##### Orphan-task lifecycle bug (real but orthogonal)
+
+`ClaudeSDKClient.query()` does `asyncio.create_task(self._run_turn())`
+and discards the handle. `__aexit__` does not cancel it before
+closing the underlying `AsyncAnthropic`. In the current code path
+this doesn't manifest as a hang (repro 3 confirms), but in edge
+cases where the consumer breaks the `async for` early (e.g. an
+exception in `message_callback` at upstream `agent.py:212`), the
+orphan task attempts `self._client.messages.create()` against a
+closed client and surfaces as a noisy traceback rather than a clean
+shutdown. The sub-agent proposed a lifecycle patch (not yet
+applied) that tracks the task handle and cancels-and-awaits it in
+`__aexit__`.
+
+##### Confidence
+
+Low on the actual hang root cause (because the reproducer set
+couldn't trigger it). Medium-high on having ruled out the three
+named hypotheses. What would raise confidence on next observation:
+`py-spy dump --pid <agent>` at hang and `tcpdump -i tailscale0 -A
+port 11434` on the desktop side to confirm whether the SDK ever
+calls `send()`. Without one of those the hang stays black-box.
+
+#### Finding 9 — shim_v2: OpenAI-compat-to-Ollama, Anthropic-shape facade
+
+Sub-agent 2 designed and prototyped a v2 replacement for the shim
+that talks `POST /v1/chat/completions` to Ollama (OpenAI-compat
+endpoint) while keeping the upstream API surface identical — same
+import names from `claude_agent_sdk`, same `async with`/`query`/
+`receive_response` shape. Per-model adapters handle the wire-format
+differences (`OpenAINative` for nemotron's native shape;
+`Qwen35HermesEmbed` for the `#14601` workaround that embeds Hermes
+tool defs in the system prompt and parses `<tool_call>` tags;
+`Generic` fallback).
+
+Design + prototype + tests live at
+[`shim_v2/`](shim_v2/). 17 unit tests pass on the conversion
+functions and adapter selection. The prototype replaces the
+`anthropic` SDK in the request path with raw `httpx` — removes the
+package the inv 005 hang correlated with.
+
+**Features dropped** (acceptable for this study):
+- Extended-thinking signatures across turns. OpenAI-compat has no
+  equivalent. v2 keeps `ThinkingBlock.thinking` text for logging but
+  doesn't round-trip a signature.
+- Streaming. Single non-streaming POST per turn. Iteration latency
+  here is dominated by Bash subprocesses, not researcher generation.
+- `betas` / `cache_control` / `permission_mode` / `setting_sources`
+  / `cli_path`. Accepted as no-ops by `ClaudeAgentOptions`.
+
+**Sharp criterion for v2 validation**: a 4-iteration nemotron
+split-host smoke produces 4 valid `evaluate_predictions`
+submissions accepted by the orchestrator.
+
+#### Finding 10 — handoff_writer module + Anthropic-essay context-reset wiring (designed; not yet activated)
+
+Sub-agent 3 implemented the handoff-artifact pattern from finding 6
+as a self-contained module: `extract_iteration_state(messages,
+server_acks) -> dict`, `write_handoff(state, output_dir,
+iteration) -> Path`, `read_handoff(path) -> dict`,
+`make_bootstrap_message(handoff_path, iteration_n) -> str`. Five
+unit tests pass on synthetic message inputs.
+
+The schema follows
+[`handoff-artifact-design.md`](handoff-artifact-design.md): YAML
+file with `idea`, `attempted_command`, `result` (including
+`ran_to_completion` and orchestrator `server_ack`), `tool_call_shape`
+(canonical/lowercase/invented Bash counts + evaluate_predictions
+count), `bash_markers` (extracted by the reference-returning Bash
+tool from finding 6), `learnings`, `next_action_hints`, and
+`failure_log`. `ran_to_completion` is True only if the session
+*both* called `evaluate_predictions` *and* received a non-None
+`server_acks` — submission without acknowledgement is not
+load-bearing state.
+
+The upstream wiring (patches `AutonomousAgentLoop._run_session` to
+extract state after each session and inject the bootstrap as the
+next session's prompt) is **drafted but not yet applied**. Patch
+file + apply instructions in
+[`scripts/upstream_w2s_patches/`](scripts/upstream_w2s_patches/).
+Activation is gated on `HANDOFF_ENABLE=1` so it's a strict no-op
+when the env var is unset.
+
+#### Finding 11 — shim_v2 live probe + real smoke (2026-05-31 PM)
+
+##### Standalone probe
+
+`shim_v2/probe/probe_nemotron.py` is a minimal harness: one fake
+"echo" tool whose handler returns instantly (no SFT, no GPU, no
+Bash subprocess). Exercises exactly the turn-1 round-trip that v1
+was reported to hang on.
+
+Result, against live Mac-served `nemotron-3-nano:4b` via
+`/v1/chat/completions`:
+
+```
+[probe] turn1 ToolUseBlock  name=echo  input={'message': 'hello shim v2'}
+[probe] ResultMessage stop_reason='end_turn'
+[probe] elapsed=15.8s  assistant_turns=2  result_messages=1
+[probe] echo_invocations=1
+[probe] PASS: structured tool round-trip + end_turn on turn 2
+```
+
+15.8 seconds end-to-end. Turn 2 fires, tool result is received,
+model concludes with `end_turn`. **No ThinkingBlock emitted** —
+under `/v1/chat/completions` Ollama doesn't expose a separate
+thinking field, sidestepping the signature-pairing question
+entirely.
+
+##### Real smoke under full w2s load
+
+`logs/v2_smoke_nemotron-3-nano_4b_p4_20260531_144256/`, killed
+early at ~21 minutes (user reclaimed the GPU). MAX_RUNTIME=25 min,
+nemotron researcher on Mac, real w2s system prompt + tool defs +
+real Bash subprocess.
+
+Aggregate:
+- 14 sessions, 17 tool calls total across the run
+- 5 Bash subprocesses (3 full SFT+vLLM cycles, 1 syntax-error,
+  1 `ls`-based exploration)
+- 2 `eval_output.json` files written to disk
+  (`test_size=62` and `test_size=64` variants)
+- **Zero `evaluate_predictions` calls. Orchestrator never received
+  a submission.**
+
+Per-session shape:
+
+| Session | tools | duration | notes                              |
+|--------:|------:|---------:|------------------------------------|
+| 000     | 1     | 161.3s   | Bash → end_turn cleanly. **v2 turn-1 round-trip works.** |
+| 001-011 | 0     | ~16s ea  | Fresh session, model says "done", end_turn. No memory of session 0. |
+| 012     | 11    | ~9 min   | Bash → Read → Glob → Read → Grep → Bash → Glob → Bash → Grep → Grep → Grep. Multi-turn exploration. |
+| 013     | 5     | ~6 min   | Bash → Grep → Grep → Read → Glob. Stopped by external kill mid-run. |
+
+What this proves:
+- v2's transport works under realistic load. Multi-turn `tool_use`
+  / `tool_result` round-trips fire reliably; the same session can
+  carry 11 tool calls.
+- The Q1 sharp criterion's actual blocker is **the model never
+  chains into `evaluate_predictions`** after running training. The
+  reference-returning Bash result includes
+  `EVAL_PREDICTIONS_WRITTEN: results/.../eval_output.json` as a
+  detected marker, but nemotron reads it as "task done" rather than
+  "now submit those predictions."
+- The `AutonomousAgentLoop` does iterate sessions, but each fresh
+  session has no memory of what prior sessions accomplished. That
+  is exactly the gap the handoff pattern in finding 10 closes.
+
+##### Reframed picture of inv 005 to date
+
+The "turn-1 hang" of findings 5–7 was almost certainly a
+misdiagnosis: external kills mistaken for hangs, possibly
+compounded by Mac Ollama log file capture being stale and giving
+the impression no second POST went out. The patches we landed
+(isinstance fix, `OLLAMA_ANTHROPIC_BASE_URL` lazy resolution,
+reference-returning Bash, thinking-block handling) are all real
+bug fixes on their own merits, but only the first two were
+load-bearing for the loop-completing-at-all question.
+
+The real Q1 blocker is **model behavior**: nemotron under patch 4
+does not reliably chain to `evaluate_predictions`, even within a
+single session containing 11 tool calls. Two non-mutually-exclusive
+paths to unblock this:
+
+1. **Wire the handoff** (finding 10's patch). After session 0
+   writes its handoff with `bash_markers` showing
+   `EVAL_PREDICTIONS_WRITTEN`, session 1's bootstrap message
+   explicitly says "iteration 0 ran Bash and wrote eval_output.json
+   at `<path>`; you have not submitted predictions yet." The
+   pointed framing may push the model into submission where
+   patch 4's "now do step 2" framing didn't.
+2. **Augment patch 4** with a stronger post-Bash directive. We
+   agreed *not* to tweak the patch in this session — the handoff
+   path is preferred because it generalizes to multi-iteration
+   research, not just "submit predictions".
+
+### Q1 — Substrate sharp criterion: not yet met, but the failure mode has been narrowed
+
+**Status as of 2026-05-31**:
+
+- Substrate (split-host Mac researcher + desktop SFT+eval): works,
+  verified by multiple sessions producing real `eval_output.json`
+  files on disk under both v1 and v2 shims.
+- Transport (shim ↔ Ollama): v1 may be salvageable per finding 8;
+  v2 is conclusively working per finding 11.
+- Tool execution: works end-to-end, verified by the patched Bash
+  tool's subprocess logs and the reference-returning summaries
+  with markers like `EVAL_PREDICTIONS_WRITTEN`.
+- **Final mile (predictions → `evaluate_predictions` →
+  orchestrator)**: not met. Model behavior gap, addressable by the
+  handoff pattern (drafted, not yet applied).
 
 ## Decisions
 
-_Populate as work proceeds. Format:_
+> **Decision 1 — Reframe findings 5–7 as model-behavior, not
+> harness, on closer inspection** (2026-05-31).
+> Three independent agent-team reproducers + the v2 real smoke
+> both show the agent loop continues past turn 1 cleanly. The
+> observed "hang" was likely the model stopping (end_turn after
+> Bash returns) being mistaken for the shim hanging. Earlier
+> patches stand on their own merits but don't change Q1's path.
 
-> **Decision N — short title** (date)
-> What was chosen, alternatives considered, why this won.
+> **Decision 2 — Adopt shim_v2 design as the inv 005 transport
+> going forward; defer full migration to inv 006** (2026-05-31).
+> v2's probe + real smoke pass conclusively under the relevant
+> conditions. We keep v1 alongside because (a) it works for the
+> already-completed inv 003/004 work, (b) v2 is still untested
+> under qwen3.5 Hermes-embed, and (c) the full migration would
+> touch `test_gate_5_full_loop.py` and other inv 003 callers.
+> The v2 launcher (`scripts/run_smoke_v2.sh`) and side-by-side
+> package (`/home/tlifke/inv003_shim/shim_v2_pkg/`) make the swap
+> a one-line PYTHONPATH change for future investigations.
+
+> **Decision 3 — Do not tweak patch 4 to push toward
+> `evaluate_predictions`** (2026-05-31).
+> Prefer the handoff-artifact path because it generalizes to
+> multi-iteration research, not just to forcing one submission.
+> If handoff alone doesn't close Q1, revisit.
 
 ## Results
 
-_To be populated._
+- Split-host topology is verified working end-to-end at the
+  transport + tool-execution level. Bash subprocesses fire,
+  produce real LoRA checkpoints and eval outputs, return cleanly
+  through the shim to the agent loop.
+- Per-model specs documented at `model-specs/qwen3.5-4b.md` and
+  `model-specs/nemotron-3-nano-4b.md`.
+- Shim_v2 (OpenAI-compat) prototype at `shim_v2/` with 17 passing
+  tests and a passing live probe.
+- Handoff-artifact module at `scripts/handoff_writer.py` with 5
+  passing tests; upstream wiring patch drafted at
+  `scripts/upstream_w2s_patches/`.
+- VRAM trace under split-host: desktop GPU idle (537 MiB) →
+  SFT peak ~9.3 GiB → vLLM peak ~10.6 GiB. Headroom is comfortable
+  throughout because the researcher is off-host.
+- Q1 sharp criterion not yet met; the gap is one model-behavior
+  step (chain to `evaluate_predictions`).
 
 ## Forward-looking
 
-_To be populated._
+Next-iteration plan, in order:
+
+1. **Apply the handoff_writer wiring patch** (drafted, gated on
+   `HANDOFF_ENABLE=1`). Re-run the v2 nemotron smoke with handoff
+   active. Sharp criterion is unchanged from Q1: one valid
+   `evaluate_predictions` submission accepted by the orchestrator.
+2. If (1) closes Q1, immediately attempt the 4-iteration smoke
+   (decision 2's v2 validation criterion). Output expected:
+   `.agent_handoff/iteration_NN.yaml` for N in 0..3, each
+   carrying a non-None `server_acks` from the orchestrator.
+3. If (1) doesn't close Q1 even with the pointed bootstrap, the
+   gap is more fundamental than handoff alone. Revisit decision 3
+   and consider augmenting patch 4 with a post-Bash directive.
+4. Apply sub-agent 1's lifecycle patch (track and cancel the
+   orphan `_run_turn` task in `__aexit__`). Strict correctness
+   improvement; not blocking Q1.
+5. Update the `model-specs/nemotron-3-nano-4b.md` "What we've
+   observed in this study" section with the v2 probe + smoke
+   results, including the "doesn't chain to `evaluate_predictions`
+   after Bash" observation as a model-behavior datapoint.
+
+Once Q1 closes:
+
+- **Q2 (researcher speed cost)** becomes measurable from the
+  handoff timestamps + per-iteration wall-clock recorded in each
+  artifact. Compare against inv 4a's direct-Bash control
+  (~94 s end-to-end SFT+eval, no researcher in the loop).
+- **Q3 (behavioral parity)** becomes measurable from
+  `tool_call_shape` aggregates in the handoff artifacts
+  (canonical_bash, lowercase_bash, invented_bash,
+  evaluate_predictions counts). The first probe + real smoke
+  already give us strong canonical-Bash fidelity from nemotron
+  under v2.
+- **Q4 (qwen3.5 vs nemotron)** stays deferred until the qwen3.5
+  Hermes-embed adapter in `shim_v2` is exercised live (and probably
+  also until the qwen3.5 renderer bug `#14601` is verified
+  fixed or the workaround is confirmed reliable).
+
+Reference artifacts that inv 006+ can inherit:
+
+- `shim_v2/` — design + prototype + tests for the OpenAI-compat
+  shim. Candidate inv 006 scope: the "full-migration + 4-iteration
+  validation" effort.
+- `handoff-artifact-design.md` + `scripts/handoff_writer.py` —
+  the context-reset / handoff pattern, generalizable to any
+  multi-iteration autonomous research loop.
+- `scripts/upstream_shim_patches/` and
+  `scripts/upstream_w2s_patches/` — the diff bundle that brings
+  a fresh checkout of the inv 003 shim and the upstream w2s repo
+  to inv 005's state.
 
 ## Things to flag
 
