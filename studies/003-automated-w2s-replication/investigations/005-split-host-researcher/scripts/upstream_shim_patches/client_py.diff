@@ -1,0 +1,48 @@
+--- /tmp/client_pre_inv005.py	2026-05-31 12:39:04.434487147 -0500
++++ /home/tlifke/inv003_shim/shim_pkg/claude_agent_sdk/client.py	2026-05-31 12:37:53.547660506 -0500
+@@ -18,7 +18,21 @@
+ from .parser import synthesize_tool_use_blocks
+ 
+ 
+-DEFAULT_BASE_URL = os.getenv("OLLAMA_ANTHROPIC_BASE_URL", "http://100.97.4.17:11434")
++_DEFAULT_BASE_URL_FALLBACK = "http://100.97.4.17:11434"
++
++
++def _resolve_default_base_url() -> str:
++    """Read OLLAMA_ANTHROPIC_BASE_URL at call time, not at module-import time.
++
++    See inv 005 Methods bug 2: the previous module-level capture meant any
++    OLLAMA_ANTHROPIC_BASE_URL set after `import claude_agent_sdk` had no
++    effect, silently routing the agent to the desktop fallback.
++    """
++    return os.getenv("OLLAMA_ANTHROPIC_BASE_URL", _DEFAULT_BASE_URL_FALLBACK)
++
++
++# Back-compat alias for any external code that imported the constant.
++DEFAULT_BASE_URL = _resolve_default_base_url()
+ 
+ 
+ class ClaudeSDKClient:
+@@ -34,7 +48,12 @@
+     def _build_tool_index(self) -> None:
+         allowed = set(self.options.allowed_tools or [])
+         for server_key, server in (self.options.mcp_servers or {}).items():
+-            if not isinstance(server, SdkMcpServer):
++            # Duck-type instead of isinstance(server, SdkMcpServer): the shim
++            # ships parallel claude_agent_sdk and claude_agent_sdk_shim packages
++            # whose SdkMcpServer classes have distinct identity, and callers
++            # routinely import create_builtin_tools_server from one while the
++            # agent loop checks against the other's class. See inv 005 Methods.
++            if not hasattr(server, "tools") or not isinstance(getattr(server, "tools", None), dict):
+                 continue
+             for tool_name, t in server.tools.items():
+                 qualified = f"mcp__{server_key}__{tool_name}"
+@@ -48,7 +67,7 @@
+                 })
+ 
+     async def __aenter__(self) -> "ClaudeSDKClient":
+-        base_url = self.options.base_url or DEFAULT_BASE_URL
++        base_url = self.options.base_url or _resolve_default_base_url()
+         api_key = self.options.api_key or os.getenv("ANTHROPIC_API_KEY") or "ollama"
+         self._client = anthropic.AsyncAnthropic(base_url=base_url, api_key=api_key)
+         return self

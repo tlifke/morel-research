@@ -18,6 +18,10 @@ SHIM_BASE="/home/tlifke/inv003_shim"
 UPSTREAM_DIR="/home/tlifke/Projects/automated-w2s-research"
 
 : "${MAC_OLLAMA_URL:?need MAC_OLLAMA_URL, e.g. http://100.106.241.33:11434}"
+# Belt-and-suspenders: even with the upstream fix in client.py reading
+# OLLAMA_ANTHROPIC_BASE_URL per-instantiation, set it before Python starts
+# so we don't depend on the inv 005 upstream patch having landed.
+export OLLAMA_ANTHROPIC_BASE_URL="$MAC_OLLAMA_URL"
 MODEL=${MODEL:-qwen3.5:4b}
 MAX_RUNTIME_SECONDS=${MAX_RUNTIME_SECONDS:-900}
 PATCH_NUM=${PATCH_NUM:-4}

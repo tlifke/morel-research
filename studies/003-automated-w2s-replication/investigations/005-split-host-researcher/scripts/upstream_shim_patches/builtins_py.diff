@@ -1,0 +1,75 @@
+--- /tmp/builtins_pre_inv005.py	2026-05-31 12:39:04.446486798 -0500
++++ /home/tlifke/inv003_shim/shim_pkg/claude_agent_sdk/builtins.py	2026-05-31 12:38:03.395246172 -0500
+@@ -32,6 +32,8 @@
+     default_timeout: int,
+     extra_env: Optional[Dict[str, str]] = None,
+ ) -> SdkTool:
++    _bash_call_counter = {"n": 0}
++
+     async def handler(args: Dict[str, Any]) -> Dict[str, Any]:
+         command = args.get("command")
+         if not command or not isinstance(command, str):
+@@ -43,6 +45,23 @@
+         if extra_env:
+             env = dict(os.environ)
+             env.update(extra_env)
++
++        # Inv 005 debug logging: write every Bash subprocess invocation to
++        # BASH_DEBUG_LOG_DIR/bash_NNN_<pid>.log if the env var is set.
++        # No-op when unset. Strictly additive — does not change handler return.
++        debug_dir = (env or os.environ).get("BASH_DEBUG_LOG_DIR") or os.environ.get("BASH_DEBUG_LOG_DIR")
++        _bash_call_counter["n"] += 1
++        call_n = _bash_call_counter["n"]
++        debug_path = None
++        if debug_dir:
++            try:
++                os.makedirs(debug_dir, exist_ok=True)
++                debug_path = os.path.join(debug_dir, f"bash_{call_n:04d}.log")
++            except Exception:
++                debug_path = None
++
++        import time as _time
++        t_start = _time.time()
+         try:
+             proc = await asyncio.create_subprocess_shell(
+                 command,
+@@ -58,11 +77,39 @@
+             except asyncio.TimeoutError:
+                 proc.kill()
+                 await proc.wait()
++                if debug_path:
++                    try:
++                        with open(debug_path, "w") as f:
++                            f.write(f"# call #{call_n} TIMED OUT after {timeout}s\n")
++                            f.write(f"# cwd: {wd}\n# command:\n{command}\n")
++                    except Exception:
++                        pass
+                 return _err(f"Bash: timed out after {timeout}s")
+         except Exception as e:
++            if debug_path:
++                try:
++                    with open(debug_path, "w") as f:
++                        f.write(f"# call #{call_n} SPAWN-ERROR: {e}\n")
++                        f.write(f"# cwd: {wd}\n# command:\n{command}\n")
++                except Exception:
++                    pass
+             return _err(f"Bash error: {e}")
++        elapsed = _time.time() - t_start
+         out = stdout.decode("utf-8", errors="replace")
+         err = stderr.decode("utf-8", errors="replace")
++        if debug_path:
++            try:
++                with open(debug_path, "w") as f:
++                    f.write(f"# call #{call_n}\n")
++                    f.write(f"# cwd: {wd}\n")
++                    f.write(f"# timeout: {timeout}s\n")
++                    f.write(f"# elapsed: {elapsed:.2f}s\n")
++                    f.write(f"# exit_code: {proc.returncode}\n")
++                    f.write(f"# command:\n{command}\n\n")
++                    f.write(f"--- stdout ({len(out)} chars) ---\n{out}\n")
++                    f.write(f"\n--- stderr ({len(err)} chars) ---\n{err}\n")
++            except Exception:
++                pass
+         body = f"exit_code: {proc.returncode}\n\n--- stdout ---\n{out}"
+         if err.strip():
+             body += f"\n--- stderr ---\n{err}"
