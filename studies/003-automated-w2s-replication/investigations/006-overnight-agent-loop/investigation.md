@@ -192,17 +192,43 @@ back a tool_result. Logged as "Things to flag" finding 2.
 
 > **Finding 2 — 5-hour stall after a self-imposed Bash timeout** (2026-06-01)
 > At session 018, after the agent's `timeout=180` Bash call returned
-> "timed out" (the SFT job needs ~20 min, agent's bound was too
-> short), the agent emitted a retry Bash call with `--batch-size 2`.
-> That second tool_use produced no tool_result for the remaining
-> ~5 hours. `bash_0016.log` was never created — the Bash tool
-> handler never started running it. Hypothesis: the shim's
-> `_run_turn` got into a state where the second tool_call didn't
-> reach the tool dispatcher, or a queue was stuck. Same family of
-> bug as inv 005 sprint 1's findings 8 + 12 (silent contract
-> failures around the tool_call ⇄ tool_result hand-off in the
-> shim).  Needs a focused repro at the shim layer — not blocking
-> Run 2 but a real shim bug.
+> "timed out", the agent emitted a retry Bash call. That second
+> tool_use produced no tool_result for the remaining ~5 hours.
+>
+> **Root cause** (reproduced 2026-06-01 in pure asyncio, no shim
+> involved): in Python 3.12 on a build without `os.pidfd_open` (the
+> uv-managed CPython 3.12.13 here doesn't expose it; falls back to
+> ThreadedChildWatcher), the sequence
+>
+> ```python
+> proc = await asyncio.create_subprocess_shell(cmd, stdout=PIPE, stderr=PIPE)
+> try:
+>     await asyncio.wait_for(proc.communicate(), timeout=N)
+> except asyncio.TimeoutError:
+>     proc.kill()
+>     await proc.wait()        # <-- deadlock
+> ```
+>
+> deadlocks. The ThreadedChildWatcher *does* reap the SIGKILL'd
+> subprocess (direct `os.waitpid(pid, WNOHANG)` afterwards returns
+> `ChildProcessError [Errno 10]`), but `Process._returncode` is
+> never set, so `Process.wait()` awaits a future that's never
+> resolved. The shim's Bash handler hit this exact path on the
+> overnight retry.
+>
+> **Fix** (landed at
+> `scripts/upstream_shim_patches/apply_bash_wait_fix.py`,
+> applied to both shim_v1 and shim_v2): replace `await proc.wait()`
+> with a bounded `wait_for(proc.wait(), timeout=2)` + fallback to
+> `os.waitpid(pid, WNOHANG)` (swallow `ChildProcessError`) +
+> best-effort transport close. Verified with a 3-consecutive-timeout
+> repro — each returns in ~4s (2s outer timeout + 2s bounded wait)
+> instead of hanging forever. Trivial follow-on call works.
+>
+> Why earlier Bash calls in the same run *did* time-out and return
+> normally without hitting this path: still slightly unclear —
+> possibly an asyncio loop state degraded after enough events. The
+> fix is robust regardless.
 
 > **Finding 3 — agent set unrealistically short Bash timeouts** (2026-06-01)
 > Sessions 015 + 017 + 018 used `timeout: 180` for full SFT+eval
