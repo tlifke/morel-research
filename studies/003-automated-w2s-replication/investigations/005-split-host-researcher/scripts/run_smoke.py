@@ -86,17 +86,20 @@ def main_sync() -> int:
     os.environ["RUN_ID"] = str(uuid.uuid4())
     os.environ["OLLAMA_ANTHROPIC_BASE_URL"] = mac_ollama_url
 
+    workspace = Path(os.environ.get("GATE5_WORKSPACE", str(run_dir / "workspace")))
+    workspace.mkdir(parents=True, exist_ok=True)
+
+    # inv 006: pass workspace= so AutonomousAgentLoop writes .agent_handoff/
+    # into our persistent dir, not upstream's default WORKSPACE_DIR.
     loop = AutonomousAgentLoop(
         idea_uid=idea_uid,
         idea_name=idea_name,
+        workspace=workspace,
         logs_dir=run_dir / "logs",
         max_runtime_seconds=config["max_runtime_seconds"],
         model=model,
         local_mode=True,
     )
-
-    workspace = Path(os.environ.get("GATE5_WORKSPACE", str(run_dir / "workspace")))
-    workspace.mkdir(parents=True, exist_ok=True)
 
     bash_debug_dir = run_dir / "bash_subprocess_logs"
     bash_debug_dir.mkdir(parents=True, exist_ok=True)
