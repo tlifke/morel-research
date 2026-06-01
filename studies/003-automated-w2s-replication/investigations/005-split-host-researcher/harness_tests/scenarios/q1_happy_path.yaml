@@ -1,0 +1,33 @@
+# Scenario: model behaves perfectly in one session.
+# Turn 0: emit `Bash` with the patch-4 training command.
+# Turn 1: receive Bash tool_result, emit `evaluate_predictions` with a
+#         fake integer array (pretending we read it from the eval_output.json).
+# Turn 2: text-only response, finish_reason=stop. Session ends.
+#
+# Expected harness output:
+# - Two assistant turns with structured tool_use blocks shown in trace
+# - One Bash subprocess executed (the test fixture monkeypatches Bash to
+#   return a canned reference-style summary instantly — no real GPU)
+# - One evaluate_predictions call dispatched to the orchestrator
+# - iteration_00.yaml written with ran_to_completion: true
+# - bash_markers includes EVAL_PREDICTIONS_WRITTEN
+# - predictions_file populated with the fake path
+# - server_ack captured (the test mocks the orchestrator to return a fake ack)
+
+turns:
+  - tool_calls:
+      - name: Bash
+        arguments:
+          command: >-
+            python -m w2s_research.ideas.vanilla_w2s.run
+            --train-size 64 --test-size 64 --epochs 1 --seed 42
+            --batch-size 4 --load-in-4bit
+
+  - text: "Training complete. Submitting predictions."
+    tool_calls:
+      - name: mcp__server-api-tools__evaluate_predictions
+        arguments:
+          predictions: [1, 0, 1, 1, 0, 1, 0, 1, 0, 1]
+
+  - text: "Done."
+    finish_reason: stop
