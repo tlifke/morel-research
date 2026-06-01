@@ -70,12 +70,20 @@ class IterationRow:
 
 
 @dataclass
+class SessionMessage:
+    """One entry in a session log: AssistantMessage, UserMessage, or ResultMessage."""
+    ts: str
+    kind: str                                       # "assistant" / "user" / "result"
+    text: str = ""                                  # any prose
+    tool_uses: List[Tuple[str, str]] = field(default_factory=list)  # (tool_name, input_json)
+
+
+@dataclass
 class SessionRecord:
     n: int
     started: Optional[str] = None
     ended: Optional[str] = None
-    tool_calls: List[Tuple[str, str, str]] = field(default_factory=list)  # (ts, tool, input_preview)
-    text_messages: List[Tuple[str, str]] = field(default_factory=list)    # (ts, text_preview)
+    messages: List[SessionMessage] = field(default_factory=list)
     result_line: Optional[str] = None
     raw: str = ""
 
@@ -131,16 +139,77 @@ def load_iterations(handoff_dir: Path) -> List[IterationRow]:
     return rows
 
 
-_TS_RE = re.compile(r"^\[(\d{2}:\d{2}:\d{2})\]\s+(\w+)(?:\s+(.*))?$", re.MULTILINE)
-_SESSION_TOOL_RE = re.compile(
-    r"\[(\d{2}:\d{2}:\d{2})\]\s+AssistantMessage\s*\n.*?Tool:\s*(\S+)\s*\n\s*Input:\s*(\{.*?\})\s*\n",
-    re.DOTALL,
+_MSG_BLOCK_RE = re.compile(
+    r"^\[(\d{2}:\d{2}:\d{2})\]\s+(AssistantMessage|UserMessage|ResultMessage)\s*$",
+    re.MULTILINE,
 )
 _SESSION_RESULT_RE = re.compile(r"# Result:\s*([^\n]+)")
-_SESSION_TEXT_RE = re.compile(
-    r"\[(\d{2}:\d{2}:\d{2})\]\s+AssistantMessage\s*\n(?!Tool:)(.+?)(?=\n\[\d{2}:\d{2}:\d{2}\]|\Z)",
-    re.DOTALL,
-)
+
+
+def _parse_assistant_body(body: str) -> Tuple[str, List[Tuple[str, str]]]:
+    """Extract any prose text + all (tool_name, input_json) pairs from an
+    AssistantMessage body. The body format is:
+
+        <optional prose text>
+        Tool: NAME
+        Input: { ... }
+        <next Tool: ... if any>
+
+    or just prose if no tool use. JSON inputs are multi-line; we balance braces.
+    """
+    tool_uses: List[Tuple[str, str]] = []
+    text_parts: List[str] = []
+    i = 0
+    while i < len(body):
+        m = re.search(r"^Tool:\s*(\S+)\s*\n\s*Input:\s*", body[i:], re.MULTILINE)
+        if not m:
+            # rest is prose
+            text_parts.append(body[i:].strip())
+            break
+        prose_before = body[i : i + m.start()].strip()
+        if prose_before:
+            text_parts.append(prose_before)
+        tool_name = m.group(1)
+        # find balanced JSON starting at i + m.end()
+        json_start = i + m.end()
+        depth = 0
+        in_str = False
+        esc = False
+        j = json_start
+        # find first { or [
+        while j < len(body) and body[j] not in "{[":
+            j += 1
+        if j >= len(body):
+            break
+        open_ch = body[j]
+        close_ch = "}" if open_ch == "{" else "]"
+        depth = 0
+        k = j
+        while k < len(body):
+            ch = body[k]
+            if in_str:
+                if esc:
+                    esc = False
+                elif ch == "\\":
+                    esc = True
+                elif ch == '"':
+                    in_str = False
+            else:
+                if ch == '"':
+                    in_str = True
+                elif ch == open_ch:
+                    depth += 1
+                elif ch == close_ch:
+                    depth -= 1
+                    if depth == 0:
+                        k += 1
+                        break
+            k += 1
+        json_blob = body[j:k]
+        tool_uses.append((tool_name, json_blob))
+        i = k
+    text = "\n\n".join(t for t in text_parts if t)
+    return text, tool_uses
 
 
 def load_sessions(launch_dir: Path) -> List[SessionRecord]:
@@ -159,17 +228,33 @@ def load_sessions(launch_dir: Path) -> List[SessionRecord]:
         m_end = re.search(r"# Ended:\s*([^\n]+)", raw)
         m_result = _SESSION_RESULT_RE.search(raw)
 
-        tool_calls = []
-        for m in _SESSION_TOOL_RE.finditer(raw):
-            ts, tool, input_blob = m.group(1), m.group(2), m.group(3)
-            preview = input_blob[:200].replace("\n", " ")
-            tool_calls.append((ts, tool, preview))
+        # Split into message blocks
+        matches = list(_MSG_BLOCK_RE.finditer(raw))
+        msgs: List[SessionMessage] = []
+        for idx, m in enumerate(matches):
+            ts = m.group(1)
+            kind_raw = m.group(2)
+            kind = {"AssistantMessage": "assistant", "UserMessage": "user", "ResultMessage": "result"}[kind_raw]
+            body_start = m.end()
+            body_end = matches[idx + 1].start() if idx + 1 < len(matches) else len(raw)
+            body = raw[body_start:body_end].strip()
+            # Strip trailing "# Result: ..." footer if present
+            body = re.sub(r"\n# Result:.*$", "", body, flags=re.DOTALL).strip()
+            body = re.sub(r"\n# Ended:.*$", "", body, flags=re.DOTALL).strip()
+
+            text = ""
+            tool_uses: List[Tuple[str, str]] = []
+            if kind == "assistant" and body:
+                text, tool_uses = _parse_assistant_body(body)
+            elif kind == "user" and body:
+                text = body
+            msgs.append(SessionMessage(ts=ts, kind=kind, text=text, tool_uses=tool_uses))
 
         sessions.append(SessionRecord(
             n=n,
             started=m_start.group(1) if m_start else None,
             ended=m_end.group(1) if m_end else None,
-            tool_calls=tool_calls,
+            messages=msgs,
             result_line=m_result.group(1) if m_result else None,
             raw=raw,
         ))
@@ -404,17 +489,39 @@ def render_iteration_drill(
 
         out.append(f"<details><summary>{_esc(title)}</summary>")
 
-        # session
+        # session — render full conversation: text + tool calls + tool result markers
         if sess:
             out.append(f"<h4>session {sess.n}</h4>")
             out.append(f"<p>started: {_esc(sess.started)}  &nbsp;|&nbsp; ended: {_esc(sess.ended)}</p>")
             if sess.result_line:
                 out.append(f"<p class='result-line'>result: <code>{_esc(sess.result_line)}</code></p>")
-            if sess.tool_calls:
-                out.append("<table class='tool-table'><thead><tr><th>ts</th><th>tool</th><th>input (preview)</th></tr></thead><tbody>")
-                for ts, tool, prev in sess.tool_calls:
-                    out.append(f"<tr><td>{_esc(ts)}</td><td><b>{_esc(tool)}</b></td><td><code>{_esc(prev)}</code></td></tr>")
-                out.append("</tbody></table>")
+            if sess.messages:
+                out.append("<div class='conv'>")
+                for msg in sess.messages:
+                    if msg.kind == "assistant":
+                        out.append(f"<div class='msg msg-assistant'>")
+                        out.append(f"<div class='msg-head'><span class='ts'>{_esc(msg.ts)}</span> <span class='who'>agent</span></div>")
+                        if msg.text:
+                            out.append(f"<div class='msg-text'>{_esc(msg.text)}</div>")
+                        for tname, tinput in msg.tool_uses:
+                            tdisp = tname.split("__")[-1] if "__" in tname else tname
+                            out.append(f"<div class='tool-call'>")
+                            out.append(f"<div class='tool-name'>→ <b>{_esc(tdisp)}</b></div>")
+                            out.append(f"<details class='tool-input'><summary>input ({len(tinput)} chars)</summary><pre>{_esc(tinput)}</pre></details>")
+                            out.append("</div>")
+                        out.append("</div>")
+                    elif msg.kind == "user":
+                        # tool result marker — body usually empty; if there's text it's a manual user injection
+                        out.append(f"<div class='msg msg-user'>")
+                        out.append(f"<div class='msg-head'><span class='ts'>{_esc(msg.ts)}</span> <span class='who'>← tool result</span></div>")
+                        if msg.text:
+                            out.append(f"<div class='msg-text'>{_esc(msg.text)}</div>")
+                        out.append("</div>")
+                    elif msg.kind == "result":
+                        out.append(f"<div class='msg msg-result'>")
+                        out.append(f"<div class='msg-head'><span class='ts'>{_esc(msg.ts)}</span> <span class='who'>(session ended)</span></div>")
+                        out.append("</div>")
+                out.append("</div>")
 
         # bash
         if bash_info:
@@ -453,6 +560,30 @@ def render_iteration_drill(
 # ---------------------------------------------------------------------------
 # Summaries
 # ---------------------------------------------------------------------------
+
+
+def render_what_agent_was_told(launch_dir: Path) -> str:
+    """Show patch_text.txt + prompt_resolved.md so the report makes the
+    agent's input context first-class. The agent sees these on every
+    session start (system prompt + tool invocation hint)."""
+    parts = ["<h2>What the agent was told</h2>"]
+    patch_p = launch_dir / "patch_text.txt"
+    prompt_p = launch_dir / "logs" / "prompt_resolved.md"
+    if patch_p.exists():
+        txt = patch_p.read_text()
+        parts.append("<details class='told'><summary>tool-invocation hint (patch_text.txt) — appended to system prompt on every turn</summary>")
+        parts.append(f"<pre>{_esc(txt)}</pre></details>")
+    if prompt_p.exists():
+        txt = prompt_p.read_text()
+        parts.append("<details class='told'><summary>resolved prompt template (prompt_resolved.md) — base system prompt</summary>")
+        parts.append(f"<pre>{_esc(txt[:8000])}{' ...(truncated)' if len(txt) > 8000 else ''}</pre></details>")
+    parts.append(
+        "<div class='gap-note'><b>Known visibility gap:</b> tool results for non-Bash tools "
+        "(Read, Glob, evaluate_predictions, etc.) are not captured in session logs — they appear "
+        "only as a timestamped <code>UserMessage</code> marker. Bash results are preserved as "
+        "<code>bash_NNNN.log</code>. evaluate_predictions server_ack is captured in the iteration yaml.</div>"
+    )
+    return "\n".join(parts)
 
 
 def render_summary(rows: List[IterationRow], posts: List[Tuple[str, int]]) -> str:
@@ -516,6 +647,22 @@ details summary { cursor: pointer; font-weight: 600; padding: 4px 0; outline: no
 details details { background: #fafafa; margin: 4px 0; }
 .bash-log pre, .ack pre { max-height: 240px; }
 .result-line code { background: #f1f5f9; padding: 1px 6px; border-radius: 3px; }
+
+.conv { display: flex; flex-direction: column; gap: 8px; margin: 8px 0; }
+.msg { padding: 8px 10px; border-radius: 6px; border-left: 3px solid; font-size: 13px; }
+.msg-assistant { background: #eff6ff; border-color: #3b82f6; }
+.msg-user { background: #f8fafc; border-color: #94a3b8; color: #64748b; font-size: 11px; padding: 4px 10px; }
+.msg-result { background: #fefce8; border-color: #eab308; color: #713f12; font-size: 11px; padding: 4px 10px; font-style: italic; }
+.msg-head { display: flex; gap: 8px; align-items: center; font-size: 11px; color: #475569; margin-bottom: 4px; }
+.msg-head .ts { color: #64748b; }
+.msg-head .who { font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.msg-text { white-space: pre-wrap; line-height: 1.55; color: #0f172a; }
+.tool-call { margin-top: 6px; padding: 6px 8px; background: white; border-radius: 4px; border: 1px solid #cbd5e1; }
+.tool-call .tool-name { font-size: 12px; }
+.tool-input pre { max-height: 280px; }
+.told { background: #fef3c7; border: 1px solid #fde68a; padding: 10px 14px; border-radius: 6px; margin: 8px 0; }
+.told pre { background: #fffbeb; color: #1c1917; max-height: 380px; white-space: pre-wrap; word-wrap: break-word; }
+.gap-note { background: #fee2e2; border: 1px solid #fecaca; color: #7f1d1d; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin: 8px 0; }
 """
 
 
@@ -570,6 +717,7 @@ def main():
         f"<div class='subhead'>launch dir: <code>{_esc(launch_dir)}</code><br>"
         f"handoff dir: <code>{_esc(handoff_dir)}</code></div>",
         render_summary(rows, posts),
+        render_what_agent_was_told(launch_dir),
         "<h2>PGR trajectory</h2>",
         render_trajectory_chart(rows) if rows else "<p><em>no iterations</em></p>",
         "<h2>Tool-use shape</h2>",
