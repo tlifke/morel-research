@@ -58,6 +58,17 @@ class AssistantMessage:
 
 
 @dataclass
+class UserMessage:
+    """Carries tool_result blocks back to the consumer between turns.
+    Inv 005 finding 12 (sprint 1 follow-up): without this class defined
+    locally, the prototype's queue.put(UserMessage(...)) calls raise a
+    NameError that the producer swallows into a generic ResultMessage —
+    silently breaking the contract. Added 2026-05-31 after the
+    fake-server probe diagnosed the missing definition."""
+    content: List[Any]
+
+
+@dataclass
 class ResultMessage:
     result: Optional[str] = None
     stop_reason: Optional[str] = None

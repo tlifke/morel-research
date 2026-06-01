@@ -176,16 +176,6 @@ def fake_mcp_server():
     return server
 
 
-@pytest.mark.xfail(
-    reason=(
-        "FIRST PASS: end-to-end fake-server flow doesn't dispatch the "
-        "evaluate_predictions tool call. This is real wiring debt the test "
-        "is correctly catching — to be fixed in a follow-on. The shim_v2 "
-        "yield behavior itself is verified by isolated probe at "
-        "shim_v2/probe/probe_nemotron.py."
-    ),
-    strict=False,
-)
 @pytest.mark.asyncio
 async def test_shim_v2_yields_user_message_with_tool_result(
     shim_v2_path_setup, fake_server, fake_mcp_server
@@ -240,14 +230,6 @@ async def test_shim_v2_yields_user_message_with_tool_result(
     assert fake_mcp_server.eval_calls[0]["predictions"][:3] == [1, 0, 1]
 
 
-@pytest.mark.xfail(
-    reason=(
-        "FIRST PASS: ride-along with the prior test. Same end-to-end "
-        "dispatch issue. To be addressed when the fake-server scenario "
-        "playback is fully wired."
-    ),
-    strict=False,
-)
 @pytest.mark.asyncio
 async def test_handoff_writer_parses_real_bash_summary(
     shim_v2_path_setup, fake_server, fake_mcp_server
