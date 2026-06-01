@@ -164,6 +164,54 @@ def test_bootstrap_message():
     assert len(msg) < 1000
 
 
+def test_contract_warning_when_no_tool_results(capsys):
+    """Sprint 3 contract: when messages contain ToolUseBlocks but NO
+    ToolResultBlocks, extract_iteration_state should warn (or raise in
+    strict mode) because the shim isn't yielding tool results — exactly
+    the silent breakage of inv 005 finding 8 + 12."""
+    messages = [
+        AssistantMessage(content=[
+            ToolUseBlock(id="t1", name="Bash", input={"command": "ls"})
+        ]),
+        # MISSING: UserMessage with ToolResultBlock here. This is the bug.
+        ResultMessage(result="ok", stop_reason="end_turn"),
+    ]
+    state = extract_iteration_state(messages, server_acks=None)
+    captured = capsys.readouterr()
+    assert "shim contract violation" in captured.err.lower() or "shim contract" in captured.err
+    assert state["result"]["exit_code"] is None  # confirms the bug shape
+
+
+def test_contract_strict_mode_raises(monkeypatch):
+    """In strict mode, the contract violation raises rather than warning."""
+    monkeypatch.setenv("HANDOFF_STRICT_CONTRACT", "1")
+    messages = [
+        AssistantMessage(content=[
+            ToolUseBlock(id="t1", name="Bash", input={"command": "ls"})
+        ]),
+        ResultMessage(result="ok", stop_reason="end_turn"),
+    ]
+    with pytest.raises(RuntimeError, match="shim contract violation"):
+        extract_iteration_state(messages, server_acks=None)
+
+
+def test_contract_silent_when_tool_results_present():
+    """The contract validation should NOT fire when ToolResultBlocks
+    are present — the happy-path case."""
+    messages = [
+        AssistantMessage(content=[
+            ToolUseBlock(id="t1", name="Bash", input={"command": "ls"})
+        ]),
+        UserMessage(content=[
+            ToolResultBlock(tool_use_id="t1", content="exit_code: 0\nelapsed: 1s")
+        ]),
+        ResultMessage(result="ok", stop_reason="end_turn"),
+    ]
+    # Just verify no raise even in strict mode
+    state = extract_iteration_state(messages, server_acks=None, strict=True)
+    assert state["result"]["exit_code"] == 0
+
+
 def test_tool_call_classification_includes_invented():
     """Inv 004's mixed-case bash variants + Python-tool hallucinations
     should be counted under lowercase_bash / invented_bash, not silently

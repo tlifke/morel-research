@@ -1,0 +1,43 @@
+# Scenario: model runs Bash in session 0 but DOESN'T submit. Session 0 ends.
+# Session 1 should be bootstrapped by handoff_writer with a pointed message
+# pointing at the predictions_file. The bootstrapped session 1's model
+# correctly reads the artifact and calls evaluate_predictions.
+#
+# This is the scenario that mirrors what inv 005's real nemotron smoke
+# stumbled on — handoff is the load-bearing piece.
+#
+# Note: the playback is *across two sessions*. The scenario script
+# concatenates them; the harness test asserts that:
+# - iteration_00.yaml has ran_to_completion: false (session 0 didn't submit)
+# - iteration_00.yaml has bash_markers including EVAL_PREDICTIONS_WRITTEN
+# - iteration_00.yaml has predictions_file populated
+# - iteration_01.yaml has ran_to_completion: true (session 1 submitted)
+
+turns:
+  # ---- Session 0 ----
+  - tool_calls:
+      - name: Bash
+        arguments:
+          command: >-
+            python -m w2s_research.ideas.vanilla_w2s.run
+            --train-size 64 --test-size 64 --load-in-4bit
+
+  - text: "Training done. I'll stop here without submitting."
+    finish_reason: stop
+
+  # ---- Session 1 (handoff bootstrap should trigger) ----
+  # Per the pointed bootstrap, the model is expected to Read predictions_file
+  # then call evaluate_predictions immediately. Scripted accordingly.
+  - tool_calls:
+      - name: Read
+        arguments:
+          file_path: "[predictions_file from prior handoff]"
+
+  - text: "Read predictions array. Submitting now."
+    tool_calls:
+      - name: mcp__server-api-tools__evaluate_predictions
+        arguments:
+          predictions: [1, 0, 1, 1, 0, 1, 0, 1, 0, 1]
+
+  - text: "Iteration complete."
+    finish_reason: stop

@@ -11,6 +11,7 @@ No live model in the loop here — this is pure extraction code.
 
 from __future__ import annotations
 
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -125,6 +126,8 @@ def _classify_tool(name: str) -> str:
 def extract_iteration_state(
     messages: list,
     server_acks: dict | None = None,
+    *,
+    strict: bool | None = None,
 ) -> dict:
     """
     Walk the agent's `messages` list (as accumulated by
@@ -135,7 +138,47 @@ def extract_iteration_state(
     the session never submitted, leave it None — the artifact will mark
     `ran_to_completion=False` and the failure_log section will summarize
     why.
+
+    ## Contract (sprint 3)
+
+    This function expects the shim used to drive the agent loop to yield
+    `UserMessage(content=[ToolResultBlock(...)])` between
+    `AssistantMessage`s. Without this, the handoff yaml ends up with
+    `bash_markers: null`, `exit_code: null`, `predictions_file: null`,
+    etc. — see inv 005 finding 8 + 12.
+
+    If `messages` contains at least one `ToolUseBlock` but **zero**
+    `ToolResultBlock` instances, this function logs a warning to stderr
+    naming the missing contract. When `strict=True` (or the
+    `HANDOFF_STRICT_CONTRACT` env var is set), it raises instead of
+    warning. Default behavior is warning-only so existing call sites
+    don't break.
     """
+
+    # Contract validation (sprint 3): count tool_use vs tool_result and warn
+    # if the shim isn't yielding the latter. See docstring.
+    _tool_use_count = 0
+    _tool_result_count = 0
+    for _msg, _block in _iter_blocks(messages):
+        cls = type(_block).__name__
+        if cls == "ToolUseBlock":
+            _tool_use_count += 1
+        elif cls == "ToolResultBlock":
+            _tool_result_count += 1
+    if _tool_use_count > 0 and _tool_result_count == 0:
+        msg = (
+            f"handoff_writer: shim contract violation — messages contain "
+            f"{_tool_use_count} ToolUseBlock(s) but ZERO ToolResultBlock(s). "
+            f"The shim is not yielding tool results to the consumer. Handoff "
+            f"artifact will have null bash_markers / predictions_file / exit_code "
+            f"/ elapsed_sec. See inv 005 finding 8 + 12 in investigation.md."
+        )
+        if strict is None:
+            strict = os.environ.get("HANDOFF_STRICT_CONTRACT") == "1"
+        if strict:
+            raise RuntimeError(msg)
+        import sys as _sys
+        print(f"WARNING: {msg}", file=_sys.stderr, flush=True)
 
     tool_use_history: list[dict] = []
     bash_calls: list[dict] = []
