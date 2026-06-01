@@ -1,0 +1,90 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<title>inv 006 — all runs</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #0f172a; padding: 32px; max-width: 980px; margin: 0 auto; }
+h1 { margin-bottom: 4px; }
+.subhead { color: #64748b; margin-bottom: 24px; }
+.run { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px 22px; margin: 14px 0; }
+.run h2 { margin: 0 0 4px 0; font-size: 18px; }
+.run h2 a { color: #1d4ed8; text-decoration: none; }
+.run h2 a:hover { text-decoration: underline; }
+.run .when { color: #64748b; font-size: 13px; }
+.run .row { margin-top: 10px; display: flex; gap: 16px; font-size: 13px; flex-wrap: wrap; }
+.run .stat { color: #334155; }
+.run .stat b { color: #0f172a; }
+.best { background: #ecfdf5; border-color: #6ee7b7; }
+.best .pgr { color: #047857; }
+table { border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+th, td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+th { background: #f1f5f9; }
+</style>
+</head><body>
+
+<h1>inv 006 — overnight agent loop runs</h1>
+<div class="subhead">all attempted runs of the nemotron-3-nano:4b researcher driving vanilla_w2s on math. each report has its own PGR trajectory, iteration table, and per-iteration drill-down (Bash command, log preview, submission, server_ack).</div>
+
+<div class="run best">
+  <h2><a href="overnight_1/report.html">Overnight Run 1</a> &nbsp; <span class="pgr">★ best result</span></h2>
+  <div class="when">2026-05-31 22:25 → 2026-06-01 07:45  •  ~9h until stall, SIGKILL'd</div>
+  <div class="row">
+    <span class="stat">11 iterations</span>
+    <span class="stat"><b>3 valid PGRs</b></span>
+    <span class="stat">best <b>PGR 0.435</b> @ iter_03</span>
+    <span class="stat">transfer_acc <b>0.615</b></span>
+  </div>
+  <p style="font-size: 13px; margin-top: 10px; color: #334155;">
+  The "we got it to work once" run. 5-hour stall at iter 17 was the asyncio
+  deadlock bug we diagnosed next morning (see commit <code>e92c58f</code>).
+  Note: launch dir (session logs, Bash logs) didn't survive — only handoff
+  yamls were preserved. Drill-down is degraded.
+  </p>
+</div>
+
+<div class="run">
+  <h2><a href="overnight_2/report.html">Overnight Run 2</a></h2>
+  <div class="when">2026-06-01 11:28 → 12:11  •  ~43 min, stopped to fix path bug</div>
+  <div class="row">
+    <span class="stat">7 iterations</span>
+    <span class="stat">1 submission</span>
+    <span class="stat">0 valid PGRs</span>
+    <span class="stat">server rejected: <code>predictions_file not found</code></span>
+  </div>
+  <p style="font-size: 13px; margin-top: 10px; color: #334155;">
+  Fired the first robust overnight (all sanity fixes in place). Agent
+  hallucinated the absolute path of <code>eval_output.json</code> (added
+  <code>data/</code> prefix). Stopped, fixed in shim Bash tool
+  (commit <code>ac4ce9d</code>), re-fired as Run 3.
+  </p>
+</div>
+
+<div class="run">
+  <h2><a href="overnight_3/report.html">Overnight Run 3</a></h2>
+  <div class="when">2026-06-01 12:17 → 13:21  •  ~1h, stopped to fix weak_model schema</div>
+  <div class="row">
+    <span class="stat">5 iterations</span>
+    <span class="stat">1 POST 200</span>
+    <span class="stat">0 valid PGRs</span>
+    <span class="stat">typo: <code>Qwen/Qwen15-0.5B-Chat</code> → baseline lookup failed</span>
+  </div>
+  <p style="font-size: 13px; margin-top: 10px; color: #334155;">
+  Absolute path fix worked (POST 200, server processed). But agent
+  typo'd <code>weak_model</code> arg → PGR null because baseline
+  lookup needs the canonical name. transfer_acc 0.47 (below baseline)
+  — agent's hyperparam exploration was also wayward this iteration
+  (lr=3e-5, train=200, --gradient-accumulation-steps invalid).
+  </p>
+</div>
+
+<h2 style="margin-top: 36px;">timeline summary</h2>
+<table>
+  <thead><tr><th>run</th><th>start</th><th>duration</th><th>iter</th><th>POST 200</th><th>valid PGR</th><th>best PGR</th><th>terminated by</th></tr></thead>
+  <tbody>
+    <tr><td><a href="overnight_1/report.html">1</a></td><td>2026-05-31 22:25</td><td>~9h</td><td>11</td><td>3</td><td>3</td><td><b>0.435</b></td><td>SIGKILL (5h stall)</td></tr>
+    <tr><td><a href="overnight_2/report.html">2</a></td><td>2026-06-01 11:28</td><td>~43 min</td><td>7</td><td>0</td><td>0</td><td>—</td><td>manual (path bug)</td></tr>
+    <tr><td><a href="overnight_3/report.html">3</a></td><td>2026-06-01 12:17</td><td>~1h</td><td>5</td><td>1</td><td>0</td><td>—</td><td>manual (weak_model typo)</td></tr>
+  </tbody>
+</table>
+
+</body></html>
