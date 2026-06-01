@@ -44,6 +44,15 @@ def main_sync() -> int:
     sys.path.insert(0, shim_base + "/scripts")
     sys.path.insert(0, shim_base + "/shim_pkg")
     sys.path.insert(0, upstream_dir)
+    # inv 005: when SHIM_V2_BASE is set, put v2 ahead of v1 so
+    # `from claude_agent_sdk import ...` resolves to the OpenAI-compat shim.
+    _shim_v2 = os.environ.get("SHIM_V2_BASE")
+    if _shim_v2:
+        sys.path.insert(0, _shim_v2)
+        # also expose the inv 005 scripts dir for handoff_writer
+        _inv005_scripts = os.environ.get("INV005_SCRIPTS_DIR")
+        if _inv005_scripts:
+            sys.path.insert(0, _inv005_scripts)
 
     from w2s_research.research_loop.agent import AutonomousAgentLoop
     # NOTE: import from claude_agent_sdk (shim_pkg), NOT claude_agent_sdk_shim

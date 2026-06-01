@@ -64,6 +64,11 @@ export BASH_TIMEOUT=1800
 # then v1 shim for fallback, then upstream, then inv 005's scripts dir
 # so handoff_writer.py is importable (no-op unless HANDOFF_ENABLE=1).
 export PYTHONPATH="$SHIM_V2_BASE:$SHIM_BASE/shim_pkg:$SHIM_BASE/scripts:$UPSTREAM_DIR:$INV_DIR/scripts"
+# CRITICAL: run_smoke.py does sys.path.insert(0, shim_pkg) which overrides
+# PYTHONPATH. We set SHIM_V2_BASE + INV005_SCRIPTS_DIR so run_smoke.py
+# additionally inserts those at position 0 (= v2 wins).
+export SHIM_V2_BASE
+export INV005_SCRIPTS_DIR="$INV_DIR/scripts"
 export CLAUDE_AGENT_SDK_SHIM_TOOL_INVOCATION_HINT="$(cat $PATCH_FILE)"
 
 curl -s -m 5 http://localhost:11434/api/generate -d '{"model":"qwen3.5:4b","keep_alive":0,"prompt":""}' > /dev/null 2>&1 || true

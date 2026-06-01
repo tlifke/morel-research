@@ -1,6 +1,8 @@
---- a/w2s_research/research_loop/agent.py	2026-05-25 13:58:24.262246959 -0500
-+++ b/w2s_research/research_loop/agent.py	2026-05-31 15:08:11.098871517 -0500
-@@ -17,6 +17,17 @@
+diff --git a/w2s_research/research_loop/agent.py b/w2s_research/research_loop/agent.py
+index ae4006b..a14d4db 100644
+--- a/w2s_research/research_loop/agent.py
++++ b/w2s_research/research_loop/agent.py
+@@ -17,6 +17,17 @@ from enum import Enum
  from pathlib import Path
  from typing import Any, Callable, Dict, List, Optional
  
@@ -18,7 +20,7 @@
  from claude_agent_sdk import (
      ClaudeSDKClient,
      ClaudeAgentOptions,
-@@ -174,6 +185,7 @@
+@@ -174,6 +185,7 @@ class BaseAgent:
          self.cli_path = cli_path
          self.message_callback = message_callback
          self.system_prompt = system_prompt
@@ -26,7 +28,21 @@
  
      async def execute(self, task: str) -> AgentResult:
          """Execute agent task. Returns AgentResult."""
-@@ -219,6 +231,8 @@
+@@ -201,6 +213,13 @@ class BaseAgent:
+                 await client.query(task)
+ 
+                 async for message in client.receive_response():
++                    # inv 005 debug — trace message types
++                    try:
++                        with open("/tmp/inv005_msg_trace.log", "a") as _df:
++                            _bnames = [type(b).__name__ for b in getattr(message, "content", []) or []]
++                            _df.write(f"{datetime.now().isoformat()}  {type(message).__name__}  blocks={_bnames}\n")
++                    except Exception:
++                        pass
+                     messages.append(message)
+ 
+                     # Log
+@@ -219,6 +238,8 @@ class BaseAgent:
                              if isinstance(content, ToolUseBlock):
                                  iteration_count += 1
  
@@ -35,7 +51,7 @@
                  return AgentResult(
                      success=True,
                      output=self._extract_output(messages),
-@@ -371,6 +385,57 @@
+@@ -371,6 +392,57 @@ class AutonomousAgentLoop:
              message_callback=message_callback,
          )
  
@@ -53,7 +69,7 @@
 +            handoff_dir = self.workspace / ".agent_handoff"
 +            path = _hand_write(state, handoff_dir, self.session_count)
 +            print(f"[Handoff] wrote {path.name}  ran_to_completion={state['result']['ran_to_completion']}")
-+            self._prompt = _hand_bootstrap(path, self.session_count)
++            self._prompt = _hand_bootstrap(path, self.session_count, prior_state=state)
 +            print(f"[Handoff] next prompt set to bootstrap (iteration {self.session_count + 1})")
 +        except Exception as e:
 +            print(f"[Handoff] WARNING: handoff failed: {e}")
@@ -93,7 +109,7 @@
      async def run(self) -> Dict[str, Any]:
          """Run the autonomous agent loop."""
          mode_str = "local" if self.local_mode else "server"
-@@ -493,6 +558,8 @@
+@@ -493,6 +565,8 @@ class AutonomousAgentLoop:
              finally:
                  log_f.write(f"\n# Ended: {datetime.now().isoformat()}\n")
  
