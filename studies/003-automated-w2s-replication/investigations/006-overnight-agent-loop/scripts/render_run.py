@@ -73,9 +73,11 @@ class IterationRow:
 class SessionMessage:
     """One entry in a session log: AssistantMessage, UserMessage, or ResultMessage."""
     ts: str
-    kind: str                                       # "assistant" / "user" / "result"
+    kind: str                                       # "assistant" / "user" / "result" / "input"
     text: str = ""                                  # any prose
     tool_uses: List[Tuple[str, str]] = field(default_factory=list)  # (tool_name, input_json)
+    tool_results: List[Tuple[str, str, bool]] = field(default_factory=list)  # (tool_use_id, content_text, is_error)
+    extras: Dict[str, Any] = field(default_factory=dict)             # stop_reason / model / etc.
 
 
 @dataclass
@@ -212,11 +214,118 @@ def _parse_assistant_body(body: str) -> Tuple[str, List[Tuple[str, str]]]:
     return text, tool_uses
 
 
+def _block_content_to_text(content: Any) -> str:
+    """A ToolResultBlock.content can be a str or a list of {type: text, text: ...} dicts."""
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict):
+                if item.get("type") == "text":
+                    parts.append(item.get("text", ""))
+                else:
+                    parts.append(json.dumps(item))
+            else:
+                parts.append(str(item))
+        return "\n".join(parts)
+    return str(content)
+
+
+def _load_session_jsonl(jsonl_path: Path) -> Optional[SessionRecord]:
+    """Parse the inv-006 full session JSONL. Returns SessionRecord or None."""
+    try:
+        lines = jsonl_path.read_text().splitlines()
+    except Exception:
+        return None
+    msgs: List[SessionMessage] = []
+    started = None
+    for raw in lines:
+        try:
+            obj = json.loads(raw)
+        except Exception:
+            continue
+        ts = obj.get("ts", "")
+        kind_raw = obj.get("kind", "")
+        # Normalize timestamp to HH:MM:SS for display alignment with .log files
+        ts_short = ts.split("T")[-1][:8] if "T" in ts else ts[:8]
+        if not started:
+            started = ts
+        if kind_raw == "input":
+            msgs.append(SessionMessage(
+                ts=ts_short, kind="input",
+                text=str(obj.get("content", "")),
+            ))
+            continue
+        kind = {
+            "AssistantMessage": "assistant",
+            "UserMessage": "user",
+            "ResultMessage": "result",
+        }.get(kind_raw, kind_raw.lower())
+        content = obj.get("content", []) or []
+        text_parts: List[str] = []
+        tool_uses: List[Tuple[str, str]] = []
+        tool_results: List[Tuple[str, str, bool]] = []
+        for block in content:
+            btype = block.get("type", "")
+            if btype == "TextBlock":
+                t = block.get("text", "")
+                if t:
+                    text_parts.append(t)
+            elif btype == "ThinkingBlock":
+                t = block.get("thinking", "")
+                if t:
+                    text_parts.append(f"<thinking>\n{t}\n</thinking>")
+            elif btype == "ToolUseBlock":
+                name = block.get("name", "")
+                inp = block.get("input", {})
+                tool_uses.append((name, json.dumps(inp, indent=2, default=str)))
+            elif btype == "ToolResultBlock":
+                tuid = block.get("tool_use_id", "")
+                body = _block_content_to_text(block.get("content"))
+                tool_results.append((tuid, body, bool(block.get("is_error", False))))
+        extras = {}
+        for k in ("stop_reason", "result", "model"):
+            if k in obj:
+                extras[k] = obj[k]
+        msgs.append(SessionMessage(
+            ts=ts_short, kind=kind,
+            text="\n\n".join(t for t in text_parts if t),
+            tool_uses=tool_uses,
+            tool_results=tool_results,
+            extras=extras,
+        ))
+    if not msgs:
+        return None
+    m_n = re.match(r"autonomous-session_(\d{3})_", jsonl_path.stem)
+    n = int(m_n.group(1)) if m_n else -1
+    return SessionRecord(
+        n=n,
+        started=started,
+        ended=msgs[-1].ts if msgs else None,
+        messages=msgs,
+        result_line=None,
+        raw="",
+    )
+
+
 def load_sessions(launch_dir: Path) -> List[SessionRecord]:
     sessions: List[SessionRecord] = []
     logs_dir = launch_dir / "logs"
     if not logs_dir.exists():
         return sessions
+    # Prefer JSONL traces if present (inv 006 full-session-logging)
+    jsonls = sorted(logs_dir.glob("autonomous-session_*.jsonl"))
+    if jsonls:
+        for jf in jsonls:
+            rec = _load_session_jsonl(jf)
+            if rec:
+                sessions.append(rec)
+        if sessions:
+            return sessions
+    # Fallback to legacy .log parsing
     for f in sorted(logs_dir.glob("session_*.log")):
         try:
             raw = f.read_text()
@@ -510,12 +619,25 @@ def render_iteration_drill(
                             out.append(f"<details class='tool-input'><summary>input ({len(tinput)} chars)</summary><pre>{_esc(tinput)}</pre></details>")
                             out.append("</div>")
                         out.append("</div>")
+                    elif msg.kind == "input":
+                        out.append(f"<div class='msg msg-input'>")
+                        out.append(f"<div class='msg-head'><span class='ts'>{_esc(msg.ts)}</span> <span class='who'>→ initial input (bootstrap / patch)</span></div>")
+                        out.append(f"<details class='input-body'><summary>{len(msg.text)} chars</summary><pre>{_esc(msg.text)}</pre></details>")
+                        out.append("</div>")
                     elif msg.kind == "user":
-                        # tool result marker — body usually empty; if there's text it's a manual user injection
+                        # tool result(s) — show content when present (inv 006 JSONL trace)
                         out.append(f"<div class='msg msg-user'>")
                         out.append(f"<div class='msg-head'><span class='ts'>{_esc(msg.ts)}</span> <span class='who'>← tool result</span></div>")
-                        if msg.text:
+                        if msg.text and not msg.tool_results:
                             out.append(f"<div class='msg-text'>{_esc(msg.text)}</div>")
+                        for tuid, body, is_err in msg.tool_results:
+                            err_cls = " is-error" if is_err else ""
+                            body_short = body if len(body) <= 400 else body[:400] + "\n…(truncated)…\n" + body[-200:]
+                            out.append(f"<div class='tool-result{err_cls}'>")
+                            out.append(f"<div class='tool-result-head'>tool_use_id <code>{_esc(tuid[:24])}…</code>{' <b>(error)</b>' if is_err else ''}</div>")
+                            out.append(f"<details><summary>result ({len(body)} chars)</summary><pre>{_esc(body)}</pre></details>")
+                            out.append(f"<pre class='preview'>{_esc(body_short)}</pre>")
+                            out.append(f"</div>")
                         out.append("</div>")
                     elif msg.kind == "result":
                         out.append(f"<div class='msg msg-result'>")
@@ -577,12 +699,22 @@ def render_what_agent_was_told(launch_dir: Path) -> str:
         txt = prompt_p.read_text()
         parts.append("<details class='told'><summary>resolved prompt template (prompt_resolved.md) — base system prompt</summary>")
         parts.append(f"<pre>{_esc(txt[:8000])}{' ...(truncated)' if len(txt) > 8000 else ''}</pre></details>")
-    parts.append(
-        "<div class='gap-note'><b>Known visibility gap:</b> tool results for non-Bash tools "
-        "(Read, Glob, evaluate_predictions, etc.) are not captured in session logs — they appear "
-        "only as a timestamped <code>UserMessage</code> marker. Bash results are preserved as "
-        "<code>bash_NNNN.log</code>. evaluate_predictions server_ack is captured in the iteration yaml.</div>"
-    )
+    # Check if the inv 006 full session JSONL is present in this launch
+    jsonl_present = any((launch_dir / "logs").glob("autonomous-session_*.jsonl")) if (launch_dir / "logs").exists() else False
+    if jsonl_present:
+        parts.append(
+            "<div class='complete-note'><b>Full message trace available:</b> this launch has the "
+            "inv 006 JSONL sidecar — every tool input <i>and</i> tool result (Read, Glob, evaluate_predictions, "
+            "Bash, etc.) is captured. Drill-down shows the agent's complete I/O loop.</div>"
+        )
+    else:
+        parts.append(
+            "<div class='gap-note'><b>Visibility gap:</b> this launch predates the inv 006 full-session-logging "
+            "patch (commit applies after 2026-06-01 ~13:30). Tool results for non-Bash tools "
+            "(Read, Glob, evaluate_predictions, etc.) are not captured — they appear only as a timestamped "
+            "<code>UserMessage</code> marker. Bash results preserved as <code>bash_NNNN.log</code>. "
+            "evaluate_predictions server_ack captured in the iteration yaml.</div>"
+        )
     return "\n".join(parts)
 
 
@@ -663,6 +795,13 @@ details details { background: #fafafa; margin: 4px 0; }
 .told { background: #fef3c7; border: 1px solid #fde68a; padding: 10px 14px; border-radius: 6px; margin: 8px 0; }
 .told pre { background: #fffbeb; color: #1c1917; max-height: 380px; white-space: pre-wrap; word-wrap: break-word; }
 .gap-note { background: #fee2e2; border: 1px solid #fecaca; color: #7f1d1d; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin: 8px 0; }
+.complete-note { background: #ecfdf5; border: 1px solid #6ee7b7; color: #047857; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin: 8px 0; }
+.msg-input { background: #fef3c7; border-color: #f59e0b; }
+.tool-result { margin-top: 4px; padding: 6px 8px; background: white; border-radius: 4px; border: 1px solid #cbd5e1; }
+.tool-result.is-error { background: #fef2f2; border-color: #fca5a5; }
+.tool-result-head { font-size: 11px; color: #475569; margin-bottom: 4px; }
+.tool-result pre { max-height: 240px; }
+.tool-result pre.preview { max-height: 160px; font-size: 11px; background: #f8fafc; color: #334155; }
 """
 
 
