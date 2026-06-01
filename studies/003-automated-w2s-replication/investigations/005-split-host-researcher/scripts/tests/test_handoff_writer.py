@@ -59,16 +59,18 @@ class ResultMessage:
 
 BASH_SUMMARY = (
     "exit_code: 0\n"
-    "elapsed_sec: 94.56\n"
-    "stdout_bytes: 31250\n"
-    "stderr_bytes: 412\n"
-    "full_log: results/run_001/bash_0017.stdout\n"
-    "markers:\n"
-    "LORA_ADAPTER_WRITTEN results/run_001/checkpoint-16/adapter_model.safetensors\n"
-    "EVAL_PREDICTIONS_WRITTEN results/run_001/eval_output.json\n"
-    "VLLM_EVAL_COMPLETE\n"
-    "--- last 40 lines ---\n"
+    "elapsed: 94.56s\n"
+    "stdout: 31250 bytes -> results/run_001/bash_0017.stdout\n"
+    "stderr: 412 bytes\n"
+    "\n"
+    "detected:\n"
+    "  - LORA_ADAPTER_WRITTEN\n"
+    "  - EVAL_PREDICTIONS_WRITTEN: results/run_001/eval_output.json\n"
+    "  - VLLM_EVAL_COMPLETE\n"
+    "\n"
+    "--- stdout: last 40 lines ---\n"
     "...vllm chatter...\n"
+    "eval_output.json written to results/run_001/eval_output.json\n"
 )
 
 

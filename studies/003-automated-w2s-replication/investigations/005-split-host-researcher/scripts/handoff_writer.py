@@ -21,14 +21,30 @@ import yaml
 
 SCHEMA_VERSION = "1"
 
+# Inv 005 finding 13 (regex calibration): the reference-returning Bash tool
+# emits markers indented under a `detected:` heading like `  - MARKER` or
+# `  - MARKER: arg1/arg2`. The earlier `^(MARKER)\b` regex required the
+# marker at column 0 and never matched. Below is the actual format.
 _MARKER_RE = re.compile(
-    r"^(LORA_ADAPTER_WRITTEN|EVAL_PREDICTIONS_WRITTEN|VLLM_EVAL_COMPLETE"
-    r"|SFT_COMPLETE|OOM|ERROR)\b",
-    re.MULTILINE,
+    r"(?:^|\n)\s*-\s+("
+    r"LORA_ADAPTER_WRITTEN|EVAL_PREDICTIONS_WRITTEN|VLLM_EVAL_COMPLETE"
+    r"|VLLM_INIT_OK|VLLM_INIT_FAIL|FLASHINFER_JIT_FAIL"
+    r"|SFT_COMPLETE|SFT_MEMORY_FREED|PROGRESS_COMPLETE"
+    r"|CUDA_OOM|OOM|BENIGN_REDIS_WARNING"
+    r"|MODULE_NOT_FOUND|FILE_NOT_FOUND|ERROR"
+    r")(?:\s*:\s*([^\n]+))?",
 )
 _EXIT_CODE_RE = re.compile(r"exit_code\s*[:=]\s*(-?\d+)", re.IGNORECASE)
 _ELAPSED_RE = re.compile(r"elapsed(?:_sec)?\s*[:=]\s*([0-9.]+)", re.IGNORECASE)
-_FULL_LOG_RE = re.compile(r"(?:full[_ ]log|log[_ ]path)\s*[:=]\s*([^\s,]+)", re.IGNORECASE)
+# The shim emits "stdout: N bytes -> /path/to/log" and/or
+# "stderr: N bytes -> /path/to/log". Match either.
+_FULL_LOG_RE = re.compile(
+    r"(?:stdout|stderr|full[_ ]log|log[_ ]path)\s*:\s*"
+    r"(?:\d+\s*bytes\s*->\s*)?([/\w][^\s,]+\.(?:log|stdout|stderr|json))",
+    re.IGNORECASE,
+)
+# Also pluck out eval_output.json path if the markers reference it
+_EVAL_OUTPUT_RE = re.compile(r"(\S+eval_output\.json)")
 
 
 def _iter_blocks(messages: Iterable[Any]) -> Iterable[Any]:
@@ -72,9 +88,16 @@ def _parse_bash_summary(text: str) -> dict:
     m = _FULL_LOG_RE.search(text)
     if m:
         out["full_log"] = m.group(1).strip().rstrip(",")
-    markers = sorted({m.group(1) for m in _MARKER_RE.finditer(text)})
+    m = _EVAL_OUTPUT_RE.search(text)
+    if m:
+        out["eval_output_path"] = m.group(1)
+    markers = []
+    for mm in _MARKER_RE.finditer(text):
+        name = mm.group(1)
+        arg = (mm.group(2) or "").strip()
+        markers.append(f"{name}: {arg}" if arg else name)
     if markers:
-        out["markers"] = markers
+        out["markers"] = sorted(set(markers))
     return out
 
 
@@ -226,7 +249,7 @@ def extract_iteration_state(
             "exit_code": last_bash_summary.get("exit_code"),
             "elapsed_sec": last_bash_summary.get("elapsed_sec"),
             "metrics": metrics or None,
-            "predictions_file": None,
+            "predictions_file": last_bash_summary.get("eval_output_path"),
             "evaluate_predictions": {
                 "submitted": eval_pred_call is not None,
                 "predictions_count": (eval_pred_call or {}).get("predictions_count"),
@@ -274,20 +297,60 @@ def read_handoff(path: str | Path) -> dict:
         return yaml.safe_load(f)
 
 
-def make_bootstrap_message(handoff_path: str | Path, iteration_n: int) -> str:
+def make_bootstrap_message(
+    handoff_path: str | Path,
+    iteration_n: int,
+    prior_state: dict | None = None,
+) -> str:
     """
     Build the next-iteration's first user message per the design doc's
     "Bootstrap message shape" section. iteration_n is the *prior*
     iteration's number; the new session is N+1.
+
+    When `prior_state` is provided and the prior iteration ran Bash but
+    never submitted predictions, the bootstrap inlines a pointed next-
+    action: read predictions_file, call evaluate_predictions on it.
     """
     path = str(handoff_path)
     next_n = iteration_n + 1
     handoff_dir = str(Path(path).parent) or "."
+
+    # Inv 005 finding 13: nemotron under patch 4 reads the handoff but
+    # doesn't reliably infer "now call evaluate_predictions" from a
+    # generic decision prompt. If the prior iteration left a clean
+    # eval_output.json on disk but didn't submit it, inline that fact.
+    pointed_hint = ""
+    if isinstance(prior_state, dict):
+        result = prior_state.get("result") or {}
+        eval_pred = (result.get("evaluate_predictions") or {})
+        predictions_file = result.get("predictions_file")
+        ran_bash = (result.get("exit_code") == 0)
+        not_submitted = not eval_pred.get("submitted")
+        if predictions_file and ran_bash and not_submitted:
+            pointed_hint = (
+                f"\n**Immediate next action (decided for you, do this first):** "
+                f"The prior iteration ran training successfully and wrote "
+                f"predictions to:\n\n"
+                f"    {predictions_file}\n\n"
+                f"You did NOT submit them. Your *first* action this iteration "
+                f"is:\n\n"
+                f"    1. `Read` that file to get the integer array under "
+                f"`\"predictions\"`.\n"
+                f"    2. Call `evaluate_predictions` with `{{\"predictions\": "
+                f"[that integer array]}}`.\n\n"
+                f"Do not re-run training. The predictions already exist. After "
+                f"you submit, the iteration is complete; you may then propose "
+                f"a new idea.\n"
+            )
+
     return (
         f"You are autonomous-research-agent iteration {next_n}. The previous "
         f"iteration's handoff artifact is at:\n\n"
         f"  {path}\n\n"
-        f"Read it first, then decide whether to:\n"
+        f"Read it first to see what was tried and what was left undone."
+        f"{pointed_hint}\n"
+        f"If there is no immediate next action specified above, decide whether "
+        f"to:\n"
         f"  (a) Iterate on the same idea with a refinement\n"
         f"  (b) Try a new idea informed by the prior result\n"
         f"  (c) Stop because the search has converged\n\n"

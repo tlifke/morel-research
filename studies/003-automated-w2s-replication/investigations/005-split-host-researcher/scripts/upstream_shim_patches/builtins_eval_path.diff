@@ -1,0 +1,17 @@
+--- /tmp/inv005_diffs/builtins_pre_eval.py	2026-05-31 19:49:09.733249511 -0500
++++ /home/tlifke/inv003_shim/shim_pkg/claude_agent_sdk/builtins.py	2026-05-31 19:48:37.672738822 -0500
+@@ -93,6 +93,14 @@
+         lines.append("detected:")
+         for m in markers:
+             lines.append(f"  - {m}")
++        # inv 005 finding 13: if EVAL_PREDICTIONS_WRITTEN matched, also
++        # capture the actual path so downstream tools (handoff_writer) can
++        # parse it into predictions_file. The path is in stdout but usually
++        # not in the tail-40-lines slice we show.
++        if any(m.startswith("EVAL_PREDICTIONS_WRITTEN") for m in markers):
++            _ep = re.search(r"(\S*results/\S*/eval_output\.json)", out)
++            if _ep:
++                lines.append(f"eval_output_path: {_ep.group(1)}")
+ 
+     if out_bytes <= small_threshold:
+         lines.append("")

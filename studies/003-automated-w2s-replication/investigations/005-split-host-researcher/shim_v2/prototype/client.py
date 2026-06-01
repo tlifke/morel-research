@@ -425,6 +425,20 @@ class ClaudeSDKClient:
                 self._history.append(assistant_history_entry)
                 for tu in tool_uses:
                     result = await self._invoke_tool(tu)
+                    # Inv 005 finding 12 (handoff smoke): also yield the tool
+                    # result to the receive_response consumer so downstream code
+                    # (e.g. handoff_writer.extract_iteration_state) can see the
+                    # Bash reference-returning summary text and parse markers
+                    # like EVAL_PREDICTIONS_WRITTEN out of it. Without this, the
+                    # agent's `messages` list contains only AssistantMessage and
+                    # ResultMessage — no ToolResultBlock — and handoff artifacts
+                    # land with bash_markers: null.
+                    tool_result_block = ToolResultBlock(
+                        tool_use_id=tu.id,
+                        content=result.get("content", []),
+                        is_error=bool(result.get("is_error", False)),
+                    )
+                    await queue.put(UserMessage(content=[tool_result_block]))
                     self._history.append(
                         _make_tool_result_payload(
                             tu.id,

@@ -739,6 +739,116 @@ paths to unblock this:
   orchestrator)**: not met. Model behavior gap, addressable by the
   handoff pattern (drafted, not yet applied).
 
+#### Finding 12 — `run_smoke.py` silently shadowed v2 via `sys.path.insert` (2026-05-31 PM)
+
+Eight cumulative shim/wiring patches landed by 2026-05-31 18:00 (isinstance
+fix, lazy base URL, reference-returning Bash, thinking-block handling,
+shim_v2 prototype, handoff_writer, agent.py `_maybe_handoff` hook, and
+the `BASH_DEBUG_LOG_DIR` instrumentation). The v2 smoke at 18:10 showed
+the bootstrap was read by the model but `bash_markers` stayed null.
+
+Root cause: `scripts/run_smoke.py` did `sys.path.insert(0, shim_pkg)`
+at startup — silently overriding the v2-first `PYTHONPATH` set in
+`run_smoke_v2.sh`. So every "v2 smoke" since shim_v2 landed was actually
+running v1's shim. The isolated probe at `shim_v2/probe/probe_nemotron.py`
+worked because it set `sys.path` directly without going through the
+runner.
+
+Diagnosed by tracing message types arriving at `BaseAgent.execute`:
+when v1 was loaded, no `UserMessage` entries appeared between
+`AssistantMessage`s (v1 has the same not-yielding-tool-result behavior
+as v2's pre-finding-13 state). With the trace pointing at the wiring,
+the fix was three lines in `run_smoke.py`:
+
+```python
+_shim_v2 = os.environ.get("SHIM_V2_BASE")
+if _shim_v2:
+    sys.path.insert(0, _shim_v2)
+```
+
+Plus `INV005_SCRIPTS_DIR` so `handoff_writer` is importable. The
+v2-actually-loaded smoke at 19:13 confirmed `UserMessage`/
+`ToolResultBlock` entries interleaving with `AssistantMessage`s in
+the trace.
+
+#### Finding 13 — handoff_writer regex calibration + pointed bootstrap (2026-05-31 PM)
+
+With v2 actually loaded, `iteration_00.yaml` now had `exit_code: 0`
+and `elapsed_sec: 95.45` populated, plus a real `tool_error` entry
+in `failure_log` when the model tried to `Read` a non-existent file
+— meaning ToolResultBlocks were flowing through. But `bash_markers`,
+`full_log`, and `predictions_file` were all null.
+
+Two regex mismatches between handoff_writer (designed against
+synthetic input by sub-agent 3) and the reference-returning Bash
+tool's actual output format (built by finding 6):
+
+| Field | Handoff regex looked for | Bash tool actually emits |
+|---|---|---|
+| markers | `^MARKER` at column 0 | `  - MARKER` indented under `detected:` |
+| `full_log` | `full_log: /path` | `stdout: N bytes -> /path` |
+| eval path | (none) | only as a marker label; path not exposed |
+
+Fixed by:
+
+1. **Marker regex**: now matches `(?:^|\n)\s*-\s+(MARKER)(?:\s*:\s*(arg))?`
+   so the `  - ` indent prefix and optional `: arg1/arg2` suffix
+   work. Expanded the marker name alternation to cover the full
+   set the Bash tool emits.
+2. **`full_log` regex**: now matches `stdout:|stderr:|full_log:`
+   followed by an optional `N bytes ->` then the path.
+3. **eval_output_path extraction**: Bash tool now appends
+   `eval_output_path: /path/to/eval_output.json` to its summary
+   when the `EVAL_PREDICTIONS_WRITTEN` marker matches. handoff_writer
+   parses that into `result.predictions_file`.
+4. **Pointed bootstrap**: `make_bootstrap_message` now accepts
+   `prior_state` and, when the prior iteration ran Bash with exit
+   0 but did not submit, inlines an explicit "your first action is
+   to Read `<predictions_file>` and call `evaluate_predictions`."
+   Pure generic decision-prompt was insufficient for nemotron under
+   patch 4.
+
+After finding 13's fixes landed, the v3 smoke (~19:28-19:42, 2
+iterations) produced handoff YAMLs with `bash_markers:
+[EVAL_PREDICTIONS_WRITTEN]` and `exit_code: 0` correctly captured —
+the partial state was right. The remaining gap that pushed us to
+stop and write up: `predictions_file: null` even with the Bash-side
+patch, because the patch wasn't applied at the time of v3 launch.
+That fix was landed afterwards as the closing step of this iteration.
+
+#### Meta — accumulated wiring debt and the sprint plan
+
+The pattern through findings 8–13 is that most bugs were silent
+contract failures between layers we built (shim ↔ handoff_writer,
+runner ↔ PYTHONPATH, Bash output format ↔ regex expectations).
+Each layer assumed something about its peer that wasn't enforced.
+
+Three sprint items queued before continuing iteration:
+
+1. **Fake-model integration test for the full loop** — a tiny
+   deterministic "model server" (OpenAI-compat /v1/chat/completions)
+   that returns scripted `Bash` → `evaluate_predictions` tool_calls.
+   Pass-through validation for the entire wiring chain regardless of
+   which real model gets swapped in. Would have caught findings 1,
+   7, 8, 12, 13 in one run.
+2. **Eliminate the dual-package shim quirk** that caused finding 1.
+   Either drop `scripts/claude_agent_sdk_shim/` and re-export from
+   `shim_pkg/`, or share class identity. Bug 1 keeps recurring as
+   the silent root cause we miss.
+3. **Explicit shim ↔ handoff_writer contract**. Add a startup
+   validation in `extract_iteration_state` that warns when messages
+   contain `ToolUseBlock` but zero `ToolResultBlock` — exactly the
+   signature of finding 8. Document the contract in
+   `handoff_writer.py`'s docstring and reference it from
+   `investigation.md`.
+
+The sprint is harness maintenance, not research. Decision deferred:
+whether to keep iterating with nemotron post-sprint or swap in Opus
+for Q1 closure speed. The accumulated harness debt is the same
+either way; Opus would mask some prompt-level fragility (the
+"model doesn't chain to evaluate_predictions" pattern) but none of
+the wiring-layer issues.
+
 ## Decisions
 
 > **Decision 1 — Reframe findings 5–7 as model-behavior, not
