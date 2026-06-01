@@ -1,0 +1,12 @@
+diff --git a/w2s_research/core/train_eval.py b/w2s_research/core/train_eval.py
+index a2d6d62..cc47be2 100755
+--- a/w2s_research/core/train_eval.py
++++ b/w2s_research/core/train_eval.py
+@@ -48,6 +48,7 @@ def main():
+             "predictions": pred_result["predictions"],
+             "num_samples": pred_result["num_samples"],
+             "pred_distribution": pred_result["pred_distribution"],
++            "test_indices": list(range(pred_result["num_samples"])),
+         }
+     else:
+         final_eval = evaluate_model(

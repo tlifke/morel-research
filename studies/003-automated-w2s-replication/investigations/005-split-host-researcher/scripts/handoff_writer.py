@@ -48,6 +48,19 @@ _FULL_LOG_RE = re.compile(
 _EVAL_OUTPUT_RE = re.compile(r"(\S+eval_output\.json)")
 
 
+def _clean_eval_output_path(path: str) -> str:
+    """Strip noise prefixes the shim's path regex may capture.
+
+    train.py emits `[Subprocess eval] eval_output_json=<path>`. The shim
+    Bash summary regex `\\S*results/\\S*/eval_output.json` greedily
+    includes `eval_output_json=` as the leading non-space chars. Strip it
+    so the downstream agent receives a clean path it can Read.
+    """
+    if "eval_output_json=" in path:
+        path = path.split("eval_output_json=", 1)[1]
+    return path
+
+
 def _iter_blocks(messages: Iterable[Any]) -> Iterable[Any]:
     for msg in messages:
         content = getattr(msg, "content", None)
@@ -91,7 +104,7 @@ def _parse_bash_summary(text: str) -> dict:
         out["full_log"] = m.group(1).strip().rstrip(",")
     m = _EVAL_OUTPUT_RE.search(text)
     if m:
-        out["eval_output_path"] = m.group(1)
+        out["eval_output_path"] = _clean_eval_output_path(m.group(1))
     markers = []
     for mm in _MARKER_RE.finditer(text):
         name = mm.group(1)

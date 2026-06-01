@@ -1,0 +1,37 @@
+# shim_v2 types.py — collapse to a re-export from client.py
+#
+# Sprint 2 (inv 005) eliminated the dual class identity between
+# `shim_v2_pkg/claude_agent_sdk/types.py` and `client.py` — both
+# defined identical dataclasses (UserMessage, ToolResultBlock, etc.)
+# as distinct class objects, so `isinstance(msg_from_client, UserMessage_from_types)`
+# returned False. Symptom: identity-coincidence bugs across module
+# boundaries that no per-module test catches.
+#
+# Fix: types.py becomes a thin re-export from client.py. One source of
+# truth for the dataclasses, no chance of divergence.
+#
+# Applied to: /home/tlifke/inv003_shim/shim_v2_pkg/claude_agent_sdk/types.py
+#
+# The full new file:
+
+"""shim_v2 types — single-source re-export from client.py.
+
+Inv 005 sprint 2: dual class identity (types.py vs client.py defining the
+same dataclasses) caused isinstance checks across the boundary to fail
+silently. Collapsed by re-exporting from client.
+"""
+from .client import (
+    TextBlock,
+    ToolUseBlock,
+    ThinkingBlock,
+    ToolResultBlock,
+    AssistantMessage,
+    UserMessage,
+    ResultMessage,
+    ClaudeAgentOptions,
+)
+
+__all__ = [
+    "TextBlock", "ToolUseBlock", "ThinkingBlock", "ToolResultBlock",
+    "AssistantMessage", "UserMessage", "ResultMessage", "ClaudeAgentOptions",
+]

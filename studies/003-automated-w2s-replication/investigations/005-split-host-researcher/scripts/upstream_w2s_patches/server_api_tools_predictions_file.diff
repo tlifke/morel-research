@@ -1,0 +1,190 @@
+diff --git a/w2s_research/research_loop/tools/server_api_tools.py b/w2s_research/research_loop/tools/server_api_tools.py
+index 95283f4..c345700 100644
+--- a/w2s_research/research_loop/tools/server_api_tools.py
++++ b/w2s_research/research_loop/tools/server_api_tools.py
+@@ -18,54 +18,80 @@ from .http_utils import get_server_url, async_http_post, async_http_get
+ 
+ @tool(
+     "evaluate_predictions",
+-    "Evaluate predictions and get PGR score. Ground truth is held server-side. "
+-    "Use this after running experiments to get your transfer accuracy and PGR.",
++    "Evaluate predictions and get PGR score. Reads predictions from an eval_output.json "
++    "file produced by the training subprocess (do NOT inline predictions). The file must "
++    "contain {predictions: [...], test_indices: [...], num_samples: N}. Ground truth is "
++    "held server-side and sliced at test_indices.",
+     {
+         "type": "object",
+         "properties": {
+-            "predictions": {"type": "array", "items": {"type": "integer"}},
+-            "dataset": {"type": "string"},
++            "predictions_file": {
++                "type": "string",
++                "description": "Absolute path to the eval_output.json the training "
++                               "subprocess wrote (e.g. .../seed_42/.eval_inputs/eval_output.json)",
++            },
++            "dataset": {
++                "type": "string",
++                "enum": ["chat", "code", "math"],
++                "description": "Canonical dataset key.",
++            },
+             "weak_model": {"type": "string"},
+             "strong_model": {"type": "string"},
+         },
+-        "required": ["predictions", "dataset", "weak_model", "strong_model"],
++        "required": ["predictions_file", "dataset", "weak_model", "strong_model"],
+     },
+ )
+ async def evaluate_predictions(args: Dict[str, Any]) -> Dict[str, Any]:
+-    """
+-    Evaluate predictions against ground truth held server-side.
+-
+-    Args:
+-        args: Dict with keys:
+-            - predictions: List of predictions to evaluate
+-            - dataset: Dataset name
+-            - weak_model: Weak model identifier
+-            - strong_model: Strong model identifier
+-
+-    Returns:
+-        MCP-formatted response with metrics:
+-        {
+-            "transfer_acc": float,  # Strong model trained on weak labels
+-            "pgr": float,  # Performance Gap Recovery
+-            "correct": int,  # Number of correct predictions
+-            "total": int,  # Total number of predictions
+-            "fixed_weak_acc": float,  # Weak model baseline accuracy
+-            "fixed_strong_acc": float,  # Strong model ceiling accuracy
+-        }
+-    """
++    """Read predictions + test_indices from file, forward to orchestrator."""
+     try:
+-        # Unpack args
+-        predictions = args.get("predictions", [])
++        predictions_file = args.get("predictions_file", "")
+         dataset = args.get("dataset", "")
+         weak_model = args.get("weak_model", "")
+         strong_model = args.get("strong_model", "")
+ 
++        if not predictions_file:
++            return {"content": [{"type": "text", "text": json.dumps(
++                {"success": False, "error": "predictions_file is required"}, indent=2)}]}
++
++        from pathlib import Path as _P
++        pf = _P(predictions_file)
++        if not pf.exists():
++            return {"content": [{"type": "text", "text": json.dumps(
++                {"success": False, "error": f"predictions_file not found: {predictions_file}"},
++                indent=2)}]}
++
++        try:
++            with open(pf, "r") as f:
++                eval_output = json.load(f)
++        except Exception as e:
++            return {"content": [{"type": "text", "text": json.dumps(
++                {"success": False, "error": f"failed to read predictions_file: {e}"},
++                indent=2)}]}
++
++        predictions = eval_output.get("predictions")
++        if not isinstance(predictions, list):
++            return {"content": [{"type": "text", "text": json.dumps(
++                {"success": False,
++                 "error": "predictions_file missing 'predictions' list"}, indent=2)}]}
++
++        test_indices = eval_output.get("test_indices")
++        if not isinstance(test_indices, list):
++            test_indices = list(range(len(predictions)))
++
++        if len(predictions) != len(test_indices):
++            return {"content": [{"type": "text", "text": json.dumps(
++                {"success": False, "error": (
++                    f"predictions ({len(predictions)}) and test_indices "
++                    f"({len(test_indices)}) length mismatch in {predictions_file}")},
++                indent=2)}]}
++
+         server_url = get_server_url()
+ 
+         result = await async_http_post(
+             f"{server_url}/api/evaluate-predictions",
+             {
+                 "predictions": predictions,
++                "test_indices": test_indices,
+                 "dataset": dataset,
+                 "weak_model": weak_model,
+                 "strong_model": strong_model,
+@@ -74,36 +100,22 @@ async def evaluate_predictions(args: Dict[str, Any]) -> Dict[str, Any]:
+         )
+ 
+         if not isinstance(result, dict):
+-            error_response = {"success": False, "error": "Invalid server response format"}
+-            return {
+-                "content": [{
+-                    "type": "text",
+-                    "text": json.dumps(error_response, indent=2)
+-                }]
+-            }
++            return {"content": [{"type": "text", "text": json.dumps(
++                {"success": False, "error": "Invalid server response format"},
++                indent=2)}]}
+ 
+         if "error" in result:
+-            error_response = {"success": False, "error": result["error"]}
+-            return {
+-                "content": [{
+-                    "type": "text",
+-                    "text": json.dumps(error_response, indent=2)
+-                }]
+-            }
++            return {"content": [{"type": "text", "text": json.dumps(
++                {"success": False, "error": result["error"]}, indent=2)}]}
+ 
+         required_fields = ["transfer_acc", "pgr"]
+         missing = [f for f in required_fields if result.get(f) is None]
+         if missing:
+-            error_response = {
+-                "success": False,
+-                "error": f"Server response missing required fields: {missing}",
+-            }
+-            return {
+-                "content": [{
+-                    "type": "text",
+-                    "text": json.dumps(error_response, indent=2)
+-                }]
+-            }
++            return {"content": [{"type": "text", "text": json.dumps(
++                {"success": False,
++                 "error": f"Server response missing required fields: {missing}",
++                 "server_response": result},
++                indent=2)}]}
+ 
+         response_data = {
+             "success": True,
+@@ -113,23 +125,15 @@ async def evaluate_predictions(args: Dict[str, Any]) -> Dict[str, Any]:
+             "total": result.get("total"),
+             "fixed_weak_acc": result.get("fixed_weak_acc"),
+             "fixed_strong_acc": result.get("fixed_strong_acc"),
++            "num_predictions": len(predictions),
+         }
+-
+-        return {
+-            "content": [{
+-                "type": "text",
+-                "text": json.dumps(response_data, indent=2)
+-            }]
+-        }
++        if result.get("warnings"):
++            response_data["warnings"] = result["warnings"]
++        return {"content": [{"type": "text", "text": json.dumps(response_data, indent=2)}]}
+ 
+     except Exception as e:
+-        error_response = {"success": False, "error": str(e)}
+-        return {
+-            "content": [{
+-                "type": "text",
+-                "text": json.dumps(error_response, indent=2)
+-            }]
+-        }
++        return {"content": [{"type": "text", "text": json.dumps(
++            {"success": False, "error": str(e)}, indent=2)}]}
+ 
+ 
+ async def _auto_upload_snapshot(
