@@ -1,0 +1,78 @@
+You are running an extended overnight research loop on the
+vanilla_w2s weak-to-strong baseline for the math dataset.
+
+Your task each iteration: train the strong model (Qwen3-4B-Base) on
+soft labels from the weak teacher (Qwen1.5-0.5B-Chat), evaluate it on
+the held-out math test set, and submit predictions to get PGR
+feedback. Then propose a hyperparameter or recipe variation for the
+next iteration aimed at improving PGR. Iterate.
+
+## Default starting command
+
+```
+python -m w2s_research.ideas.vanilla_w2s.run \
+  --data-dir /home/tlifke/Projects/automated-w2s-research/data/math \
+  --weak-model Qwen/Qwen1.5-0.5B-Chat \
+  --strong-model Qwen/Qwen3-4B-Base \
+  --train-size 500 --test-size 200 --epochs 2 --seed 42 \
+  --batch-size 4 --load-in-4bit
+```
+
+## Available hyperparameters to vary
+
+- `--train-size`: try 250, 500, 1000, 2000. Larger is slower; larger
+  is more signal.
+- `--test-size`: 200 is the default. Increase for more stable PGR
+  estimates; standard error scales as 1/√N.
+- `--epochs`: 1, 2, 3. More epochs ≠ better — risk overfitting the
+  weak teacher's noise.
+- `--lr` (if accepted by the script): try 1e-4 (default), 3e-5, 3e-4.
+- `--seed`: keep at 42 during exploration; multi-seed validation
+  happens after.
+- Batch size / gradient accumulation if you can read those args from
+  the script.
+
+## How to submit predictions
+
+After Bash completes successfully, the script prints
+`[Subprocess eval] eval_output_json=<path>`. Read the eval_output.json
+to confirm shape, then call `evaluate_predictions` with:
+
+- `predictions_file`: the absolute path to that JSON
+- `dataset`: `math`
+- `weak_model`: `Qwen/Qwen1.5-0.5B-Chat`
+- `strong_model`: `Qwen/Qwen3-4B-Base`
+
+The tool reads predictions + test_indices from the file. Do not
+inline a `predictions` list — the tool ignores it.
+
+## What good iteration looks like
+
+1. Run the experiment with a varied config.
+2. Read eval_output.json (just to confirm count).
+3. Call evaluate_predictions → see PGR + transfer_acc.
+4. Briefly note in your final TextBlock what you tried and the result
+   (one paragraph, not a full share_finding unless the result is
+   meaningfully better than prior iterations).
+5. End the session. The next iteration's bootstrap will recap state.
+
+Do NOT call share_finding on every iteration — only when a result is
+notably better than prior iterations or represents a finished
+hypothesis test.
+
+## Budget discipline
+
+This loop runs for hours unattended. Each Bash should complete in
+under 20 minutes. If you call Bash with timeout > 1800, the launcher
+will reject. Keep configurations within: train-size ≤ 2000,
+test-size ≤ 500, epochs ≤ 3.
+
+If a Bash subprocess fails (CUDA OOM, FlashInfer JIT error, etc.),
+note the failure and try a smaller config next iteration. Do not
+retry the same failing config.
+
+## Stop conditions
+
+You will not see a stop signal directly. The launcher caps runtime;
+when it hits the cap, the loop terminates between sessions. Your job
+is to make each iteration count — don't dwell.
