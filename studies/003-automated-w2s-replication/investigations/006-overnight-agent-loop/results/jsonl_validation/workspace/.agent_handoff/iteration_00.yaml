@@ -1,0 +1,53 @@
+schema_version: '1'
+iteration: 0
+timestamp: '2026-06-01T19:40:16Z'
+parent_iteration_path: null
+idea:
+  uid: null
+  name: null
+  source_code:
+    path: null
+    commit: null
+  hypothesis: null
+attempted_command:
+  argv: null
+  cwd: null
+  full_log: /home/tlifke/Projects/morel-research/studies/003-automated-w2s-replication/investigations/006-overnight-agent-loop/logs/handoff_math_seed42/launches/20260601_143204/bash_subprocess_logs/bash_0001.log
+result:
+  ran_to_completion: true
+  exit_code: 0
+  elapsed_sec: 102.58
+  metrics:
+    transfer_acc: 0.546875
+    pgr: 0.05975130890052393
+  predictions_file: /home/tlifke/Projects/automated-w2s-research/results/math_vanilla_w2s/Qwen_Qwen3_4B_Base_Qwen_Qwen1_5_0_5B_Chat_e1_lr0.0001_bs4_schlinear_test_size64_train_size64/seed_42/.eval_inputs/eval_output.json
+  evaluate_predictions:
+    submitted: true
+    predictions_count: null
+    server_ack:
+      success: true
+      transfer_acc: 0.546875
+      pgr: 0.05975130890052393
+      correct: 35
+      total: 64
+      fixed_weak_acc: 0.5360266159695817
+      fixed_strong_acc: 0.7175855513307985
+      num_predictions: 64
+tool_call_shape:
+  canonical_bash: 1
+  lowercase_bash: 0
+  invented_bash: 0
+  evaluate_predictions: 1
+  total_tool_uses: 7
+  stop_reason: null
+bash_markers:
+- BENIGN_REDIS_WARNING
+- EVAL_PREDICTIONS_WRITTEN
+- SFT_MEMORY_FREED
+- VLLM_EVAL_COMPLETE
+artifacts: {}
+learnings: []
+next_action_hints: []
+failure_log:
+- 'tool_error[Read]: Read: file not found: /home/tlifke/Projects/automated-w2s-research/w2s_research/research_loop/notebook.json'
+- 'tool_error[Evaluate_predictions]: unknown tool: Evaluate_predictions'
