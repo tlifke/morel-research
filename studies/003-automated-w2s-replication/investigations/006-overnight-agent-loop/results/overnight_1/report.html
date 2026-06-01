@@ -1,0 +1,167 @@
+<!doctype html><html><head><meta charset='utf-8'>
+<title>inv 006 run report — 20260531_222509</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+       background: #f8fafc; color: #0f172a; margin: 0; padding: 24px; }
+h1 { font-size: 22px; margin: 0 0 4px 0; }
+h2 { font-size: 18px; margin: 28px 0 8px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+h3 { font-size: 15px; margin: 16px 0 6px 0; color: #334155; }
+h4 { font-size: 13px; margin: 12px 0 4px 0; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; }
+p { font-size: 13px; line-height: 1.5; margin: 4px 0; }
+code, pre { font-family: 'SF Mono', 'Menlo', monospace; font-size: 12px; }
+pre { background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: 6px; overflow-x: auto; max-height: 360px; }
+pre.cmd { background: #f1f5f9; color: #0f172a; max-height: 200px; }
+.subhead { color: #64748b; font-size: 12px; margin-bottom: 16px; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+           gap: 8px; margin: 12px 0 16px 0; }
+.card { background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; }
+.card .lbl { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+.card .val { font-size: 22px; font-weight: 600; color: #0f172a; }
+.card.best { background: #ecfdf5; border-color: #6ee7b7; }
+.card.best .val { color: #047857; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; background: white; }
+table th { background: #f1f5f9; padding: 6px 8px; text-align: left; border-bottom: 1px solid #cbd5e1; }
+table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+table.it-table tr:hover { background: #f8fafc; }
+table.tool-table { margin: 4px 0; }
+details { background: white; border: 1px solid #e2e8f0; border-radius: 6px;
+          padding: 8px 12px; margin: 6px 0; }
+details summary { cursor: pointer; font-weight: 600; padding: 4px 0; outline: none; }
+details details { background: #fafafa; margin: 4px 0; }
+.bash-log pre, .ack pre { max-height: 240px; }
+.result-line code { background: #f1f5f9; padding: 1px 6px; border-radius: 3px; }
+</style></head><body>
+<h1>inv 006 run report — 20260531_222509</h1>
+<div class='subhead'>launch dir: <code>/Users/tylerlifke/Projects/morel-research/studies/003-automated-w2s-replication/investigations/006-overnight-agent-loop/results/overnight_1/launches/20260531_222509</code><br>handoff dir: <code>/Users/tylerlifke/Projects/morel-research/studies/003-automated-w2s-replication/investigations/006-overnight-agent-loop/results/overnight_1/workspace/.agent_handoff</code></div>
+<div class='summary'>
+<div class='card'><div class='lbl'>iterations</div><div class='val'>11</div></div>
+<div class='card'><div class='lbl'>Bash exit=0</div><div class='val'>3</div></div>
+<div class='card'><div class='lbl'>submissions</div><div class='val'>3</div></div>
+<div class='card'><div class='lbl'>valid PGRs</div><div class='val'>3</div></div>
+<div class='card best'><div class='lbl'>best PGR</div><div class='val'>0.435</div></div>
+<div class='card'><div class='lbl'>POST 200</div><div class='val'>0</div></div>
+<div class='card'><div class='lbl'>POST other</div><div class='val'>0</div></div>
+</div>
+<h2>PGR trajectory</h2>
+<div>                        <script>window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.5.0.min.js" integrity="sha256-fHbNLP+GlIXN+efbQec78UkemUz3NJp7UmfGxC1tNxs=" crossorigin="anonymous"></script>                <div id="9a7c90d8-dce1-4713-bc51-c13eb1d8ab84" class="plotly-graph-div" style="height:420px; width:100%;"></div>            <script>                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("9a7c90d8-dce1-4713-bc51-c13eb1d8ab84")) {                    Plotly.newPlot(                        "9a7c90d8-dce1-4713-bc51-c13eb1d8ab84",                        [{"line":{"color":"#3b82f6"},"marker":{"size":10},"mode":"lines+markers","name":"PGR","x":[0,1,2,3,4,5,6,7,8,9,10],"y":[null,null,0.2421989528795812,0.43497382198952894,null,null,null,null,-0.01483420593368201,null,null],"type":"scatter"},{"line":{"color":"#10b981"},"marker":{"size":8},"mode":"lines+markers","name":"transfer_acc","x":[0,1,2,3,4,5,6,7,8,9,10],"y":[null,null,0.58,0.615,null,null,null,null,0.5333333333333333,null,null],"yaxis":"y2","type":"scatter"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"shapes":[{"line":{"color":"#94a3b8","dash":"dot"},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":0.5360266159695817,"y1":0.5360266159695817,"yref":"y2"},{"line":{"color":"#94a3b8","dash":"dot"},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":0.7175855513307985,"y1":0.7175855513307985,"yref":"y2"}],"annotations":[{"showarrow":false,"text":"weak_acc=0.536","x":1,"xanchor":"right","xref":"x domain","y":0.5360266159695817,"yanchor":"top","yref":"y2"},{"showarrow":false,"text":"strong_acc=0.718","x":1,"xanchor":"right","xref":"x domain","y":0.7175855513307985,"yanchor":"bottom","yref":"y2"}],"yaxis":{"title":{"text":"PGR"},"tickformat":".3f"},"yaxis2":{"title":{"text":"transfer_acc"},"overlaying":"y","side":"right","tickformat":".3f"},"legend":{"x":0.01,"y":0.99},"margin":{"l":60,"r":60,"t":60,"b":40},"title":{"text":"PGR + transfer_acc per iteration"},"xaxis":{"title":{"text":"iteration"}},"height":420},                        {"responsive": true}                    )                };            </script>        </div>
+<h2>Tool-use shape</h2>
+<div>                            <div id="b10dbc3c-ade9-4e09-86bc-caf32330890d" class="plotly-graph-div" style="height:300px; width:100%;"></div>            <script>                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("b10dbc3c-ade9-4e09-86bc-caf32330890d")) {                    Plotly.newPlot(                        "b10dbc3c-ade9-4e09-86bc-caf32330890d",                        [{"name":"canonical_bash","x":[0,1,2,3,4,5,6,7,8,9,10],"y":[1,1,0,4,1,0,0,1,1,3,2],"type":"bar"},{"name":"lowercase_bash","x":[0,1,2,3,4,5,6,7,8,9,10],"y":[0,0,0,0,0,0,0,0,0,0,0],"type":"bar"},{"name":"invented_bash","x":[0,1,2,3,4,5,6,7,8,9,10],"y":[0,0,0,0,0,0,0,0,0,0,0],"type":"bar"},{"name":"evaluate_predictions","x":[0,1,2,3,4,5,6,7,8,9,10],"y":[0,0,1,1,0,0,0,0,1,0,0],"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"margin":{"l":60,"r":20,"t":50,"b":40},"title":{"text":"Tool-use shape per iteration"},"xaxis":{"title":{"text":"iteration"}},"yaxis":{"title":{"text":"count"}},"barmode":"stack","height":300},                        {"responsive": true}                    )                };            </script>        </div>
+<h2>VRAM</h2>
+<p><em>no vram samples</em></p>
+<h2>Iterations</h2>
+<table class='it-table'>
+<thead><tr><th>iter</th><th>ts</th><th>exit</th><th>elapsed(s)</th><th>submitted</th><th>n_pred</th><th>transfer_acc</th><th>PGR</th><th>correct/total</th><th>notes</th></tr></thead><tbody>
+<tr><td>0</td><td>2026-06-01T03:27:51Z</td><td>2</td><td>0.0</td><td></td><td></td><td></td><td></td><td></td><td>4 failure(s)</td></tr>
+<tr><td>1</td><td>2026-06-01T03:47:51Z</td><td>0</td><td>390.0</td><td></td><td></td><td></td><td></td><td></td><td>2 failure(s)</td></tr>
+<tr><td>2</td><td>2026-06-01T03:50:09Z</td><td></td><td></td><td>✓</td><td></td><td>0.580</td><td>0.242</td><td>116/200</td><td></td></tr>
+<tr><td>3</td><td>2026-06-01T06:12:27Z</td><td>1</td><td>11.3</td><td>✓</td><td></td><td>0.615</td><td>0.435</td><td>123/200</td><td>2 failure(s)</td></tr>
+<tr><td>4</td><td>2026-06-01T06:46:23Z</td><td>0</td><td>1367.0</td><td></td><td></td><td></td><td></td><td></td><td>1 failure(s)</td></tr>
+<tr><td>5</td><td>2026-06-01T06:57:52Z</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>2 failure(s)</td></tr>
+<tr><td>6</td><td>2026-06-01T06:58:42Z</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>1 failure(s)</td></tr>
+<tr><td>7</td><td>2026-06-01T07:18:06Z</td><td>0</td><td>735.6</td><td></td><td></td><td></td><td></td><td></td><td>2 failure(s)</td></tr>
+<tr><td>8</td><td>2026-06-01T07:21:02Z</td><td>1</td><td>9.2</td><td>✓</td><td></td><td>0.533</td><td>-0.015</td><td>160/300</td><td></td></tr>
+<tr><td>9</td><td>2026-06-01T07:40:16Z</td><td>1</td><td>9.1</td><td></td><td></td><td></td><td></td><td></td><td>3 failure(s)</td></tr>
+<tr><td>10</td><td>2026-06-01T07:55:50Z</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>2 failure(s)</td></tr>
+</tbody></table>
+<h2>Drill-down</h2>
+<details><summary>iteration 0 — Bash exit 2</summary>
+<h4>failure log</h4><ul>
+<li><code>tool_error[Read]: Read: file not found: /home/tlifke/Projects/morel-research/studies/003-automated-w2s-replication/investigations/006-overnight-agent-loop/logs/handoff_math_seed42/workspace/results/math_vanilla_w2s/Qwen_Qwen3_4B_Base_Qwen_Qwen1_5_0_5B_Chat_e1_lr0.0001_bs4_schlinear_test_size64/seed_42/.eval_inputs/ev</code></li>
+<li><code>tool_error[Glob]: Glob error: Non-relative patterns are unsupported</code></li>
+<li><code>tool_error[Read]: Read: file not found: /home/tlifke/Projects/morel-research/studies/003-automated-w2s-replication/investigations/006-overnight-agent-loop/logs/handoff_math_seed42/workspace/results/math_vanilla_w2s/Qwen_Qwen3_4B_Base_Qwen_Qwen1_5_0_5B_Chat_e1_lr0.0001_bs4_schlinear_test_size64/seed_42/.eval_inputs/ev</code></li>
+<li><code>no evaluate_predictions tool_use observed in session</code></li>
+</ul>
+</details>
+<details><summary>iteration 1 — Bash succeeded, no submission</summary>
+<h4>failure log</h4><ul>
+<li><code>tool_error[Read]: Read: file not found: /home/tlifke/Projects/automated-w2s-research/cache_results/math_vanilla_w2s/Qwen_Qwen3_4B_Base_Qwen_Qwen1_5_0_5B_Chat_e2_lr0.0001_bs4_schlinear_test_size200_train_size250/seed_42/.eval_inputs/eval_output.json</code></li>
+<li><code>no evaluate_predictions tool_use observed in session</code></li>
+</ul>
+<p>bash_markers: <code>BENIGN_REDIS_WARNING</code> <code>EVAL_PREDICTIONS_WRITTEN</code> <code>SFT_MEMORY_FREED</code> <code>VLLM_EVAL_COMPLETE</code></p>
+</details>
+<details><summary>iteration 2 — PGR 0.242</summary>
+<h4>evaluate_predictions submission</h4>
+<p>predictions_file: <code></code></p>
+<details class='ack'><summary>server_ack</summary><pre>{
+  &quot;success&quot;: true,
+  &quot;transfer_acc&quot;: 0.58,
+  &quot;pgr&quot;: 0.2421989528795812,
+  &quot;correct&quot;: 116,
+  &quot;total&quot;: 200,
+  &quot;fixed_weak_acc&quot;: 0.5360266159695817,
+  &quot;fixed_strong_acc&quot;: 0.7175855513307985,
+  &quot;num_predictions&quot;: 200
+}</pre></details>
+</details>
+<details><summary>iteration 3 — PGR 0.435</summary>
+<h4>evaluate_predictions submission</h4>
+<p>predictions_file: <code></code></p>
+<details class='ack'><summary>server_ack</summary><pre>{
+  &quot;success&quot;: true,
+  &quot;transfer_acc&quot;: 0.615,
+  &quot;pgr&quot;: 0.43497382198952894,
+  &quot;correct&quot;: 123,
+  &quot;total&quot;: 200,
+  &quot;fixed_weak_acc&quot;: 0.5360266159695817,
+  &quot;fixed_strong_acc&quot;: 0.7175855513307985,
+  &quot;num_predictions&quot;: 200
+}</pre></details>
+<h4>failure log</h4><ul>
+<li><code>tool_error[Bash]: Bash: timed out after 1800s</code></li>
+<li><code>tool_error[Bash]: Bash: timed out after 1800s</code></li>
+</ul>
+</details>
+<details><summary>iteration 4 — Bash succeeded, no submission</summary>
+<h4>failure log</h4><ul>
+<li><code>no evaluate_predictions tool_use observed in session</code></li>
+</ul>
+<p>bash_markers: <code>BENIGN_REDIS_WARNING</code> <code>EVAL_PREDICTIONS_WRITTEN</code> <code>SFT_MEMORY_FREED</code> <code>VLLM_EVAL_COMPLETE</code></p>
+</details>
+<details><summary>iteration 5</summary>
+<h4>failure log</h4><ul>
+<li><code>tool_error[Read]: Read: file not found: /home/tlifke/Projects/automated-w2s-research/results/math_vanilla_w2s/Qwen_Qwen3_4B_Base_Qwen_Qwen1_5_0.5B_Chat_e2_lr0.0001_bs4_schlinear_test_size200_train_size1000/seed_42/.eval_inputs/eval_output.json</code></li>
+<li><code>no evaluate_predictions tool_use observed in session</code></li>
+</ul>
+</details>
+<details><summary>iteration 6</summary>
+<h4>failure log</h4><ul>
+<li><code>no evaluate_predictions tool_use observed in session</code></li>
+</ul>
+</details>
+<details><summary>iteration 7 — Bash succeeded, no submission</summary>
+<h4>failure log</h4><ul>
+<li><code>tool_error[Read]: Read: file not found: /home/tlifke/Projects/morel-research/studies/003-automated-w2s-replication/investigations/006-overnight-agent-loop/logs/handoff_math_seed42/workspace/results/math_vanilla_w2s/Qwen_Qwen3_4B_Base_Qwen_Qwen1_5_0_5B_Chat_e2_lr0.0001_bs4_schlinear_test_size300_train_size500/seed_42/</code></li>
+<li><code>no evaluate_predictions tool_use observed in session</code></li>
+</ul>
+<p>bash_markers: <code>BENIGN_REDIS_WARNING</code> <code>EVAL_PREDICTIONS_WRITTEN</code> <code>SFT_MEMORY_FREED</code> <code>VLLM_EVAL_COMPLETE</code></p>
+</details>
+<details><summary>iteration 8 — PGR -0.015</summary>
+<h4>evaluate_predictions submission</h4>
+<p>predictions_file: <code></code></p>
+<details class='ack'><summary>server_ack</summary><pre>{
+  &quot;success&quot;: true,
+  &quot;transfer_acc&quot;: 0.5333333333333333,
+  &quot;pgr&quot;: -0.01483420593368201,
+  &quot;correct&quot;: 160,
+  &quot;total&quot;: 300,
+  &quot;fixed_weak_acc&quot;: 0.5360266159695817,
+  &quot;fixed_strong_acc&quot;: 0.7175855513307985,
+  &quot;num_predictions&quot;: 300
+}</pre></details>
+</details>
+<details><summary>iteration 9 — Bash exit 1</summary>
+<h4>failure log</h4><ul>
+<li><code>tool_error[Bash]: Bash: timed out after 180s</code></li>
+<li><code>tool_error[Bash]: Bash: timed out after 180s</code></li>
+<li><code>no evaluate_predictions tool_use observed in session</code></li>
+</ul>
+</details>
+<details><summary>iteration 10</summary>
+<h4>failure log</h4><ul>
+<li><code>tool_error[Bash]: Bash: timed out after 180s</code></li>
+<li><code>no evaluate_predictions tool_use observed in session</code></li>
+</ul>
+</details>
+</body></html>
