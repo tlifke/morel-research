@@ -125,8 +125,11 @@ cleanup() {
 trap cleanup TERM INT
 
 cd "$UPSTREAM_DIR"
+# Use process substitution so $! captures the python's PID (not tee's).
+# Inv 006 finding: `python ... | tee` made `$!` = tee, so SIGTERM-to-wrapper
+# killed only tee and the agent loop kept running uninterrupted.
 "$UPSTREAM_DIR/.venv/bin/python" "$INV005_DIR/scripts/run_smoke.py" \
-    2>&1 | tee "$LAUNCH_DIR/run.log" &
+    > >(tee "$LAUNCH_DIR/run.log") 2>&1 &
 PYTHON_PID=$!
 wait "$PYTHON_PID"
 EXIT=$?
