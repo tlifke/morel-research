@@ -1,0 +1,58 @@
+diff --git a/w2s_research/web_ui/backend/app.py b/w2s_research/web_ui/backend/app.py
+index 5e3eca8..3bf9a60 100644
+--- a/w2s_research/web_ui/backend/app.py
++++ b/w2s_research/web_ui/backend/app.py
+@@ -1705,6 +1705,7 @@ def evaluate_predictions():
+             return jsonify({'error': 'Missing request body'}), 400
+         
+         predictions = data.get('predictions')
++        test_indices = data.get('test_indices')
+         dataset_name = data.get('dataset')
+         split = data.get('split', 'test')
+         weak_model = data.get('weak_model')
+@@ -1714,6 +1715,11 @@ def evaluate_predictions():
+             return jsonify({'error': 'Missing predictions field'}), 400
+         if not dataset_name:
+             return jsonify({'error': 'Missing dataset field'}), 400
++        if test_indices is not None and len(test_indices) != len(predictions):
++            return jsonify({'error': (
++                f'test_indices ({len(test_indices)}) and predictions '
++                f'({len(predictions)}) length mismatch'
++            )}), 400
+         
+         # Import evaluation functions
+         from w2s_research.web_ui.backend.evaluation import (
+@@ -1753,6 +1759,24 @@ def evaluate_predictions():
+         if strong_model and fixed_strong_acc is None:
+             warnings.append(f"strong baseline not found in cache for {strong_model} on {dataset_name}")
+         
++        # inv 005: subset eval via test_indices.
++        # When the worker evaluated only a subset of the test set
++        # (e.g. --test-size 64 out of 1315), it passes test_indices
++        # so the server can slice ground truth to match.
++        subset_warnings = []
++        if test_indices is not None:
++            max_idx = max(test_indices) if test_indices else -1
++            if max_idx >= len(ground_truth):
++                return jsonify({'error': (
++                    f'test_indices max ({max_idx}) >= ground_truth length '
++                    f'({len(ground_truth)})'
++                )}), 400
++            ground_truth = [ground_truth[i] for i in test_indices]
++            if len(predictions) < (max_idx + 1):
++                subset_warnings.append(
++                    f"subset eval: {len(predictions)} of {max_idx + 1} test items"
++                )
++        
+         # Compute metrics
+         metrics = compute_metrics_from_predictions(
+             predictions=predictions,
+@@ -1760,6 +1784,8 @@ def evaluate_predictions():
+             fixed_weak_acc=fixed_weak_acc,
+             fixed_strong_acc=fixed_strong_acc,
+         )
++        if subset_warnings:
++            metrics.setdefault("warnings", []).extend(subset_warnings)
+         
+         # Add warnings to response if PGR couldn't be computed
+         if metrics.get('pgr') is None and warnings:

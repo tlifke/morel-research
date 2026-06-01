@@ -1,0 +1,25 @@
+--- a/claude_agent_sdk/builtins.py
++++ b/claude_agent_sdk/builtins.py
+@@ -98,9 +98,13 @@
+         # not in the tail-40-lines slice we show.
+         if any(m.startswith("EVAL_PREDICTIONS_WRITTEN") for m in markers):
+             _ep = re.search(r"(\S*results/\S*/eval_output\.json)", out)
+             if _ep:
+-                lines.append(f"eval_output_path: {_ep.group(1)}")
++                _path = _ep.group(1)
++                # train.py emits `eval_output_json=<path>`; strip that prefix
++                if "eval_output_json=" in _path:
++                    _path = _path.split("eval_output_json=", 1)[1]
++                lines.append(f"eval_output_path: {_path}")
+
+     if out_bytes <= small_threshold:
+         lines.append("")
+
+# Applies to both shim_v1 (/home/tlifke/inv003_shim/shim_pkg/) and
+# shim_v2 (/home/tlifke/inv003_shim/shim_v2_pkg/).
+# Discovered 2026-05-31 during inv 005 Q1 close: train.py's
+# `[Subprocess eval] eval_output_json=<path>` line caused the greedy
+# `\S*results/` regex to capture the `eval_output_json=` prefix into
+# the path. Symptom: handoff yaml's predictions_file was malformed,
+# the next iteration's pointed bootstrap directed nemotron to read
+# from "eval_output_json=results/..." which didn't resolve.
