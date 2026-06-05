@@ -61,4 +61,40 @@ Conventions:
 
 ## Open ideas
 
-_None yet. Add new directions below using the format above._
+### Literature-grounded research agents (search → relevance → implement)
+
+When we move from *diagnosing* a small research agent (study 004) to
+*improving* one, a core capability to test is whether the agent can use
+the published literature: search for work relevant to its problem, judge
+whether what it finds is actually relevant (not just keyword-matched),
+extract the usable idea, and implement it correctly in its own
+experiment. The literature on long-horizon agents and context
+engineering turned out to be unexpectedly rich (ACE, ACON,
+Context-Folding, the "lost in multi-turn" line, Anthropic's harness-design
+work) — exactly the kind of material a self-improving researcher should
+be mining. Each sub-skill is separately testable (retrieval quality,
+relevance judgement, faithful implementation) and each is a distinct
+point on the capability map. Likely its own study once study 004's
+diagnostic framework is mature enough to plug a "read the literature"
+tool into the loop.
+
+```yaml
+llm_assessment:
+  model: claude-opus-4-8
+  date: 2026-06-04
+  llm_capability: medium
+  human_capability: high
+  confidence: low
+  reasoning: |
+    Retrieval and summarization are tractable for current LLMs; the hard,
+    under-tested parts are relevance judgement (does this paper actually
+    bear on my problem?) and faithful implementation of a method from a
+    paper into running code. Splitting medium because the easy half is
+    solved and the hard half is largely unmeasured for small models.
+    Framing may be brittle: "implement an idea from a paper" bundles
+    several capabilities that should probably be separated before scoring.
+
+human_assessment: null
+
+divergence_notes: null
+```
