@@ -9,18 +9,18 @@ PROVIDER="$1"; MODEL="$2"; S0="$3"; S1="$4"; shift 4
 ENVS=("$@")
 SWEEP="runs/${SUBDIR:-sweep}"
 mkdir -p "$SWEEP"
-RETAG="${THINK:+_re${THINK}}"
-LOG="$SWEEP/${PROVIDER}${RETAG}_sweep.log"
+TAGX="${ARM:+_${ARM}}${THINK:+_re${THINK}}"
+LOG="$SWEEP/${PROVIDER}${TAGX}_sweep.log"
 
 for pair in "${ENVS[@]}"; do
   N="${pair%%:*}"; D="${pair##*:}"
   for s in $(seq "$S0" "$S1"); do
-    tag="${PROVIDER}${RETAG}_N${N}_D${D}_s${s}"
+    tag="${PROVIDER}${TAGX}_N${N}_D${D}_s${s}"
     RD="$SWEEP/$tag"
     if [ -f "$RD/loop_summary.json" ]; then echo "[skip] $tag"; continue; fi
     echo "[run ] $tag  ($(date +%H:%M:%S))"
     RUN_DIR="$RD" PROVIDER="$PROVIDER" MODEL="$MODEL" N="$N" D="$D" BUDGET="${BUDGET:-50}" \
-      THINK="${THINK:-}" OLLAMA_URL="${OLLAMA_URL:-http://localhost:11434/v1}" \
+      THINK="${THINK:-}" REFLECT="${REFLECT:-off}" ACTUATE="${ACTUATE:-off}" OLLAMA_URL="${OLLAMA_URL:-http://localhost:11434/v1}" \
       node src/researcher.ts >> "$LOG" 2>&1 \
       && tail -2 "$LOG" | sed 's/^/        /' \
       || echo "        [ERROR] see $LOG"
