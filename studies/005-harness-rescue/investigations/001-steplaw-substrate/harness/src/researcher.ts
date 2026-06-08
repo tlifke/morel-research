@@ -14,6 +14,11 @@ const WALL_MS = Number(process.env.WALL_MS ?? "300000");
 const N = Number(process.env.N ?? "214663680");
 const D = Number(process.env.D ?? "100000000000");
 
+// Phase-1 rich-harness knobs (inv 002):
+const REFLECT = (process.env.REFLECT ?? "off") as "off" | "self" | "fresh";  // C1
+const ACTUATE = (process.env.ACTUATE ?? "off") !== "off";                     // C4
+const ACTUATE_RETRIES = Number(process.env.ACTUATE_RETRIES ?? "3");
+
 const REASONING = (process.env.REASONING ?? "true") !== "false";
 // THINK = off|minimal|low|medium|high. ollama /v1 disables reasoning only via
 // reasoning_effort:"none" (Pi nullifies thinkingLevel "off" → sends nothing → ollama defaults ON),
@@ -41,6 +46,23 @@ let totalCalls = 0;
 let consecReject = 0;
 let finished: { best_lr: number; best_bs: number; claimed_loss?: number } | null = null;
 let terminatedByCap: string | null = null;
+let reflections = 0;
+
+// C1 fresh-agent reflection: a SEPARATE clean-context call (same model) that reviews the
+// trajectory so far and returns one line of strategic advice, injected into the next result.
+async function freshReflect(): Promise<string> {
+  const hist = traj.map((t) => `lr=${t.lr.toExponential(2)} bs=${t.bs}->loss=${t.loss}`).join("; ");
+  const sys = "You advise an ML researcher tuning learning rate (lr) and batch size (bs) to MINIMIZE validation loss. Be concise, strategic, and specific.";
+  const user = `Experiments so far: ${hist || "(none yet)"}. Valid lr: ${info.lr_values.map((x: number) => x.toExponential(2)).join(", ")}. Valid bs: ${info.bs_values.join(", ")}. In ONE sentence, advise the single most useful next configuration to try and why — vary BOTH lr and bs across the run (do not get stuck fixing one), and steer toward unexplored regions. Do not suggest an already-tried config.`;
+  try {
+    const res = await fetch(OLLAMA_URL.replace(/\/$/, "") + "/chat/completions", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: model.id, messages: [{ role: "system", content: sys }, { role: "user", content: user }], reasoning_effort: "low", max_tokens: 600, temperature: 1 }),
+    });
+    const j: any = await res.json();
+    return ((j.choices?.[0]?.message?.content ?? "") as string).trim().replace(/\s+/g, " ").slice(0, 320);
+  } catch { return ""; }
+}
 
 const runConfig = {
   name: "run_config",
@@ -83,7 +105,18 @@ const runConfig = {
     let note = "";
     if (used >= BUDGET) note = ` Budget exhausted (${used}/${BUDGET}). Call finish now with your best configuration.`;
     else if (used >= BUDGET - 5) note = ` ${BUDGET - used} experiment(s) left in your budget.`;
-    return { content: [{ type: "text", text: JSON.stringify({ lr: r.lr, bs: r.bs, val_loss: r.loss }) + note }], details: {} };
+    // C1 reflection
+    let reflect = "";
+    if (used < BUDGET) {
+      if (REFLECT === "self") {
+        reflect = " Reflect in ONE sentence: what does this result teach you about lr/bs, and should you change direction? Then run your next experiment or finish.";
+        reflections++;
+      } else if (REFLECT === "fresh") {
+        const a = await freshReflect();
+        if (a) { reflect = ` Advisor (independent review of your history): "${a}"`; logRec({ kind: "reflection", source: "fresh", text: a }); reflections++; }
+      }
+    }
+    return { content: [{ type: "text", text: JSON.stringify({ lr: r.lr, bs: r.bs, val_loss: r.loss }) + note + reflect }], details: {} };
   },
 };
 
@@ -104,6 +137,8 @@ const SYSTEM_PROMPT = [
   `Only these exact values are valid. Learning rates: ${info.lr_values.map((x: number) => x.toExponential(3)).join(", ")}. Batch sizes: ${info.bs_values.join(", ")}. Off-grid requests are rejected (and do not cost you a budget slot).`,
   info.sparse ? `Note: not every lr×bs combination was measured (${info.n_configs} of ${info.full_grid} exist). If a pair was not measured, the response tells you which batch sizes ARE available at that lr — pick one of those rather than retrying nearby.` : ``,
   `You may run up to ${BUDGET} experiments. Spend them deliberately: use what each result reveals to choose the next configuration, and do not re-run a configuration you already tried.`,
+  REFLECT === "self" ? `After each result you will be asked to reflect briefly; use that reflection to direct your search — vary BOTH lr and bs over the run, and don't get stuck fixing one of them.` : ``,
+  REFLECT === "fresh" ? `After each result an independent advisor will review your history and suggest a next move; weigh its advice, but you decide.` : ``,
   `When you have found the best configuration you can — or your budget is spent — call finish with your best lr and bs. Briefly state what you learned as you go.`,
 ].filter(Boolean).join("\n");
 
@@ -112,7 +147,7 @@ mkdirSync(runDir, { recursive: true });
 const jsonl = createWriteStream(join(runDir, "trace.jsonl"));
 const logRec = (rec: Record<string, unknown>) => jsonl.write(JSON.stringify({ ts: new Date().toISOString(), ...rec }) + "\n");
 const FIRST_USER = `Begin. You have a budget of ${BUDGET} experiments. Run your first experiment, then continue until you call finish.`;
-logRec({ kind: "meta", title: "StepLaw researcher (single-conversation)", subtitle: `study 005 inv 001 · N=${N} D=${D} · optimum_loss=${OPTIMUM}`, model: model.id, substrate: "steplaw", scenario: `lr/bs tuning, budget ${BUDGET}, finish-tool`, system_prompt: SYSTEM_PROMPT, first_user: FIRST_USER });
+logRec({ kind: "meta", title: "StepLaw researcher (single-conversation)", subtitle: `study 005 · N=${N} D=${D} · optimum_loss=${OPTIMUM} · reflect=${REFLECT} actuate=${ACTUATE}`, model: model.id, substrate: "steplaw", scenario: `lr/bs tuning, budget ${BUDGET}, reflect=${REFLECT}, actuate=${ACTUATE}`, system_prompt: SYSTEM_PROMPT, first_user: FIRST_USER });
 
 const usage = { input: 0, output: 0, cacheRead: 0, cost: 0, calls: 0 };
 function move(name: string) { return name === "run_config" ? "EXECUTE" : name === "finish" ? "DECIDE" : "TOOL"; }
@@ -130,13 +165,30 @@ function attach(agent: Agent) {
   });
 }
 
-console.log(`\n=== steplaw researcher (single-conversation)  model=${model.id}  env N=${N} D=${D}  optimum=${OPTIMUM}  budget=${BUDGET} ===\n`);
+console.log(`\n=== steplaw researcher  model=${model.id}  env N=${N} D=${D}  optimum=${OPTIMUM}  budget=${BUDGET}  reflect=${REFLECT} actuate=${ACTUATE} ===\n`);
 const THINK_LEVEL = PROVIDER === "gemini" ? THINK : "minimal";
 const agent = new Agent({ initialState: { systemPrompt: SYSTEM_PROMPT, model: model as never, tools: [runConfig, finishTool] as never, thinkingLevel: THINK_LEVEL as never }, getApiKey: apiKey });
 attach(agent);
 logRec({ kind: "input", text: FIRST_USER });
+let actuateRetries = 0;
+let forcedFinish = false;
 try {
-  await agent.prompt(FIRST_USER);
+  let prompt = FIRST_USER;
+  while (true) {
+    await agent.prompt(prompt);
+    if (finished || terminatedByCap) break;
+    // agent yielded without calling finish.
+    if (!ACTUATE) break; // minimal: a yield-without-finish is a stall
+    if (actuateRetries >= ACTUATE_RETRIES) {
+      // C4 force: re-prompts exhausted → harness submits the best config found
+      const bi = traj.length ? traj.reduce((m, t, i) => (t.loss < traj[m].loss ? i : m), 0) : -1;
+      if (bi >= 0) { finished = { best_lr: traj[bi].lr, best_bs: traj[bi].bs }; forcedFinish = true; }
+      break;
+    }
+    actuateRetries++;
+    prompt = `You stopped without calling finish. You MUST now do exactly ONE of: (a) if you can still improve and have budget left, run another experiment with run_config; or (b) record your answer by calling finish(best_lr, best_bs) with the best configuration you found. Do one now — a written conclusion is not accepted, only a tool call.`;
+    logRec({ kind: "input", text: prompt, actuate_retry: actuateRetries });
+  }
 } catch (err) { console.error("error:", err); }
 logRec({ kind: "end" });
 jsonl.end();
@@ -149,7 +201,8 @@ const outcome = finished ? "finished" : terminatedByCap ? `ceiling:${terminatedB
 const claimMatchesBest = finished && bestIdx >= 0
   ? Math.abs(finished.best_lr - traj[bestIdx].lr) / traj[bestIdx].lr < 0.05 && Number(finished.best_bs) === traj[bestIdx].bs
   : null;
-const summary = { model: model.id, N, D, budget: BUDGET, think: THINK, reasoning_effort: PROVIDER === "gemini" ? THINK : OLLAMA_RE, optimum_loss: OPTIMUM, experiments: traj.length, invalid_requests: invalid, total_calls: totalCalls, best_loss: best, best_config: bestIdx >= 0 ? { lr: traj[bestIdx].lr, bs: traj[bestIdx].bs } : null, final_regret: best != null ? best - OPTIMUM : null, repeats, coverage: tried.size / info.n_configs, outcome, finished, claim_matches_best: claimMatchesBest, elapsed_ms: Date.now() - START, usage, trajectory: traj };
+const finishKind = finished ? (forcedFinish ? "forced" : actuateRetries > 0 ? "nudged" : "clean") : null;
+const summary = { model: model.id, N, D, budget: BUDGET, think: THINK, reasoning_effort: PROVIDER === "gemini" ? THINK : OLLAMA_RE, reflect: REFLECT, actuate: ACTUATE, optimum_loss: OPTIMUM, experiments: traj.length, invalid_requests: invalid, total_calls: totalCalls, best_loss: best, best_config: bestIdx >= 0 ? { lr: traj[bestIdx].lr, bs: traj[bestIdx].bs } : null, final_regret: best != null ? best - OPTIMUM : null, repeats, coverage: tried.size / info.n_configs, outcome, finish_kind: finishKind, actuate_retries: actuateRetries, reflections, finished, claim_matches_best: claimMatchesBest, elapsed_ms: Date.now() - START, usage, trajectory: traj };
 writeFileSync(join(runDir, "loop_summary.json"), JSON.stringify(summary, null, 2));
-console.log(`outcome=${outcome}  experiments=${traj.length}  invalid=${invalid}  best_loss=${best?.toFixed(4)}  regret=${best != null ? (best - OPTIMUM).toFixed(4) : "?"}  coverage=${(tried.size / info.n_configs * 100).toFixed(0)}%  repeats=${repeats}  claim_ok=${claimMatchesBest}`);
+console.log(`outcome=${outcome} finish=${finishKind}  reflect=${REFLECT} actuate=${ACTUATE}(retries ${actuateRetries})  experiments=${traj.length}  regret=${best != null ? (best - OPTIMUM).toFixed(4) : "?"}  repeats=${repeats}  claim_ok=${claimMatchesBest}`);
 console.log(`usage: model_calls=${usage.calls}  input_tok=${usage.input}  output_tok=${usage.output}  cache_read=${usage.cacheRead}  cost=$${usage.cost.toFixed(6)} (per the price constants set in this script)`);
