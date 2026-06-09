@@ -155,7 +155,41 @@ _Populate as work proceeds._
 
 ## Results
 
-_To be populated._
+### Phase 1 — C1×C4 factorial (2026-06-08)
+
+nemotron-4b · Env A · reasoning=low · 20 seeds/arm · 120 runs · figure
+`assets/fig_phase1.png`, data `data/phase1_runs.csv`.
+
+| arm | finished | finish_kind | regret med / mean / max | reach-opt | sec |
+|---|---|---|---|---|---|
+| A0 minimal | 11/20 | clean 11 | 0.0016 / 0.0060 / 0.038 | 2 | 31 |
+| A1 +C4 | **20/20** | nudged 10, clean 9, forced 1 | 0.0016 / 0.0074 / 0.026 | 3 | 34 |
+| A2 +C1self | 11/20 | clean 11 | 0.0021 / 0.0059 / 0.042 | 2 | 33 |
+| A3 +C1self+C4 | **20/20** | clean 10, nudged 8, forced 2 | 0.0016 / 0.0038 / 0.016 | 1 | 34 |
+| A4 +C1fresh | 8/20 | clean 8 | 0.0016 / 0.0034 / **0.014** | **5** | 88 |
+| A5 +C1fresh+C4 | **20/20** | nudged 8, clean 9, forced 3 | **0.0002** / **0.0036** / 0.019 | **5** | 78 |
+
+**Main effects.**
+- **C4 (actuation) is a clean, decisive win on finishing:** stall rate
+  ~45–60% → **0%** across *all* C1 levels (finished-rate Δ ≈ +50%). The rescue
+  is real: ~8–10/20 finished only after the re-prompt (`nudged`), 1–3 needed the
+  harness force-submit (`forced`). As predicted, C4 does **not** change the
+  median regret of runs that already finished — it fixes *finishing*, not search.
+- **C1 (reflection) doesn't move the saturated median but tightens the tail,
+  and fresh > self:** worst-case regret falls from `off` ~0.026–0.038 to `fresh`
+  ~0.014–0.019; mean from ~0.006–0.007 (`off`) → ~0.0035 (`fresh`). Fresh
+  reflection also reaches the **exact optimum 5/20** (vs 2–3 elsewhere) — its
+  "explore both axes / unexplored regions" advice works.
+- **Interaction:** the C4 nudge ("run another experiment OR finish") extracts ~1
+  extra experiment on average (A3 13.7 vs A2 12.7 exp), so C4 *slightly* helps
+  regret in combination, not just finishing. Self-reflection is noisy **alone**
+  (A2) but clean **with C4** (A3).
+- **Cost:** fresh reflection ≈ 2.3× wall-clock (78–88s vs 31–34s) — the
+  per-step advisor call.
+
+**Best harness:** **A5 (fresh + C4)** — 100% finished, lowest mean regret,
+most optimum-reaches — for quality; **A3 (self + C4)** is ~as good on the tail
+at **half the time** (no advisor calls), the quality/cost pick.
 
 ## Forward-looking
 
