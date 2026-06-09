@@ -15,7 +15,8 @@ ENV_LABEL = {
     (1073741824, 56900000000): "C",
 }
 
-FIELDS = ["model", "env", "N", "D", "seed", "think", "reasoning_effort", "outcome", "experiments",
+FIELDS = ["model", "env", "N", "D", "seed", "think", "reasoning_effort", "reflect", "actuate",
+          "outcome", "finish_kind", "actuate_retries", "reflections", "experiments",
           "invalid_requests", "total_calls", "repeats", "best_loss", "final_regret", "optimum_loss",
           "claim_matches_best", "elapsed_ms", "cost_usd"]
 
@@ -30,7 +31,9 @@ def main():
             "model": r["model"], "env": ENV_LABEL.get((r["N"], r["D"]), "?"),
             "N": r["N"], "D": r["D"], "seed": seed,
             "think": r.get("think", ""), "reasoning_effort": r.get("reasoning_effort", ""),
-            "outcome": r["outcome"],
+            "reflect": r.get("reflect", ""), "actuate": r.get("actuate", ""),
+            "outcome": r["outcome"], "finish_kind": r.get("finish_kind", ""),
+            "actuate_retries": r.get("actuate_retries", ""), "reflections": r.get("reflections", ""),
             "experiments": r["experiments"], "invalid_requests": r["invalid_requests"],
             "total_calls": r.get("total_calls", ""), "repeats": r["repeats"],
             "best_loss": r["best_loss"], "final_regret": r["final_regret"],

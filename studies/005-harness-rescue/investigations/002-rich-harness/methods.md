@@ -221,3 +221,23 @@ capstone.
   self-vs-fresh for C1.
 - **Decision rule:** carry the winning (C1-owner, C4) config to Phase 2; report
   problem-specific vs generalizable C4 mechanisms separately.
+
+## Phase-1 outcomes — hypotheses scored (2026-06-08)
+
+- **C4.** Tyler: "big improvement, finicky, distinguish problem-space vs
+  generalizable." Claude: "near-certain win; effect is finished-rate +
+  claim-capture, ~0 on regret-of-finished." **Result: Claude's metric split
+  confirmed** — stall 0% across all C1 levels, median regret of finishers
+  unchanged. Not finicky on StepLaw (simple case); Tyler's finicky-prediction
+  reserved for the real task. Both directionally right; Claude's precision on
+  *which* metric moves was the sharper call.
+- **C1.** Tyler: "biggest lever besides C4, likely works well." Claude:
+  "fresh > self; self may underdeliver." **Result: split decision.** Reflection
+  does *not* move the saturated median (so "works well" is true only in the
+  **tail**, not the center). Fresh tightens the tail most and reaches the
+  optimum more — **Claude's fresh > self held**. But the nuance neither of us
+  predicted: **self is noisy *alone* but clean *with C4* (A3)** — there's a real
+  C1×C4 interaction. Tyler's "biggest lever" overstated for the median;
+  accurate for worst-case + optimum-reaching.
+- **Open for Phase 2:** is fresh's tail-tightening worth 2.3× time vs self+C4?
+  Does fresh's advantage grow on harder envs (B/C) where exploration matters more?
