@@ -219,14 +219,47 @@ is **specific and nameable**, not generic weakness:
   *self*-reflection produced the single cleanest run (s13's deliberate bs-sweep)
   with no advisor.
 
-**Highest-leverage fix (data-derived, → Phase 2):** a **coverage-forcing nudge**
-— "before you finish, confirm you've swept batch size up to the maximum at your
-best learning rate." Every far miss is cured by one bs=1024 probe at its chosen
-lr. This targets the dominant failure directly and is sharp/judgeable.
-Secondary: make the A5 advisor grid-aware + corner-biased + on-grid-validated,
-or **drop it for the cheaper, more reliable A3-style self-reflection + an
-explicit coverage checklist**. The C4 actuation wrapper is doing real work
-(forced/nudged finishes) — keep it.
+### All-six-arms behavioral comparison (2026-06-08) — corrects the A3>A5 read
+
+Second subagent analyzed A0/A1/A2/A4 against the axis-freezing hypothesis. The
+result **overturns the prior turn's "A3 self+C4 is the better base, drop the
+advisor" conclusion.** Which intervention touches the *root cause* (axis-freezing)
+vs merely cleans up finishing:
+
+- **C4 / actuation (A1): finishing only, zero effect on search.** A1's far misses
+  are identical low-lr bs-freezes to A0's; the wrapper fires once, at the stop
+  step (A1 s5 wrote a prose "Finish." with a *hallucinated* loss 1.945, got
+  re-prompted, then called finish). Necessary for clean measurement, not a cure.
+- **C1self / inline reflection (A2): does NOT structurally unfreeze.** It makes
+  the agent more *methodical inside* whatever region it anchored — A2 s18 spent
+  20 experiments crawling lr 2.4e-4→9.8e-4, reflecting "128 best" the whole way.
+  Changes flavor, not the freeze.
+- **C1fresh / fresh advisor (A4): the ONLY lever that actually breaks
+  axis-freezing.** By injecting new (lr,bs) *pairs* each step it mechanically
+  prevents single-axis sweeps → highest joint 2-axis movement, lowest freezing
+  of all six arms. **But** it trades freezing for (a) direction-unreliability
+  (off-grid "bs=7", dead-zone low-lr pushes) and (b) **non-termination** — A4
+  converged runs (s4, s16) *reached the optimum then walked away* because the
+  advisor kept proposing corners; they ended `stalled`.
+
+**Reframe:** A4 is **less problematic than its regret suggests** — its *search*
+is the best of the set; its deficit is termination/selection, exactly what C4
+fixes. A2 **looked better than it is** — clean joint narration on wins, but its
+misses are pure unbroken freezes. So the implied combination is **C1fresh + C4
+(= A5)**: the advisor breaks the freeze, C4 stops the advisor-induced wandering
+and commits. **Neither alone suffices** — C4-alone fixes nothing about search;
+fresh-alone finds the corner but won't commit. My prior-turn "drop the advisor"
+was wrong: self-reflection cannot break the freeze; only the fresh observer can.
+
+**Corrected highest-leverage path (→ Phase 2):** keep **C1fresh + C4**, but fix
+the advisor's *reliability* (its only real flaw): (i) **on-grid validation** —
+snap/reject its suggestions to real grid points before injection; (ii) **reframe
+it as a general anti-freezing monitor** — "you've held one axis fixed for N
+steps; vary it / check whether your best lr changes at other batch sizes" —
+rather than naming specific configs/corners (which leaks env-specific answers and
+is the source of its bad low-lr pushes). C4 already handles the termination flaw.
+This keeps the *generalizable* mechanism (detect freezing, prompt joint coverage,
+no assumption about where the optimum is) and removes the env-specific noise.
 
 ## Forward-looking
 
