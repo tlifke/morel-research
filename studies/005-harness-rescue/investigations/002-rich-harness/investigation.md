@@ -191,6 +191,43 @@ nemotron-4b · Env A · reasoning=low · 20 seeds/arm · 120 runs · figure
 most optimum-reaches — for quality; **A3 (self + C4)** is ~as good on the tail
 at **half the time** (no advisor calls), the quality/cost pick.
 
+### Why it fails — converged/close/far deep-dive (2026-06-08)
+
+Subagent read A3/A5 traces across tiers (converged / close / far). Root cause
+is **specific and nameable**, not generic weakness:
+
+- **The model does not reason about the lr×bs *interaction*.** It treats the two
+  as independently optimizable, **freezes one axis early (almost always batch
+  size)** — often off a misleading low-lr slice — and sweeps the other. The
+  optimum needs the *joint* high-lr + large-bs setting, so freezing bs small
+  caps regret at ~0.016. Worse, the bs=128 lr-sweep has a **clean, confident,
+  wrong minimum** (at low lr=1.38e-3, loss 2.358), so the agent gets an
+  internally-consistent "answer" it has no reason to doubt.
+- **Success discriminator = did it reach bs ≥ 736 paired with high lr.** Effort
+  doesn't separate tiers — far misses (s11 12-exp, s16 13-exp) used *more*
+  budget than converged runs (s8 6-exp). It's *which* corner, not how hard.
+- **Failure is COVERAGE, not perception or stamina.** The shallow-basin worry
+  didn't materialize — when agents reach the basin they correctly stop on a
+  near-best cell (no found-it-then-walked-away cases). Extra budget wouldn't
+  help the misses; they'd keep sweeping lr at bs=128. (One exception: A5 s19, a
+  genuine stamina+bad-steering give-up at n=5.)
+- **The A5 fresh advisor is net-unreliable.** When it names the high-lr/high-bs
+  corner it's golden (s8 → exact optimum). But it's the *same 4B*, and in both
+  A5 far misses it produced sustained **low-lr advice in the wrong direction**
+  (s18, s19), plus off-grid values (1.5e-2, 2.2e-2) and truncated lines
+  ("Try lr≈8.0e-"). As likely to cause a far miss as a convergence. A3's
+  *self*-reflection produced the single cleanest run (s13's deliberate bs-sweep)
+  with no advisor.
+
+**Highest-leverage fix (data-derived, → Phase 2):** a **coverage-forcing nudge**
+— "before you finish, confirm you've swept batch size up to the maximum at your
+best learning rate." Every far miss is cured by one bs=1024 probe at its chosen
+lr. This targets the dominant failure directly and is sharp/judgeable.
+Secondary: make the A5 advisor grid-aware + corner-biased + on-grid-validated,
+or **drop it for the cheaper, more reliable A3-style self-reflection + an
+explicit coverage checklist**. The C4 actuation wrapper is doing real work
+(forced/nudged finishes) — keep it.
+
 ## Forward-looking
 
 _To be populated — the winning harness graduates to inv 003 (real-W2S desktop
