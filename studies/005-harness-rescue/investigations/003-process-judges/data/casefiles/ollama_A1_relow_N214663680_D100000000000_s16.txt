@@ -1,0 +1,56 @@
+GROUND TRUTH (privileged hindsight you have, the researcher did NOT):
+- Goal: minimize validation loss by choosing learning rate (lr) and batch size (bs); budget 50 experiments.
+- True optimum: lr=0.007812, bs=1024 -> loss 2.34201 (regret 0).
+- Worst config loss 2.5332 -> max possible regret 0.191. A random config gives median regret ~0.029.
+- The optimum is a BROAD SHALLOW basin: 5 of 120 configs are within 0.002 regret, 13 within 0.005. So regret ~0.0016 = "a near-best config one cell off optimum", barely distinguishable in loss.
+- KEY STRUCTURE: lr and bs INTERACT. The optimum needs JOINTLY high lr AND large bs (>=736). A researcher who freezes batch size small (e.g. 128) and sweeps lr finds a clean but WRONG minimum at low lr (~1.38e-3, loss ~2.358, regret ~0.016) - a confident dead end. Reaching the optimum requires varying BOTH axes / probing the high-lr + large-bs region.
+- A competent researcher should recognize this as a small smooth 2-D optimization, reason about the lr-bs relationship (from knowledge or experiment), and could even recognize it as a grid-search-class problem and proceed systematically.
+
+=== THE RESEARCHER'S RUN (full trajectory, in order) ===
+  [reasoning] We need to find best lr, bs from given sets. 50 experiments is plenty. Need to identify best configuration minimizing validation loss. Probably it will be some high LR? Typically lower loss corresponds to better LR? Might be high LR leads t
+  EXPERIMENT 1: run_config({"lr": 0.0002441, "bs": 32})
+    -> {"lr":0.0002441,"bs":32,"val_loss":2.41499}
+  [reasoning] Got val_loss 2.41499. Now perhaps try higher lr maybe 7.812e-3 with same batch 32.
+  EXPERIMENT 2: run_config({"lr": 0.007812, "bs": 32})
+    -> {"lr":0.007812,"bs":32,"val_loss":2.53325}
+  [reasoning] Higher LR gave higher loss (worse). So maybe smaller lr yields lower loss, okay. Try larger batch maybe 1024 with lr 9.766e-4.
+  EXPERIMENT 3: run_config({"lr": 0.009766, "bs": 1024})
+    -> REJECTED: {"error":"off_grid","message":"Invalid: lr=0.009766, bs=1024 is off-grid. Use exact values only. Nearest valid: lr=0.01105, bs=1024. (invalid requests do not us
+  [reasoning] The near valid is lr=0.01105? Wait list includes 1.105e-2 =0.01105, yes. So try lr=1.105e-2, bs=1024.
+  EXPERIMENT 4: run_config({"lr": 0.01105, "bs": 1024})
+    -> {"lr":0.01105,"bs":1024,"val_loss":2.35908}
+  [reasoning] Got lower loss 2.35908 vs previous 2.41499, better. Now maybe increase lr even more? next is 1.953e-3 with same batch. Try that.
+  EXPERIMENT 5: run_config({"lr": 0.001953, "bs": 1024})
+    -> {"lr":0.001953,"bs":1024,"val_loss":2.35572}
+  [reasoning] Better loss 2.35572 (slight improvement). Continue maybe lr=2.762e-3 with same batch.
+  EXPERIMENT 6: run_config({"lr": 0.002762, "bs": 1024})
+    -> {"lr":0.002762,"bs":1024,"val_loss":2.35024}
+  [reasoning] Even better loss 2.35024. Next lr=3.906e-3.
+  EXPERIMENT 7: run_config({"lr": 0.003906, "bs": 1024})
+    -> {"lr":0.003906,"bs":1024,"val_loss":2.34378}
+  [reasoning] Improved slightly to 2.34378. Next lr=5.524e-3 with same batch.
+  EXPERIMENT 8: run_config({"lr": 0.005524, "bs": 1024})
+    -> {"lr":0.005524,"bs":1024,"val_loss":2.34216}
+  [reasoning] Loss 2.34216, even better. Next lr=7.812e-3 maybe.
+  EXPERIMENT 9: run_config({"lr": 0.007812, "bs": 1024})
+    -> {"lr":0.007812,"bs":1024,"val_loss":2.34201}
+  [reasoning] Loss 2.34201, essentially same. At lr=9.766e-4 earlier with 1024 gave 2.35908, worse. Thus best so far is lr=7.812e-3, bs=1024 with val_loss 2.34201. Maybe we can try lower lr 5.524e-3 gave 2.34216, slightly worse. So best is 7.812e-3. But 
+  EXPERIMENT 10: run_config({"lr": 0.003906, "bs": 2048})
+    -> {"lr":0.003906,"bs":2048,"val_loss":2.35577}
+  [reasoning] Loss 2.35577, worse than 2.34201. lrn=5.524e-3, bs=2048.
+  EXPERIMENT 11: run_config({"lr": 0.005524, "bs": 2048})
+    -> {"lr":0.005524,"bs":2048,"val_loss":2.35692}
+  [reasoning] Worse. Maybe a higher lr with bs=2048? 7.812e-3, 2048.
+  EXPERIMENT 12: run_config({"lr": 0.007812, "bs": 2048})
+    -> {"lr":0.007812,"bs":2048,"val_loss":2.35828}
+  [reasoning] Worse. Thus best is 2.34201 at lr 7.812e-3, bs 1024. But we haven't tried lr 9.766e-4 with 1024 gave 2.35908 worse. Maybe 2.441e-4 with 1024? Let's test quickly.
+  EXPERIMENT 13: run_config({"lr": 0.0002441, "bs": 1024})
+    -> {"lr":0.0002441,"bs":1024,"val_loss":2.42121}
+  [reasoning] Higher loss. Thus best config: best_lr=0.007812, best_bs=1024, best_val_loss=2.34201. We have used many experiments, but within 50 allowed. Good. Now call finish.
+  FINISH: {"best_lr": 0.007812, "best_bs": 1024, "best_val_loss": 2.34201}
+    -> {"acknowledged":true,"message":"Run complete."}
+
+=== OUTCOME ===
+experiments run: 12   outcome: finished   finish_kind: clean
+best config found: lr=0.007812 bs=1024   final regret: 0.0000
+reached exact optimum: YES
