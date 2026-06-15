@@ -100,6 +100,28 @@ traces spanning converged/close/far, with the manual subagent reads as reference
 
 Clears the ~80% bar on core verdict; rubric needs the two fixes above before scaling.
 
+### v2 + nemotron 4th judge (tightened rubric, 8 traces)
+
+Re-validated with the tightened rubric (no `outcome_vs_process`; advisor-credit
+policy + `used_external_help`) on 8 traces. Opus+Haiku+Gemini: **6/8 unanimous**;
+the 2 splits (A5 s8 advisor-handed, A1 s16 lucky-guess) are genuine
+credit-attribution edges with Opus+Haiku agreeing.
+
+**nemotron-3-nano:4b as a 4th (local) judge** — can a 4B peer-judge? **Partially.**
+It tracks the panel on clear cases (A0 s8 / A3 s11 weak, A2 s4 strong, A5 s8
+adequate-with-majority) but is the **noisy cheap judge**: A3 s20 adequate (panel
+strong), and it returned **no verdict on the 2 hardest advisor-misuse cases**
+(A4 s10, A5 s18). It also emits dimensions as flat strings, not nested objects
+(persist/compare handle both). Verdict: usable as a cross-check on clear cases,
+unreliable on the hard ones — keep it in the panel but don't lean on it alone.
+
+**Transport note (infra):** the desktop tailnet:11434 path is flaky post-reboot
+(WSL Hyper-V firewall — see [[desktop-gpu-access]]); the nemotron judge runs
+reliably via **SSH → WSL-localhost ollama** (`scripts/run_ssh_judge.py`), with the
+base64 request body sent over **SSH stdin** (not the command line — cmd.exe's
+~8191-char arg limit truncated the large judge prompt). reasoning_effort low /
+max_tokens 1500.
+
 ## Things to flag
 
 _Surface assumptions here._

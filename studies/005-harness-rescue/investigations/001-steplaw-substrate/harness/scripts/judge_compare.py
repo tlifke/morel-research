@@ -33,6 +33,17 @@ def chip(v):
     return f'<span class="chip" style="background:{VCOLOR.get(v, "#64748b")}">{esc(v)}</span>'
 
 
+def dv(v, key):
+    """Dimension is {verdict,evidence} (strong judges) or a flat string (weaker judges)."""
+    x = v.get(key)
+    return x.get("verdict") if isinstance(x, dict) else x
+
+
+def de(v, key):
+    x = v.get(key)
+    return x.get("evidence", "") if isinstance(x, dict) else ""
+
+
 def yn(b, good_is_true=True):
     ok = b if good_is_true else not b
     return f'<span class="chip" style="background:{"#16a34a" if ok else "#dc2626"}">{"YES" if b else "NO"}</span>'
@@ -128,14 +139,14 @@ def main():
         return f"<tr><th class='rl'>{esc(label)}</th>" + "".join(f"<td>{chip(getter(verdicts[j]))}</td>" for j in judges) + "</tr>"
     grid = row("PROCESS VERDICT", lambda v: v.get("process_verdict"))
     for key, lbl in DIMS:
-        grid += row(lbl, lambda v, k=key: (v.get(k) or {}).get("verdict"))
+        grid += row(lbl, lambda v, k=key: dv(v, k))
     grid += row("bifurcation class", lambda v: v.get("bifurcation_classification"))
     grid += row("used external help", lambda v: v.get("used_external_help"))
     details = ""
     for j in judges:
         v = verdicts[j]
-        dims = "".join(f'<div class="dd"><b>{esc(lbl)}:</b> {chip((v.get(k) or {}).get("verdict"))} '
-                       f'<span class="ev">{esc((v.get(k) or {}).get("evidence"))}</span></div>' for k, lbl in DIMS)
+        dims = "".join(f'<div class="dd"><b>{esc(lbl)}:</b> {chip(dv(v, k))} '
+                       f'<span class="ev">{esc(de(v, k))}</span></div>' for k, lbl in DIMS)
         details += (f'<div class="jd"><h4>{esc(j)} — {chip(v.get("process_verdict"))}</h4>{dims}'
                     f'<div class="dd"><b>bifurcation:</b> {esc(v.get("bifurcation_point"))} [{chip(v.get("bifurcation_classification"))}] '
                     f'<span class="ev">{esc(v.get("bifurcation_reasoning"))}</span></div>'

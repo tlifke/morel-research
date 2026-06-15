@@ -17,6 +17,12 @@ def reached_opt(traj):
     return any(abs(math.log(t["lr"]) - math.log(0.007812)) < 1e-6 and t["bs"] == 1024 for t in traj)
 
 
+def dv(v, key):
+    """A dimension may be {verdict,evidence} (strong judges) or a flat string (weaker judges)."""
+    x = v.get(key)
+    return x.get("verdict") if isinstance(x, dict) else x
+
+
 def find_run(run_name):
     for sub in ("phase1", "sweep", "reasoning"):
         d = RUNS / sub / run_name
@@ -45,9 +51,9 @@ def records():
             recs.append({
                 "run": run_name, "arm": arm, "seed": seed, "judge": judge,
                 "process_verdict": v.get("process_verdict"),
-                "struct": (v.get("reasoned_about_structure") or {}).get("verdict"),
-                "hypotheses": (v.get("formed_tested_hypotheses") or {}).get("verdict"),
-                "exploration": (v.get("exploration_quality") or {}).get("verdict"),
+                "struct": dv(v, "reasoned_about_structure"),
+                "hypotheses": dv(v, "formed_tested_hypotheses"),
+                "exploration": dv(v, "exploration_quality"),
                 "bifurcation_classification": v.get("bifurcation_classification"),
                 "bifurcation_point": v.get("bifurcation_point"),
                 "used_external_help": v.get("used_external_help"),
