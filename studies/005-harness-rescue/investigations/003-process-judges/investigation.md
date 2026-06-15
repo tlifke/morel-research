@@ -74,7 +74,31 @@ _Populate as work proceeds._
 
 ## Results
 
-_To be populated._
+### First validation (2026-06-15) — 6 traces × 3 cloud judges
+
+Judge harness (in inv-001 `harness/`): `judges/process_judge.md` (shared rubric),
+`scripts/judge_casefile.py` (privileged case-file renderer), `scripts/run_api_judge.py`
+(gemini/nemotron). Anthropic judges run as **Agent subagents** (model override
+opus/haiku); see [[feedback_multi_llm_judge_panel]]. Validation set = 6 Phase-1
+traces spanning converged/close/far, with the manual subagent reads as reference.
+**nemotron judge deferred — desktop GPU offline (last seen ~4d).**
+
+- **Core verdict (strong/adequate/weak): 5/6 unanimous** across Opus+Haiku+Gemini;
+  all three catch axis-freezing as `weak/decision_error` and joint-axis reasoning
+  as `strong/sound`. The instrument works on its primary job.
+- **The one split (A5 s8) is the advisor-handed win** — all three judges *downgrade*
+  it (none says `strong`) because the advisor, not the agent, supplied the insight.
+  The judges **corrected the manual reference** (which had called it a clean win):
+  they score *process, not outcome*, as designed.
+- **Disagreement concentrates on the advisor-involved cases** (s8, s18) — exactly
+  where credit-assignment is genuinely hard (the literature's problem, manifest).
+- **`outcome_vs_process` is the unreliable field**: Opus handles it; Gemini/Haiku
+  confuse aligned/lucky/unlucky. **Action: tighten its definition or drop it.**
+- **Open policy question:** does following good external advice earn *process*
+  credit? (Gemini: no/`weak`; Opus/Haiku: partial/`adequate`.) Must be set by us —
+  it is a credit-assignment decision, not a judge bug.
+
+Clears the ~80% bar on core verdict; rubric needs the two fixes above before scaling.
 
 ## Things to flag
 
