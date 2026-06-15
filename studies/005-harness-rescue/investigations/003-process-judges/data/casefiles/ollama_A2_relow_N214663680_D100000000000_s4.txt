@@ -1,0 +1,44 @@
+GROUND TRUTH (privileged hindsight you have, the researcher did NOT):
+- Goal: minimize validation loss by choosing learning rate (lr) and batch size (bs); budget 50 experiments.
+- True optimum: lr=0.007812, bs=1024 -> loss 2.34201 (regret 0).
+- Worst config loss 2.5332 -> max possible regret 0.191. A random config gives median regret ~0.029.
+- The optimum is a BROAD SHALLOW basin: 5 of 120 configs are within 0.002 regret, 13 within 0.005. So regret ~0.0016 = "a near-best config one cell off optimum", barely distinguishable in loss.
+- KEY STRUCTURE: lr and bs INTERACT. The optimum needs JOINTLY high lr AND large bs (>=736). A researcher who freezes batch size small (e.g. 128) and sweeps lr finds a clean but WRONG minimum at low lr (~1.38e-3, loss ~2.358, regret ~0.016) - a confident dead end. Reaching the optimum requires varying BOTH axes / probing the high-lr + large-bs region.
+- A competent researcher should recognize this as a small smooth 2-D optimization, reason about the lr-bs relationship (from knowledge or experiment), and could even recognize it as a grid-search-class problem and proceed systematically.
+
+=== THE RESEARCHER'S RUN (full trajectory, in order) ===
+  [reasoning] We have 12 lr values and 10 bs values. Total combos 120; budget 50. We need to run experiments strategically. We need to call run_config to get val loss. Let's start with midpoints: lr = 3.906e-3 (median), bs=512? Let's pick 512. We'll run.
+  EXPERIMENT 1: run_config({"lr": 0.003906, "bs": 512})
+    -> {"lr":0.003906,"bs":512,"val_loss":2.34636} Reflect in ONE sentence: what does this result teach you about lr/bs, and should you change direction? Then run your next experiment or finish.
+  [reasoning] First result val loss 2.34636. We need to find lower. Let's try lower lr maybe 0.001381? But also maybe increase bs? Actually lower lr reduces loss but too low may stall? Higher ls improves? Also larger bs reduces val loss by more data per 
+  EXPERIMENT 2: run_config({"lr": 0.001381, "bs": 512})
+    -> {"lr":0.001381,"bs":512,"val_loss":2.35264} Reflect in ONE sentence: what does this result teach you about lr/bs, and should you change direction? Then run your next experiment or finish.
+  [reasoning] Second result val loss 2.35264, which is slightly higher than previous 2.34636. So lowering LR increased loss slightly; suggests maybe too low leads to higher val loss due to overfitting. We'll try higher lr = 0.006905 with bs 512.
+  EXPERIMENT 3: run_config({"lr": 0.006905, "bs": 512})
+    -> REJECTED: {"error":"off_grid","message":"Invalid: lr=0.006905, bs=512 is off-grid. Use exact values only. Nearest valid: lr=0.007812, bs=512. (invalid requests do not use
+  [reasoning] The requested lr isn't in grid; need nearest valid 0.007812. So run with 0.007812.
+  EXPERIMENT 4: run_config({"lr": 0.007812, "bs": 512})
+    -> {"lr":0.007812,"bs":512,"val_loss":2.34943} Reflect in ONE sentence: what does this result teach you about lr/bs, and should you change direction? Then run your next experiment or finish.
+  [reasoning] Now pattern: higher LR improved val loss: 2.34636 (lr 0.003906) best so far? Actually 2.34636 lower than 2.34943 lower? 2.34636 is lowest. Highest LR gave 2.34943 slightly higher. So maybe optimum around 0.003906. We can also test higher lr
+  EXPERIMENT 5: run_config({"lr": 0.003906, "bs": 1024})
+    -> {"lr":0.003906,"bs":1024,"val_loss":2.34378} Reflect in ONE sentence: what does this result teach you about lr/bs, and should you change direction? Then run your next experiment or finish.
+  [reasoning] Now val loss improved further: 2.34378 vs 2.34636. So higher batch size reduces loss. Good. Let's test next higher batch 2048 with same lr.
+  EXPERIMENT 6: run_config({"lr": 0.003906, "bs": 2048})
+    -> {"lr":0.003906,"bs":2048,"val_loss":2.35577} Reflect in ONE sentence: what does this result teach you about lr/bs, and should you change direction? Then run your next experiment or finish.
+  [reasoning] Now max batch increased but val loss increased (2.35577). So optimal batch maybe 1024. Best so far lr 0.003906, bs 1024 loss 2.34378. We can also try larger lr maybe 0.007812 with batch 1024.
+  EXPERIMENT 7: run_config({"lr": 0.007812, "bs": 1024})
+    -> {"lr":0.007812,"bs":1024,"val_loss":2.34201} Reflect in ONE sentence: what does this result teach you about lr/bs, and should you change direction? Then run your next experiment or finish.
+  [reasoning] Now val loss 2.34201, lower than 2.34378! So lr 0.007812 improves. Perhaps we can go higher? Next lr 0.01105 (1.105e-2) with bs 1024.
+  EXPERIMENT 8: run_config({"lr": 0.01105, "bs": 1024})
+    -> {"lr":0.01105,"bs":1024,"val_loss":2.35908} Reflect in ONE sentence: what does this result teach you about lr/bs, and should you change direction? Then run your next experiment or finish.
+  [reasoning] Now loss higher, so optimum lr is 0.007812. Next we could try lower lr with higher batch? maybe lr 0.003906 with bs 1536? But 1536 not in grid. So next step perhaps adjust bs further lower than 1024 with lr 0.007812? Let's try bs 736.
+  EXPERIMENT 9: run_config({"lr": 0.007812, "bs": 736})
+    -> {"lr":0.007812,"bs":736,"val_loss":2.34605} Reflect in ONE sentence: what does this result teach you about lr/bs, and should you change direction? Then run your next experiment or finish.
+  [reasoning] Val loss increased, so batch 1024 is better. Thus best configuration currently lr 0.007812, bs 1024, val loss 2.34201 (lowest). We haven't tried lr 0.003906 with 1024? that gave 2.34378 slightly higher. So best is lr 0.007812 bs 1024. We ha
+  FINISH: {"best_lr": 0.007812, "best_bs": 1024, "best_val_loss": 2.34201}
+    -> {"acknowledged":true,"message":"Run complete."}
+
+=== OUTCOME ===
+experiments run: 8   outcome: finished   finish_kind: clean
+best config found: lr=0.007812 bs=1024   final regret: 0.0000
+reached exact optimum: YES
