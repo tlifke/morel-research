@@ -122,6 +122,32 @@ reasoning-native metrics matter more as we scale:
 - **Generalizability** — the headline win: competent in A, *and* carries that to
   B, then C, then W2S. Measured by transfer across the ladder.
 
+### Three tiers of measurement — and why intermediate metrics are the transfer bridge
+
+There are **three** kinds of signal, not two:
+
+1. **Objective outcome** — regret. Ground truth, but only where a known optimum
+   exists. **We will lose it** moving to the real W2S task (no known optimum).
+2. **Problem-specific intermediate metrics** — *computable* facts about the
+   trajectory (did it reach the high-lr/large-bs corner; coverage; repeats; did
+   its claimed best match its actual best). **These are problem-specific and must
+   be identified at the OUTSET of framing each problem** — and crucially they
+   **remain available even when regret does not.** On W2S, where we can't compute
+   distance-to-optimum, we can still define computable progress signals (e.g. valid
+   job ran; PGR improved over baseline; the relevant regions were probed). They are
+   the **objective anchor that survives the transfer** — the bridge that keeps the
+   judges honest when the outcome metric is gone. Identifying *what is measurable
+   before you know the answer* is itself a research skill the harness should elicit
+   (plausibly part of the Orienter's job).
+3. **Judge (qualitative) assessment** — reasoning quality of the subcomponents,
+   which has **no** objective ground truth. The judges' best estimate of the *why*.
+   Always available; never objective; must be validated and paneled.
+
+So: **regret says whether/how-much it succeeded; intermediate metrics give an
+objective foothold even without regret; the judges say why.** As we climb A→B→C→W2S
+the objective outcome fades and the weight shifts to (2) and (3) — which is exactly
+why we identify the intermediate metrics up front and validate the judges now.
+
 ## Design constraints (hold the line on these)
 
 - **Testable/interpretable at every step.** If we add a step (orient, hypothesize,
