@@ -79,8 +79,12 @@ fooling ourselves with an optimizer-in-disguise.
 
 ## The judging layer (how we keep it honest)
 
-- Judges are **LLM agents** (panel: Opus + Haiku + the local 4B, per study-004
-  inv-002 judge-comparison), each with a rubric *per process-agent*.
+- Judges are **LLM agents** — **first-pass panel: Opus 4.8 + Haiku 4.5 +
+  gemini-3.1-flash-lite + nemotron-3-nano:4b** (a deliberate spread of capability
+  and cost, per study-004 inv-002 judge-comparison) — each with a rubric *per
+  process-agent*. The 4B judge is the cheapest cross-check and tells us whether a
+  weak model can self-/peer-judge; Opus is the reference ceiling; Haiku and Gemini
+  are the cheap-but-capable middle.
 - Output: a **qualitative assessment + justification** (always) and a **rubric
   score per dimension** (1–5), plus the quantitative anchor where one exists.
 - **Validation (tuning the judges):** before trusting judge scores at scale, we
@@ -144,16 +148,33 @@ before — `hypothesis_targeted`, `predicted_result`; after — `observation`,
 `belief_update`. These are *requested*, not gated, so the agent isn't forced into
 lockstep; they make the design/analysis steps judgeable.
 
-### Arms (C4 in all; reasoning front-end varies)
+### Arms — reasoning front-end × domain framing (C4 in all)
 
-| arm | front-end | tests |
-|---|---|---|
-| **M** (= Phase-1 A1) | none (minimal + C4) | baseline; judges score its *implicit* reasoning from the trace |
-| **O** | + Orienter | does eliciting a neutral prior alone help? |
-| **OH** | + Orienter + Hypothesizer | does the full reason-first front-end help? |
+Two crossed factors:
 
-20 seeds, Env A, reasoning=low. (Self vs fresh-critic and the full design/analyst
-agents are the *next* round, layered on the winner.)
+- **Front-end:** **M** (minimal+C4) · **O** (+Orienter) · **OH** (+Orienter+Hypothesizer)
+- **Domain framing:** **real** (named lr/bs/val-loss, real grid values — the
+  model's domain knowledge is in play) · **abstract** (relabeled: "control A ∈
+  {a1…a12}, control B ∈ {b1…b10}", a score to minimize; the substrate maps labels
+  back to the real grid, so the *problem* is identical but the *semantics* are
+  hidden). Implemented by a `DOMAIN=real|abstract` flag that rewrites the framing
+  + a label↔value map; the substrate and optimum are unchanged.
+
+= **6 arms** (M/O/OH × real/abstract). The contrast isolates **domain knowledge**
+(real − abstract) from **structured reasoning** (front-end effect): does the
+Orienter help because the model *recalls ML knowledge*, or because *being asked to
+reason first* helps even with no domain to recall? A competent abstract-O run can
+only win by general search reasoning; a real-O win that abstract-O doesn't get is
+the value of the model's knowledge.
+
+### Methodology — small-scale first (don't burn GPU on dead ends)
+
+**Probe at <5 seeds per arm first**; only scale an arm to 20+ once it *shows
+promise* (judge scores or outcomes clearly moving). Insights fast, cheap, and
+GPU-frugal (nemotron is free but the one desktop GPU is serial). The full
+6-arm × 20-seed grid is the *confirmation* run, not the *exploration* run.
+Env A, reasoning=low throughout. Self-vs-fresh critic and the full design/analyst
+agents layer on the winner in later rounds.
 
 ### What we measure
 
