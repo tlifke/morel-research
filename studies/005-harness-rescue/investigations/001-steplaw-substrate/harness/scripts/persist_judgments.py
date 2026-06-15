@@ -50,6 +50,7 @@ def records():
                 "exploration": (v.get("exploration_quality") or {}).get("verdict"),
                 "bifurcation_classification": v.get("bifurcation_classification"),
                 "bifurcation_point": v.get("bifurcation_point"),
+                "used_external_help": v.get("used_external_help"),
                 "justification": v.get("justification"),
                 "regret": round(max(0.0, s["final_regret"]), 5),
                 "reached_opt": reached_opt(s["trajectory"]),

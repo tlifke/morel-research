@@ -78,6 +78,18 @@ Default applies, plus:
   `data/` — it's the figure/experiment data and small enough to check in.
 - The Pi harness is a TypeScript subtree (same as study 004);
   `node_modules/` and `runs/` gitignored, rendered artifacts in `assets/`.
+- **Future:** the judgment + run datasets (traces, judge verdicts, casefiles)
+  should move to a **cloud storage** location at some point as they grow — not
+  yet (small enough to vendor in `investigations/003-process-judges/data/` for
+  now), but plan for it before the corpus gets large.
+
+## Evaluation reporting (standing rule)
+
+Every results report must surface **all three evaluation components**, never
+just one (see `reasoner-not-optimizer.md`): (1) objective outcome (regret /
+reached-optimum), (2) problem-specific intermediate metrics, (3) judge
+qualitative assessment. Evaluation is the point — without it we may drift toward
+a correct answer without knowing *why*, which defeats the reasoner thesis.
 
 ## Forward-looking
 

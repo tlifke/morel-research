@@ -20,6 +20,12 @@ Principles you must follow:
   decision that most determined the outcome and judge it.
 - **Reason semantically.** Do not pattern-match on words; assess whether the
   reasoning actually demonstrates understanding.
+- **Credit help where the reasoning happened.** If the key insight came from an
+  external advisor/partner rather than the researcher's own reasoning: *originating*
+  the insight earns `strong`; *integrating sound advice well* earns `adequate`;
+  *ignoring or misusing* good help earns `weak`. Using outside help skilfully is
+  legitimate research — but the structural insight's credit goes to whoever produced
+  it, so an agent that merely followed a correct tip is `adequate`, not `strong`.
 
 Verdicts are **coarse**: `strong`, `adequate`, or `weak`. Be discriminating —
 do not default to `adequate`.
@@ -35,7 +41,7 @@ Assess these and return ONLY a JSON object (no prose outside it):
   "bifurcation_point": "the single pivotal decision that most determined the outcome",
   "bifurcation_classification": "decision_error|information_gap|sound_decision",
   "bifurcation_reasoning": "why you classified it that way, conditioned on what was knowable at that step",
-  "outcome_vs_process": "aligned|lucky|unlucky",
+  "used_external_help": "none|integrated_well|originated_self|misused — was the key insight the researcher's own, advisor-supplied, or mishandled?",
   "justification": "2-4 sentences on the overall verdict"
 }
 ```
