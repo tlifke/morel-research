@@ -49,10 +49,24 @@ boundary as porous.
 
 ## Methods
 
-_To be populated. Plan: per-agent rubrics → hand-score a small held-out reference
-sample → measure each panel model's agreement with the reference → audit
-divergences → iterate rubric → only then trust scores at scale. Probe small
-([[feedback_small_scale_first]]) before scaling._
+Judge design is literature-grounded (see `002-rich-harness/agent-mdp-design.md`
+refs). The blueprint follows **CriticSearch** ([2511.12159](https://arxiv.org/abs/2511.12159))
+and the credit-assignment survey ([2604.09459](https://arxiv.org/abs/2604.09459)):
+
+- **Retrospective + privileged:** judges run *after* a trajectory, seeing the full
+  trajectory + outcome (regret, distance to known optimum) — access the actor lacked.
+- **Coarse, hard-to-game verdicts** (`strong|adequate|weak` or binary), **aggregated
+  bottleneck/min-form, never summed** (sum-form is reward-hackable).
+- **Decision-error vs information-gap:** rubric must credit each step relative to
+  *what was knowable then* — the survey's named open problem; the central rubric risk.
+- **Bifurcation-point focus:** weight pivotal decisions, don't grade every step uniformly.
+- **Frozen** off-the-shelf judges; no judge↔actor co-training.
+
+**Validation protocol** (the gate before scores are load-bearing): hand-score a
+**~20-trajectory** reference sample per step type → measure each panel model's
+(Opus 4.8 / Haiku 4.5 / gemini-3.1-flash-lite / nemotron-4b) agreement with the
+reference → target **~80%** → audit divergences → iterate the rubric. Probe small
+([[feedback_small_scale_first]]) before scaling.
 
 ## Decisions
 

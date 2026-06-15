@@ -77,24 +77,54 @@ headline scientific question becomes measurable — **does process quality predi
 outcome?** If yes, the reasoning is real and worth scaffolding; if not, we're
 fooling ourselves with an optimizer-in-disguise.
 
+**Decompose for credit, optimize for the global outcome** (MHGPO [2506.02718];
+HiPER [2602.16165]). The per-step decomposition is a *credit-routing and diagnostic*
+structure — **not** a set of local objectives to optimize in isolation. Each step's
+credit must **anchor to whether it advanced the global outcome** (regret reduction),
+HiPER-style boundary-bootstrapping: an analyze-step isn't "good" in a vacuum, it's
+good if the hypothesis/design phase it served actually moved regret. MHGPO's lesson:
+per-agent isolated optimization chases local proxies that don't compose into global
+success — so we judge per step but **select/optimize on the whole-trajectory result**.
+And boundaries stay **reasoning-driven, not rigidly imposed** (HiPER's SWITCH/KEEP):
+a fixed five-stage pipeline graded by five independent judges is precisely what this
+literature warns against — it reintroduces the over-prescription we're avoiding.
+
 ## The judging layer (how we keep it honest)
 
-- Judges are **LLM agents** — **first-pass panel: Opus 4.8 + Haiku 4.5 +
-  gemini-3.1-flash-lite + nemotron-3-nano:4b** (a deliberate spread of capability
-  and cost, per study-004 inv-002 judge-comparison) — each with a rubric *per
-  process-agent*. The 4B judge is the cheapest cross-check and tells us whether a
-  weak model can self-/peer-judge; Opus is the reference ceiling; Haiku and Gemini
-  are the cheap-but-capable middle.
-- Output: a **qualitative assessment + justification** (always) and a **rubric
-  score per dimension** (1–5), plus the quantitative anchor where one exists.
-- **Validation (tuning the judges):** before trusting judge scores at scale, we
-  hand-score a small held-out sample of each step type as the reference, measure
-  judge↔reference agreement, audit divergences, and iterate the rubric — exactly
-  the methodology from study 004's judge investigation. A judge we haven't
-  validated produces *provisional* scores only.
-- **Never** a naive proxy. We do not score "mentioned the word interaction"; we
-  ask a judge "does this prior demonstrate understanding that the two controls
-  must be set jointly?" and let it reason.
+Design grounded in the 2026 credit-assignment literature (refs below); the
+prescriptions below are not free choices — three of four papers converge on them.
+
+- **Panel: Opus 4.8 + Haiku 4.5 + gemini-3.1-flash-lite + nemotron-3-nano:4b** — a
+  spread of capability/cost (study-004 inv-002 method). 4B = cheapest cross-check
+  (can a weak model peer-judge?); Opus = reference ceiling; Haiku/Gemini = the
+  cheap-capable middle.
+- **Retrospective + privileged** (CriticSearch [2511.12159]; survey [2604.09459]).
+  Judges run **after** a trajectory completes, with **privileged access the actor
+  never had** — the *full* trajectory **and the final outcome** (regret, distance
+  to the known optimum). Grading a step in hindsight is the survey's recommended
+  way to handle a sparse terminal signal; do **not** judge online/forward-only.
+- **Coarse, hard-to-game labels — not rich summed scores** (survey reward-hacking
+  warning; PURE min-form; CriticSearch binary). Each step gets a **coarse verdict**
+  (e.g. `strong | adequate | weak`, or binary `helped | didn't`), **not** a 1–5
+  score per dimension. We **aggregate bottleneck/min-form, never sum/average** —
+  summed per-step scores invite "safe filler steps that inflate the total."
+- **Separate decision-errors from information-gaps** (survey's named open problem —
+  the biggest risk for an orient/hypothesize judge). The rubric **must** ask: *given
+  what was knowable at this step, is this a genuine reasoning error, or reasonable-
+  but-unlucky given the information then available?* A judge that punishes
+  information-gaps will mis-assign credit and push us to over-prescribe.
+- **Concentrate on bifurcation points** (survey). Most steps are routine; a few
+  decisions drive outcome variance (e.g. *the* decision to freeze batch size). The
+  judge identifies and weights the pivotal decisions rather than grading every step
+  uniformly.
+- **Frozen, not co-trained** (CriticSearch). Off-the-shelf judges; no judge↔actor
+  co-optimization (avoids instability and is sufficient).
+- **Validation bar before trusting scores** (CriticSearch protocol): hand-score a
+  **~20-trajectory** reference sample; require **~80% judge↔reference agreement**;
+  audit divergences; iterate the rubric. Below the bar = provisional only. This is
+  the home of inv 003.
+- **Never a naive proxy.** No keyword/string matching. We ask a judge "does this
+  prior show the model understands the controls must be set jointly?" — semantically.
 
 ---
 
@@ -206,3 +236,26 @@ the ability to author and run code) when the subagent's reasoning calls for it.
 That is the path to the "recognize-and-offload" behavior whose *absence* is our
 cleanest signal that the harness isn't finished — and it is the natural Phase-3+
 extension of the Method-selector agent above.
+
+## References (credit assignment & multi-agent)
+
+- **From Reasoning to Agentic: Credit Assignment in RL for LLMs** — Zhang, 2026 —
+  [2604.09459](https://arxiv.org/abs/2604.09459). Survey of 47 CA methods; anchor for
+  hindsight credit, reward-hacking of sum-form scores (→ min-form/coarse), the
+  decision-error-vs-information-gap open problem, and bifurcation-point focus.
+- **CriticSearch: Fine-Grained Credit Assignment for Search Agents via a
+  Retrospective Critic** — Zhang et al., CAS, 2025 —
+  [2511.12159](https://arxiv.org/abs/2511.12159). The judge blueprint: frozen,
+  privileged (full trajectory + gold/outcome), retrospective, coarse Good/Bad,
+  human-validated (~80% on ~20 trajectories).
+- **HiPER: Hierarchical RL with Explicit Credit Assignment for LLM Agents** —
+  Peng et al., 2026 — [2602.16165](https://arxiv.org/abs/2602.16165). Two-level
+  plan/execute with *reasoning-driven* SWITCH/KEEP boundaries; HAE boundary-
+  bootstrapping; variance-reduction only when the hierarchy is informative.
+- **End-to-End Optimization of LLM-Driven Multi-Agent *Search* Systems (MHGPO)** —
+  Chen et al., 2025 — [2506.02718](https://arxiv.org/abs/2506.02718). Whole-system
+  group comparison beats per-agent isolated optimization; decompose-for-credit,
+  optimize-for-global. (Search-specific — transfer with care.)
+
+_Venues for [2506.02718] (ACL 2026) and [2602.16165] (ICML) are arXiv-reported,
+not independently confirmed. [2604.09459] is a single-author preprint._
