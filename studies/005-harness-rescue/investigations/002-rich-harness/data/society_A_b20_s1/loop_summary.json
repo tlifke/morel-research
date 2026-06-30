@@ -1,0 +1,91 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "1",
+  "budget": 20,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "config": {
+    "critic": true,
+    "critic_roles": [
+      "analyst"
+    ],
+    "analyst_fix": false,
+    "hyp_seed": null,
+    "hyp_freeze": false,
+    "max_high": 3,
+    "max_narrow_per": 3
+  },
+  "regions": {
+    "LL": 0,
+    "LH": 2,
+    "HL": 0,
+    "HH": 2
+  },
+  "region_mid": {
+    "lr": 0.001953,
+    "bs": 352
+  },
+  "experiments": 4,
+  "best_loss": 2.3445,
+  "best_config": {
+    "lr": 0.002762,
+    "bs": 736,
+    "loss": 2.3445
+  },
+  "final_regret": 0.0024861582825819184,
+  "cumulative_regret": 0.19025,
+  "coverage": 0.03333333333333333,
+  "reached_corner": true,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": null,
+  "claim_matches_best": null,
+  "decision": {
+    "action": "finish",
+    "reason": "All open hypotheses are either supported or falsifiable and current best validation loss (2.3445 at lr=2.762e-3, bs=736) cannot be further reduced; remaining UNTRIED pairs do not include known optimal region and further experiments unlikely to yield lower loss."
+  },
+  "model_calls": 34,
+  "net_retries": 0,
+  "elapsed_ms": 305362,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.0003453,
+      "bs": 1024,
+      "loss": 2.40675,
+      "regret": 0.06474,
+      "repeat": false,
+      "t_ms": 36005
+    },
+    {
+      "n": 2,
+      "lr": 0.0002441,
+      "bs": 2048,
+      "loss": 2.45412,
+      "regret": 0.11211,
+      "repeat": false,
+      "t_ms": 86615
+    },
+    {
+      "n": 3,
+      "lr": 0.002762,
+      "bs": 736,
+      "loss": 2.3445,
+      "regret": 0.00249,
+      "repeat": false,
+      "t_ms": 135167
+    },
+    {
+      "n": 4,
+      "lr": 0.01105,
+      "bs": 736,
+      "loss": 2.35292,
+      "regret": 0.01091,
+      "repeat": false,
+      "t_ms": 203664
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "1",
+  "budget": 5,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "config": {
+    "critic": false,
+    "hyp_seed": "correct",
+    "hyp_freeze": true,
+    "max_high": 3,
+    "max_narrow_per": 3
+  },
+  "regions": {
+    "LL": 1,
+    "LH": 2,
+    "HL": 1,
+    "HH": 0
+  },
+  "region_mid": {
+    "lr": 0.001953,
+    "bs": 352
+  },
+  "experiments": 4,
+  "best_loss": 2.37056,
+  "best_config": {
+    "lr": 0.0009766,
+    "bs": 1024,
+    "loss": 2.37056
+  },
+  "final_regret": 0.02854615828258167,
+  "cumulative_regret": 0.1744,
+  "coverage": 0.03333333333333333,
+  "reached_corner": false,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": null,
+  "claim_matches_best": null,
+  "decision": {
+    "action": "finish",
+    "reason": "The hypothesis that the optimum validation loss occurs at high learning rate and high batch size is refuted by experiments #2, #3, #4. The best loss observed (2.38053) is achieved with lr=7.812e-3 and bs=192, and alternative high-high combinations (lr=1.381e-3, bs=2048) yield only slightly higher loss (2.38123). No open hypotheses suggest lower loss could be achieved, making the current best pair stable."
+  },
+  "model_calls": 13,
+  "net_retries": 0,
+  "elapsed_ms": 57516,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.001381,
+      "bs": 2048,
+      "loss": 2.38123,
+      "regret": 0.03922,
+      "repeat": false,
+      "t_ms": 6684
+    },
+    {
+      "n": 2,
+      "lr": 0.0009766,
+      "bs": 1024,
+      "loss": 2.37056,
+      "regret": 0.02855,
+      "repeat": false,
+      "t_ms": 19618
+    },
+    {
+      "n": 3,
+      "lr": 0.0003453,
+      "bs": 32,
+      "loss": 2.41014,
+      "regret": 0.06812,
+      "repeat": false,
+      "t_ms": 33473
+    },
+    {
+      "n": 4,
+      "lr": 0.007812,
+      "bs": 192,
+      "loss": 2.38053,
+      "regret": 0.03851,
+      "repeat": false,
+      "t_ms": 43711
+    }
+  ]
+}

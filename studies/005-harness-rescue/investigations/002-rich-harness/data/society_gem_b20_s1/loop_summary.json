@@ -1,0 +1,186 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "1",
+  "budget": 20,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "config": {
+    "critic": false,
+    "critic_roles": [
+      "all"
+    ],
+    "analyst_fix": false,
+    "hyp_seed": null,
+    "hyp_freeze": false,
+    "max_high": 3,
+    "max_narrow_per": 3,
+    "strong_roles": [
+      "analyst",
+      "hypothesizer"
+    ],
+    "strong_model": "gemini-3.1-flash-lite"
+  },
+  "regions": {
+    "LL": 0,
+    "LH": 1,
+    "HL": 2,
+    "HH": 11
+  },
+  "region_mid": {
+    "lr": 0.001953,
+    "bs": 352
+  },
+  "experiments": 14,
+  "best_loss": 2.34364,
+  "best_config": {
+    "lr": 0.002762,
+    "bs": 512,
+    "loss": 2.34364
+  },
+  "final_regret": 0.0016261582825820575,
+  "cumulative_regret": 0.15452000000000002,
+  "coverage": 0.11666666666666667,
+  "reached_corner": true,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": null,
+  "claim_matches_best": null,
+  "decision": {
+    "action": "finish",
+    "reason": "The current best loss of 2.34364 at lr=2.762e-3, bs=512 is stable across tested variations; remaining open hypotheses (h1, n28, n29) pertain to potentially worse or non-improving parameter space. Testing lr=1.105e-2 with bs=2048 (n29) is unlikely to produce a lower loss and risks higher instability, while other combinations (e.g., low lr with 2048) would not beat the best and do not resolve the primary uncertainty. Resources are sufficient for further marginal checks, but no clear informative next experiment is identified."
+  },
+  "model_calls": 44,
+  "net_retries": 0,
+  "elapsed_ms": 145514,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.001381,
+      "bs": 512,
+      "loss": 2.35264,
+      "regret": 0.01063,
+      "repeat": false,
+      "t_ms": 8384
+    },
+    {
+      "n": 2,
+      "lr": 0.003906,
+      "bs": 64,
+      "loss": 2.40638,
+      "regret": 0.06437,
+      "repeat": false,
+      "t_ms": 15309
+    },
+    {
+      "n": 3,
+      "lr": 0.001953,
+      "bs": 1024,
+      "loss": 2.35572,
+      "regret": 0.01371,
+      "repeat": false,
+      "t_ms": 23915
+    },
+    {
+      "n": 4,
+      "lr": 0.001953,
+      "bs": 512,
+      "loss": 2.34691,
+      "regret": 0.0049,
+      "repeat": false,
+      "t_ms": 31660
+    },
+    {
+      "n": 5,
+      "lr": 0.002762,
+      "bs": 512,
+      "loss": 2.34364,
+      "regret": 0.00163,
+      "repeat": false,
+      "t_ms": 39482
+    },
+    {
+      "n": 6,
+      "lr": 0.003906,
+      "bs": 512,
+      "loss": 2.34636,
+      "regret": 0.00434,
+      "repeat": false,
+      "t_ms": 50502
+    },
+    {
+      "n": 7,
+      "lr": 0.002762,
+      "bs": 736,
+      "loss": 2.3445,
+      "regret": 0.00249,
+      "repeat": false,
+      "t_ms": 57536
+    },
+    {
+      "n": 8,
+      "lr": 0.003906,
+      "bs": 1024,
+      "loss": 2.34378,
+      "regret": 0.00176,
+      "repeat": false,
+      "t_ms": 67103
+    },
+    {
+      "n": 9,
+      "lr": 0.001953,
+      "bs": 352,
+      "loss": 2.34791,
+      "regret": 0.0059,
+      "repeat": false,
+      "t_ms": 75270
+    },
+    {
+      "n": 10,
+      "lr": 0.005524,
+      "bs": 512,
+      "loss": 2.34546,
+      "regret": 0.00345,
+      "repeat": false,
+      "t_ms": 85206
+    },
+    {
+      "n": 11,
+      "lr": 0.007812,
+      "bs": 2048,
+      "loss": 2.35828,
+      "regret": 0.01627,
+      "repeat": false,
+      "t_ms": 95575
+    },
+    {
+      "n": 12,
+      "lr": 0.001953,
+      "bs": 736,
+      "loss": 2.34999,
+      "regret": 0.00797,
+      "repeat": false,
+      "t_ms": 111933
+    },
+    {
+      "n": 13,
+      "lr": 0.002762,
+      "bs": 1024,
+      "loss": 2.35024,
+      "regret": 0.00822,
+      "repeat": false,
+      "t_ms": 124511
+    },
+    {
+      "n": 14,
+      "lr": 0.002762,
+      "bs": 256,
+      "loss": 2.3509,
+      "regret": 0.00888,
+      "repeat": false,
+      "t_ms": 132553
+    }
+  ]
+}

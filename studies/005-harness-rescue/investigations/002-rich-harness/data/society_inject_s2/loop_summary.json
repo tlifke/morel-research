@@ -1,0 +1,109 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "2",
+  "budget": 20,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "config": {
+    "critic": false,
+    "critic_roles": [
+      "all"
+    ],
+    "analyst_fix": false,
+    "hyp_seed": null,
+    "hyp_freeze": false,
+    "max_high": 3,
+    "max_narrow_per": 3,
+    "strong_roles": [],
+    "strong_model": null,
+    "high_roles": [],
+    "prior_mode": "inject"
+  },
+  "regions": {
+    "LL": 0,
+    "LH": 5,
+    "HL": 0,
+    "HH": 0
+  },
+  "region_mid": {
+    "lr": 0.001953,
+    "bs": 352
+  },
+  "experiments": 5,
+  "best_loss": 2.36889,
+  "best_config": {
+    "lr": 0.0006905,
+    "bs": 512,
+    "loss": 2.36889
+  },
+  "final_regret": 0.02687615828258183,
+  "cumulative_regret": 0.20968,
+  "coverage": 0.041666666666666664,
+  "reached_corner": false,
+  "axis_frozen": "bs_frozen",
+  "outcome": "finished",
+  "claimed_best": {
+    "lr": 0.0006905,
+    "bs": 512
+  },
+  "claim_matches_best": true,
+  "decision": {
+    "action": "finish",
+    "reason": "All open hypotheses have been substantiated: lr=6.905e-4 is supported (h1) as the minimizer; further lr variations worsen loss. Batch size 512 is optimal at that lr (h3) as larger/ smaller batches increase loss, and loss at 6.905e-4/512 is lowest found 2.36889. The combination (h6) is optimal with no better found; further experiments are unlikely to improve.",
+    "best_lr": 0.0006905,
+    "best_bs": 512
+  },
+  "model_calls": 21,
+  "net_retries": 0,
+  "elapsed_ms": 197314,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.0006905,
+      "bs": 512,
+      "loss": 2.36889,
+      "regret": 0.02688,
+      "repeat": false,
+      "t_ms": 18085
+    },
+    {
+      "n": 2,
+      "lr": 0.0006905,
+      "bs": 1024,
+      "loss": 2.38237,
+      "regret": 0.04036,
+      "repeat": false,
+      "t_ms": 44343
+    },
+    {
+      "n": 3,
+      "lr": 0.0002441,
+      "bs": 512,
+      "loss": 2.40141,
+      "regret": 0.0594,
+      "repeat": false,
+      "t_ms": 94826
+    },
+    {
+      "n": 4,
+      "lr": 0.0003453,
+      "bs": 512,
+      "loss": 2.38889,
+      "regret": 0.04688,
+      "repeat": false,
+      "t_ms": 129234
+    },
+    {
+      "n": 5,
+      "lr": 0.0004883,
+      "bs": 512,
+      "loss": 2.37818,
+      "regret": 0.03616,
+      "repeat": false,
+      "t_ms": 165278
+    }
+  ]
+}

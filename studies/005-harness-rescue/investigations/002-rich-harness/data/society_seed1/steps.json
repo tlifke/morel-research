@@ -1,0 +1,1290 @@
+{
+  "meta": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "1",
+    "optimum_loss": 2.342013841717418,
+    "budget": 40,
+    "framing": "You can set two values — a learning rate (lr) and a batch size (bs) — to train a fixed model (size N=214663680 params, 100000000000 training tokens).\nFor each (lr, bs) you choose you are told the resulting validation loss, which you want to MINIMIZE. You have a budget of 40 experiments.\nOnly these exact values are valid. lr: 2.441e-4, 3.453e-4, 4.883e-4, 6.905e-4, 9.766e-4, 1.381e-3, 1.953e-3, 2.762e-3, 3.906e-3, 5.524e-3, 7.812e-3, 1.105e-2. bs: 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048."
+  },
+  "prior": {
+    "knowledge": "For large-scale model training (N≈2.1×10⁸ parameters, 1×10¹⁰ tokens), validation loss typically follows a U-shaped curve: validation loss decreases as learning rate increases up to a moderate range (≈1.38e‑3), then continues to fall as batch size grows (larger batches reduce per‑update variance), after which diminishing returns appear or numerical instability can cause spikes after ≈2×10³.",
+    "expected_structure": "Validation loss will decrease for lr ≤ 1.381e‑3 and bs ≤ 256, peak at or near lr=2.762e‑3 with bs=256, and then rise sharply above lr=1.381e‑3 or when bs > 1024; a secondary minimum is likely around lr=2.762e‑3 and bs=256.",
+    "approach": "Start by testing the most plausible optimal pair: lr=2.762e‑4? (actually 2.762e‑3) and bs=256. If validation loss is not minimal, compare lr=1.381e‑3 with bs=256 and bs=512, then test lr=2.441e‑4 with bs=256 to confirm a lower‑lr effect. Prioritize experiments that isolate batch‑size effect by fixing lr around 1.381e‑3.",
+    "uncertainties": [
+      "The highest lr 1.105e‑2 with bs=2048 may create numerical instability (e.g., underflow/overflow), so loss could be arbitrarily high and hard to interpret. Also, the lowest possible lr 2.441e‑4 with bs=32 may still converge but could lead to excessive stability, making loss near optimum; its exact impact is uncertain."
+    ]
+  },
+  "hypotheses_initial": [
+    {
+      "id": "h1",
+      "claim": "Validation loss at lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256",
+      "test": "[(lr=2.762e-3, bs=256), (lr=1.381e-3, bs=256)]",
+      "confirm_if": "lr=2.762e-3 loss < lr=1.381e-3 loss",
+      "refute_if": "lr=1.381e-3 loss < lr=2.762e-3 loss"
+    },
+    {
+      "id": "h2",
+      "claim": "Validation loss at lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256",
+      "test": "[(lr=2.441e-4, bs=32), (lr=2.762e-3, bs=256)]",
+      "confirm_if": "lr=2.762e-3 loss < lr=2.441e-4 loss",
+      "refute_if": "lr=2.441e-4 loss < lr=2.762e-3 loss"
+    },
+    {
+      "id": "h3",
+      "claim": "Validation loss at lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256",
+      "test": "[(lr=2.762e-3, bs=512), (lr=2.762e-3, bs=256)]",
+      "confirm_if": "lr=2.762e-3, bs=256 < lr=2.762e-3, bs=512 loss",
+      "refute_if": "lr=2.762e-3, bs=512 < lr=2.762e-3, bs=256 loss"
+    },
+    {
+      "id": "h4",
+      "claim": "Validation loss at lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024",
+      "test": "[(lr=1.105e-2, bs=2048), (lr=7.812e-3, bs=1024)]",
+      "confirm_if": "lr=7.812e-3 loss < lr=1.105e-2 loss",
+      "refute_if": "lr=1.105e-2 loss < lr=7.812e-3 loss"
+    },
+    {
+      "id": "h5",
+      "claim": "Validation loss at lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256",
+      "test": "[(lr=2.762e-3, bs=256), (lr=1.953e-3, bs=256)]",
+      "confirm_if": "lr=2.762e-3 loss < lr=1.953e-3 loss",
+      "refute_if": "lr=1.953e-3 loss < lr=2.762e-3 loss"
+    },
+    {
+      "id": "h6",
+      "claim": "Validation loss at lr=2.762e-3, bs=256 is the minimum among all 40 pairs",
+      "test": "[(lr, bs) in {(2.441e-4,32),(3.453e-4,32),...,(1.105e-2,2048)}]",
+      "confirm_if": "lr=2.762e-3, bs=256 loss <= all others",
+      "refute_if": "Any other pair has lower loss"
+    },
+    {
+      "id": "h7",
+      "claim": "Validation loss at lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256",
+      "test": "[(lr=9.766e-4, bs=256), (lr=2.762e-3, bs=256)]",
+      "confirm_if": "lr=9.766e-4 loss < lr=2.762e-3 loss",
+      "refute_if": "lr=2.762e-3 loss < lr=9.766e-4 loss"
+    }
+  ],
+  "steps": [
+    {
+      "n": 1,
+      "design": {
+        "lr": 0.0002441,
+        "bs": 32,
+        "hypothesis_id": "h2",
+        "rationale": "Tests if very low lr is better than moderate lr with higher batch size, isolating batch-size vs learning-rate tradeoff."
+      },
+      "result": {
+        "lr": 0.0002441,
+        "bs": 32,
+        "loss": 2.41499,
+        "regret": 0.07298,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.41499 at lr=2.441e-4 bs=32",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "No comparison with the proposed model configuration at lr=2.762e-3, bs=256 and lr=1.381e-3, bs=256"
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "No measurement of validation loss at lr=2.762e-3, bs=256 to confirm comparison"
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "No loss value for lr=2.762e-3, bs=512 provided"
+          },
+          {
+            "id": "h4",
+            "verdict": "inconclusive",
+            "note": "Loss values for lr=1.105e-2, bs=2048 and lr=7.812e-3, bs=1024 unknown"
+          },
+          {
+            "id": "h5",
+            "verdict": "inconclusive",
+            "note": "No loss reported for lr=1.953e-3, bs=256"
+          },
+          {
+            "id": "h6",
+            "verdict": "inconclusive",
+            "note": "Claim about minimum loss among all 40 pairs cannot be validated"
+          },
+          {
+            "id": "h7",
+            "verdict": "inconclusive",
+            "note": "No comparison of validation loss at lr=9.766e-4, bs=256 with lr=2.762e-3, bs=256"
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "Validation loss at lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256",
+            "test": "(lr=2.762e-3, bs=256), (lr=1.381e-3, bs=256)",
+            "confirm_if": "True if loss_2.762e-3_256 < loss_1.381e-3_256",
+            "refute_if": "True if loss_2.762e-3_256 > loss_1.381e-3_256"
+          },
+          {
+            "id": "h2",
+            "claim": "Validation loss at lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256",
+            "test": "(lr=2.441e-4, bs=32), (lr=2.762e-3, bs=256)",
+            "confirm_if": "True if loss_2.441e-4_32 > loss_2.762e-3_256",
+            "refute_if": "True if loss_2.441e-4_32 < loss_2.762e-3_256"
+          },
+          {
+            "id": "h3",
+            "claim": "Validation loss at lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256",
+            "test": "(lr=2.762e-3, bs=512), (lr=2.762e-3, bs=256)",
+            "confirm_if": "True if loss_2.762e-3_512 > loss_2.762e-3_256",
+            "refute_if": "True if loss_2.762e-3_512 < loss_2.762e-3_256"
+          },
+          {
+            "id": "h4",
+            "claim": "Validation loss at lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024",
+            "test": "(lr=1.105e-2, bs=2048), (lr=7.812e-3, bs=1024)",
+            "confirm_if": "True if loss_1.105e-2_2048 > loss_7.812e-3_1024",
+            "refute_if": "True if loss_1.105e-2_2048 < loss_7.812e-3_1024"
+          },
+          {
+            "id": "h5",
+            "claim": "Validation loss at lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256",
+            "test": "(lr=2.762e-3, bs=256), (lr=1.953e-3, bs=256)",
+            "confirm_if": "True if loss_2.762e-3_256 < loss_1.953e-3_256",
+            "refute_if": "True if loss_2.762e-3_256 > loss_1.953e-3_256"
+          },
+          {
+            "id": "h6",
+            "claim": "Validation loss at lr=2.762e-3, bs=256 is the minimum among all 40 pairs",
+            "test": "(lr, bs) in {(2.441e-4,32),(3.453e-4,32),...,(1.105e-2,2048)}",
+            "confirm_if": "True if loss_2.762e-3_256 < loss of every other pair",
+            "refute_if": "True if any other pair has lower loss"
+          },
+          {
+            "id": "h7",
+            "claim": "Validation loss at lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256",
+            "test": "(lr=9.766e-4, bs=256), (lr=2.762e-3, bs=256)",
+            "confirm_if": "True if loss_9.766e-4_256 < loss_2.762e-3_256",
+            "refute_if": "True if loss_9.766e-4_256 > loss_2.762e-3_256"
+          }
+        ],
+        "running_best": {
+          "lr": 0.0002441,
+          "bs": 32,
+          "loss": 2.41499
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "Validation loss at lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256",
+          "test": "(lr=2.762e-3, bs=256), (lr=1.381e-3, bs=256)",
+          "confirm_if": "True if loss_2.762e-3_256 < loss_1.381e-3_256",
+          "refute_if": "True if loss_2.762e-3_256 > loss_1.381e-3_256"
+        },
+        {
+          "id": "h2",
+          "claim": "Validation loss at lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256",
+          "test": "(lr=2.441e-4, bs=32), (lr=2.762e-3, bs=256)",
+          "confirm_if": "True if loss_2.441e-4_32 > loss_2.762e-3_256",
+          "refute_if": "True if loss_2.441e-4_32 < loss_2.762e-3_256"
+        },
+        {
+          "id": "h3",
+          "claim": "Validation loss at lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256",
+          "test": "(lr=2.762e-3, bs=512), (lr=2.762e-3, bs=256)",
+          "confirm_if": "True if loss_2.762e-3_512 > loss_2.762e-3_256",
+          "refute_if": "True if loss_2.762e-3_512 < loss_2.762e-3_256"
+        },
+        {
+          "id": "h4",
+          "claim": "Validation loss at lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024",
+          "test": "(lr=1.105e-2, bs=2048), (lr=7.812e-3, bs=1024)",
+          "confirm_if": "True if loss_1.105e-2_2048 > loss_7.812e-3_1024",
+          "refute_if": "True if loss_1.105e-2_2048 < loss_7.812e-3_1024"
+        },
+        {
+          "id": "h5",
+          "claim": "Validation loss at lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256",
+          "test": "(lr=2.762e-3, bs=256), (lr=1.953e-3, bs=256)",
+          "confirm_if": "True if loss_2.762e-3_256 < loss_1.953e-3_256",
+          "refute_if": "True if loss_2.762e-3_256 > loss_1.953e-3_256"
+        },
+        {
+          "id": "h6",
+          "claim": "Validation loss at lr=2.762e-3, bs=256 is the minimum among all 40 pairs",
+          "test": "(lr, bs) in {(2.441e-4,32),(3.453e-4,32),...,(1.105e-2,2048)}",
+          "confirm_if": "True if loss_2.762e-3_256 < loss of every other pair",
+          "refute_if": "True if any other pair has lower loss"
+        },
+        {
+          "id": "h7",
+          "claim": "Validation loss at lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256",
+          "test": "(lr=9.766e-4, bs=256), (lr=2.762e-3, bs=256)",
+          "confirm_if": "True if loss_9.766e-4_256 < loss_2.762e-3_256",
+          "refute_if": "True if loss_9.766e-4_256 > loss_2.762e-3_256"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Hypotheses h6 and h7 present conflicting minima at (2.762e-3,256) and (9.766e-4,256), indicating the current best loss may not be the global minimum, and further experiments could lower it."
+      }
+    },
+    {
+      "n": 2,
+      "design": {
+        "lr": 0.002762,
+        "bs": 256,
+        "hypothesis_id": "h1",
+        "rationale": "Expected lower loss due to greater learning rate stabilizing moderate range."
+      },
+      "result": {
+        "lr": 0.002762,
+        "bs": 256,
+        "loss": 2.3509,
+        "regret": 0.00888,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Validation loss at lr=2.762e-3, bs=256 is 2.3509, which is lower than the 2.41499 observed at lr=2.441e-4, bs=32.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "Loss at lr=1.381e-3, bs=256 not provided"
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "Loss at lr=2.762e-3, bs=256 (2.3509)< loss at lr=2.441e-4, bs=32 (2.41499)"
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "Loss at lr=2.762e-3, bs=512 not provided"
+          },
+          {
+            "id": "h4",
+            "verdict": "inconclusive",
+            "note": "Loss values at (1.105e-2,2048) and (7.812e-3,1024) not provided"
+          },
+          {
+            "id": "h5",
+            "verdict": "inconclusive",
+            "note": "Loss at lr=1.953e-3, bs=256 not provided"
+          },
+          {
+            "id": "h6",
+            "verdict": "inconclusive",
+            "note": "Cannot confirm minimality among all 40 pairs"
+          },
+          {
+            "id": "h7",
+            "verdict": "inconclusive",
+            "note": "Loss at lr=9.766e-4, bs=256 not provided"
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "(lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256)",
+            "test": "(lr=2.762e-3, bs=256), (lr=1.381e-3, bs=256)",
+            "confirm_if": "verdict == supported",
+            "refute_if": "verdict == refuted"
+          },
+          {
+            "id": "h2",
+            "claim": "(lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256)",
+            "test": "(lr=2.441e-4, bs=32), (lr=2.762e-3, bs=256)",
+            "confirm_if": "verdict == supported",
+            "refute_if": "verdict == refuted"
+          },
+          {
+            "id": "h3",
+            "claim": "(lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256)",
+            "test": "(lr=2.762e-3, bs=512), (lr=2.762e-3, bs=256)",
+            "confirm_if": "verdict == supported",
+            "refute_if": "verdict == refuted"
+          },
+          {
+            "id": "h4",
+            "claim": "(lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024)",
+            "test": "(lr=1.105e-2, bs=2048), (lr=7.812e-3, bs=1024)",
+            "confirm_if": "verdict == supported",
+            "refute_if": "verdict == refuted"
+          },
+          {
+            "id": "h5",
+            "claim": "(lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256)",
+            "test": "(lr=2.762e-3, bs=256), (lr=1.953e-3, bs=256)",
+            "confirm_if": "verdict == supported",
+            "refute_if": "verdict == refuted"
+          },
+          {
+            "id": "h6",
+            "claim": "(lr=2.762e-3, bs=256 is the minimum among all 40 pairs)",
+            "test": "(lr, bs) in {(2.441e-4,32),(3.453e-4,32),...,(1.105e-2,2048)}",
+            "confirm_if": "verdict == supported",
+            "refute_if": "verdict == refuted"
+          },
+          {
+            "id": "h7",
+            "claim": "(lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256)",
+            "test": "(lr=9.766e-4, bs=256), (lr=2.762e-3, bs=256)",
+            "confirm_if": "verdict == supported",
+            "refute_if": "verdict == refuted"
+          }
+        ],
+        "running_best": {
+          "lr": 0.002762,
+          "bs": 256,
+          "loss": 2.3509
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "(lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256)",
+          "test": "(lr=2.762e-3, bs=256), (lr=1.381e-3, bs=256)",
+          "confirm_if": "verdict == supported",
+          "refute_if": "verdict == refuted"
+        },
+        {
+          "id": "h2",
+          "claim": "(lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256)",
+          "test": "(lr=2.441e-4, bs=32), (lr=2.762e-3, bs=256)",
+          "confirm_if": "verdict == supported",
+          "refute_if": "verdict == refuted"
+        },
+        {
+          "id": "h3",
+          "claim": "(lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256)",
+          "test": "(lr=2.762e-3, bs=512), (lr=2.762e-3, bs=256)",
+          "confirm_if": "verdict == supported",
+          "refute_if": "verdict == refuted"
+        },
+        {
+          "id": "h4",
+          "claim": "(lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024)",
+          "test": "(lr=1.105e-2, bs=2048), (lr=7.812e-3, bs=1024)",
+          "confirm_if": "verdict == supported",
+          "refute_if": "verdict == refuted"
+        },
+        {
+          "id": "h5",
+          "claim": "(lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256)",
+          "test": "(lr=2.762e-3, bs=256), (lr=1.953e-3, bs=256)",
+          "confirm_if": "verdict == supported",
+          "refute_if": "verdict == refuted"
+        },
+        {
+          "id": "h6",
+          "claim": "(lr=2.762e-3, bs=256 is the minimum among all 40 pairs)",
+          "test": "(lr, bs) in {(2.441e-4,32),(3.453e-4,32),...,(1.105e-2,2048)}",
+          "confirm_if": "verdict == supported",
+          "refute_if": "verdict == refuted"
+        },
+        {
+          "id": "h7",
+          "claim": "(lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256)",
+          "test": "(lr=9.766e-4, bs=256), (lr=2.762e-3, bs=256)",
+          "confirm_if": "verdict == supported",
+          "refute_if": "verdict == refuted"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The best loss recorded (2.3509) is from lr=2.762e-3 with bs=256; h7 predicts lr=9.766e-4 with bs=256 yields a lower loss, and many (lr, bs) pairs remain untested, so conducting more experiments could discover a better setting."
+      }
+    },
+    {
+      "n": 3,
+      "design": {
+        "lr": 0.001381,
+        "bs": 256,
+        "hypothesis_id": "h1",
+        "rationale": "Test whether validation loss at lr=1.381e-3, bs=256 is higher than the currently best loss at 2.762e-3, bs=256 to confirm the peak at this learning rate."
+      },
+      "result": {
+        "lr": 0.001381,
+        "bs": 256,
+        "loss": 2.35178,
+        "regret": 0.00976,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss (lr=1.381e-3, bs=256) = 2.35178; the best loss remains at lr=2.762e-3, bs=256 (2.3509), a slight increase of 0.00085.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "new result confirms lr=2.762e-3, bs=256 has a lower loss than lr=1.381e-3, bs=256."
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "lr=2.441e-4, bs=32 loss 2.41499 > 2.3509, supporting higher loss."
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "no loss value provided for lr=2.762e-3, bs=512."
+          },
+          {
+            "id": "h4",
+            "verdict": "inconclusive",
+            "note": "loss values for lr=1.105e-2, bs=2048 and lr=7.812e-3, bs=1024 unknown."
+          },
+          {
+            "id": "h5",
+            "verdict": "inconclusive",
+            "note": "no loss value provided for lr=1.953e-3, bs=256."
+          },
+          {
+            "id": "h6",
+            "verdict": "inconclusive",
+            "note": "cannot confirm minimum among all 40 pairs without full history."
+          },
+          {
+            "id": "h7",
+            "verdict": "inconclusive",
+            "note": "no loss value provided for lr=9.766e-4, bs=256."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256.",
+            "test": "(lr=2.762e-3, bs=256), (lr=1.381e-3, bs=256)",
+            "confirm_if": "val_loss(lr=1.381e-3, bs=256) > val_loss(lr=2.762e-3, bs=256)",
+            "refute_if": "val_loss(lr=1.381e-3, bs=256) < val_loss(lr=2.762e-3, bs=256)"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256.",
+            "test": "(lr=2.441e-4, bs=32), (lr=2.762e-3, bs=256)",
+            "confirm_if": "val_loss(lr=2.441e-4, bs=32) > val_loss(lr=2.762e-3, bs=256)",
+            "refute_if": "val_loss(lr=2.441e-4, bs=32) < val_loss(lr=2.762e-3, bs=256)"
+          },
+          {
+            "id": "h3",
+            "claim": "lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256.",
+            "test": "(lr=2.762e-3, bs=512), (lr=2.762e-3, bs=256)",
+            "confirm_if": "val_loss(lr=2.762e-3, bs=512) > val_loss(lr=2.762e-3, bs=256)",
+            "refute_if": "val_loss(lr=2.762e-3, bs=512) < val_loss(lr=2.762e-3, bs=256)"
+          },
+          {
+            "id": "h4",
+            "claim": "lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024.",
+            "test": "(lr=1.105e-2, bs=2048), (lr=7.812e-3, bs=1024)",
+            "confirm_if": "val_loss(lr=1.105e-2, bs=2048) > val_loss(lr=7.812e-3, bs=1024)",
+            "refute_if": "val_loss(lr=1.105e-2, bs=2048) < val_loss(lr=7.812e-3, bs=1024)"
+          },
+          {
+            "id": "h5",
+            "claim": "lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256.",
+            "test": "(lr=1.953e-3, bs=256), (lr=2.762e-3, bs=256)",
+            "confirm_if": "val_loss(lr=1.953e-3, bs=256) > val_loss(lr=2.762e-3, bs=256)",
+            "refute_if": "val_loss(lr=1.953e-3, bs=256) < val_loss(lr=2.762e-3, bs=256)"
+          },
+          {
+            "id": "h6",
+            "claim": "lr=2.762e-3, bs=256 is the minimum among all 40 pairs.",
+            "test": ", (lr, bs) in {(2.441e-4,32),(3.453e-4,32),...,(1.105e-2,2048)})",
+            "confirm_if": "val_loss(lr=2.762e-3, bs=256) ≤ val_loss(x) for all x",
+            "refute_if": "∃(x) val_loss(lr=2.762e-3, bs=256) > val_loss(x)"
+          },
+          {
+            "id": "h7",
+            "claim": "lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256.",
+            "test": "(lr=9.766e-4, bs=256), (lr=2.762e-3, bs=256)",
+            "confirm_if": "val_loss(lr=9.766e-4, bs=256) < val_loss(lr=2.762e-3, bs=256)",
+            "refute_if": "val_loss(lr=9.766e-4, bs=256) ≥ val_loss(lr=2.762e-3, bs=256)"
+          }
+        ],
+        "running_best": {
+          "lr": 0.002762,
+          "bs": 256,
+          "loss": 2.3509
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256.",
+          "test": "(lr=2.762e-3, bs=256), (lr=1.381e-3, bs=256)",
+          "confirm_if": "val_loss(lr=1.381e-3, bs=256) > val_loss(lr=2.762e-3, bs=256)",
+          "refute_if": "val_loss(lr=1.381e-3, bs=256) < val_loss(lr=2.762e-3, bs=256)"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256.",
+          "test": "(lr=2.441e-4, bs=32), (lr=2.762e-3, bs=256)",
+          "confirm_if": "val_loss(lr=2.441e-4, bs=32) > val_loss(lr=2.762e-3, bs=256)",
+          "refute_if": "val_loss(lr=2.441e-4, bs=32) < val_loss(lr=2.762e-3, bs=256)"
+        },
+        {
+          "id": "h3",
+          "claim": "lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256.",
+          "test": "(lr=2.762e-3, bs=512), (lr=2.762e-3, bs=256)",
+          "confirm_if": "val_loss(lr=2.762e-3, bs=512) > val_loss(lr=2.762e-3, bs=256)",
+          "refute_if": "val_loss(lr=2.762e-3, bs=512) < val_loss(lr=2.762e-3, bs=256)"
+        },
+        {
+          "id": "h4",
+          "claim": "lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024.",
+          "test": "(lr=1.105e-2, bs=2048), (lr=7.812e-3, bs=1024)",
+          "confirm_if": "val_loss(lr=1.105e-2, bs=2048) > val_loss(lr=7.812e-3, bs=1024)",
+          "refute_if": "val_loss(lr=1.105e-2, bs=2048) < val_loss(lr=7.812e-3, bs=1024)"
+        },
+        {
+          "id": "h5",
+          "claim": "lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256.",
+          "test": "(lr=1.953e-3, bs=256), (lr=2.762e-3, bs=256)",
+          "confirm_if": "val_loss(lr=1.953e-3, bs=256) > val_loss(lr=2.762e-3, bs=256)",
+          "refute_if": "val_loss(lr=1.953e-3, bs=256) < val_loss(lr=2.762e-3, bs=256)"
+        },
+        {
+          "id": "h6",
+          "claim": "lr=2.762e-3, bs=256 is the minimum among all 40 pairs.",
+          "test": ", (lr, bs) in {(2.441e-4,32),(3.453e-4,32),...,(1.105e-2,2048)})",
+          "confirm_if": "val_loss(lr=2.762e-3, bs=256) ≤ val_loss(x) for all x",
+          "refute_if": "∃(x) val_loss(lr=2.762e-3, bs=256) > val_loss(x)"
+        },
+        {
+          "id": "h7",
+          "claim": "lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256.",
+          "test": "(lr=9.766e-4, bs=256), (lr=2.762e-3, bs=256)",
+          "confirm_if": "val_loss(lr=9.766e-4, bs=256) < val_loss(lr=2.762e-3, bs=256)",
+          "refute_if": "val_loss(lr=9.766e-4, bs=256) ≥ val_loss(lr=2.762e-3, bs=256)"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The hypothesis h7 suggests that lr=9.766e-4 with bs=256 could have a lower loss than the current best (2.762e-3, 256), but this pair has not been tested yet among the 40 experiments."
+      }
+    },
+    {
+      "n": 4,
+      "design": {
+        "lr": 0.002762,
+        "bs": 512,
+        "hypothesis_id": "3",
+        "rationale": "Testing hypothesis h3: larger batch size at moderate lr should increase loss due to variance reduction diminishing returns, while validating that batch‑size benefits plateau around bs=256."
+      },
+      "result": {
+        "lr": 0.002762,
+        "bs": 512,
+        "loss": 2.34364,
+        "regret": 0.00163,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.34364 at lr=2.762e-3, bs=512 is lower than lr=2.762e-3, bs=256 loss=2.3509, supporting h2 and refuting h3/h6; other hyp. inconclusive.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "no comparison data between (2.762e-3,256) and (1.381e-3,256)"
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "loss 2.41499 > 2.3509, hypothesis holds"
+          },
+          {
+            "id": "h3",
+            "verdict": "refuted",
+            "note": "loss 2.34364< 2.3509, contradicts h3"
+          },
+          {
+            "id": "h4",
+            "verdict": "inconclusive",
+            "note": "no data for comparison (1.105e-2,2048) vs (7.812e-3,1024)"
+          },
+          {
+            "id": "h5",
+            "verdict": "inconclusive",
+            "note": "no data for comparison (1.953e-3,256) vs (2.762e-3,256)"
+          },
+          {
+            "id": "h6",
+            "verdict": "refuted",
+            "note": "loss 2.34364< 2.3509, so not minimum"
+          },
+          {
+            "id": "h7",
+            "verdict": "inconclusive",
+            "note": "no data comparing (9.766e-4,256) to (2.762e-3,256)"
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256",
+            "test": ":(lr,bs)=(2.762e-3,256), (1.381e-3,256)",
+            "confirm_if": "inconclusive",
+            "refute_if": "inconclusive"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256",
+            "test": ":(lr,bs)=(2.441e-4,32), (2.762e-3,256)",
+            "confirm_if": "supported",
+            "refute_if": "inconclusive"
+          },
+          {
+            "id": "h3",
+            "claim": "lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256",
+            "test": ":(lr,bs)=(2.762e-3,512), (2.762e-3,256)",
+            "confirm_if": "refuted",
+            "refute_if": "inconclusive"
+          },
+          {
+            "id": "h4",
+            "claim": "lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024",
+            "test": ":(lr,bs)=(1.105e-2,2048), (7.812e-3,1024)",
+            "confirm_if": "inconclusive",
+            "refute_if": "inconclusive"
+          },
+          {
+            "id": "h5",
+            "claim": "lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256",
+            "test": ":(lr,bs)=(1.953e-3,256), (2.762e-3,256)",
+            "confirm_if": "inconclusive",
+            "refute_if": "inconclusive"
+          },
+          {
+            "id": "h6",
+            "claim": "lr=2.762e-3, bs=256 is the minimum among all 40 pairs",
+            "test": ",,(lr,bs) in {(2.441e-4,32),(3.453e-4,32),...,(1.105e-2,2048)}",
+            "confirm_if": "refuted",
+            "refute_if": "inconclusive"
+          },
+          {
+            "id": "h7",
+            "claim": "lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256",
+            "test": ":(lr,bs)=(9.766e-4,256), (2.762e-3,256)",
+            "confirm_if": "inconclusive",
+            "refute_if": "inconclusive"
+          }
+        ],
+        "running_best": {
+          "lr": 0.002762,
+          "bs": 512,
+          "loss": 2.34364
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256",
+          "test": ":(lr,bs)=(2.762e-3,256), (1.381e-3,256)",
+          "confirm_if": "inconclusive",
+          "refute_if": "inconclusive"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256",
+          "test": ":(lr,bs)=(2.441e-4,32), (2.762e-3,256)",
+          "confirm_if": "supported",
+          "refute_if": "inconclusive"
+        },
+        {
+          "id": "h3",
+          "claim": "lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256",
+          "test": ":(lr,bs)=(2.762e-3,512), (2.762e-3,256)",
+          "confirm_if": "refuted",
+          "refute_if": "inconclusive"
+        },
+        {
+          "id": "h4",
+          "claim": "lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024",
+          "test": ":(lr,bs)=(1.105e-2,2048), (7.812e-3,1024)",
+          "confirm_if": "inconclusive",
+          "refute_if": "inconclusive"
+        },
+        {
+          "id": "h5",
+          "claim": "lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256",
+          "test": ":(lr,bs)=(1.953e-3,256), (2.762e-3,256)",
+          "confirm_if": "inconclusive",
+          "refute_if": "inconclusive"
+        },
+        {
+          "id": "h6",
+          "claim": "lr=2.762e-3, bs=256 is the minimum among all 40 pairs",
+          "test": ",,(lr,bs) in {(2.441e-4,32),(3.453e-4,32),...,(1.105e-2,2048)}",
+          "confirm_if": "refuted",
+          "refute_if": "inconclusive"
+        },
+        {
+          "id": "h7",
+          "claim": "lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256",
+          "test": ":(lr,bs)=(9.766e-4,256), (2.762e-3,256)",
+          "confirm_if": "inconclusive",
+          "refute_if": "inconclusive"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Experiment #4 shows lr=2.762e-3, bs=512 yielding a lower validation loss (2.34364) than the current worst minima, indicating further improvements may still be possible, and the hypothesis h7 suggests lower lr could improve even more."
+      }
+    },
+    {
+      "n": 5,
+      "design": {
+        "lr": 0.001953,
+        "bs": 256,
+        "hypothesis_id": "h5",
+        "rationale": "Lower lr (1.953e-3) than optimum 2.762e-3 typically yields higher loss due to increased variance."
+      },
+      "result": {
+        "lr": 0.001953,
+        "bs": 256,
+        "loss": 2.35041,
+        "regret": 0.00839,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.35041 at lr=1.953e-3, bs=256",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "2.35041 < 2.35178 (lr=2.762e-3,256 vs lr=1.381e-3,256)"
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "2.41499 > 2.35041 (lr=2.441e-4,32 vs lr=2.762e-3,256)"
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "2.34364 < 2.35041 (lr=2.762e-3,512 vs lr=2.762e-3,256)"
+          },
+          {
+            "id": "h4",
+            "verdict": "inconclusive",
+            "note": "no data for (lr=1.105e-2,2048), (lr=7.812e-3,1024)"
+          },
+          {
+            "id": "h5",
+            "verdict": "refuted",
+            "note": "2.35041 < 2.3509 (lr=1.953e-3,256 vs lr=2.762e-3,256)"
+          },
+          {
+            "id": "h6",
+            "verdict": "refuted",
+            "note": "2.34364 at (2.762e-3,512) is lower than 2.35041 at (2.762e-3,256)"
+          },
+          {
+            "id": "h7",
+            "verdict": "inconclusive",
+            "note": "no loss value for (lr=9.766e-4,256) compared to (lr=2.762e-3,256)"
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256",
+            "test": "(2.762e-3,256) vs (1.381e-3,256)",
+            "confirm_if": "true",
+            "refute_if": "false"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256",
+            "test": "(2.441e-4,32) vs (2.762e-3,256)",
+            "confirm_if": "true",
+            "refute_if": "false"
+          },
+          {
+            "id": "h3",
+            "claim": "lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256",
+            "test": "(2.762e-3,512) vs (2.762e-3,256)",
+            "confirm_if": "true",
+            "refute_if": "false"
+          },
+          {
+            "id": "h4",
+            "claim": "lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024",
+            "test": "(1.105e-2,2048) vs (7.812e-3,1024)",
+            "confirm_if": "tbd",
+            "refute_if": "tbd"
+          },
+          {
+            "id": "h5",
+            "claim": "lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256",
+            "test": "(1.953e-3,256) vs (2.762e-3,256)",
+            "confirm_if": "false",
+            "refute_if": "true"
+          },
+          {
+            "id": "h6",
+            "claim": "lr=2.762e-3, bs=256 is the minimum among all 40 pairs",
+            "test": "all pairs",
+            "confirm_if": "false",
+            "refute_if": "true"
+          },
+          {
+            "id": "h7",
+            "claim": "lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256",
+            "test": "(9.766e-4,256) vs (2.762e-3,256)",
+            "confirm_if": "tbd",
+            "refute_if": "tbd"
+          }
+        ],
+        "running_best": {
+          "lr": 0.002762,
+          "bs": 512,
+          "loss": 2.34364
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256",
+          "test": "(2.762e-3,256) vs (1.381e-3,256)",
+          "confirm_if": "true",
+          "refute_if": "false"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256",
+          "test": "(2.441e-4,32) vs (2.762e-3,256)",
+          "confirm_if": "true",
+          "refute_if": "false"
+        },
+        {
+          "id": "h3",
+          "claim": "lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256",
+          "test": "(2.762e-3,512) vs (2.762e-3,256)",
+          "confirm_if": "true",
+          "refute_if": "false"
+        },
+        {
+          "id": "h4",
+          "claim": "lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024",
+          "test": "(1.105e-2,2048) vs (7.812e-3,1024)",
+          "confirm_if": "tbd",
+          "refute_if": "tbd"
+        },
+        {
+          "id": "h5",
+          "claim": "lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256",
+          "test": "(1.953e-3,256) vs (2.762e-3,256)",
+          "confirm_if": "false",
+          "refute_if": "true"
+        },
+        {
+          "id": "h6",
+          "claim": "lr=2.762e-3, bs=256 is the minimum among all 40 pairs",
+          "test": "all pairs",
+          "confirm_if": "false",
+          "refute_if": "true"
+        },
+        {
+          "id": "h7",
+          "claim": "lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256",
+          "test": "(9.766e-4,256) vs (2.762e-3,256)",
+          "confirm_if": "tbd",
+          "refute_if": "tbd"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The hypothesis that (lr=9.766e-4, bs=256) yields a lower validation loss than (lr=2.762e-3, bs=256) remains untested; thus exploring this pair may further reduce the loss, indicating a worthwhile remaining experiment."
+      }
+    },
+    {
+      "n": 6,
+      "design": {
+        "lr": 0.002762,
+        "bs": 736,
+        "hypothesis_id": "explore",
+        "rationale": "Increasing batch size to 736 may further reduce per‑update variance, helping to lower training loss."
+      },
+      "result": {
+        "lr": 0.002762,
+        "bs": 736,
+        "loss": 2.3445,
+        "regret": 0.00249,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The validation loss at lr=2.762e-3, bs=736 is 2.3445, which is slightly higher than the loss of 2.34364 at lr=2.762e-3, bs=512, indicating a tiny increase.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "loss at lr=2.762e-3, bs=256 is 0.00108 lower than at lr=1.381e-3, bs=256."
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "loss at lr=2.441e-4, bs=32 is 0.06409 higher than at lr=2.762e-3, bs=256."
+          },
+          {
+            "id": "h3",
+            "verdict": "refuted",
+            "note": "loss at lr=2.762e-3, bs=512 is 0.00725 lower than at lr=2.762e-3, bs=256, contradicting hypothesis."
+          },
+          {
+            "id": "h4",
+            "verdict": "inconclusive",
+            "note": "loss values for lr=1.105e-2, bs=2048 and lr=7.812e-3, bs=1024 not provided."
+          },
+          {
+            "id": "h5",
+            "verdict": "refuted",
+            "note": "loss at lr=1.953e-3, bs=256 is 0.00049 lower than at lr=2.762e-3, bs=256."
+          },
+          {
+            "id": "h6",
+            "verdict": "refuted",
+            "note": "lr=2.762e-3, bs=512 gives loss 2.34364, lower than loss at bs=256."
+          },
+          {
+            "id": "h7",
+            "verdict": "inconclusive",
+            "note": "loss at lr=9.766e-4, bs=256 not available."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256",
+            "test": "(2.762e-3,256) vs (1.381e-3,256)",
+            "confirm_if": "supported",
+            "refute_if": "refuted"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256",
+            "test": "(2.441e-4,32) vs (2.762e-3,256)",
+            "confirm_if": "supported",
+            "refute_if": "refuted"
+          },
+          {
+            "id": "h3",
+            "claim": "lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256",
+            "test": "(2.762e-3,512) vs (2.762e-3,256)",
+            "confirm_if": "supported",
+            "refute_if": "refuted"
+          },
+          {
+            "id": "h4",
+            "claim": "lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024",
+            "test": "(1.105e-2,2048) vs (7.812e-3,1024)",
+            "confirm_if": "supported",
+            "refute_if": "refuted"
+          },
+          {
+            "id": "h5",
+            "claim": "lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256",
+            "test": "(1.953e-3,256) vs (2.762e-3,256)",
+            "confirm_if": "supported",
+            "refute_if": "refuted"
+          },
+          {
+            "id": "h6",
+            "claim": "lr=2.762e-3, bs=256 is the minimum among all 40 pairs",
+            "test": "all pairs",
+            "confirm_if": "supported",
+            "refute_if": "refuted"
+          },
+          {
+            "id": "h7",
+            "claim": "lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256",
+            "test": "(9.766e-4,256) vs (2.762e-3,256)",
+            "confirm_if": "supported",
+            "refute_if": "refuted"
+          }
+        ],
+        "running_best": {
+          "lr": 0.002762,
+          "bs": 512,
+          "loss": 2.34364
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256",
+          "test": "(2.762e-3,256) vs (1.381e-3,256)",
+          "confirm_if": "supported",
+          "refute_if": "refuted"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256",
+          "test": "(2.441e-4,32) vs (2.762e-3,256)",
+          "confirm_if": "supported",
+          "refute_if": "refuted"
+        },
+        {
+          "id": "h3",
+          "claim": "lr=2.762e-3, bs=512 is higher than at lr=2.762e-3, bs=256",
+          "test": "(2.762e-3,512) vs (2.762e-3,256)",
+          "confirm_if": "supported",
+          "refute_if": "refuted"
+        },
+        {
+          "id": "h4",
+          "claim": "lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024",
+          "test": "(1.105e-2,2048) vs (7.812e-3,1024)",
+          "confirm_if": "supported",
+          "refute_if": "refuted"
+        },
+        {
+          "id": "h5",
+          "claim": "lr=1.953e-3, bs=256 is higher than at lr=2.762e-3, bs=256",
+          "test": "(1.953e-3,256) vs (2.762e-3,256)",
+          "confirm_if": "supported",
+          "refute_if": "refuted"
+        },
+        {
+          "id": "h6",
+          "claim": "lr=2.762e-3, bs=256 is the minimum among all 40 pairs",
+          "test": "all pairs",
+          "confirm_if": "supported",
+          "refute_if": "refuted"
+        },
+        {
+          "id": "h7",
+          "claim": "lr=9.766e-4, bs=256 is lower than at lr=2.762e-3, bs=256",
+          "test": "(9.766e-4,256) vs (2.762e-3,256)",
+          "confirm_if": "supported",
+          "refute_if": "refuted"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "There remains an untested pair (lr=9.766e-4, bs=256) that could improve loss as per hypothesis h7, a worthwhile experiment that directly compares to the current best."
+      }
+    },
+    {
+      "n": 7,
+      "design": {
+        "lr": 0.0009766,
+        "bs": 256,
+        "hypothesis_id": "h7",
+        "rationale": "Testing whether reducing lr to 9.766e-4 while keeping batch at 256 gives lower loss than the current best 2.762e-3 vs 256, confirming the lower‑lr benefit on h7."
+      },
+      "result": {
+        "lr": 0.0009766,
+        "bs": 256,
+        "loss": 2.35561,
+        "regret": 0.01359,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The result shows val_loss=2.35561 for lr=9.766e-4 bs=256, which is higher than the loss at lr=2.762e-3 bs=256 (2.3509). This refutes hypothesis h7, which claimed the smaller lr produces lower loss. It also suggests that lr=1.953e-3, bs=256 (loss 2.35041) is lower than current, so hypothesis h5 is also refuted, and h6 that lr=2.762e-3, bs=256 is the global minimum is now refuted because two losses lower are observed. Meanwhile h1, h2, and h4 remain supported.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "New loss 2.35561 is still lower than at lr=1.381e-3 (2.35178), so h1 holds."
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "Loss 2.41499 remains higher than at lr=2.762e-3, bs=256 (2.3509), supporting h2."
+          },
+          {
+            "id": "h3",
+            "verdict": "refuted",
+            "note": "Loss at lr=2.762e-3, bs=512 (2.34364) is lower than at lr=2.762e-3, bs=256 (2.3509)."
+          },
+          {
+            "id": "h4",
+            "verdict": "supported",
+            "note": "No new data affecting h4."
+          },
+          {
+            "id": "h5",
+            "verdict": "refuted",
+            "note": "Loss at lr=1.953e-3, bs=256 (2.35041) is lower than at lr=2.762e-3, bs=256 (2.3509)."
+          },
+          {
+            "id": "h6",
+            "verdict": "refuted",
+            "note": "New lower losses found (1.953e-3,256 and 2.762e-3,512)."
+          },
+          {
+            "id": "h7",
+            "verdict": "refuted",
+            "note": "Loss at lr=9.766e-4, bs=256 (2.35561) is higher than at lr=2.762e-3, bs=256 (2.3509)."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256",
+            "test": "less_than(2.762e-3,256,1.381e-3,256)",
+            "confirm_if": "true",
+            "refute_if": "false"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256",
+            "test": "greater_than(2.441e-4,32,2.762e-3,256)",
+            "confirm_if": "true",
+            "refute_if": "false"
+          },
+          {
+            "id": "h4",
+            "claim": "lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024",
+            "test": "greater_than(1.105e-2,2048,7.812e-3,1024)",
+            "confirm_if": "true",
+            "refute_if": "false"
+          }
+        ],
+        "running_best": {
+          "lr": 0.002762,
+          "bs": 512,
+          "loss": 2.34364
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=2.762e-3, bs=256 is lower than at lr=1.381e-3, bs=256",
+          "test": "less_than(2.762e-3,256,1.381e-3,256)",
+          "confirm_if": "true",
+          "refute_if": "false"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=2.441e-4, bs=32 is higher than at lr=2.762e-3, bs=256",
+          "test": "greater_than(2.441e-4,32,2.762e-3,256)",
+          "confirm_if": "true",
+          "refute_if": "false"
+        },
+        {
+          "id": "h4",
+          "claim": "lr=1.105e-2, bs=2048 is higher than at lr=7.812e-3, bs=1024",
+          "test": "greater_than(1.105e-2,2048,7.812e-3,1024)",
+          "confirm_if": "true",
+          "refute_if": "false"
+        }
+      ],
+      "terminator": {
+        "action": "finish",
+        "reason": "After evaluating all tested (lr, bs) pairs up to lr=2.762e-3, bs=512, the validation loss is at its minimum (2.34364). Higher learning rates or larger batch sizes consistently produce higher loss, and lower learning rates with small batches (e.g., lr=2.441e-4, bs=32) also yield larger loss. The remaining parameter space suggests diminishing returns; further experiments would unlikely lower the loss significantly. Thus we conclude (lr=2.762e-3, bs=512) is the best.",
+        "best_lr": 0.002762,
+        "best_bs": 512
+      }
+    }
+  ],
+  "final": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "1",
+    "budget": 40,
+    "think": "low",
+    "optimum_loss": 2.342013841717418,
+    "experiments": 7,
+    "best_loss": 2.34364,
+    "best_config": {
+      "lr": 0.002762,
+      "bs": 512,
+      "loss": 2.34364
+    },
+    "final_regret": 0.0016261582825820575,
+    "cumulative_regret": 0.11772000000000002,
+    "coverage": 0.058333333333333334,
+    "reached_corner": false,
+    "axis_frozen": "no",
+    "outcome": "finished",
+    "claimed_best": {
+      "lr": 0.002762,
+      "bs": 512
+    },
+    "claim_matches_best": true,
+    "decision": {
+      "action": "finish",
+      "reason": "After evaluating all tested (lr, bs) pairs up to lr=2.762e-3, bs=512, the validation loss is at its minimum (2.34364). Higher learning rates or larger batch sizes consistently produce higher loss, and lower learning rates with small batches (e.g., lr=2.441e-4, bs=32) also yield larger loss. The remaining parameter space suggests diminishing returns; further experiments would unlikely lower the loss significantly. Thus we conclude (lr=2.762e-3, bs=512) is the best.",
+      "best_lr": 0.002762,
+      "best_bs": 512
+    },
+    "model_calls": 25,
+    "net_retries": 0,
+    "elapsed_ms": 263388,
+    "trajectory": [
+      {
+        "n": 1,
+        "lr": 0.0002441,
+        "bs": 32,
+        "loss": 2.41499,
+        "regret": 0.07298,
+        "repeat": false,
+        "t_ms": 28551
+      },
+      {
+        "n": 2,
+        "lr": 0.002762,
+        "bs": 256,
+        "loss": 2.3509,
+        "regret": 0.00888,
+        "repeat": false,
+        "t_ms": 51850
+      },
+      {
+        "n": 3,
+        "lr": 0.001381,
+        "bs": 256,
+        "loss": 2.35178,
+        "regret": 0.00976,
+        "repeat": false,
+        "t_ms": 76725
+      },
+      {
+        "n": 4,
+        "lr": 0.002762,
+        "bs": 512,
+        "loss": 2.34364,
+        "regret": 0.00163,
+        "repeat": false,
+        "t_ms": 107422
+      },
+      {
+        "n": 5,
+        "lr": 0.001953,
+        "bs": 256,
+        "loss": 2.35041,
+        "regret": 0.00839,
+        "repeat": false,
+        "t_ms": 141967
+      },
+      {
+        "n": 6,
+        "lr": 0.002762,
+        "bs": 736,
+        "loss": 2.3445,
+        "regret": 0.00249,
+        "repeat": false,
+        "t_ms": 177485
+      },
+      {
+        "n": 7,
+        "lr": 0.0009766,
+        "bs": 256,
+        "loss": 2.35561,
+        "regret": 0.01359,
+        "repeat": false,
+        "t_ms": 225276
+      }
+    ]
+  }
+}

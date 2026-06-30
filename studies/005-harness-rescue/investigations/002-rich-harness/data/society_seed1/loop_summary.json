@@ -1,0 +1,102 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "1",
+  "budget": 40,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "experiments": 7,
+  "best_loss": 2.34364,
+  "best_config": {
+    "lr": 0.002762,
+    "bs": 512,
+    "loss": 2.34364
+  },
+  "final_regret": 0.0016261582825820575,
+  "cumulative_regret": 0.11772000000000002,
+  "coverage": 0.058333333333333334,
+  "reached_corner": false,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": {
+    "lr": 0.002762,
+    "bs": 512
+  },
+  "claim_matches_best": true,
+  "decision": {
+    "action": "finish",
+    "reason": "After evaluating all tested (lr, bs) pairs up to lr=2.762e-3, bs=512, the validation loss is at its minimum (2.34364). Higher learning rates or larger batch sizes consistently produce higher loss, and lower learning rates with small batches (e.g., lr=2.441e-4, bs=32) also yield larger loss. The remaining parameter space suggests diminishing returns; further experiments would unlikely lower the loss significantly. Thus we conclude (lr=2.762e-3, bs=512) is the best.",
+    "best_lr": 0.002762,
+    "best_bs": 512
+  },
+  "model_calls": 25,
+  "net_retries": 0,
+  "elapsed_ms": 263388,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.0002441,
+      "bs": 32,
+      "loss": 2.41499,
+      "regret": 0.07298,
+      "repeat": false,
+      "t_ms": 28551
+    },
+    {
+      "n": 2,
+      "lr": 0.002762,
+      "bs": 256,
+      "loss": 2.3509,
+      "regret": 0.00888,
+      "repeat": false,
+      "t_ms": 51850
+    },
+    {
+      "n": 3,
+      "lr": 0.001381,
+      "bs": 256,
+      "loss": 2.35178,
+      "regret": 0.00976,
+      "repeat": false,
+      "t_ms": 76725
+    },
+    {
+      "n": 4,
+      "lr": 0.002762,
+      "bs": 512,
+      "loss": 2.34364,
+      "regret": 0.00163,
+      "repeat": false,
+      "t_ms": 107422
+    },
+    {
+      "n": 5,
+      "lr": 0.001953,
+      "bs": 256,
+      "loss": 2.35041,
+      "regret": 0.00839,
+      "repeat": false,
+      "t_ms": 141967
+    },
+    {
+      "n": 6,
+      "lr": 0.002762,
+      "bs": 736,
+      "loss": 2.3445,
+      "regret": 0.00249,
+      "repeat": false,
+      "t_ms": 177485
+    },
+    {
+      "n": 7,
+      "lr": 0.0009766,
+      "bs": 256,
+      "loss": 2.35561,
+      "regret": 0.01359,
+      "repeat": false,
+      "t_ms": 225276
+    }
+  ]
+}

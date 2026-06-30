@@ -1,0 +1,239 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "3",
+  "budget": 20,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "config": {
+    "critic": false,
+    "critic_roles": [
+      "all"
+    ],
+    "analyst_fix": false,
+    "hyp_seed": null,
+    "hyp_freeze": false,
+    "max_high": 3,
+    "max_narrow_per": 3,
+    "strong_roles": [
+      "hypothesizer"
+    ],
+    "strong_model": "gemini-3.1-flash-lite"
+  },
+  "regions": {
+    "LL": 6,
+    "LH": 3,
+    "HL": 1,
+    "HH": 10
+  },
+  "region_mid": {
+    "lr": 0.001953,
+    "bs": 352
+  },
+  "experiments": 20,
+  "best_loss": 2.34201,
+  "best_config": {
+    "lr": 0.007812,
+    "bs": 1024,
+    "loss": 2.34201
+  },
+  "final_regret": -0.000003841717417962798,
+  "cumulative_regret": 0.35681999999999997,
+  "coverage": 0.16666666666666666,
+  "reached_corner": true,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": null,
+  "claim_matches_best": null,
+  "decision": {
+    "action": "continue",
+    "reason": "hypothesis h5 remains open indicating that high learning rates (lr > 5e-3) benefit from large batch sizes (bs >= 1024) and possibly even larger (2048). The only untested joint cell that appears truly informative is (lr=1.105e-2, bs=2048), which directly tests this boundary. Given this clear, potentially impactful experiment remains and still within budget limits, we should continue rather than finish."
+  },
+  "model_calls": 66,
+  "net_retries": 0,
+  "elapsed_ms": 413978,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.0002441,
+      "bs": 512,
+      "loss": 2.40141,
+      "regret": 0.0594,
+      "repeat": false,
+      "t_ms": 11635
+    },
+    {
+      "n": 2,
+      "lr": 0.0002441,
+      "bs": 256,
+      "loss": 2.39092,
+      "regret": 0.0489,
+      "repeat": false,
+      "t_ms": 28196
+    },
+    {
+      "n": 3,
+      "lr": 0.0003453,
+      "bs": 256,
+      "loss": 2.37972,
+      "regret": 0.03771,
+      "repeat": false,
+      "t_ms": 41586
+    },
+    {
+      "n": 4,
+      "lr": 0.0003453,
+      "bs": 128,
+      "loss": 2.3746,
+      "regret": 0.03258,
+      "repeat": false,
+      "t_ms": 74247
+    },
+    {
+      "n": 5,
+      "lr": 0.0003453,
+      "bs": 192,
+      "loss": 2.37755,
+      "regret": 0.03554,
+      "repeat": false,
+      "t_ms": 104626
+    },
+    {
+      "n": 6,
+      "lr": 0.0006905,
+      "bs": 256,
+      "loss": 2.36144,
+      "regret": 0.01942,
+      "repeat": false,
+      "t_ms": 141141
+    },
+    {
+      "n": 7,
+      "lr": 0.0009766,
+      "bs": 256,
+      "loss": 2.35561,
+      "regret": 0.01359,
+      "repeat": false,
+      "t_ms": 156212
+    },
+    {
+      "n": 8,
+      "lr": 0.001381,
+      "bs": 352,
+      "loss": 2.35131,
+      "regret": 0.00929,
+      "repeat": false,
+      "t_ms": 173593
+    },
+    {
+      "n": 9,
+      "lr": 0.001953,
+      "bs": 512,
+      "loss": 2.34691,
+      "regret": 0.0049,
+      "repeat": false,
+      "t_ms": 188989
+    },
+    {
+      "n": 10,
+      "lr": 0.001953,
+      "bs": 736,
+      "loss": 2.34999,
+      "regret": 0.00797,
+      "repeat": false,
+      "t_ms": 207247
+    },
+    {
+      "n": 11,
+      "lr": 0.002762,
+      "bs": 352,
+      "loss": 2.34667,
+      "regret": 0.00466,
+      "repeat": false,
+      "t_ms": 224298
+    },
+    {
+      "n": 12,
+      "lr": 0.002762,
+      "bs": 256,
+      "loss": 2.3509,
+      "regret": 0.00888,
+      "repeat": false,
+      "t_ms": 242593
+    },
+    {
+      "n": 13,
+      "lr": 0.002762,
+      "bs": 512,
+      "loss": 2.34364,
+      "regret": 0.00163,
+      "repeat": false,
+      "t_ms": 261407
+    },
+    {
+      "n": 14,
+      "lr": 0.002762,
+      "bs": 736,
+      "loss": 2.3445,
+      "regret": 0.00249,
+      "repeat": false,
+      "t_ms": 276068
+    },
+    {
+      "n": 15,
+      "lr": 0.003906,
+      "bs": 512,
+      "loss": 2.34636,
+      "regret": 0.00434,
+      "repeat": false,
+      "t_ms": 293660
+    },
+    {
+      "n": 16,
+      "lr": 0.002762,
+      "bs": 1024,
+      "loss": 2.35024,
+      "regret": 0.00822,
+      "repeat": false,
+      "t_ms": 312526
+    },
+    {
+      "n": 17,
+      "lr": 0.0004883,
+      "bs": 512,
+      "loss": 2.37818,
+      "regret": 0.03616,
+      "repeat": false,
+      "t_ms": 336686
+    },
+    {
+      "n": 18,
+      "lr": 0.005524,
+      "bs": 736,
+      "loss": 2.34446,
+      "regret": 0.00244,
+      "repeat": false,
+      "t_ms": 352951
+    },
+    {
+      "n": 19,
+      "lr": 0.002762,
+      "bs": 2048,
+      "loss": 2.36071,
+      "regret": 0.0187,
+      "repeat": false,
+      "t_ms": 375804
+    },
+    {
+      "n": 20,
+      "lr": 0.007812,
+      "bs": 1024,
+      "loss": 2.34201,
+      "regret": 0,
+      "repeat": false,
+      "t_ms": 394544
+    }
+  ]
+}

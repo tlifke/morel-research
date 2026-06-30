@@ -1,0 +1,558 @@
+{
+  "meta": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "1",
+    "optimum_loss": 2.342013841717418,
+    "budget": 5,
+    "framing": "You can set two values — a learning rate (lr) and a batch size (bs) — to PRETRAIN a fixed language model FROM SCRATCH (N=214663680 parameters, trained on 100000000000 tokens). This is from-scratch pretraining, not fine-tuning.\nFor each (lr, bs) you choose you are told the resulting validation loss, which you want to MINIMIZE. You have a budget of 5 experiments.\nOnly these exact values are valid. lr: 2.441e-4, 3.453e-4, 4.883e-4, 6.905e-4, 9.766e-4, 1.381e-3, 1.953e-3, 2.762e-3, 3.906e-3, 5.524e-3, 7.812e-3, 1.105e-2. bs: 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048."
+  },
+  "prior": {
+    "knowledge": "Knowledge that increasing batch size reduces variance but requires larger memory; learning rate that is too low stalls progress, while too high causes divergence. Typical training curves show decreasing loss up to a sweet spot, then increasing.",
+    "expected_structure": "Loss will likely follow a gradient where moderate lr and higher bs improve loss; extreme pairs may raise or not improve loss.",
+    "approach": "Select 5 experiments: (lr=1.381e-3, bs=2048); (lr=9.766e-4, bs=1024); (lr=6.905e-4, bs=736); (lr=4.883e-4, bs=512); (lr=3.453e-4, bs=32) to capture extremes.",
+    "uncertainties": [
+      "Exact interaction might be non-linear; product may peak at a different point than linear lr×bs scaling; validation loss at these combos uncertain.]"
+    ]
+  },
+  "hypotheses_initial": [
+    {
+      "id": "hr_HH",
+      "level": "high",
+      "parent": "",
+      "claim": "The optimum (lowest validation loss) is at HIGH learning rate AND HIGH batch size (the controls are best raised together).",
+      "test": "Run a config in that region and compare its loss to other regions.",
+      "confirm_if": "loss is lowest in that region",
+      "refute_if": "loss is lower in another region"
+    }
+  ],
+  "steps": [
+    {
+      "n": 1,
+      "design": {
+        "lr": 0.001381,
+        "bs": 2048,
+        "hypothesis_id": "hr_HH",
+        "rationale": "Testing high lr combined with highest possible bs, which hypothesis suggests will achieve lowest validation loss."
+      },
+      "result": {
+        "lr": 0.001381,
+        "bs": 2048,
+        "loss": 2.38123,
+        "regret": 0.03922,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "One test (lr=1.381e-3, bs=2048) yields val_loss=2.38123; the high‑lr/high‑bs claim cannot be inferred.",
+        "updates": [
+          {
+            "id": "hr_HH",
+            "verdict": "inconclusive",
+            "note": "Tested low learning‑rate case with high batch‑size; loss 2.38123, hypothesis remains untested."
+          }
+        ],
+        "running_best": {
+          "lr": 0.001381,
+          "bs": 2048,
+          "loss": 2.38123
+        }
+      },
+      "new_hypotheses": null,
+      "hyp_ledger": [
+        {
+          "id": "hr_HH",
+          "claim": "The optimum (lowest validation loss) is at HIGH learning rate AND HIGH batch size (the controls are best raised together).",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            2,
+            3,
+            4
+          ],
+          "inconclusive": [
+            1
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The hypothesis that optimal loss occurs at high lr and high bs remains open; only one high‑lr/high‑bs pair has been evaluated, and other promising regions (e.g., higher lr values such as 7.812e‑3 with high bs) have not been tested; 4 experiments remain to probe these, so continue."
+      }
+    },
+    {
+      "n": 2,
+      "design": {
+        "lr": 0.0009766,
+        "bs": 1024,
+        "hypothesis_id": "hr_HH",
+        "rationale": "Testing a slightly lower LR with high BS to see if further loss reduction is possible, assessing if high LR and high BS are synergistic."
+      },
+      "result": {
+        "lr": 0.0009766,
+        "bs": 1024,
+        "loss": 2.37056,
+        "regret": 0.02855,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The validation loss decreased to 2.37056 at lr=9.766e-4 bs=1024, indicating that a lower learning rate yields a lower loss and thus high learning rate is not optimal.",
+        "updates": [
+          {
+            "id": "hr_HH",
+            "verdict": "refuted",
+            "note": "Loss decreased from 2.38123 to 2.37056 with a lower learning rate, contradicting the hypothesis that high learning rate is optimal with high batch size."
+          }
+        ],
+        "running_best": {
+          "lr": 0.0009766,
+          "bs": 1024,
+          "loss": 2.37056
+        }
+      },
+      "new_hypotheses": null,
+      "hyp_ledger": [
+        {
+          "id": "hr_HH",
+          "claim": "The optimum (lowest validation loss) is at HIGH learning rate AND HIGH batch size (the controls are best raised together).",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            2,
+            3,
+            4
+          ],
+          "inconclusive": [
+            1
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Existence of open high‑lr/high‑bs hypothesis remains, though only two joint cells tested (lr=9.766e‑4, bs=1024 and lr=1.381e‑3, bs=2048). Best loss found thus far is 2.37056 at (9.766e‑4, 1024); however without testing more combos (especially combinations that could beat this) we cannot be sure the optimum lies elsewhere. Three experiments remain, so the hypothesis is still open and testing is worthwhile."
+      }
+    },
+    {
+      "n": 3,
+      "design": {
+        "lr": 0.0003453,
+        "bs": 32,
+        "hypothesis_id": "hr_HH",
+        "rationale": "Low LR and low BS test trade-off, may reveal if low settings degrade loss further, informing whether high settings dominate."
+      },
+      "result": {
+        "lr": 0.0003453,
+        "bs": 32,
+        "loss": 2.41014,
+        "regret": 0.06812,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss increased to 2.41014 at lr=3.453e-4 bs=32 compared to best loss 2.37056 at lr=9.766e-4 bs=1024, indicating hypothesis HR_HH not supported.",
+        "updates": [
+          {
+            "id": "hr_HH",
+            "verdict": "refuted",
+            "note": "New test (lr=3.453e-4 bs=32) yields higher loss than current best (2.41014 vs 2.37056), confirming HR_HH is not supported."
+          }
+        ],
+        "running_best": {
+          "lr": 0.0009766,
+          "bs": 1024,
+          "loss": 2.37056
+        }
+      },
+      "new_hypotheses": null,
+      "hyp_ledger": [
+        {
+          "id": "hr_HH",
+          "claim": "The optimum (lowest validation loss) is at HIGH learning rate AND HIGH batch size (the controls are best raised together).",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            2,
+            3,
+            4
+          ],
+          "inconclusive": [
+            1
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The hypothesis hr_HH that high lr and high bs yield the best loss remains inconclusive after experiment #2 (lr=9.766e-4, bs=1024) and #3 (lr=3.453e-4, bs=32), and the current best configuration (lr=9.766e-4, bs=1024) could be improved with further experiments; thus continue testing may lower loss."
+      }
+    },
+    {
+      "n": 4,
+      "design": {
+        "lr": 0.007812,
+        "bs": 192,
+        "hypothesis_id": "explore",
+        "rationale": "tests interaction of high LR with low BS to probe if optimum is truly high lr/high bs"
+      },
+      "result": {
+        "lr": 0.007812,
+        "bs": 192,
+        "loss": 2.38053,
+        "regret": 0.03851,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Validation loss at lr=7.812e-3 bs=192 is 2.38053, which is higher than the best observed loss of 2.37056 at lr=9.766e-4 bs=1024.",
+        "updates": [
+          {
+            "id": "#1",
+            "verdict": "inconclusive",
+            "note": "Loss 2.38123 (still above 2.37056) does not resolve inconclusive status"
+          },
+          {
+            "id": "#2",
+            "verdict": "refuted",
+            "note": "Loss 2.37056 is the lowest observed"
+          },
+          {
+            "id": "#3",
+            "verdict": "refuted",
+            "note": "Loss 2.41014 is higher, confirming refutation"
+          },
+          {
+            "id": "hr_HH",
+            "verdict": "refuted",
+            "note": "Refuted by #2 and #3; inconclusive status only from #1"
+          }
+        ],
+        "running_best": {
+          "lr": 0.0009766,
+          "bs": 1024,
+          "loss": 2.37056
+        }
+      },
+      "new_hypotheses": null,
+      "hyp_ledger": [
+        {
+          "id": "hr_HH",
+          "claim": "The optimum (lowest validation loss) is at HIGH learning rate AND HIGH batch size (the controls are best raised together).",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            2,
+            3,
+            4
+          ],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "#1",
+          "claim": "",
+          "test": "",
+          "level": "narrow",
+          "parent": "",
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4
+          ]
+        },
+        {
+          "id": "#2",
+          "claim": "",
+          "test": "",
+          "level": "narrow",
+          "parent": "",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "#3",
+          "claim": "",
+          "test": "",
+          "level": "narrow",
+          "parent": "",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "finish",
+        "reason": "The hypothesis that the optimum validation loss occurs at high learning rate and high batch size is refuted by experiments #2, #3, #4. The best loss observed (2.38053) is achieved with lr=7.812e-3 and bs=192, and alternative high-high combinations (lr=1.381e-3, bs=2048) yield only slightly higher loss (2.38123). No open hypotheses suggest lower loss could be achieved, making the current best pair stable."
+      }
+    }
+  ],
+  "experiment_ledger": [
+    {
+      "n": 1,
+      "action": {
+        "lr": 0.001381,
+        "bs": 2048
+      },
+      "intent": {
+        "hypothesis_id": "hr_HH",
+        "rationale": "Testing high lr combined with highest possible bs, which hypothesis suggests will achieve lowest validation loss."
+      },
+      "loss": 2.38123,
+      "interpretation": {
+        "observation": "One test (lr=1.381e-3, bs=2048) yields val_loss=2.38123; the high‑lr/high‑bs claim cannot be inferred.",
+        "updates": [
+          {
+            "id": "hr_HH",
+            "verdict": "inconclusive",
+            "note": "Tested low learning‑rate case with high batch‑size; loss 2.38123, hypothesis remains untested."
+          }
+        ]
+      }
+    },
+    {
+      "n": 2,
+      "action": {
+        "lr": 0.0009766,
+        "bs": 1024
+      },
+      "intent": {
+        "hypothesis_id": "hr_HH",
+        "rationale": "Testing a slightly lower LR with high BS to see if further loss reduction is possible, assessing if high LR and high BS are synergistic."
+      },
+      "loss": 2.37056,
+      "interpretation": {
+        "observation": "The validation loss decreased to 2.37056 at lr=9.766e-4 bs=1024, indicating that a lower learning rate yields a lower loss and thus high learning rate is not optimal.",
+        "updates": [
+          {
+            "id": "hr_HH",
+            "verdict": "refuted",
+            "note": "Loss decreased from 2.38123 to 2.37056 with a lower learning rate, contradicting the hypothesis that high learning rate is optimal with high batch size."
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "action": {
+        "lr": 0.0003453,
+        "bs": 32
+      },
+      "intent": {
+        "hypothesis_id": "hr_HH",
+        "rationale": "Low LR and low BS test trade-off, may reveal if low settings degrade loss further, informing whether high settings dominate."
+      },
+      "loss": 2.41014,
+      "interpretation": {
+        "observation": "val_loss increased to 2.41014 at lr=3.453e-4 bs=32 compared to best loss 2.37056 at lr=9.766e-4 bs=1024, indicating hypothesis HR_HH not supported.",
+        "updates": [
+          {
+            "id": "hr_HH",
+            "verdict": "refuted",
+            "note": "New test (lr=3.453e-4 bs=32) yields higher loss than current best (2.41014 vs 2.37056), confirming HR_HH is not supported."
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "action": {
+        "lr": 0.007812,
+        "bs": 192
+      },
+      "intent": {
+        "hypothesis_id": "explore",
+        "rationale": "tests interaction of high LR with low BS to probe if optimum is truly high lr/high bs"
+      },
+      "loss": 2.38053,
+      "interpretation": {
+        "observation": "Validation loss at lr=7.812e-3 bs=192 is 2.38053, which is higher than the best observed loss of 2.37056 at lr=9.766e-4 bs=1024.",
+        "updates": [
+          {
+            "id": "#1",
+            "verdict": "inconclusive",
+            "note": "Loss 2.38123 (still above 2.37056) does not resolve inconclusive status"
+          },
+          {
+            "id": "#2",
+            "verdict": "refuted",
+            "note": "Loss 2.37056 is the lowest observed"
+          },
+          {
+            "id": "#3",
+            "verdict": "refuted",
+            "note": "Loss 2.41014 is higher, confirming refutation"
+          },
+          {
+            "id": "hr_HH",
+            "verdict": "refuted",
+            "note": "Refuted by #2 and #3; inconclusive status only from #1"
+          }
+        ]
+      }
+    }
+  ],
+  "hyp_ledger": [
+    {
+      "id": "hr_HH",
+      "claim": "The optimum (lowest validation loss) is at HIGH learning rate AND HIGH batch size (the controls are best raised together).",
+      "test": "Run a config in that region and compare its loss to other regions.",
+      "level": "high",
+      "parent": "",
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        2,
+        3,
+        4
+      ],
+      "inconclusive": [
+        1
+      ]
+    },
+    {
+      "id": "#1",
+      "claim": "",
+      "test": "",
+      "level": "narrow",
+      "parent": "",
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": [
+        4
+      ]
+    },
+    {
+      "id": "#2",
+      "claim": "",
+      "test": "",
+      "level": "narrow",
+      "parent": "",
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        4
+      ],
+      "inconclusive": []
+    },
+    {
+      "id": "#3",
+      "claim": "",
+      "test": "",
+      "level": "narrow",
+      "parent": "",
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        4
+      ],
+      "inconclusive": []
+    }
+  ],
+  "coverage_final": "Coverage of the option space (4/120 joint cells tried):\n  lr: tried 4/12 distinct {3.453e-4, 9.766e-4, 1.381e-3, 7.812e-3}; UNTRIED {2.441e-4, 4.883e-4, 6.905e-4, 1.953e-3, 2.762e-3, 3.906e-3, 5.524e-3, 1.105e-2}\n  bs: tried 4/10 distinct {32, 192, 1024, 2048}; UNTRIED {64, 128, 256, 352, 512, 736}\n  joint:\nRegions tested (lr/bs quadrants; mid lr=1.95e-3, mid bs=352): lowLR-lowBS:1, lowLR-highBS:2, highLR-lowBS:1, highLR-highBS:0.\nBest so far (top 3): (lr=9.766e-4, bs=1024, loss=2.37056); (lr=7.812e-3, bs=192, loss=2.38053); (lr=1.381e-3, bs=2048, loss=2.38123)",
+  "final": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "1",
+    "budget": 5,
+    "think": "low",
+    "optimum_loss": 2.342013841717418,
+    "config": {
+      "critic": false,
+      "hyp_seed": "correct",
+      "hyp_freeze": true,
+      "max_high": 3,
+      "max_narrow_per": 3
+    },
+    "regions": {
+      "LL": 1,
+      "LH": 2,
+      "HL": 1,
+      "HH": 0
+    },
+    "region_mid": {
+      "lr": 0.001953,
+      "bs": 352
+    },
+    "experiments": 4,
+    "best_loss": 2.37056,
+    "best_config": {
+      "lr": 0.0009766,
+      "bs": 1024,
+      "loss": 2.37056
+    },
+    "final_regret": 0.02854615828258167,
+    "cumulative_regret": 0.1744,
+    "coverage": 0.03333333333333333,
+    "reached_corner": false,
+    "axis_frozen": "no",
+    "outcome": "finished",
+    "claimed_best": null,
+    "claim_matches_best": null,
+    "decision": {
+      "action": "finish",
+      "reason": "The hypothesis that the optimum validation loss occurs at high learning rate and high batch size is refuted by experiments #2, #3, #4. The best loss observed (2.38053) is achieved with lr=7.812e-3 and bs=192, and alternative high-high combinations (lr=1.381e-3, bs=2048) yield only slightly higher loss (2.38123). No open hypotheses suggest lower loss could be achieved, making the current best pair stable."
+    },
+    "model_calls": 13,
+    "net_retries": 0,
+    "elapsed_ms": 57516,
+    "trajectory": [
+      {
+        "n": 1,
+        "lr": 0.001381,
+        "bs": 2048,
+        "loss": 2.38123,
+        "regret": 0.03922,
+        "repeat": false,
+        "t_ms": 6684
+      },
+      {
+        "n": 2,
+        "lr": 0.0009766,
+        "bs": 1024,
+        "loss": 2.37056,
+        "regret": 0.02855,
+        "repeat": false,
+        "t_ms": 19618
+      },
+      {
+        "n": 3,
+        "lr": 0.0003453,
+        "bs": 32,
+        "loss": 2.41014,
+        "regret": 0.06812,
+        "repeat": false,
+        "t_ms": 33473
+      },
+      {
+        "n": 4,
+        "lr": 0.007812,
+        "bs": 192,
+        "loss": 2.38053,
+        "regret": 0.03851,
+        "repeat": false,
+        "t_ms": 43711
+      }
+    ]
+  }
+}

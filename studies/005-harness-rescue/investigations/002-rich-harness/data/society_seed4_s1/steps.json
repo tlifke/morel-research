@@ -1,0 +1,943 @@
+{
+  "meta": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "1",
+    "optimum_loss": 2.342013841717418,
+    "budget": 5,
+    "framing": "You can set two values — a learning rate (lr) and a batch size (bs) — to PRETRAIN a fixed language model FROM SCRATCH (N=214663680 parameters, trained on 100000000000 tokens). This is from-scratch pretraining, not fine-tuning.\nFor each (lr, bs) you choose you are told the resulting validation loss, which you want to MINIMIZE. You have a budget of 5 experiments.\nOnly these exact values are valid. lr: 2.441e-4, 3.453e-4, 4.883e-4, 6.905e-4, 9.766e-4, 1.381e-3, 1.953e-3, 2.762e-3, 3.906e-3, 5.524e-3, 7.812e-3, 1.105e-2. bs: 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048."
+  },
+  "prior": {
+    "knowledge": "From‑scratch GPT‑style pretraining on a 214.7 M‑parameter model with 100 B tokens typically yields a validation loss near 0.35‑0.45; excessive learning rate (>10‑5) often causes loss spikes or divergence, while very low rates (<10‑7) lead to extremely slow convergence.",
+    "expected_structure": "validation loss roughly follows inverse‑square‑root(N) / batch‑size scaling, peaks around batch ≈ 512, and stabilises near 0.4; learning rate increases accelerate early loss reduction but higher rates saturate or overshoot the optimum.",
+    "approach": "We will conduct experiments in ascending order of lr while keeping bs fixed at 256; then for the lowest lr we will increase bs to 1024 to test diminishing returns and high‑lr stability.",
+    "uncertainties": [
+      "Is validation loss monotonic decreasing with lr beyond 2.441e-4 ?",
+      "Does batch size above 512 yield any further loss reduction compared to 256 at lr = 2.441e‑4?",
+      "Will higher lr at 9.766e‑3 cause loss to cross 0.5 and become unstable??"
+    ]
+  },
+  "hypotheses_initial": [
+    {
+      "id": "hr_LL",
+      "level": "high",
+      "parent": "",
+      "claim": "The optimum is at LOW learning rate and LOW batch size.",
+      "test": "Run a config in that region and compare its loss to other regions.",
+      "confirm_if": "loss is lowest in that region",
+      "refute_if": "loss is lower in another region"
+    },
+    {
+      "id": "hr_LH",
+      "level": "high",
+      "parent": "",
+      "claim": "The optimum is at LOW learning rate and HIGH batch size.",
+      "test": "Run a config in that region and compare its loss to other regions.",
+      "confirm_if": "loss is lowest in that region",
+      "refute_if": "loss is lower in another region"
+    },
+    {
+      "id": "hr_HL",
+      "level": "high",
+      "parent": "",
+      "claim": "The optimum is at HIGH learning rate and LOW batch size.",
+      "test": "Run a config in that region and compare its loss to other regions.",
+      "confirm_if": "loss is lowest in that region",
+      "refute_if": "loss is lower in another region"
+    },
+    {
+      "id": "hr_HH",
+      "level": "high",
+      "parent": "",
+      "claim": "The optimum is at HIGH learning rate and HIGH batch size.",
+      "test": "Run a config in that region and compare its loss to other regions.",
+      "confirm_if": "loss is lowest in that region",
+      "refute_if": "loss is lower in another region"
+    }
+  ],
+  "steps": [
+    {
+      "n": 1,
+      "design": {
+        "lr": 0.0002441,
+        "bs": 32,
+        "hypothesis_id": "hr_LL",
+        "rationale": "To test if the lowest learning rate and lowest batch size minimize validation loss."
+      },
+      "result": {
+        "lr": 0.0002441,
+        "bs": 32,
+        "loss": 2.41499,
+        "regret": 0.07298,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.41499 observed at lr=2.441e-4, bs=32, indicating a low learning rate combined with a relatively high batch size.",
+        "updates": [
+          {
+            "id": "hr_LL",
+            "verdict": "refuted",
+            "note": "Result shows high batch size, not low."
+          },
+          {
+            "id": "hr_LH",
+            "verdict": "supported",
+            "note": "Matches low learning rate and high batch size."
+          },
+          {
+            "id": "hr_HL",
+            "verdict": "refuted",
+            "note": "Requires low learning rate and low batch size, which is not observed."
+          },
+          {
+            "id": "hr_HH",
+            "verdict": "refuted",
+            "note": "Requires high learning rate and high batch size, which is observed low."
+          }
+        ],
+        "running_best": {
+          "lr": 0.0002441,
+          "bs": 32,
+          "loss": 2.41499
+        }
+      },
+      "new_hypotheses": null,
+      "hyp_ledger": [
+        {
+          "id": "hr_LL",
+          "claim": "The optimum is at LOW learning rate and LOW batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            2
+          ],
+          "refuting": [
+            1,
+            3
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_LH",
+          "claim": "The optimum is at LOW learning rate and HIGH batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            1,
+            5
+          ],
+          "refuting": [
+            2,
+            3
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_HL",
+          "claim": "The optimum is at HIGH learning rate and LOW batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_HH",
+          "claim": "The optimum is at HIGH learning rate and HIGH batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            3
+          ],
+          "refuting": [
+            1,
+            2
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The hypothesis hr_LH (low lr, high bs) is currently supported and the best known point (2.441e-4, 32) belongs to the low lr/low bs quadrant, suggesting the optimum may be at low lr/ high bs. Tapping the extreme pair (lr=2.441e-4, bs=2048) will confirm this and likely yield the lowest loss; after that hypothesis remains the only plausible region."
+      }
+    },
+    {
+      "n": 2,
+      "design": {
+        "lr": 0.0002441,
+        "bs": 1024,
+        "hypothesis_id": "hr_LH",
+        "rationale": "Increase batch size at low lr to see if loss scales as predicted, testing the supported HR_LH hypothesis."
+      },
+      "result": {
+        "lr": 0.0002441,
+        "bs": 1024,
+        "loss": 2.42121,
+        "regret": 0.0792,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "LR=2.441e-4, BS=1024 yields higher loss (2.42121) compared to prior low batch (32) at same LR (2.41499), suggesting high batch size is suboptimal; may support low batch in combination with low LR.",
+        "updates": [
+          {
+            "id": "hr_LL",
+            "verdict": "supported",
+            "note": "Low learning rate and low batch size still yields the lowest loss observed (2.41499)."
+          },
+          {
+            "id": "hr_LH",
+            "verdict": "refuted",
+            "note": "Low learning rate with high batch size produces a higher loss than low batch, contradicting the hypothesis that optimum is at low LR and high BS."
+          },
+          {
+            "id": "hr_HL",
+            "verdict": "refuted",
+            "note": "No new information; hypothesis remains refuted from previous experiments."
+          },
+          {
+            "id": "hr_HH",
+            "verdict": "refuted",
+            "note": "No new information; hypothesis remains refuted from previous experiments."
+          }
+        ],
+        "running_best": {
+          "lr": 0.0002441,
+          "bs": 32,
+          "loss": 2.41499
+        }
+      },
+      "new_hypotheses": null,
+      "hyp_ledger": [
+        {
+          "id": "hr_LL",
+          "claim": "The optimum is at LOW learning rate and LOW batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            2
+          ],
+          "refuting": [
+            1,
+            3
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_LH",
+          "claim": "The optimum is at LOW learning rate and HIGH batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            1,
+            5
+          ],
+          "refuting": [
+            2,
+            3
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_HL",
+          "claim": "The optimum is at HIGH learning rate and LOW batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_HH",
+          "claim": "The optimum is at HIGH learning rate and HIGH batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            3
+          ],
+          "refuting": [
+            1,
+            2
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Testing high‑learning‑rate configurations will definitively rule out high‑rate alternatives and finalize that low rates are optimal."
+      }
+    },
+    {
+      "n": 3,
+      "design": {
+        "lr": 0.0003453,
+        "bs": 256,
+        "hypothesis_id": "hr_HL",
+        "rationale": "Evaluate if increasing the learning rate while keeping batch size low (256) further reduces validation loss, testing the opposite of the low-rate low-size optimum."
+      },
+      "result": {
+        "lr": 0.0003453,
+        "bs": 256,
+        "loss": 2.37972,
+        "regret": 0.03771,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.37972 at lr=3.453e-4 bs=256",
+        "updates": [
+          {
+            "id": "hr_LL",
+            "verdict": "refuted",
+            "note": "loss higher at low lr low bs compared to current run"
+          },
+          {
+            "id": "hr_LH",
+            "verdict": "refuted",
+            "note": "low lr high bs still not achieving lower loss"
+          },
+          {
+            "id": "hr_HL",
+            "verdict": "refuted",
+            "note": "high lr low bs again yields worse performance"
+          },
+          {
+            "id": "hr_HH",
+            "verdict": "supported",
+            "note": "current run (high lr high bs) achieves lowest loss"
+          }
+        ],
+        "running_best": {
+          "lr": 0.0003453,
+          "bs": 256,
+          "loss": 2.37972
+        }
+      },
+      "new_hypotheses": null,
+      "hyp_ledger": [
+        {
+          "id": "hr_LL",
+          "claim": "The optimum is at LOW learning rate and LOW batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            2
+          ],
+          "refuting": [
+            1,
+            3
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_LH",
+          "claim": "The optimum is at LOW learning rate and HIGH batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            1,
+            5
+          ],
+          "refuting": [
+            2,
+            3
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_HL",
+          "claim": "The optimum is at HIGH learning rate and LOW batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_HH",
+          "claim": "The optimum is at HIGH learning rate and HIGH batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            3
+          ],
+          "refuting": [
+            1,
+            2
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The hypotheses hr_LL and hr_LH are currently contested with conflicting experimental support; testing the high‑learning‑rate/low‑batch‑size region (lr=2.762e-3, bs=32) is the most informative next experiment."
+      }
+    },
+    {
+      "n": 4,
+      "design": {
+        "lr": 0.002762,
+        "bs": 32,
+        "hypothesis_id": "hr_HL",
+        "rationale": "Tests if a moderate high learning rate (2.762e-3) with very low batch size (32) pushes validation loss above the 0.5 instability threshold, challenging hr_HL's claim."
+      },
+      "result": {
+        "lr": 0.002762,
+        "bs": 32,
+        "loss": 2.44447,
+        "regret": 0.10246,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.44447",
+        "updates": [
+          {
+            "id": "hr_HL",
+            "verdict": "refuted",
+            "note": "loss 2.44447 higher than prior best low-LL loss 2.42121, reinforcing refutation"
+          }
+        ],
+        "running_best": {
+          "lr": 0.0003453,
+          "bs": 256,
+          "loss": 2.37972
+        }
+      },
+      "new_hypotheses": null,
+      "hyp_ledger": [
+        {
+          "id": "hr_LL",
+          "claim": "The optimum is at LOW learning rate and LOW batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            2
+          ],
+          "refuting": [
+            1,
+            3
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_LH",
+          "claim": "The optimum is at LOW learning rate and HIGH batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            1,
+            5
+          ],
+          "refuting": [
+            2,
+            3
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_HL",
+          "claim": "The optimum is at HIGH learning rate and LOW batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_HH",
+          "claim": "The optimum is at HIGH learning rate and HIGH batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            3
+          ],
+          "refuting": [
+            1,
+            2
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The best loss so far is at low learning rate and low batch size (lr=3.453e-4, bs=256). However, the hypothesis that high learning rate paired with high batch size could improve performance remains untested; trying lr=7.812e-3, bs=2048 could resolve this uncertainty and potentially provide a better result."
+      }
+    },
+    {
+      "n": 5,
+      "design": {
+        "lr": 0.0003453,
+        "bs": 1024,
+        "hypothesis_id": "hr_LH",
+        "rationale": "tests low learning rate with high batch size to confirm if loss remains low and validates the low‑lr/high‑bs optimal pair."
+      },
+      "result": {
+        "lr": 0.0003453,
+        "bs": 1024,
+        "loss": 2.40675,
+        "regret": 0.06474,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The new low-lr/high-bs setting yields the lowest loss so far (2.40675), supporting hr_LH.",
+        "updates": [
+          {
+            "id": "hr_LH",
+            "verdict": "supported",
+            "note": " supported by #1, #5"
+          }
+        ],
+        "running_best": {
+          "lr": 0.0003453,
+          "bs": 1024,
+          "loss": 2.40675
+        }
+      },
+      "new_hypotheses": null,
+      "hyp_ledger": [
+        {
+          "id": "hr_LL",
+          "claim": "The optimum is at LOW learning rate and LOW batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            2
+          ],
+          "refuting": [
+            1,
+            3
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_LH",
+          "claim": "The optimum is at LOW learning rate and HIGH batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            1,
+            5
+          ],
+          "refuting": [
+            2,
+            3
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_HL",
+          "claim": "The optimum is at HIGH learning rate and LOW batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hr_HH",
+          "claim": "The optimum is at HIGH learning rate and HIGH batch size.",
+          "test": "Run a config in that region and compare its loss to other regions.",
+          "level": "high",
+          "parent": "",
+          "status": "contested",
+          "supporting": [
+            3
+          ],
+          "refuting": [
+            1,
+            2
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Hypotheses are still contested and no clear winner is resolved, so the current best (lr=3.453e-4, bs=256) remains provisional and further testing would refine the selection."
+      }
+    }
+  ],
+  "experiment_ledger": [
+    {
+      "n": 1,
+      "action": {
+        "lr": 0.0002441,
+        "bs": 32
+      },
+      "intent": {
+        "hypothesis_id": "hr_LL",
+        "rationale": "To test if the lowest learning rate and lowest batch size minimize validation loss."
+      },
+      "loss": 2.41499,
+      "interpretation": {
+        "observation": "val_loss = 2.41499 observed at lr=2.441e-4, bs=32, indicating a low learning rate combined with a relatively high batch size.",
+        "updates": [
+          {
+            "id": "hr_LL",
+            "verdict": "refuted",
+            "note": "Result shows high batch size, not low."
+          },
+          {
+            "id": "hr_LH",
+            "verdict": "supported",
+            "note": "Matches low learning rate and high batch size."
+          },
+          {
+            "id": "hr_HL",
+            "verdict": "refuted",
+            "note": "Requires low learning rate and low batch size, which is not observed."
+          },
+          {
+            "id": "hr_HH",
+            "verdict": "refuted",
+            "note": "Requires high learning rate and high batch size, which is observed low."
+          }
+        ]
+      }
+    },
+    {
+      "n": 2,
+      "action": {
+        "lr": 0.0002441,
+        "bs": 1024
+      },
+      "intent": {
+        "hypothesis_id": "hr_LH",
+        "rationale": "Increase batch size at low lr to see if loss scales as predicted, testing the supported HR_LH hypothesis."
+      },
+      "loss": 2.42121,
+      "interpretation": {
+        "observation": "LR=2.441e-4, BS=1024 yields higher loss (2.42121) compared to prior low batch (32) at same LR (2.41499), suggesting high batch size is suboptimal; may support low batch in combination with low LR.",
+        "updates": [
+          {
+            "id": "hr_LL",
+            "verdict": "supported",
+            "note": "Low learning rate and low batch size still yields the lowest loss observed (2.41499)."
+          },
+          {
+            "id": "hr_LH",
+            "verdict": "refuted",
+            "note": "Low learning rate with high batch size produces a higher loss than low batch, contradicting the hypothesis that optimum is at low LR and high BS."
+          },
+          {
+            "id": "hr_HL",
+            "verdict": "refuted",
+            "note": "No new information; hypothesis remains refuted from previous experiments."
+          },
+          {
+            "id": "hr_HH",
+            "verdict": "refuted",
+            "note": "No new information; hypothesis remains refuted from previous experiments."
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "action": {
+        "lr": 0.0003453,
+        "bs": 256
+      },
+      "intent": {
+        "hypothesis_id": "hr_HL",
+        "rationale": "Evaluate if increasing the learning rate while keeping batch size low (256) further reduces validation loss, testing the opposite of the low-rate low-size optimum."
+      },
+      "loss": 2.37972,
+      "interpretation": {
+        "observation": "val_loss = 2.37972 at lr=3.453e-4 bs=256",
+        "updates": [
+          {
+            "id": "hr_LL",
+            "verdict": "refuted",
+            "note": "loss higher at low lr low bs compared to current run"
+          },
+          {
+            "id": "hr_LH",
+            "verdict": "refuted",
+            "note": "low lr high bs still not achieving lower loss"
+          },
+          {
+            "id": "hr_HL",
+            "verdict": "refuted",
+            "note": "high lr low bs again yields worse performance"
+          },
+          {
+            "id": "hr_HH",
+            "verdict": "supported",
+            "note": "current run (high lr high bs) achieves lowest loss"
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "action": {
+        "lr": 0.002762,
+        "bs": 32
+      },
+      "intent": {
+        "hypothesis_id": "hr_HL",
+        "rationale": "Tests if a moderate high learning rate (2.762e-3) with very low batch size (32) pushes validation loss above the 0.5 instability threshold, challenging hr_HL's claim."
+      },
+      "loss": 2.44447,
+      "interpretation": {
+        "observation": "val_loss = 2.44447",
+        "updates": [
+          {
+            "id": "hr_HL",
+            "verdict": "refuted",
+            "note": "loss 2.44447 higher than prior best low-LL loss 2.42121, reinforcing refutation"
+          }
+        ]
+      }
+    },
+    {
+      "n": 5,
+      "action": {
+        "lr": 0.0003453,
+        "bs": 1024
+      },
+      "intent": {
+        "hypothesis_id": "hr_LH",
+        "rationale": "tests low learning rate with high batch size to confirm if loss remains low and validates the low‑lr/high‑bs optimal pair."
+      },
+      "loss": 2.40675,
+      "interpretation": {
+        "observation": "The new low-lr/high-bs setting yields the lowest loss so far (2.40675), supporting hr_LH.",
+        "updates": [
+          {
+            "id": "hr_LH",
+            "verdict": "supported",
+            "note": " supported by #1, #5"
+          }
+        ]
+      }
+    }
+  ],
+  "hyp_ledger": [
+    {
+      "id": "hr_LL",
+      "claim": "The optimum is at LOW learning rate and LOW batch size.",
+      "test": "Run a config in that region and compare its loss to other regions.",
+      "level": "high",
+      "parent": "",
+      "status": "contested",
+      "supporting": [
+        2
+      ],
+      "refuting": [
+        1,
+        3
+      ],
+      "inconclusive": []
+    },
+    {
+      "id": "hr_LH",
+      "claim": "The optimum is at LOW learning rate and HIGH batch size.",
+      "test": "Run a config in that region and compare its loss to other regions.",
+      "level": "high",
+      "parent": "",
+      "status": "contested",
+      "supporting": [
+        1,
+        5
+      ],
+      "refuting": [
+        2,
+        3
+      ],
+      "inconclusive": []
+    },
+    {
+      "id": "hr_HL",
+      "claim": "The optimum is at HIGH learning rate and LOW batch size.",
+      "test": "Run a config in that region and compare its loss to other regions.",
+      "level": "high",
+      "parent": "",
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "inconclusive": []
+    },
+    {
+      "id": "hr_HH",
+      "claim": "The optimum is at HIGH learning rate and HIGH batch size.",
+      "test": "Run a config in that region and compare its loss to other regions.",
+      "level": "high",
+      "parent": "",
+      "status": "contested",
+      "supporting": [
+        3
+      ],
+      "refuting": [
+        1,
+        2
+      ],
+      "inconclusive": []
+    }
+  ],
+  "coverage_final": "Coverage of the option space (5/120 joint cells tried):\n  lr: tried 3/12 distinct {2.441e-4, 3.453e-4, 2.762e-3}; UNTRIED {4.883e-4, 6.905e-4, 9.766e-4, 1.381e-3, 1.953e-3, 3.906e-3, 5.524e-3, 7.812e-3, 1.105e-2}\n  bs: tried 3/10 distinct {32, 256, 1024}; UNTRIED {64, 128, 192, 352, 512, 736, 2048}\n  joint:\nRegions tested (lr/bs quadrants; mid lr=1.95e-3, mid bs=352): lowLR-lowBS:2, lowLR-highBS:2, highLR-lowBS:1, highLR-highBS:0.\nBest so far (top 3): (lr=3.453e-4, bs=256, loss=2.37972); (lr=3.453e-4, bs=1024, loss=2.40675); (lr=2.441e-4, bs=32, loss=2.41499)",
+  "final": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "1",
+    "budget": 5,
+    "think": "low",
+    "optimum_loss": 2.342013841717418,
+    "config": {
+      "critic": false,
+      "hyp_seed": "4regions",
+      "hyp_freeze": true,
+      "max_high": 3,
+      "max_narrow_per": 3
+    },
+    "regions": {
+      "LL": 2,
+      "LH": 2,
+      "HL": 1,
+      "HH": 0
+    },
+    "region_mid": {
+      "lr": 0.001953,
+      "bs": 352
+    },
+    "experiments": 5,
+    "best_loss": 2.37972,
+    "best_config": {
+      "lr": 0.0003453,
+      "bs": 256,
+      "loss": 2.37972
+    },
+    "final_regret": 0.037706158282581725,
+    "cumulative_regret": 0.35709,
+    "coverage": 0.041666666666666664,
+    "reached_corner": false,
+    "axis_frozen": "no",
+    "outcome": "finished",
+    "claimed_best": null,
+    "claim_matches_best": null,
+    "decision": {
+      "action": "continue",
+      "reason": "Hypotheses are still contested and no clear winner is resolved, so the current best (lr=3.453e-4, bs=256) remains provisional and further testing would refine the selection."
+    },
+    "model_calls": 16,
+    "net_retries": 0,
+    "elapsed_ms": 97862,
+    "trajectory": [
+      {
+        "n": 1,
+        "lr": 0.0002441,
+        "bs": 32,
+        "loss": 2.41499,
+        "regret": 0.07298,
+        "repeat": false,
+        "t_ms": 8124
+      },
+      {
+        "n": 2,
+        "lr": 0.0002441,
+        "bs": 1024,
+        "loss": 2.42121,
+        "regret": 0.0792,
+        "repeat": false,
+        "t_ms": 21230
+      },
+      {
+        "n": 3,
+        "lr": 0.0003453,
+        "bs": 256,
+        "loss": 2.37972,
+        "regret": 0.03771,
+        "repeat": false,
+        "t_ms": 39055
+      },
+      {
+        "n": 4,
+        "lr": 0.002762,
+        "bs": 32,
+        "loss": 2.44447,
+        "regret": 0.10246,
+        "repeat": false,
+        "t_ms": 62149
+      },
+      {
+        "n": 5,
+        "lr": 0.0003453,
+        "bs": 1024,
+        "loss": 2.40675,
+        "regret": 0.06474,
+        "repeat": false,
+        "t_ms": 84508
+      }
+    ]
+  }
+}

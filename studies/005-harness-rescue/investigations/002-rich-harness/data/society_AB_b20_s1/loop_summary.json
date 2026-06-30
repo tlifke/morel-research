@@ -1,0 +1,127 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "1",
+  "budget": 20,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "config": {
+    "critic": true,
+    "critic_roles": [
+      "analyst"
+    ],
+    "analyst_fix": true,
+    "hyp_seed": null,
+    "hyp_freeze": false,
+    "max_high": 3,
+    "max_narrow_per": 3
+  },
+  "regions": {
+    "LL": 1,
+    "LH": 2,
+    "HL": 2,
+    "HH": 3
+  },
+  "region_mid": {
+    "lr": 0.001953,
+    "bs": 352
+  },
+  "experiments": 8,
+  "best_loss": 2.34364,
+  "best_config": {
+    "lr": 0.002762,
+    "bs": 512,
+    "loss": 2.34364
+  },
+  "final_regret": 0.0016261582825820575,
+  "cumulative_regret": 0.57561,
+  "coverage": 0.058333333333333334,
+  "reached_corner": false,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": null,
+  "claim_matches_best": null,
+  "decision": {
+    "action": "finish",
+    "reason": "All hypotheses have been resolved (h1 and h2 refuted, h3/h4/h5 supported). The current best observed validation loss is at lr=2.762e-3 with bs=512. Further experiments are unlikely to yield a lower loss."
+  },
+  "model_calls": 82,
+  "net_retries": 0,
+  "elapsed_ms": 833105,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.0002441,
+      "bs": 1024,
+      "loss": 2.42121,
+      "regret": 0.0792,
+      "repeat": false,
+      "t_ms": 26646
+    },
+    {
+      "n": 2,
+      "lr": 0.0002441,
+      "bs": 32,
+      "loss": 2.41499,
+      "regret": 0.07298,
+      "repeat": false,
+      "t_ms": 99661
+    },
+    {
+      "n": 3,
+      "lr": 0.002762,
+      "bs": 32,
+      "loss": 2.44447,
+      "regret": 0.10246,
+      "repeat": false,
+      "t_ms": 138275
+    },
+    {
+      "n": 4,
+      "lr": 0.002762,
+      "bs": 1024,
+      "loss": 2.35024,
+      "regret": 0.00822,
+      "repeat": false,
+      "t_ms": 230898
+    },
+    {
+      "n": 5,
+      "lr": 0.0002441,
+      "bs": 2048,
+      "loss": 2.45412,
+      "regret": 0.11211,
+      "repeat": false,
+      "t_ms": 376760
+    },
+    {
+      "n": 6,
+      "lr": 0.002762,
+      "bs": 1024,
+      "loss": 2.35024,
+      "regret": 0.00822,
+      "repeat": true,
+      "t_ms": 420797
+    },
+    {
+      "n": 7,
+      "lr": 0.002762,
+      "bs": 512,
+      "loss": 2.34364,
+      "regret": 0.00163,
+      "repeat": false,
+      "t_ms": 564503
+    },
+    {
+      "n": 8,
+      "lr": 0.01105,
+      "bs": 32,
+      "loss": 2.5328,
+      "regret": 0.19079,
+      "repeat": false,
+      "t_ms": 725229
+    }
+  ]
+}

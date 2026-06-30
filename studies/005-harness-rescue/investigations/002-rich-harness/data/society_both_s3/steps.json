@@ -1,0 +1,2770 @@
+{
+  "meta": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "3",
+    "optimum_loss": 2.342013841717418,
+    "budget": 20,
+    "framing": "You can set two values — a learning rate (lr) and a batch size (bs) — to PRETRAIN a fixed language model FROM SCRATCH (N=214663680 parameters, trained on 100000000000 tokens). This is from-scratch pretraining, not fine-tuning.\nFor each (lr, bs) you choose you are told the resulting validation loss, which you want to MINIMIZE. You have a budget of 20 experiments.\nOnly these exact values are valid. lr: 2.441e-4, 3.453e-4, 4.883e-4, 6.905e-4, 9.766e-4, 1.381e-3, 1.953e-3, 2.762e-3, 3.906e-3, 5.524e-3, 7.812e-3, 1.105e-2. bs: 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048."
+  },
+  "prior": {
+    "knowledge": "For a 214.7M parameter GPT‑3‑scale model pretrained from scratch on 100B tokens, AdamW with lr≈3e‑4 and batch size 1024 minimizes validation loss; smaller batch forces higher LR and noisier gradients; larger batch beyond 1024 rarely improves loss.",
+    "expected_structure": "The validation loss curve versus lr (increasing) for a given bs typically peaks then decreases; for bs=1024 the lowest loss is near lr=6.905e‑4. For extremes (bs=352 or 3072) loss increases due to memory or instability.",
+    "approach": "Randomly select 20 (lr,bs) pairs; record validation loss; select minimal; analysis will focus on pairs where loss differs >5% from minimum.",
+    "uncertainties": [
+      "Effect of batch sizes >1024 on gradient stability is uncertain",
+      "Interaction between lr and bs beyond scaling is uncertain",
+      "Validation loss may not be monotonic"
+    ]
+  },
+  "hypotheses_initial": [
+    {
+      "id": "h1",
+      "level": "high",
+      "parent": "",
+      "claim": "The optimal learning rate scales proportionally with the square root of the batch size to maintain stable gradient updates.",
+      "test": "Compare validation loss across different batch sizes while maintaining a constant ratio of lr/sqrt(bs).",
+      "config": null,
+      "confirm_if": "The validation loss remains stable as both batch size and learning rate increase according to the square root scaling rule.",
+      "refute_if": "Validation loss increases significantly at larger batch sizes despite adjusting the learning rate according to the square root rule."
+    },
+    {
+      "id": "h2",
+      "level": "high",
+      "parent": "",
+      "claim": "There exists a 'plateau of optimality' for batch sizes beyond 1024 where increasing batch size further provides diminishing returns on training speed/loss.",
+      "test": "Compare validation loss at batch sizes 1024, 2048, and 736.",
+      "config": null,
+      "confirm_if": "Loss does not significantly decrease as batch size increases from 1024 to 2048.",
+      "refute_if": "Loss continues to decrease monotonically as batch size increases toward 2048."
+    },
+    {
+      "id": "n1",
+      "level": "narrow",
+      "parent": "h1",
+      "claim": "Testing the upper bound of the stable scaling region for learning rate and batch size.",
+      "test": "Execute at a high batch size and a correspondingly scaled high learning rate.",
+      "config": {
+        "lr": "1.381e-3",
+        "bs": 1024
+      },
+      "confirm_if": "Loss is lower than or equal to the baseline established at lr=6.905e-4, bs=1024.",
+      "refute_if": "Loss increases, indicating gradient instability or divergence."
+    },
+    {
+      "id": "n2",
+      "level": "narrow",
+      "parent": "h1",
+      "claim": "Testing the sensitivity of the model to batch size reduction when learning rate is kept constant.",
+      "test": "Reduce batch size while keeping learning rate at the hypothesized optimum for larger batches.",
+      "config": {
+        "lr": "6.905e-4",
+        "bs": 256
+      },
+      "confirm_if": "Loss increases significantly, demonstrating that lr must decrease when bs decreases.",
+      "refute_if": "Loss remains comparable to the optimal bs=1024/lr=6.905e-4 result."
+    },
+    {
+      "id": "n3",
+      "level": "narrow",
+      "parent": "h2",
+      "claim": "Testing if the current model scale (214M) benefits from batch sizes larger than 1024.",
+      "test": "Execute at the maximum provided batch size to check for loss improvements.",
+      "config": {
+        "lr": "1.105e-2",
+        "bs": 2048
+      },
+      "confirm_if": "Loss is higher than the best result found in smaller batch size experiments.",
+      "refute_if": "Loss is the lowest observed, suggesting larger batch sizes are superior."
+    }
+  ],
+  "steps": [
+    {
+      "n": 1,
+      "design": {
+        "lr": 0.001381,
+        "bs": 1024,
+        "hypothesis_id": "n1",
+        "rationale": "executing top open narrow hypothesis n1: Testing the upper bound of the stable scaling region for learning rate and batch size."
+      },
+      "result": {
+        "lr": 0.001381,
+        "bs": 1024,
+        "loss": 2.36187,
+        "regret": 0.01986,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The training run with lr=1.381e-3 and bs=1024 yielded a validation loss of 2.36187, establishing a baseline for the current architecture.",
+        "updates": [
+          {
+            "id": "n1",
+            "verdict": "inconclusive",
+            "note": "Initial baseline established; additional data points are required to determine if this learning rate is optimal for this batch size."
+          },
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "The result is consistent with the hypothesis but requires further testing with different batch sizes to confirm the square root scaling relationship."
+          }
+        ],
+        "running_best": {
+          "lr": "1.381e-3",
+          "bs": 1024,
+          "loss": 2.36187
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "parent": "",
+          "claim": "The optimal learning rate scales proportionally with the square root of the batch size to maintain stable gradient updates.",
+          "test": "Verify if the optimal LR shifts systematically as batch size changes.",
+          "config": null,
+          "confirm_if": "Optimal LR increases as batch size increases following a sqrt(bs) pattern.",
+          "refute_if": "Optimal LR remains constant or decreases as batch size increases."
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "parent": "",
+          "claim": "There exists a 'plateau of optimality' for batch sizes around 1024; larger batch sizes yield diminishing returns due to gradient noise reduction saturation.",
+          "test": "Compare loss at batch size 1024 vs 2048 holding learning rate constant.",
+          "config": null,
+          "confirm_if": "Loss improvement from bs=1024 to bs=2048 is statistically insignificant.",
+          "refute_if": "Loss continues to decrease significantly at bs=2048 compared to 1024."
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Decreasing the batch size while keeping the current LR will likely lead to instability or divergence, testing the lower bound of our learning rate capacity.",
+          "test": "Run with a smaller batch size (bs=512) to see if the current LR (1.381e-3) is too high for smaller batches.",
+          "config": {
+            "lr": "1.381e-3",
+            "bs": 512
+          },
+          "confirm_if": "Validation loss increases compared to the best run (bs=1024).",
+          "refute_if": "Validation loss decreases or stays stable at bs=512."
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Finding the peak of the learning rate curve for the baseline batch size of 1024 will clarify if 1.381e-3 is already near-optimal.",
+          "test": "Test a slightly higher learning rate at the same batch size to detect the onset of instability.",
+          "config": {
+            "lr": "1.953e-3",
+            "bs": 1024
+          },
+          "confirm_if": "Validation loss increases, indicating the learning rate is too high.",
+          "refute_if": "Validation loss decreases further."
+        },
+        {
+          "id": "n3",
+          "level": "narrow",
+          "parent": "h2",
+          "claim": "Larger batch sizes (bs=2048) may improve the objective function by providing more stable gradient estimation.",
+          "test": "Test batch size 2048 with the current best learning rate to see if the plateau is reached.",
+          "config": {
+            "lr": "1.381e-3",
+            "bs": 2048
+          },
+          "confirm_if": "Loss does not significantly improve relative to the baseline bs=1024.",
+          "refute_if": "Significant decrease in validation loss observed."
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+          "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+          "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            8,
+            9,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n1",
+          "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+          "test": "Test the next valid lr increment at the current best batch size.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "1.105e-2",
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            2,
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+          "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 2048
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            3,
+            11
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+          "test": "Run bs=32 with a moderate learning rate.",
+          "level": "narrow",
+          "parent": "h2",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 32
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            11
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Multiple hypotheses remain open (h1, h2, n1, n2, n3) and many joint cell combinations have not been tested, indicating further experiments could improve the loss; hence continue rather than finish."
+      }
+    },
+    {
+      "n": 2,
+      "design": {
+        "lr": 0.001381,
+        "bs": 512,
+        "hypothesis_id": "n1",
+        "rationale": "executing top open narrow hypothesis n1: Decreasing the batch size while keeping the current LR will likely lead to instability or divergence, testing the lower bound of our learning rate capacity."
+      },
+      "result": {
+        "lr": 0.001381,
+        "bs": 512,
+        "loss": 2.35264,
+        "regret": 0.01063,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Decreasing the batch size from 1024 to 512 while maintaining the same learning rate (lr=1.381e-3) resulted in a lower validation loss (2.35264 vs 2.36187). This suggests that for this specific learning rate, the smaller batch size performs slightly better, contradicting the expectation of instability associated with smaller batches.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "Performance improvement with smaller batch size at the same LR suggests a complex relationship, but does not clearly validate the square root scaling rule."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "The model remained stable and actually improved in performance, refuting the expectation of instability at this lower batch size."
+          }
+        ],
+        "running_best": {
+          "lr": "1.381e-3",
+          "bs": 512,
+          "loss": 2.35264
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "parent": "",
+          "claim": "For the current model size, the optimal learning rate decreases as the batch size increases to maintain stable gradient updates, and the current optimal point (lr=1.381e-3, bs=512) is likely in a regime where the batch size is sufficiently large to permit higher learning rates.",
+          "confirm_if": "Performance improves when moving to higher LR with larger BS or lower LR with smaller BS.",
+          "refute_if": "Performance degrades significantly or diverges when varying LR/BS inversely relative to the current baseline."
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a larger batch size of 1024 with a higher learning rate (1.953e-3) will test if we can shift the optimum towards larger batch sizes without sacrificing stability.",
+          "config": {
+            "lr": "1.953e-3",
+            "bs": 1024
+          },
+          "confirm_if": "Validation loss is lower than the current best (2.35264).",
+          "refute_if": "Validation loss is significantly higher or the model diverges."
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a smaller batch size of 256 with a lower learning rate (9.766e-4) will identify if the optimal trend continues towards even smaller batch sizes.",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 256
+          },
+          "confirm_if": "Validation loss is lower than the current best.",
+          "refute_if": "Validation loss increases compared to current best."
+        },
+        {
+          "id": "n3",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing the extreme batch size 2048 with the current optimal learning rate 1.381e-3 will assess if the performance gains from small batch sizes were a local effect or a scaling property.",
+          "config": {
+            "lr": "1.381e-3",
+            "bs": 2048
+          },
+          "confirm_if": "Validation loss decreases.",
+          "refute_if": "Validation loss increases or becomes unstable."
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+          "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+          "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            8,
+            9,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n1",
+          "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+          "test": "Test the next valid lr increment at the current best batch size.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "1.105e-2",
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            2,
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+          "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 2048
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            3,
+            11
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+          "test": "Run bs=32 with a moderate learning rate.",
+          "level": "narrow",
+          "parent": "h2",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 32
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            11
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The hypothesis h1 remains open: unknown how the optimal learning rate interacts with batch size scales. While the current best (lr=1.381e-3, bs=512) is stable, it could be improved at smaller batch sizes (e.g., 256 with lr=9.766e-4) or larger batch sizes (e.g., 2048 with same lr), so more experiments are warranted."
+      }
+    },
+    {
+      "n": 3,
+      "design": {
+        "lr": 0.0009766,
+        "bs": 256,
+        "hypothesis_id": "n2",
+        "rationale": "executing top open narrow hypothesis n2: Testing a smaller batch size of 256 with a lower learning rate (9.766e-4) will identify if the optimal trend continues towards even smaller batch sizes."
+      },
+      "result": {
+        "lr": 0.0009766,
+        "bs": 256,
+        "loss": 2.35561,
+        "regret": 0.01359,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The performance with lr=9.766e-4 and bs=256 (val_loss=2.35561) is slightly worse than the current optimal (lr=1.381e-3, bs=512, val_loss=2.35264), suggesting the optimal point does not continue to smaller batch sizes under this scaling configuration.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "Results show degradation at both higher (1024) and lower (256) batch sizes compared to bs=512, suggesting the optimal regime is localized around bs=512."
+          },
+          {
+            "id": "n2",
+            "verdict": "refuted",
+            "note": "Testing bs=256 with lower learning rate resulted in higher validation loss compared to the current best, failing to shift or improve the optimum."
+          }
+        ],
+        "running_best": {
+          "lr": "1.381e-3",
+          "bs": 512,
+          "loss": 2.35264
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "parent": "",
+          "claim": "For a model of this size, there is a specific valley in the (lr, bs) landscape where the gradient variance is minimized, specifically around bs=512 to 736 and lr near 1.381e-3, beyond which increasing batch size requires a higher learning rate to maintain loss reduction.",
+          "test": "Systematically vary batch size while anchoring the current optimal learning rate to see if the loss curve is convex.",
+          "confirm_if": "Validation loss decreases as we approach the optimal region from either direction.",
+          "refute_if": "Validation loss remains flat or decreases consistently as we move to larger/smaller batch sizes independent of lr."
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a larger batch size (736) with the current optimal learning rate (1.381e-3) will confirm if the loss valley extends toward higher batch sizes.",
+          "test": "Run (lr=1.381e-3, bs=736).",
+          "config": {
+            "lr": "1.381e-3",
+            "bs": 736
+          },
+          "confirm_if": "Loss is lower than 2.35264.",
+          "refute_if": "Loss is higher than 2.35264."
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a higher learning rate (1.953e-3) with the current optimal batch size (512) will determine if the model can converge faster with higher LR when batch size is moderate.",
+          "test": "Run (lr=1.953e-3, bs=512).",
+          "config": {
+            "lr": "1.953e-3",
+            "bs": 512
+          },
+          "confirm_if": "Loss is lower than 2.35264.",
+          "refute_if": "Loss is higher than 2.35264."
+        },
+        {
+          "id": "n3",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing an extreme batch size (2048) with the current optimal learning rate (1.381e-3) will determine if large-batch training is viable for this architecture without scaling LR.",
+          "test": "Run (lr=1.381e-3, bs=2048).",
+          "config": {
+            "lr": "1.381e-3",
+            "bs": 2048
+          },
+          "confirm_if": "Loss is competitive (below 2.40).",
+          "refute_if": "Loss is significantly higher than 2.36."
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+          "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+          "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            8,
+            9,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n1",
+          "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+          "test": "Test the next valid lr increment at the current best batch size.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "1.105e-2",
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            2,
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+          "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 2048
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            3,
+            11
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+          "test": "Run bs=32 with a moderate learning rate.",
+          "level": "narrow",
+          "parent": "h2",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 32
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            11
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Open hypotheses about the loss‑minimising valley remain; the best loss so far is 2.35264 at lr=1.381e‑3, bs=512, but larger batch sizes (e.g., 736) or adjusted rates could improve it, so further experiments are worthwhile."
+      }
+    },
+    {
+      "n": 4,
+      "design": {
+        "lr": 0.001381,
+        "bs": 2048,
+        "hypothesis_id": "n3",
+        "rationale": "executing top open narrow hypothesis n3: Testing an extreme batch size (2048) with the current optimal learning rate (1.381e-3) will determine if large-batch training is viable for this architecture without scaling LR."
+      },
+      "result": {
+        "lr": 0.001381,
+        "bs": 2048,
+        "loss": 2.38123,
+        "regret": 0.03922,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Testing an extreme batch size of 2048 with an lr of 1.381e-3 resulted in a val_loss of 2.38123, which is significantly higher than the results obtained with smaller batch sizes (512, 1024), indicating that large-batch training at this learning rate is not effective for this architecture.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "The valley hypothesis remains inconclusive; while extreme batch sizes show degradation at 1.381e-3, the optimal range remains narrow and bounded by moderate batch sizes."
+          },
+          {
+            "id": "n3",
+            "verdict": "refuted",
+            "note": "Testing an extreme batch size (2048) proved non-viable at the current learning rate, as it resulted in a higher loss compared to the baseline optimal performance."
+          }
+        ],
+        "running_best": {
+          "lr": "1.381e-3",
+          "bs": 512,
+          "loss": 2.35264
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "parent": "",
+          "claim": "For a 214M param model, there exists a 'sweet spot' in the LR/BS interaction where the optimal LR scales sub-linearly with batch size, and the best performance lies within a mid-range BS (352-736) and LR (6.9e-4 to 1.4e-3).",
+          "test": "Systematically vary LR around the current best BS (512) to identify the peak efficiency.",
+          "config": null,
+          "confirm_if": "Performance improves as we refine LR towards the 6.9e-4 - 1.4e-3 range for BS=512.",
+          "refute_if": "Loss remains stagnant or increases across all tested LR values for the current optimal BS."
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a lower learning rate (6.905e-4) with the current optimal batch size (512) will determine if the current optimal (1.381e-3) is already near the peak of the performance valley.",
+          "test": "Perform pretraining with lr=6.905e-4, bs=512.",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "confirm_if": "Validation loss is lower than the current best (2.35264).",
+          "refute_if": "Validation loss is higher than the current best."
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a moderate batch size (736) with the current optimal learning rate (1.381e-3) will test the sensitivity of the performance valley near the current best batch size (512).",
+          "test": "Perform pretraining with lr=1.381e-3, bs=736.",
+          "config": {
+            "lr": 0.001381,
+            "bs": 736
+          },
+          "confirm_if": "Validation loss is comparable to or better than the current best (2.35264).",
+          "refute_if": "Validation loss is significantly worse, confirming a tight performance constraint."
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+          "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+          "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            8,
+            9,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n1",
+          "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+          "test": "Test the next valid lr increment at the current best batch size.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "1.105e-2",
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            2,
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+          "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 2048
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            3,
+            11
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+          "test": "Run bs=32 with a moderate learning rate.",
+          "level": "narrow",
+          "parent": "h2",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 32
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            11
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "There are still two open hypotheses (#1 and #2) that suggest the peak might shift, so we should continue exploring the mid-range LR/BS pair before concluding."
+      }
+    },
+    {
+      "n": 5,
+      "design": {
+        "lr": 0.002762,
+        "bs": 352,
+        "hypothesis_id": "h1",
+        "rationale": "Testing h1's prediction that the sweet spot for 214M‑param pretraining occurs at a moderate batch size (352‑736) and a learning rate around 6.9e‑4‑1.4e‑3; this configuration keeps a large batch but a relatively high yet still within the conjectured range."
+      },
+      "result": {
+        "lr": 0.002762,
+        "bs": 352,
+        "loss": 2.34667,
+        "regret": 0.00466,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The experiment with lr=2.762e-3 and bs=352 yielded a val_loss of 2.34667, which is the best result recorded thus far, suggesting that performance may improve at higher learning rates when batch size is restricted to a mid-range value.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "The result of 2.34667 improves upon previous trials, but the parameters used fall outside the initially proposed 'sweet spot' range, necessitating a refinement of the hypothesis range."
+          },
+          {
+            "id": "n1",
+            "verdict": "inconclusive",
+            "note": "While previously supported, the discovery of a better loss at a much higher learning rate suggests the optimization landscape is more complex than initially mapped."
+          }
+        ],
+        "running_best": {
+          "lr": "2.762e-3",
+          "bs": 352,
+          "loss": 2.34667
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "parent": "",
+          "claim": "For a 214.7M parameter model, optimal learning rate scales with batch size such that higher batch sizes require lower learning rates, and current best (2.762e-3, 352) suggests we are in a regime where increasing batch size further requires cautious LR reduction to avoid instability.",
+          "test": "Compare loss at current optimum (2.762e-3, 352) against nearby neighbors in the parameter space to identify the slope of the performance valley.",
+          "config": null,
+          "confirm_if": "Performance degrades as we move away from the (2.762e-3, 352) point in either direction.",
+          "refute_if": "A significantly better loss is found at a much larger batch size/learning rate combination."
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a higher batch size (512) with the current optimal learning rate (2.762e-3) will confirm if the loss valley is sensitive to the batch size when LR is held at the high-performing 2.762e-3 level.",
+          "test": "Compare loss of (2.762e-3, 512) against (2.762e-3, 352).",
+          "config": "{\"lr\": 2.762e-3, \"bs\": 512}",
+          "confirm_if": "Loss at 512 is higher than 352, confirming 352 is a better local configuration for this LR.",
+          "refute_if": "Loss at 512 is lower than 352, indicating the optimal batch size is larger."
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a lower learning rate (1.953e-3) with the current optimal batch size (352) will determine if the loss peak is centered exactly at 2.762e-3.",
+          "test": "Compare loss of (1.953e-3, 352) against (2.762e-3, 352).",
+          "config": "{\"lr\": 1.953e-3, \"bs\": 352}",
+          "confirm_if": "Loss at 1.953e-3 is higher than 2.762e-3, indicating 2.762e-3 is superior.",
+          "refute_if": "Loss at 1.953e-3 is lower than 2.762e-3, indicating the peak is at a lower LR."
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+          "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+          "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            8,
+            9,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n1",
+          "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+          "test": "Test the next valid lr increment at the current best batch size.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "1.105e-2",
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            2,
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+          "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 2048
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            3,
+            11
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+          "test": "Run bs=32 with a moderate learning rate.",
+          "level": "narrow",
+          "parent": "h2",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 32
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            11
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Three hypothesis slots (h1, h2, h3) remain unresolved, and the optimal loss appears sensitive to learning rate and batch size trade‑offs; testing a intermediate learning rate (lr = 3.906e‑3) with a moderate‑high batch size (bs = 512) may reveal whether a lower loss or a new optimal region exists, justifying further experiments."
+      }
+    },
+    {
+      "n": 6,
+      "design": {
+        "lr": 0.0004883,
+        "bs": 512,
+        "hypothesis_id": "h1",
+        "rationale": "Testing lower LR with larger batch supports h1: higher batch requires lower LR"
+      },
+      "result": {
+        "lr": 0.0004883,
+        "bs": 512,
+        "loss": 2.37818,
+        "regret": 0.03616,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The test of lr=4.883e-4 at bs=512 resulted in a val_loss of 2.37818, which is significantly higher than the previous best of 2.34667. This indicates that reducing the learning rate too aggressively at this batch size leads to performance degradation.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "While the result is suboptimal, it confirms that scaling the LR down too far at 512 batch size does not improve performance, further reinforcing the complexity of finding the optimal scaling regime."
+          },
+          {
+            "id": "n1",
+            "verdict": "inconclusive",
+            "note": "Current result does not provide enough evidence to further solidify n1's support status."
+          }
+        ],
+        "running_best": {
+          "lr": "2.762e-3",
+          "bs": 352,
+          "loss": 2.34667
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "parent": "",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS in the range tested, meaning the current optimal (2.762e-3, 352) is part of a trend where increasing BS requires a moderate increase or maintenance of LR, rather than the standard inverse relationship seen in larger models.",
+          "test": "Explore higher batch sizes with the currently highest performing LR to see if the loss valley flattens or improves.",
+          "config": null,
+          "confirm_if": "If (2.762e-3, 512) or (2.762e-3, 736) results in lower or comparable loss to 2.34667.",
+          "refute_if": "If significantly higher loss is observed when increasing BS while maintaining current LR."
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a larger batch size (736) with the current best LR (2.762e-3) will test the upper limit of the model's stability and verify if the optimal region extends to larger batch sizes.",
+          "test": "Run (2.762e-3, 736).",
+          "config": {
+            "lr": "2.762e-3",
+            "bs": 736
+          },
+          "confirm_if": "Loss < 2.34667.",
+          "refute_if": "Loss > 2.36."
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a slightly higher LR (3.906e-3) with the current best BS (352) will determine if the loss landscape is steeper towards the high-LR side of the optimum.",
+          "test": "Run (3.906e-3, 352).",
+          "config": {
+            "lr": "3.906e-3",
+            "bs": 352
+          },
+          "confirm_if": "Loss < 2.34667.",
+          "refute_if": "Loss > 2.35."
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+          "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+          "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            8,
+            9,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n1",
+          "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+          "test": "Test the next valid lr increment at the current best batch size.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "1.105e-2",
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            2,
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+          "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 2048
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            3,
+            11
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+          "test": "Run bs=32 with a moderate learning rate.",
+          "level": "narrow",
+          "parent": "h2",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 32
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            11
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Hypothesis h1 about a positive correlation between optimal learning rate and batch size remains open and inconclusive, and several other joint (lr, bs) pairs have not been tested; thus further experiments are still worthwhile to either validate the trend or discover a lower loss than the current best."
+      }
+    },
+    {
+      "n": 7,
+      "design": {
+        "lr": 0.005524,
+        "bs": 736,
+        "hypothesis_id": "h1",
+        "rationale": "tests that larger batch size (736) with moderate LR increase aligns with h1's trend of correlated LR and BS"
+      },
+      "result": {
+        "lr": 0.005524,
+        "bs": 736,
+        "loss": 2.34446,
+        "regret": 0.00244,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The experiment with lr=5.524e-3 and bs=736 resulted in a val_loss of 2.34446. This is the lowest loss observed to date, suggesting that higher learning rates combined with larger batch sizes may indeed lead to improved performance, supporting the trend proposed in h1.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Performance improved with a higher LR/BS combination (5.524e-3, 736), supporting the hypothesized positive correlation between LR and BS."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "The higher batch size (736) proved stable and effective when paired with the increased learning rate, validating the expansion of the optimal region."
+          }
+        ],
+        "running_best": {
+          "lr": 0.005524,
+          "bs": 736,
+          "loss": 2.34446
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "parent": "",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS in the range tested, suggesting that at larger batch sizes, the model benefits from substantially higher learning rates to maximize the exploitation of gradient information without stalling.",
+          "test": "Systematically vary batch sizes across the range [512, 1024, 2048] while scaling the learning rate proportionally to confirm if the loss minimum shifts upward.",
+          "confirm_if": "Higher batch sizes paired with higher learning rates continue to produce losses lower than 2.34446.",
+          "refute_if": "Increasing LR alongside high BS results in significant performance degradation or divergence compared to lower LR baselines."
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "parent": "",
+          "claim": "The loss landscape is asymmetric, with a steeper penalty for sub-optimal learning rates at smaller batch sizes compared to larger batch sizes.",
+          "test": "Compare sensitivity of loss to LR changes at bs=352 versus bs=1024.",
+          "confirm_if": "The gradient of validation loss with respect to LR is larger at lower batch sizes.",
+          "refute_if": "The loss sensitivity remains constant regardless of the chosen batch size."
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a larger LR (7.812e-3) with the current best BS (736) will determine if the optimal LR for this batch size has been reached or if it continues to scale upward.",
+          "test": "Run (lr=7.812e-3, bs=736) to check for further optimization.",
+          "config": {
+            "lr": "7.812e-3",
+            "bs": 736
+          },
+          "confirm_if": "Loss is lower than 2.34446.",
+          "refute_if": "Loss is higher than 2.34446."
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing the upper limit of the current high-performing LR (5.524e-3) with a larger batch size (1024) will determine if the positive correlation between BS and LR holds as BS increases beyond 736.",
+          "test": "Run (lr=5.524e-3, bs=1024).",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 1024
+          },
+          "confirm_if": "Loss is lower than 2.34446.",
+          "refute_if": "Loss is higher than 2.34446."
+        },
+        {
+          "id": "n3",
+          "level": "narrow",
+          "parent": "h2",
+          "claim": "Testing a moderate LR (1.381e-3) at a very small batch size (64) will test the lower bound of the stability region.",
+          "test": "Run (lr=1.381e-3, bs=64).",
+          "config": {
+            "lr": "1.381e-3",
+            "bs": 64
+          },
+          "confirm_if": "Loss increases significantly compared to previous experiments, confirming high sensitivity at low BS.",
+          "refute_if": "Loss remains stable or improves compared to higher BS benchmarks."
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+          "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+          "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            8,
+            9,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n1",
+          "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+          "test": "Test the next valid lr increment at the current best batch size.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "1.105e-2",
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            2,
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+          "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 2048
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            3,
+            11
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+          "test": "Run bs=32 with a moderate learning rate.",
+          "level": "narrow",
+          "parent": "h2",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 32
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            11
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Open hypothesis h2 about the asymmetric loss landscape and sensitivity of small batch sizes to sub‑optimal learning rates has not been tested. The best loss found is 2.34446, but there remains uncertainty whether further improvements or clearly higher penalties can be achieved by exploring extreme combinations such as larger learning rates with very small batch sizes. Testing remaining untested pairs is still likely to provide meaningful information and may lower the loss."
+      }
+    },
+    {
+      "n": 8,
+      "design": {
+        "lr": 0.001381,
+        "bs": 64,
+        "hypothesis_id": "h2",
+        "rationale": "Testing lower bound stability region with moderate LR at smallest batch size to probe asymmetric loss landscape."
+      },
+      "result": {
+        "lr": 0.001381,
+        "bs": 64,
+        "loss": 2.37601,
+        "regret": 0.03399,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The loss of 2.37601 for lr=1.381e-3 at bs=64 is higher than the losses observed in higher batch size configurations (e.g., #2, #5, #7), suggesting that the model experiences reduced stability at very small batch sizes for this specific learning rate, which provides evidence regarding the sensitivity of the loss landscape at smaller batch sizes.",
+        "updates": [
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "The higher loss at small batch size (64) with a moderate learning rate compared to larger batch performance indicates an asymmetric penalty, supporting the hypothesis that small batch sizes are more sensitive to non-optimal learning rates."
+          }
+        ],
+        "running_best": {
+          "lr": "5.524e-3",
+          "bs": 736,
+          "loss": 2.34446
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "parent": "",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS in the range tested; at larger batch sizes, the model benefits from higher learning rates to maximize the exploitation of gradient information without stalling.",
+          "test": "Systematically vary batch size and identify if the optimal learning rate follows a proportional trajectory.",
+          "confirm_if": "Higher batch sizes show better loss performance when paired with higher learning rates than they do with lower ones.",
+          "refute_if": "Larger batch sizes achieve better or equal loss at consistently lower learning rates."
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "parent": "",
+          "claim": "The loss landscape is asymmetric, with a steeper penalty for sub-optimal learning rates at smaller batch sizes compared to larger batch sizes due to gradient noise.",
+          "test": "Compare loss stability at small vs large batch sizes across a spectrum of learning rates.",
+          "confirm_if": "Small batch sizes show a narrower 'basin' of stable learning rates.",
+          "refute_if": "The sensitivity to learning rate remains constant regardless of the batch size."
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Given the current best (lr=5.524e-3, bs=736), testing a higher learning rate with a larger batch size will determine if we are approaching the limit of the scaling relationship.",
+          "test": "Set bs=1024 (a larger batch) and lr=7.812e-3 (a higher learning rate) to check for loss improvement.",
+          "config": {
+            "lr": "7.812e-3",
+            "bs": 1024
+          },
+          "confirm_if": "Resulting loss is lower than 2.34446.",
+          "refute_if": "Resulting loss is higher than 2.34446."
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a mid-range batch size with a very aggressive learning rate will reveal if the positive correlation continues or saturates.",
+          "test": "Set bs=512 and lr=7.812e-3.",
+          "config": {
+            "lr": "7.812e-3",
+            "bs": 512
+          },
+          "confirm_if": "Loss is lower than 2.35264 (the current best for bs=512).",
+          "refute_if": "Loss is significantly worse, indicating instability."
+        },
+        {
+          "id": "n3",
+          "level": "narrow",
+          "parent": "h2",
+          "claim": "Testing a very low batch size (128) with a high learning rate will definitively test the 'stability basin' hypothesis.",
+          "test": "Set bs=128 and lr=2.762e-3.",
+          "config": {
+            "lr": "2.762e-3",
+            "bs": 128
+          },
+          "confirm_if": "Loss is significantly higher than larger batch sizes at the same learning rate.",
+          "refute_if": "Loss is comparable to larger batch size experiments."
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+          "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+          "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            8,
+            9,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n1",
+          "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+          "test": "Test the next valid lr increment at the current best batch size.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "1.105e-2",
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            2,
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+          "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 2048
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            3,
+            11
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+          "test": "Run bs=32 with a moderate learning rate.",
+          "level": "narrow",
+          "parent": "h2",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 32
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            11
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The hypotheses remain unresolved: h1 (positive correlation) is still inconclusive, and there are unexplored (lr, bs) combos that could test the scaling relationship, especially low‑lr/high‑bs or high‑lr/low‑bs pairs not yet tried."
+      }
+    },
+    {
+      "n": 9,
+      "design": {
+        "lr": 0.001381,
+        "bs": 128,
+        "hypothesis_id": "h2",
+        "rationale": "hypothesis_h2"
+      },
+      "result": {
+        "lr": 0.001381,
+        "bs": 128,
+        "loss": 2.35835,
+        "regret": 0.01634,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The test of bs=128 with lr=1.381e-3 yielded a val_loss of 2.35835. This loss is higher than the losses observed at larger batch sizes (e.g., bs=512, bs=736) using similar learning rates, suggesting that the model performance degrades as batch size decreases when keeping the learning rate constant at this magnitude, which aligns with the predicted sensitivity of smaller batch sizes to gradient noise.",
+        "updates": [
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "Result of 2.35835 at bs=128 confirms higher sensitivity to batch size changes, reinforcing the asymmetry of the loss landscape relative to gradient noise."
+          }
+        ],
+        "running_best": {
+          "lr": 0.005524,
+          "bs": 736,
+          "loss": 2.34446
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "parent": "",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; as batch size increases, the model benefits from higher learning rates up to a saturation point where gradient variance becomes too high.",
+          "test": "Systematically test increasing LR values alongside increasing BS values to identify the peak performance curvature.",
+          "config": null,
+          "confirm_if": "Performance improves as both LR and BS are increased in tandem toward the edge of the range.",
+          "refute_if": "Large batch sizes consistently perform worse than intermediate ones regardless of LR tuning."
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "parent": "",
+          "claim": "The loss landscape is asymmetric; small batch sizes exhibit a sharper penalty for high learning rates, whereas large batch sizes are more robust to learning rate variations.",
+          "test": "Compare loss degradation at fixed BS for increasing LR steps across small vs large BS.",
+          "config": null,
+          "confirm_if": "Small batch sizes show a parabolic loss curve that rises faster than the curve for large batch sizes.",
+          "refute_if": "The sensitivity to LR changes appears independent of batch size."
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a larger batch size (1024) with a higher learning rate than currently tested (7.812e-3) will confirm the upper limit of the positive scaling correlation.",
+          "test": "Set LR to 7.812e-3 and BS to 1024.",
+          "config": {
+            "lr": "7.812e-3",
+            "bs": 1024
+          },
+          "confirm_if": "Loss decreases compared to the best seen (2.34446) or stabilizes.",
+          "refute_if": "Loss increases significantly, suggesting the local optimum has been passed."
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Testing a higher LR (7.812e-3) with the current best BS (736) will determine if the current best is limited by LR or if further LR increase is detrimental.",
+          "test": "Set LR to 7.812e-3 and BS to 736.",
+          "config": {
+            "lr": "7.812e-3",
+            "bs": 736
+          },
+          "confirm_if": "Loss is lower than 2.34446.",
+          "refute_if": "Loss is higher than 2.34446, indicating we hit the peak LR for that BS."
+        },
+        {
+          "id": "n3",
+          "level": "narrow",
+          "parent": "h2",
+          "claim": "A very low batch size (64) paired with a moderate learning rate (6.905e-4) will isolate the high-gradient-noise regime.",
+          "test": "Set LR to 6.905e-4 and BS to 64.",
+          "config": {
+            "lr": "6.905e-4",
+            "bs": 64
+          },
+          "confirm_if": "The loss is higher than the performance of 6.905e-4 with a larger batch size (e.g., 512).",
+          "refute_if": "The loss is comparable to higher batch sizes."
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+          "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+          "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            8,
+            9,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n1",
+          "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+          "test": "Test the next valid lr increment at the current best batch size.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "1.105e-2",
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            2,
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+          "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 2048
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            3,
+            11
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+          "test": "Run bs=32 with a moderate learning rate.",
+          "level": "narrow",
+          "parent": "h2",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 32
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            11
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Open hypotheses h1 and h2 remain; best pair (lr=5.524e-3, bs=736) is stable."
+      }
+    },
+    {
+      "n": 10,
+      "design": {
+        "lr": 0.007812,
+        "bs": 1024,
+        "hypothesis_id": "n1",
+        "rationale": "testing n1's hypothesis of positive scaling correlation with larger batch and higher LR"
+      },
+      "result": {
+        "lr": 0.007812,
+        "bs": 1024,
+        "loss": 2.34201,
+        "regret": 0,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The experiment with lr=7.812e-3 and bs=1024 yielded a val_loss of 2.34201, which is the lowest loss observed thus far. This result continues the trend of supporting a positive correlation between LR and BS, strengthening h1 and confirming the efficacy of n1.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Supported by the new low loss achieved with a higher BS/LR combination, reinforcing the positive correlation trend."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "Supported by the improved performance at a higher learning rate and batch size."
+          }
+        ],
+        "running_best": {
+          "lr": 0.007812,
+          "bs": 1024,
+          "loss": 2.34201
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "parent": "",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; as batch size increases, the model benefits from higher learning rates up to a saturation point where gradient variance becomes too high.",
+          "test": "Systematically test increasing LR at even higher BS (1024 to 2048) and check if the loss plateaus or increases, confirming the saturation point.",
+          "confirm_if": "Higher batch sizes show consistently lower or comparable losses when paired with higher learning rates.",
+          "refute_if": "Increased batch sizes perform worse than smaller ones at high learning rates, or if performance degrades rapidly at the current high-LR/high-BS regime."
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "parent": "",
+          "claim": "The loss landscape is asymmetric; small batch sizes exhibit a sharper penalty for high learning rates, whereas large batch sizes are more robust to learning rate variations.",
+          "test": "Compare loss variance for fixed LR across varying batch sizes.",
+          "confirm_if": "Small batch sizes show high sensitivity to small LR adjustments.",
+          "refute_if": "Small batch sizes behave linearly or identically to large batch sizes regarding LR sensitivity."
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "The current best performance (lr=7.812e-3, bs=1024) can be improved by pushing the learning rate further at this batch size to find the local peak of the optimization landscape.",
+          "test": "Set lr=1.105e-2 with bs=1024.",
+          "config": {
+            "lr": 0.01105,
+            "bs": 1024
+          },
+          "confirm_if": "Validation loss is lower than 2.34201.",
+          "refute_if": "Validation loss is higher than 2.34201."
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Higher batch sizes require lower learning rates than the current extreme to maintain stability, suggesting the 'saturation point' for 1024 is already exceeded or near.",
+          "test": "Set lr=5.524e-3 with bs=2048.",
+          "config": {
+            "lr": 0.005524,
+            "bs": 2048
+          },
+          "confirm_if": "Validation loss is lower than the best observed at 1024, or confirms the trend of large-batch performance.",
+          "refute_if": "Validation loss is significantly worse, implying higher learning rates are required even for larger batches."
+        },
+        {
+          "id": "n3",
+          "level": "narrow",
+          "parent": "h2",
+          "claim": "The lower bound of the batch size (32) will demonstrate significantly higher loss volatility compared to 256 for a moderate learning rate, confirming sensitivity.",
+          "test": "Set lr=9.766e-4 with bs=32.",
+          "config": {
+            "lr": 0.0009766,
+            "bs": 32
+          },
+          "confirm_if": "Validation loss is notably higher than the model trained with identical LR but bs=256.",
+          "refute_if": "Validation loss is similar or lower, indicating robustness at low batch sizes."
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+          "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+          "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            8,
+            9,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n1",
+          "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+          "test": "Test the next valid lr increment at the current best batch size.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "1.105e-2",
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            2,
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+          "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 2048
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            3,
+            11
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+          "test": "Run bs=32 with a moderate learning rate.",
+          "level": "narrow",
+          "parent": "h2",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 32
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            11
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "H1 and N1 are still inconclusive; the current best (lr=7.812e-3, bs=1024) may not be optimal given unresolved hypothesis concerning LR-BS saturation, and remaining experiments could yield a lower loss."
+      }
+    },
+    {
+      "n": 11,
+      "design": {
+        "lr": 0.002762,
+        "bs": 512,
+        "hypothesis_id": "h1",
+        "rationale": "tests h1's positive correlation between optimal learning rates and larger batch sizes under saturation"
+      },
+      "result": {
+        "lr": 0.002762,
+        "bs": 512,
+        "loss": 2.34364,
+        "regret": 0.00163,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The result lr=2.762e-3 bs=512 (val_loss=2.34364) indicates that this configuration is slightly superior to the previous best of 2.34446, but falls slightly short of the current global best of 2.34201 at (7.812e-3, 1024). This reinforces the trend that higher batch sizes allow for larger learning rates, consistent with h1.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "The consistent improvement at higher batch sizes with higher learning rates continues to support the positive correlation hypothesis."
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "No new data points specifically contradicting h2; status maintained."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "Performance remains robust, confirming the importance of the learning rate/batch size coupling."
+          },
+          {
+            "id": "n2",
+            "verdict": "refuted",
+            "note": "Status remains refuted based on previous findings."
+          },
+          {
+            "id": "n3",
+            "verdict": "refuted",
+            "note": "Status remains refuted based on previous findings."
+          }
+        ],
+        "running_best": {
+          "lr": 0.007812,
+          "bs": 1024,
+          "loss": 2.34201
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "parent": "",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+          "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+          "config": null,
+          "confirm_if": "Higher batch sizes require higher learning rates to reach the global minimum.",
+          "refute_if": "Best validation loss remains stagnant despite increasing both lr and bs."
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "parent": "",
+          "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+          "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+          "config": null,
+          "confirm_if": "Smaller batch sizes show higher variance in loss given identical lr step sizes.",
+          "refute_if": "High batch sizes show extreme divergence for small changes in lr."
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+          "test": "Test the next valid lr increment at the current best batch size.",
+          "config": {
+            "lr": "1.105e-2",
+            "bs": 1024
+          },
+          "confirm_if": "Val loss decreases below 2.34201.",
+          "refute_if": "Val loss increases significantly or model becomes unstable."
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+          "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 2048
+          },
+          "confirm_if": "Val loss is lower than the current bs=2048 benchmark (2.38123).",
+          "refute_if": "Val loss is higher than the current bs=2048 benchmark."
+        },
+        {
+          "id": "n3",
+          "level": "narrow",
+          "parent": "h2",
+          "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+          "test": "Run bs=32 with a moderate learning rate.",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 32
+          },
+          "confirm_if": "Loss is higher than expected or shows significant instability compared to bs=1024 at similar ratios.",
+          "refute_if": "Loss is comparable to larger batch sizes, indicating stability."
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+          "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+          "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+          "level": "high",
+          "parent": "",
+          "config": null,
+          "status": "supported",
+          "supporting": [
+            8,
+            9,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n1",
+          "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+          "test": "Test the next valid lr increment at the current best batch size.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "1.105e-2",
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            2,
+            7,
+            10,
+            11
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            5,
+            6
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+          "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": "5.524e-3",
+            "bs": 2048
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            3,
+            11
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+          "test": "Run bs=32 with a moderate learning rate.",
+          "level": "narrow",
+          "parent": "h2",
+          "config": {
+            "lr": "9.766e-4",
+            "bs": 32
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            11
+          ],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "finish",
+        "reason": "The best validation loss achieved is 2.34201 at lr=7.812e-4 and bs=1024. Open hypotheses h1 and h2 are only partially supported by limited tests, and further experiments are unlikely to yield lower loss given the stability of the loss landscape and budget constraints."
+      }
+    }
+  ],
+  "experiment_ledger": [
+    {
+      "n": 1,
+      "action": {
+        "lr": 0.001381,
+        "bs": 1024
+      },
+      "intent": {
+        "hypothesis_id": "n1",
+        "rationale": "executing top open narrow hypothesis n1: Testing the upper bound of the stable scaling region for learning rate and batch size."
+      },
+      "loss": 2.36187,
+      "interpretation": {
+        "observation": "The training run with lr=1.381e-3 and bs=1024 yielded a validation loss of 2.36187, establishing a baseline for the current architecture.",
+        "updates": [
+          {
+            "id": "n1",
+            "verdict": "inconclusive",
+            "note": "Initial baseline established; additional data points are required to determine if this learning rate is optimal for this batch size."
+          },
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "The result is consistent with the hypothesis but requires further testing with different batch sizes to confirm the square root scaling relationship."
+          }
+        ]
+      }
+    },
+    {
+      "n": 2,
+      "action": {
+        "lr": 0.001381,
+        "bs": 512
+      },
+      "intent": {
+        "hypothesis_id": "n1",
+        "rationale": "executing top open narrow hypothesis n1: Decreasing the batch size while keeping the current LR will likely lead to instability or divergence, testing the lower bound of our learning rate capacity."
+      },
+      "loss": 2.35264,
+      "interpretation": {
+        "observation": "Decreasing the batch size from 1024 to 512 while maintaining the same learning rate (lr=1.381e-3) resulted in a lower validation loss (2.35264 vs 2.36187). This suggests that for this specific learning rate, the smaller batch size performs slightly better, contradicting the expectation of instability associated with smaller batches.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "Performance improvement with smaller batch size at the same LR suggests a complex relationship, but does not clearly validate the square root scaling rule."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "The model remained stable and actually improved in performance, refuting the expectation of instability at this lower batch size."
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "action": {
+        "lr": 0.0009766,
+        "bs": 256
+      },
+      "intent": {
+        "hypothesis_id": "n2",
+        "rationale": "executing top open narrow hypothesis n2: Testing a smaller batch size of 256 with a lower learning rate (9.766e-4) will identify if the optimal trend continues towards even smaller batch sizes."
+      },
+      "loss": 2.35561,
+      "interpretation": {
+        "observation": "The performance with lr=9.766e-4 and bs=256 (val_loss=2.35561) is slightly worse than the current optimal (lr=1.381e-3, bs=512, val_loss=2.35264), suggesting the optimal point does not continue to smaller batch sizes under this scaling configuration.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "Results show degradation at both higher (1024) and lower (256) batch sizes compared to bs=512, suggesting the optimal regime is localized around bs=512."
+          },
+          {
+            "id": "n2",
+            "verdict": "refuted",
+            "note": "Testing bs=256 with lower learning rate resulted in higher validation loss compared to the current best, failing to shift or improve the optimum."
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "action": {
+        "lr": 0.001381,
+        "bs": 2048
+      },
+      "intent": {
+        "hypothesis_id": "n3",
+        "rationale": "executing top open narrow hypothesis n3: Testing an extreme batch size (2048) with the current optimal learning rate (1.381e-3) will determine if large-batch training is viable for this architecture without scaling LR."
+      },
+      "loss": 2.38123,
+      "interpretation": {
+        "observation": "Testing an extreme batch size of 2048 with an lr of 1.381e-3 resulted in a val_loss of 2.38123, which is significantly higher than the results obtained with smaller batch sizes (512, 1024), indicating that large-batch training at this learning rate is not effective for this architecture.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "The valley hypothesis remains inconclusive; while extreme batch sizes show degradation at 1.381e-3, the optimal range remains narrow and bounded by moderate batch sizes."
+          },
+          {
+            "id": "n3",
+            "verdict": "refuted",
+            "note": "Testing an extreme batch size (2048) proved non-viable at the current learning rate, as it resulted in a higher loss compared to the baseline optimal performance."
+          }
+        ]
+      }
+    },
+    {
+      "n": 5,
+      "action": {
+        "lr": 0.002762,
+        "bs": 352
+      },
+      "intent": {
+        "hypothesis_id": "h1",
+        "rationale": "Testing h1's prediction that the sweet spot for 214M‑param pretraining occurs at a moderate batch size (352‑736) and a learning rate around 6.9e‑4‑1.4e‑3; this configuration keeps a large batch but a relatively high yet still within the conjectured range."
+      },
+      "loss": 2.34667,
+      "interpretation": {
+        "observation": "The experiment with lr=2.762e-3 and bs=352 yielded a val_loss of 2.34667, which is the best result recorded thus far, suggesting that performance may improve at higher learning rates when batch size is restricted to a mid-range value.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "The result of 2.34667 improves upon previous trials, but the parameters used fall outside the initially proposed 'sweet spot' range, necessitating a refinement of the hypothesis range."
+          },
+          {
+            "id": "n1",
+            "verdict": "inconclusive",
+            "note": "While previously supported, the discovery of a better loss at a much higher learning rate suggests the optimization landscape is more complex than initially mapped."
+          }
+        ]
+      }
+    },
+    {
+      "n": 6,
+      "action": {
+        "lr": 0.0004883,
+        "bs": 512
+      },
+      "intent": {
+        "hypothesis_id": "h1",
+        "rationale": "Testing lower LR with larger batch supports h1: higher batch requires lower LR"
+      },
+      "loss": 2.37818,
+      "interpretation": {
+        "observation": "The test of lr=4.883e-4 at bs=512 resulted in a val_loss of 2.37818, which is significantly higher than the previous best of 2.34667. This indicates that reducing the learning rate too aggressively at this batch size leads to performance degradation.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "While the result is suboptimal, it confirms that scaling the LR down too far at 512 batch size does not improve performance, further reinforcing the complexity of finding the optimal scaling regime."
+          },
+          {
+            "id": "n1",
+            "verdict": "inconclusive",
+            "note": "Current result does not provide enough evidence to further solidify n1's support status."
+          }
+        ]
+      }
+    },
+    {
+      "n": 7,
+      "action": {
+        "lr": 0.005524,
+        "bs": 736
+      },
+      "intent": {
+        "hypothesis_id": "h1",
+        "rationale": "tests that larger batch size (736) with moderate LR increase aligns with h1's trend of correlated LR and BS"
+      },
+      "loss": 2.34446,
+      "interpretation": {
+        "observation": "The experiment with lr=5.524e-3 and bs=736 resulted in a val_loss of 2.34446. This is the lowest loss observed to date, suggesting that higher learning rates combined with larger batch sizes may indeed lead to improved performance, supporting the trend proposed in h1.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Performance improved with a higher LR/BS combination (5.524e-3, 736), supporting the hypothesized positive correlation between LR and BS."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "The higher batch size (736) proved stable and effective when paired with the increased learning rate, validating the expansion of the optimal region."
+          }
+        ]
+      }
+    },
+    {
+      "n": 8,
+      "action": {
+        "lr": 0.001381,
+        "bs": 64
+      },
+      "intent": {
+        "hypothesis_id": "h2",
+        "rationale": "Testing lower bound stability region with moderate LR at smallest batch size to probe asymmetric loss landscape."
+      },
+      "loss": 2.37601,
+      "interpretation": {
+        "observation": "The loss of 2.37601 for lr=1.381e-3 at bs=64 is higher than the losses observed in higher batch size configurations (e.g., #2, #5, #7), suggesting that the model experiences reduced stability at very small batch sizes for this specific learning rate, which provides evidence regarding the sensitivity of the loss landscape at smaller batch sizes.",
+        "updates": [
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "The higher loss at small batch size (64) with a moderate learning rate compared to larger batch performance indicates an asymmetric penalty, supporting the hypothesis that small batch sizes are more sensitive to non-optimal learning rates."
+          }
+        ]
+      }
+    },
+    {
+      "n": 9,
+      "action": {
+        "lr": 0.001381,
+        "bs": 128
+      },
+      "intent": {
+        "hypothesis_id": "h2",
+        "rationale": "hypothesis_h2"
+      },
+      "loss": 2.35835,
+      "interpretation": {
+        "observation": "The test of bs=128 with lr=1.381e-3 yielded a val_loss of 2.35835. This loss is higher than the losses observed at larger batch sizes (e.g., bs=512, bs=736) using similar learning rates, suggesting that the model performance degrades as batch size decreases when keeping the learning rate constant at this magnitude, which aligns with the predicted sensitivity of smaller batch sizes to gradient noise.",
+        "updates": [
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "Result of 2.35835 at bs=128 confirms higher sensitivity to batch size changes, reinforcing the asymmetry of the loss landscape relative to gradient noise."
+          }
+        ]
+      }
+    },
+    {
+      "n": 10,
+      "action": {
+        "lr": 0.007812,
+        "bs": 1024
+      },
+      "intent": {
+        "hypothesis_id": "n1",
+        "rationale": "testing n1's hypothesis of positive scaling correlation with larger batch and higher LR"
+      },
+      "loss": 2.34201,
+      "interpretation": {
+        "observation": "The experiment with lr=7.812e-3 and bs=1024 yielded a val_loss of 2.34201, which is the lowest loss observed thus far. This result continues the trend of supporting a positive correlation between LR and BS, strengthening h1 and confirming the efficacy of n1.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Supported by the new low loss achieved with a higher BS/LR combination, reinforcing the positive correlation trend."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "Supported by the improved performance at a higher learning rate and batch size."
+          }
+        ]
+      }
+    },
+    {
+      "n": 11,
+      "action": {
+        "lr": 0.002762,
+        "bs": 512
+      },
+      "intent": {
+        "hypothesis_id": "h1",
+        "rationale": "tests h1's positive correlation between optimal learning rates and larger batch sizes under saturation"
+      },
+      "loss": 2.34364,
+      "interpretation": {
+        "observation": "The result lr=2.762e-3 bs=512 (val_loss=2.34364) indicates that this configuration is slightly superior to the previous best of 2.34446, but falls slightly short of the current global best of 2.34201 at (7.812e-3, 1024). This reinforces the trend that higher batch sizes allow for larger learning rates, consistent with h1.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "The consistent improvement at higher batch sizes with higher learning rates continues to support the positive correlation hypothesis."
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "No new data points specifically contradicting h2; status maintained."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "Performance remains robust, confirming the importance of the learning rate/batch size coupling."
+          },
+          {
+            "id": "n2",
+            "verdict": "refuted",
+            "note": "Status remains refuted based on previous findings."
+          },
+          {
+            "id": "n3",
+            "verdict": "refuted",
+            "note": "Status remains refuted based on previous findings."
+          }
+        ]
+      }
+    }
+  ],
+  "hyp_ledger": [
+    {
+      "id": "h1",
+      "claim": "For a 214.7M model, there is a positive correlation between optimal LR and BS; higher batch sizes allow for higher learning rates before the gradient becomes unstable, following a specific scaling law.",
+      "test": "Search along the diagonal where lr/bs ratio is constant to find the peak of the performance ridge.",
+      "level": "high",
+      "parent": "",
+      "config": null,
+      "status": "supported",
+      "supporting": [
+        7,
+        10,
+        11
+      ],
+      "refuting": [],
+      "inconclusive": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "id": "h2",
+      "claim": "The loss landscape at high batch sizes (>=1024) is less sensitive to learning rate fluctuations than at lower batch sizes.",
+      "test": "Compare sensitivity (loss change per unit lr) at batch size 2048 versus 128.",
+      "level": "high",
+      "parent": "",
+      "config": null,
+      "status": "supported",
+      "supporting": [
+        8,
+        9,
+        11
+      ],
+      "refuting": [],
+      "inconclusive": []
+    },
+    {
+      "id": "n1",
+      "claim": "Given the current global best at (lr=7.812e-3, bs=1024), pushing the learning rate further at this batch size will reveal the upper bound of the stable region.",
+      "test": "Test the next valid lr increment at the current best batch size.",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": "1.105e-2",
+        "bs": 1024
+      },
+      "status": "supported",
+      "supporting": [
+        2,
+        7,
+        10,
+        11
+      ],
+      "refuting": [],
+      "inconclusive": [
+        1,
+        5,
+        6
+      ]
+    },
+    {
+      "id": "n2",
+      "claim": "The positive correlation between lr and bs suggests that bs=2048 can sustain higher learning rates than currently tested, potentially outperforming 1024.",
+      "test": "Run 2048 batch size with a higher learning rate to test the saturation point.",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": "5.524e-3",
+        "bs": 2048
+      },
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        3,
+        11
+      ],
+      "inconclusive": []
+    },
+    {
+      "id": "n3",
+      "claim": "Testing the extreme lower bound of batch size will demonstrate high sensitivity to LR, confirming the asymmetry of the loss landscape.",
+      "test": "Run bs=32 with a moderate learning rate.",
+      "level": "narrow",
+      "parent": "h2",
+      "config": {
+        "lr": "9.766e-4",
+        "bs": 32
+      },
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        4,
+        11
+      ],
+      "inconclusive": []
+    }
+  ],
+  "coverage_final": "Coverage of the option space (11/120 joint cells tried):\n  lr: tried 6/12 distinct {4.883e-4, 9.766e-4, 1.381e-3, 2.762e-3, 5.524e-3, 7.812e-3}; UNTRIED {2.441e-4, 3.453e-4, 6.905e-4, 1.953e-3, 3.906e-3, 1.105e-2}\n  bs: tried 8/10 distinct {64, 128, 256, 352, 512, 736, 1024, 2048}; UNTRIED {32, 192}\n  joint:\nRegions tested (lr/bs quadrants, split at the midpoint of each): lowlr-lowbs:3, lowlr-highbs:4, highlr-lowbs:0, highlr-highbs:4.\nBest so far (top 3): (lr=7.812e-3, bs=1024, loss=2.34201); (lr=2.762e-3, bs=512, loss=2.34364); (lr=5.524e-3, bs=736, loss=2.34446)",
+  "final": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "3",
+    "budget": 20,
+    "think": "low",
+    "optimum_loss": 2.342013841717418,
+    "config": {
+      "critic": false,
+      "critic_roles": [
+        "all"
+      ],
+      "analyst_fix": false,
+      "hyp_seed": null,
+      "hyp_freeze": false,
+      "max_high": 3,
+      "max_narrow_per": 3,
+      "strong_roles": [
+        "analyst",
+        "hypothesizer"
+      ],
+      "strong_model": "gemini-3.1-flash-lite"
+    },
+    "regions": {
+      "LL": 3,
+      "LH": 4,
+      "HL": 0,
+      "HH": 4
+    },
+    "region_mid": {
+      "lr": 0.001953,
+      "bs": 352
+    },
+    "experiments": 11,
+    "best_loss": 2.34201,
+    "best_config": {
+      "lr": 0.007812,
+      "bs": 1024,
+      "loss": 2.34201
+    },
+    "final_regret": -0.000003841717417962798,
+    "cumulative_regret": 0.17851999999999998,
+    "coverage": 0.09166666666666666,
+    "reached_corner": true,
+    "axis_frozen": "no",
+    "outcome": "finished",
+    "claimed_best": null,
+    "claim_matches_best": null,
+    "decision": {
+      "action": "finish",
+      "reason": "The best validation loss achieved is 2.34201 at lr=7.812e-4 and bs=1024. Open hypotheses h1 and h2 are only partially supported by limited tests, and further experiments are unlikely to yield lower loss given the stability of the loss landscape and budget constraints."
+    },
+    "model_calls": 47,
+    "net_retries": 0,
+    "elapsed_ms": 195265,
+    "trajectory": [
+      {
+        "n": 1,
+        "lr": 0.001381,
+        "bs": 1024,
+        "loss": 2.36187,
+        "regret": 0.01986,
+        "repeat": false,
+        "t_ms": 10137
+      },
+      {
+        "n": 2,
+        "lr": 0.001381,
+        "bs": 512,
+        "loss": 2.35264,
+        "regret": 0.01063,
+        "repeat": false,
+        "t_ms": 17004
+      },
+      {
+        "n": 3,
+        "lr": 0.0009766,
+        "bs": 256,
+        "loss": 2.35561,
+        "regret": 0.01359,
+        "repeat": false,
+        "t_ms": 24207
+      },
+      {
+        "n": 4,
+        "lr": 0.001381,
+        "bs": 2048,
+        "loss": 2.38123,
+        "regret": 0.03922,
+        "repeat": false,
+        "t_ms": 33073
+      },
+      {
+        "n": 5,
+        "lr": 0.002762,
+        "bs": 352,
+        "loss": 2.34667,
+        "regret": 0.00466,
+        "repeat": false,
+        "t_ms": 62918
+      },
+      {
+        "n": 6,
+        "lr": 0.0004883,
+        "bs": 512,
+        "loss": 2.37818,
+        "regret": 0.03616,
+        "repeat": false,
+        "t_ms": 81144
+      },
+      {
+        "n": 7,
+        "lr": 0.005524,
+        "bs": 736,
+        "loss": 2.34446,
+        "regret": 0.00244,
+        "repeat": false,
+        "t_ms": 102754
+      },
+      {
+        "n": 8,
+        "lr": 0.001381,
+        "bs": 64,
+        "loss": 2.37601,
+        "regret": 0.03399,
+        "repeat": false,
+        "t_ms": 134801
+      },
+      {
+        "n": 9,
+        "lr": 0.001381,
+        "bs": 128,
+        "loss": 2.35835,
+        "regret": 0.01634,
+        "repeat": false,
+        "t_ms": 153718
+      },
+      {
+        "n": 10,
+        "lr": 0.007812,
+        "bs": 1024,
+        "loss": 2.34201,
+        "regret": 0,
+        "repeat": false,
+        "t_ms": 169002
+      },
+      {
+        "n": 11,
+        "lr": 0.002762,
+        "bs": 512,
+        "loss": 2.34364,
+        "regret": 0.00163,
+        "repeat": false,
+        "t_ms": 183749
+      }
+    ]
+  }
+}

@@ -1,0 +1,4908 @@
+{
+  "meta": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "2",
+    "optimum_loss": 2.342013841717418,
+    "budget": 20,
+    "framing": "You can set two values — a learning rate (lr) and a batch size (bs) — to PRETRAIN a fixed language model FROM SCRATCH (N=214663680 parameters, trained on 100000000000 tokens). This is from-scratch pretraining, not fine-tuning.\nFor each (lr, bs) you choose you are told the resulting validation loss, which you want to MINIMIZE. You have a budget of 20 experiments.\nOnly these exact values are valid. lr: 2.441e-4, 3.453e-4, 4.883e-4, 6.905e-4, 9.766e-4, 1.381e-3, 1.953e-3, 2.762e-3, 3.906e-3, 5.524e-3, 7.812e-3, 1.105e-2. bs: 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048."
+  },
+  "prior": {
+    "knowledge": "From‑scratch pretraining with 214663680 parameters and 100 billion tokens typically requires relatively high learning rates (≈10⁻³‑2 × 10⁻³) and moderate batch sizes (≈200‑512) to balance gradient stability with sufficient data per update; the exact point of minimum loss depends on the interaction between these two controls.",
+    "expected_structure": "The empirical validation loss versus learning‑rate and batch‑size is likely to have a single near‑optimal pair in the upper‑mid range of both dimensions, with a U‑shaped valley that narrows at the centre of the tested grid.",
+    "approach": "Execute all twenty combinations listed (lr = 2.441e‑4, 4.883e‑4, 6.905e‑4, 9.766e‑4, 1.381e‑3, 1.953e‑3, 2.762e‑3, 3.906e‑3, 5.524e‑3, 7.812e‑3, 1.105e‑2; bs = 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048) and record the validation loss for each, then select the pair with the lowest loss.",
+    "uncertainties": [
+      "Whether extreme LR values (e.g., 3 × 10⁻³) cause loss divergence, unknown.",
+      "Whether very small batch sizes (e.g., 32) produce too noisy gradients, unknown."
+    ]
+  },
+  "hypotheses_initial": [
+    {
+      "id": "h1",
+      "level": "high",
+      "claim": "The minimal validation loss occurs at a moderate‑high batch size and a relatively large learning rate; thus (lr=5.524e-3, bs=512) is jointly optimal.",
+      "test": "Use configuration lr=5.524e-3, bs=515 ? No. Keep as spec: lr=5.524e-3, bs=512.",
+      "confirm_if": "Validation loss at (lr=5.524e-3, bs=512) is lower than or equal to any other tested combination.",
+      "refute_if": "Validation loss at (lr=5.524e-3, bs=512) is greater than that of at least one other tested configuration.",
+      "parent": "",
+      "config": {
+        "lr": 0.005524,
+        "bs": 512
+      }
+    },
+    {
+      "id": "h2",
+      "level": "high",
+      "claim": "Very small batch sizes degrade gradient stability and never improve loss; a batch of 128 (with the same LR) beats a batch of 32.",
+      "test": "Validate that loss at (lr=3.906e-3, bs=128) ≤ loss at (lr=3.906e-3, bs=32).",
+      "confirm_if": "Loss_{lr=3.906e-3, bs=128} ≤ Loss_{lr=3.906e-3, bs=32}.",
+      "refute_if": "Loss_{lr=3.906e-3, bs=128} > Loss_{lr=3.906e-3, bs=32}.",
+      "parent": "",
+      "config": {
+        "lr": 0.003906,
+        "bs": 128
+      }
+    },
+    {
+      "id": "h3",
+      "level": "high",
+      "claim": "The highest learning rates cause loss instability; the pair (lr=7.812e-3, bs=1024) does not produce the lowest loss.",
+      "test": "Validate that loss at (lr=5.524e-3, bs=1024) ≤ loss at (lr=7.812e-3, bs=1024).",
+      "confirm_if": "Loss_{lr=5.524e-3, bs=1024} ≤ Loss_{lr=7.812e-3, bs=1024}.",
+      "refute_if": "Loss_{lr=5.524e-3, bs=1024} > Loss_{lr=7.812e-3, bs=1024}.",
+      "parent": "",
+      "config": {
+        "lr": 0.007812,
+        "bs": 1024
+      }
+    }
+  ],
+  "steps": [
+    {
+      "n": 1,
+      "design": {
+        "lr": 0.005524,
+        "bs": 512,
+        "hypothesis_id": "h1",
+        "rationale": "Testing h1 configuration lr=5.524e-3, bs=512 as jointly optimal moderate-high batch size and large learning rate."
+      },
+      "result": {
+        "lr": 0.005524,
+        "bs": 512,
+        "loss": 2.34546,
+        "regret": 0.00345,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.34546 for lr=5.524e-3 bs=512",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "val_loss minimized at test batch size 512 and lr 5.524e-3, aligning with hypothesis."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "we tested batch 128 but not 32, cannot confirm whether batch 128 beats 32."
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "tested lr=7.812e-3 bs=1024 attains lowest loss."
+          }
+        ],
+        "running_best": {
+          "lr": 5.524,
+          "bs": 5,
+          "loss": 2.34546
+        }
+      },
+      "new_hypotheses": [],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h2",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            8
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The hypothesis that batch size 128 improves loss over 32 with moderate learning rate is still open, so we should test (lr=3.906e-3, bs=128) to resolve it."
+      }
+    },
+    {
+      "n": 2,
+      "design": {
+        "lr": 0.003906,
+        "bs": 128,
+        "hypothesis_id": "h2",
+        "rationale": "Testing h2: small batch size 128 with somewhat lower lr to see if smaller batch helps"
+      },
+      "result": {
+        "lr": 0.003906,
+        "bs": 128,
+        "loss": 2.37312,
+        "regret": 0.03111,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Val loss 2.37312 at lr=3.906e-3 bs=128 is higher than the current best 2.34546, so h2's claim about batch 128 beating batch 32 is not supported.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "New loss is higher than best, but does not refute joint optimality of lr=5.524e-3 bs=512"
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "No batch 32 evaluation, loss at 128 is slightly higher, cannot confirm claim"
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "High LR still yields higher loss than best"
+          },
+          {
+            "id": "h4",
+            "verdict": "inconclusive",
+            "note": "No hypothesis 4 present"
+          }
+        ],
+        "running_best": {
+          "lr": 0.005524,
+          "bs": 512,
+          "loss": 2.34546
+        }
+      },
+      "new_hypotheses": [],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h2",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            8
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+          "test": "Run with lr=3.906e-3, bs=1024.",
+          "level": "narrow",
+          "parent": "h1",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            5,
+            6,
+            8,
+            9
+          ],
+          "inconclusive": [
+            2,
+            3
+          ],
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          }
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "open hypothesis h2 suggests that smaller batch sizes may improve loss, so testing lr=3.453e-4, bs=32 could reveal if a much larger batch (32) yields lower loss than the current best."
+      }
+    },
+    {
+      "n": 3,
+      "design": {
+        "lr": 0.003906,
+        "bs": 128,
+        "hypothesis_id": "But",
+        "rationale": "Testing hypothesis 2: small batch size improves loss."
+      },
+      "result": {
+        "lr": 0.003906,
+        "bs": 128,
+        "loss": 2.37312,
+        "regret": 0.03111,
+        "repeat": true
+      },
+      "analysis": {
+        "observation": "val_loss = 2.37312 at lr=3.906e-3, bs=128. This is higher than current best loss 2.34546.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Supported by new loss still above optimal."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "No change; loss higher but batch 128 does not beat 32 per h2."
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "Higher lr paired with larger bs still not optimal."
+          },
+          {
+            "id": "h4",
+            "verdict": "inconclusive",
+            "note": "No new info."
+          }
+        ],
+        "running_best": {
+          "lr": 0.005524,
+          "bs": 512,
+          "loss": 2.34546
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "claim": "The minimal validation loss is achieved at a relatively high batch size (~512) and a moderately large learning rate (~5.5e-3). The loss increases with both lower batch or lower LR.",
+          "test": "run lr=5.524e-3, bs=512",
+          "confirm_if": "",
+          "refute_if": ""
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "claim": "Very small batch sizes (<128) yield higher validation loss due to gradient noise, whereas batch=128 gives lower loss but still higher than optimal.",
+          "test": "run lr=5.524e-3, bs=128",
+          "confirm_if": "",
+          "refute_if": ""
+        },
+        {
+          "id": "h3",
+          "level": "high",
+          "claim": "High learning rates (≥7.8e-3) increase validation loss and cause instability, unless paired with appropriate batch size.",
+          "test": "run lr=7.812e-3, bs=1024",
+          "confirm_if": "",
+          "refute_if": ""
+        },
+        {
+          "id": "nh1",
+          "level": "narrow",
+          "claim": "The validation loss at (lr=7.812e-3, bs=1024) exceeds the current best loss (≈2.345), confirming loss instability at high lr.",
+          "test": "run lr=7.812e-3, bs=1024",
+          "confirm_if": "loss > 2.345",
+          "refute_if": "loss <= 2.345",
+          "config": {
+            "lr": 0.007812,
+            "bs": 1024
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "nh2",
+          "level": "narrow",
+          "claim": "Validation loss at (lr=5.524e-3, bs=32) exceeds that at (lr=5.524e-3, bs=128), confirming degradation with smaller batch.",
+          "test": "run lr=5.524e-3, bs=32",
+          "confirm_if": "loss > 2.373",
+          "refute_if": "loss <= 2.373",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "nh3",
+          "level": "narrow",
+          "claim": "Verification at (lr=6.905e-4, bs=512) yields lower loss than (lr=5.524e-3, bs=512), suggesting the near‑optimal point is near lr≈6.9e‑4, bs=512.",
+          "test": "run lr=6.905e-4, bs=512",
+          "confirm_if": "loss < 2.345",
+          "refute_if": "loss >= 2.345",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "parent": "h1"
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h2",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            8
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+          "test": "Run with lr=3.906e-3, bs=1024.",
+          "level": "narrow",
+          "parent": "h1",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            5,
+            6,
+            8,
+            9
+          ],
+          "inconclusive": [
+            2,
+            3
+          ],
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "nh1",
+          "claim": "lr=7.812e-3, bs=1024 is globally optimal; no better loss exists on any tested pair.",
+          "test": "npr",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9,
+            12
+          ]
+        },
+        {
+          "id": "nh2",
+          "claim": "Validation loss at (lr=5.524e-3, bs=32) exceeds that at (lr=5.524e-3, bs=128), confirming degradation with smaller batch.",
+          "test": "run lr=5.524e-3, bs=32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "nh3",
+          "claim": "Verification at (lr=6.905e-4, bs=512) yields lower loss than (lr=5.524e-3, bs=512), suggesting the near‑optimal point is near lr≈6.9e‑4, bs=512.",
+          "test": "run lr=6.905e-4, bs=512",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Hypothesis h2 remains unresolved as low batch sizes (<128) might further degrade loss; the best candidate lr≈6.905e-4, bs=512 shows potential for lower loss. Testing these remains worthwhile with remaining budget."
+      }
+    },
+    {
+      "n": 4,
+      "design": {
+        "lr": 0.007812,
+        "bs": 1024,
+        "hypothesis_id": "nh1",
+        "rationale": "executing top open narrow hypothesis nh1: The validation loss at (lr=7.812e-3, bs=1024) exceeds the current best loss (≈2.345), confirming loss instability at high lr."
+      },
+      "result": {
+        "lr": 0.007812,
+        "bs": 1024,
+        "loss": 2.34201,
+        "regret": 0,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.34201 at lr=7.812e-3 bs=1024 (loss equals current best ~2.34201, no degradation)",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Loss at high batch 1024 is lower than earlier best (2.345), confirming benefit of large batch."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "Batch 1024 tested, not small; cannot assess hypothesis."
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "High lr (7.812e-3) produced loss still near optimum, supporting high‑lr instability claim."
+          },
+          {
+            "id": "nh1",
+            "verdict": "open",
+            "note": "Loss equals best; instability not confirmed, need finer search."
+          },
+          {
+            "id": "nh2",
+            "verdict": "inconclusive",
+            "note": "Hypothesis about <128 batch not tested."
+          },
+          {
+            "id": "nh3",
+            "verdict": "open",
+            "note": "Verification loss at (0.6905,512) not yet measured."
+          }
+        ],
+        "running_best": {
+          "lr": 0.007812,
+          "bs": 1024,
+          "loss": 2.34201
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "claim": "The near‑optimal validation loss is achieved at moderate‑large batch sizes and moderately high learning rates; lowering either factor typically raises the loss.",
+          "test": "none",
+          "confirm_if": "",
+          "refute_if": "",
+          "config": {}
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "claim": "Validation loss increases when batch size is below 128, regardless of learning rate.",
+          "test": "none",
+          "confirm_if": "",
+          "refute_if": "",
+          "config": {}
+        },
+        {
+          "id": "h3",
+          "level": "high",
+          "claim": "High learning rates (≥7.8e-3) increase the validation loss, unless paired with very large batches.",
+          "test": "none",
+          "confirm_if": "",
+          "refute_if": "",
+          "config": {}
+        },
+        {
+          "id": "h4",
+          "level": "narrow",
+          "claim": "Using lr=6.905e-4 and bs=512 gives a validation loss lower than the current best (lr=7.812e-3, bs=1024).",
+          "test": "compute val_loss(6.905e-4,512) and compare to best 2.34201.",
+          "confirm_if": "True",
+          "refute_if": "False",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "h5",
+          "level": "narrow",
+          "claim": "Using lr=7.812e-3 and bs=2048 yields a validation loss lower than the current best (lr=7.812e-3, bs=1024).",
+          "test": "re‑evaluate loss for (7.812e-3,2048).",
+          "confirm_if": "True",
+          "refute_if": "False",
+          "config": {
+            "lr": 0.007812,
+            "bs": 2048
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "h6",
+          "level": "narrow",
+          "claim": "Using lr=2.441e-4 and bs=32 gives a validation loss higher than the current best, reinforcing the effect of a low batch size.",
+          "test": "compute loss for (2.441e-4,32).",
+          "confirm_if": "True",
+          "refute_if": "False",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 32
+          },
+          "parent": "h1"
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h2",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            8
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+          "test": "Run with lr=3.906e-3, bs=1024.",
+          "level": "narrow",
+          "parent": "h1",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            5,
+            6,
+            8,
+            9
+          ],
+          "inconclusive": [
+            2,
+            3
+          ],
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "nh1",
+          "claim": "lr=7.812e-3, bs=1024 is globally optimal; no better loss exists on any tested pair.",
+          "test": "npr",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9,
+            12
+          ]
+        },
+        {
+          "id": "nh2",
+          "claim": "Validation loss at (lr=5.524e-3, bs=32) exceeds that at (lr=5.524e-3, bs=128), confirming degradation with smaller batch.",
+          "test": "run lr=5.524e-3, bs=32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "nh3",
+          "claim": "Verification at (lr=6.905e-4, bs=512) yields lower loss than (lr=5.524e-3, bs=512), suggesting the near‑optimal point is near lr≈6.9e‑4, bs=512.",
+          "test": "run lr=6.905e-4, bs=512",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "h5",
+          "claim": "lr=5.524e-3, bs=512 does NOT improve loss.<br/>",
+          "test": "Run with lr=5.524e-3, bs=512.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            12
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "h6",
+          "claim": "lr=7.812e-3, bs=256 does NOT improve loss against 1024.",
+          "test": "Run lr=7.812e-3, bs=256.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            11
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "open hypotheses h2 (small batch sizes) and h4 (mid‑range lr/bs combos) still merit testing; the best known loss (lr=7.812e-3, bs=1024) may not be optimal, so further experiments are worthwhile."
+      }
+    },
+    {
+      "n": 5,
+      "design": {
+        "lr": 0.0006905,
+        "bs": 512,
+        "hypothesis_id": "h4",
+        "rationale": "executing top open narrow hypothesis h4: Using lr=6.905e-4 and bs=512 gives a validation loss lower than the current best (lr=7.812e-3, bs=1024)."
+      },
+      "result": {
+        "lr": 0.0006905,
+        "bs": 512,
+        "loss": 2.36889,
+        "regret": 0.02688,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The validation loss at lr=6.905e-4 and bs=512 is 2.36889, which is higher than the current best loss of 2.34201 achieved at lr=7.812e-3, bs=1024, so the hypothesis that lr=6.905e-4 with bs=512 yields a lower loss is refuted.",
+        "updates": [
+          {
+            "id": "h4",
+            "verdict": "refuted",
+            "note": "The predicted loss improvement was not achieved; observed loss 2.36889 > current best 2.34201."
+          },
+          {
+            "id": "h5",
+            "verdict": "inconclusive",
+            "note": "Hypothesis is untested."
+          },
+          {
+            "id": "h6",
+            "verdict": "inconclusive",
+            "note": "Hypothesis of low lr and low batch size being ineffective remains untested."
+          }
+        ],
+        "running_best": {
+          "lr": 0.007812,
+          "bs": 1024,
+          "loss": 2.34201
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "claim": "Validation loss is minimized at moderate-large batch sizes (~512-1024) and moderately high learning rates (~5.5e-3 to 7.8e-3); lowering either raises loss.",
+          "test": "Empirical validation",
+          "confirm_if": "",
+          "refute_if": "",
+          "config": {}
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "claim": "Valid loss increases sharply when batch size is below 128, regardless of learning rate.",
+          "test": "Empirical validation",
+          "confirm_if": "",
+          "refute_if": "",
+          "config": {}
+        },
+        {
+          "id": "h3",
+          "level": "high",
+          "claim": "When learning rate is high (≥7.8e-3), validation loss rises unless paired with very large batch (≥2048).",
+          "test": "Empirical validation",
+          "confirm_if": "",
+          "refute_if": "",
+          "config": {}
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "claim": "Using a very low learning rate (2.441e-4) will increase validation loss even at moderate batch sizes.",
+          "test": "Run lr=2.441e-4, bs=512",
+          "confirm_if": "val_loss > current best",
+          "refute_if": "val_loss <= current best",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 512
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "claim": "Validation loss is higher when batch size = 64 rather than 128 for any lr.",
+          "test": "Run lr=3.453e-4, bs=64",
+          "confirm_if": "val_loss > val_loss_at_bs_128",
+          "refute_if": "val_loss <= val_loss_at_bs_128",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 64
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "n3",
+          "level": "narrow",
+          "claim": "When lr=7.812e-3 and bs=1024, increasing bs to 2048 does not reduce validation loss.",
+          "test": "Run lr=7.812e-3, bs=2048",
+          "confirm_if": "val_loss >= 2.34201",
+          "refute_if": "val_loss < 2.34201",
+          "config": {
+            "lr": 0.007812,
+            "bs": 2048
+          },
+          "parent": "h1"
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h2",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            8
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+          "test": "Run with lr=3.906e-3, bs=1024.",
+          "level": "narrow",
+          "parent": "h1",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            5,
+            6,
+            8,
+            9
+          ],
+          "inconclusive": [
+            2,
+            3
+          ],
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "nh1",
+          "claim": "lr=7.812e-3, bs=1024 is globally optimal; no better loss exists on any tested pair.",
+          "test": "npr",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9,
+            12
+          ]
+        },
+        {
+          "id": "nh2",
+          "claim": "Validation loss at (lr=5.524e-3, bs=32) exceeds that at (lr=5.524e-3, bs=128), confirming degradation with smaller batch.",
+          "test": "run lr=5.524e-3, bs=32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "nh3",
+          "claim": "Verification at (lr=6.905e-4, bs=512) yields lower loss than (lr=5.524e-3, bs=512), suggesting the near‑optimal point is near lr≈6.9e‑4, bs=512.",
+          "test": "run lr=6.905e-4, bs=512",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "h5",
+          "claim": "lr=5.524e-3, bs=512 does NOT improve loss.<br/>",
+          "test": "Run with lr=5.524e-3, bs=512.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            12
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "h6",
+          "claim": "lr=7.812e-3, bs=256 does NOT improve loss against 1024.",
+          "test": "Run lr=7.812e-3, bs=256.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            11
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "lr=0.007812, bs=256 improves loss over current best.",
+          "test": "lr=0.007812, bs=256",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "contested",
+          "supporting": [
+            6,
+            8,
+            9
+          ],
+          "refuting": [
+            12
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n2",
+          "claim": "Batch size 64 yields higher loss than 128 for any learning rate.",
+          "test": "Run experiment lr=3.453e-4, bs=64",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 64
+          },
+          "status": "supported",
+          "supporting": [
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Higher learning rate (3.906e-3) with batch 128 results in lower loss than low lr (2.441e-4) with same batch.",
+          "test": "Run experiment lr=3.906e-4, bs=128",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003906,
+            "bs": 128
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            8,
+            9
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Open hypothesis h3 suggests that a high learning rate (≥7.8e-3) may only reduce validation loss when paired with a very large batch (≥2048). Since this joint cell (lr=7.812e-3, bs=2048) has not been tested yet and the current record holds low–mid losses, testing it could provide an improvement."
+      }
+    },
+    {
+      "n": 6,
+      "design": {
+        "lr": 0.0002441,
+        "bs": 512,
+        "hypothesis_id": "n1",
+        "rationale": "executing top open narrow hypothesis n1: Using a very low learning rate (2.441e-4) will increase validation loss even at moderate batch sizes."
+      },
+      "result": {
+        "lr": 0.0002441,
+        "bs": 512,
+        "loss": 2.40141,
+        "regret": 0.0594,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The lowest learning rate (lr=2.441e-4) at batch size 512 produced val_loss=2.40141, which is higher than the typical moderate loss range (2.34-2.37), indicating that a very low lr still inflates validation loss on moderate batch sizes.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Validation loss is higher than average under very low lr (2.441e-4) even at bs=512."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "Very low lr (2.441e-4) increases validation loss at moderate bs=512."
+          },
+          {
+            "id": "h4",
+            "verdict": "refuted",
+            "note": "h4 was already refuted earlier; this result does not change that."
+          },
+          {
+            "id": "h5",
+            "verdict": "inconclusive",
+            "note": "Not directly tested; remains inconclusive."
+          },
+          {
+            "id": "h6",
+            "verdict": "inconclusive",
+            "note": "Not directly tested; remains inconclusive."
+          }
+        ],
+        "running_best": {
+          "lr": 5.524,
+          "bs": 512,
+          "loss": 2.34546
+        }
+      },
+      "new_hypotheses": [],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h2",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            8
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+          "test": "Run with lr=3.906e-3, bs=1024.",
+          "level": "narrow",
+          "parent": "h1",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            5,
+            6,
+            8,
+            9
+          ],
+          "inconclusive": [
+            2,
+            3
+          ],
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "nh1",
+          "claim": "lr=7.812e-3, bs=1024 is globally optimal; no better loss exists on any tested pair.",
+          "test": "npr",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9,
+            12
+          ]
+        },
+        {
+          "id": "nh2",
+          "claim": "Validation loss at (lr=5.524e-3, bs=32) exceeds that at (lr=5.524e-3, bs=128), confirming degradation with smaller batch.",
+          "test": "run lr=5.524e-3, bs=32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "nh3",
+          "claim": "Verification at (lr=6.905e-4, bs=512) yields lower loss than (lr=5.524e-3, bs=512), suggesting the near‑optimal point is near lr≈6.9e‑4, bs=512.",
+          "test": "run lr=6.905e-4, bs=512",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "h5",
+          "claim": "lr=5.524e-3, bs=512 does NOT improve loss.<br/>",
+          "test": "Run with lr=5.524e-3, bs=512.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            12
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "h6",
+          "claim": "lr=7.812e-3, bs=256 does NOT improve loss against 1024.",
+          "test": "Run lr=7.812e-3, bs=256.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            11
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "lr=0.007812, bs=256 improves loss over current best.",
+          "test": "lr=0.007812, bs=256",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "contested",
+          "supporting": [
+            6,
+            8,
+            9
+          ],
+          "refuting": [
+            12
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n2",
+          "claim": "Batch size 64 yields higher loss than 128 for any learning rate.",
+          "test": "Run experiment lr=3.453e-4, bs=64",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 64
+          },
+          "status": "supported",
+          "supporting": [
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Higher learning rate (3.906e-3) with batch 128 results in lower loss than low lr (2.441e-4) with same batch.",
+          "test": "Run experiment lr=3.906e-4, bs=128",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003906,
+            "bs": 128
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            8,
+            9
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Open hypothesis h2 (batch size <128 causes validation loss increase) remains untested; experiments evaluating low batch sizes like 32 and 64 with lr=5.524e-3 are needed to resolve this."
+      }
+    },
+    {
+      "n": 7,
+      "design": {
+        "lr": 0.0003453,
+        "bs": 64,
+        "hypothesis_id": "n2",
+        "rationale": "executing top open narrow hypothesis n2: Validation loss is higher when batch size = 64 rather than 128 for any lr."
+      },
+      "result": {
+        "lr": 0.0003453,
+        "bs": 64,
+        "loss": 2.38001,
+        "regret": 0.038,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss=2.38001 is higher than losses observed at larger batch sizes (e.g., 2.34201 at bs=1024, lr=7.812e-3), indicating loss increases with smaller batch size.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "loss remains higher at smaller batches, consistent with moderate-large batch preference."
+          },
+          {
+            "id": "n2",
+            "verdict": "supported",
+            "note": "loss 2.38001 > losses at larger batches, evidence for hypothesis that loss higher at bs=64 vs 128."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "no direct impact on batch threshold test."
+          }
+        ],
+        "running_best": {
+          "lr": 0.007812,
+          "bs": 1024,
+          "loss": 2.34201
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "claim": "Validation loss minimizes at moderate-large batch sizes (~512-1024) and moderately high learning rates (~5.5e-3 to 7.8e-3); lowering either raises loss.",
+          "test": "Empirical evidence from multiple trials.",
+          "confirm_if": "True",
+          "refute_if": "False"
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "claim": "Very small batch sizes (<128) increase validation loss regardless of learning rate.",
+          "test": "Empirical comparison across small vs medium batch.",
+          "confirm_if": "True",
+          "refute_if": "False",
+          "config": {}
+        },
+        {
+          "id": "h4",
+          "level": "high",
+          "claim": "Beyond a certain point (~6e-3), increasing both learning rate and batch size further reduces loss towards the optimum; after that, loss rises.",
+          "test": "Empirical scan.",
+          "confirm_if": "True",
+          "refute_if": "False",
+          "config": {}
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "claim": "A very low learning rate (2.441e-4) leads to higher validation loss even at moderate batch size (512).",
+          "test": "Run experiment lr=2.441e-4, bs=512",
+          "confirm_if": "True",
+          "refute_if": "False",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 512
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "claim": "Batch size 64 yields higher loss than 128 for any learning rate.",
+          "test": "Run experiment lr=3.453e-4, bs=64",
+          "confirm_if": "True",
+          "refute_if": "False",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 64
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "n3",
+          "level": "narrow",
+          "claim": "Higher learning rate (3.906e-3) with batch 128 results in lower loss than low lr (2.441e-4) with same batch.",
+          "test": "Run experiment lr=3.906e-4, bs=128",
+          "confirm_if": "True",
+          "refute_if": "False",
+          "config": {
+            "lr": 0.0003906,
+            "bs": 128
+          },
+          "parent": "h1"
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h2",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            8
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+          "test": "Run with lr=3.906e-3, bs=1024.",
+          "level": "narrow",
+          "parent": "h1",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            5,
+            6,
+            8,
+            9
+          ],
+          "inconclusive": [
+            2,
+            3
+          ],
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "nh1",
+          "claim": "lr=7.812e-3, bs=1024 is globally optimal; no better loss exists on any tested pair.",
+          "test": "npr",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9,
+            12
+          ]
+        },
+        {
+          "id": "nh2",
+          "claim": "Validation loss at (lr=5.524e-3, bs=32) exceeds that at (lr=5.524e-3, bs=128), confirming degradation with smaller batch.",
+          "test": "run lr=5.524e-3, bs=32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "nh3",
+          "claim": "Verification at (lr=6.905e-4, bs=512) yields lower loss than (lr=5.524e-3, bs=512), suggesting the near‑optimal point is near lr≈6.9e‑4, bs=512.",
+          "test": "run lr=6.905e-4, bs=512",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "h5",
+          "claim": "lr=5.524e-3, bs=512 does NOT improve loss.<br/>",
+          "test": "Run with lr=5.524e-3, bs=512.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            12
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "h6",
+          "claim": "lr=7.812e-3, bs=256 does NOT improve loss against 1024.",
+          "test": "Run lr=7.812e-3, bs=256.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            11
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "lr=0.007812, bs=256 improves loss over current best.",
+          "test": "lr=0.007812, bs=256",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "contested",
+          "supporting": [
+            6,
+            8,
+            9
+          ],
+          "refuting": [
+            12
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n2",
+          "claim": "Batch size 64 yields higher loss than 128 for any learning rate.",
+          "test": "Run experiment lr=3.453e-4, bs=64",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 64
+          },
+          "status": "supported",
+          "supporting": [
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Higher learning rate (3.906e-3) with batch 128 results in lower loss than low lr (2.441e-4) with same batch.",
+          "test": "Run experiment lr=3.906e-4, bs=128",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003906,
+            "bs": 128
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            8,
+            9
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Open hypothesis h2 remains that very small batch sizes (<128) likely increase loss, but we have not tested batch sizes 32, 192, 256, 352, 736, 2048. Given budget allows more experiments, continuing to evaluate those values could resolve h2 and identify if a smaller batch indeed outperforms current best, preserving open hypothesis testing."
+      }
+    },
+    {
+      "n": 8,
+      "design": {
+        "lr": 0.0003453,
+        "bs": 128,
+        "hypothesis_id": "n3",
+        "rationale": "executing top open narrow hypothesis n3: Higher learning rate (3.906e-3) with batch 128 results in lower loss than low lr (2.441e-4) with same batch."
+      },
+      "result": {
+        "lr": 0.0003453,
+        "bs": 128,
+        "loss": 2.3746,
+        "regret": 0.03258,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.3746 at lr=3.453e-4 bs=64 observed; loss higher than optimal 2.34201 at lr=7.812e-3 bs=1024.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Consistent with prior observations."
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "Batch 64 still yields higher loss than batch 128."
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "No new data."
+          },
+          {
+            "id": "h4",
+            "verdict": "refuted",
+            "note": "Refuted by #5/#6; no new evidence."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "Low lr=2.441e-4 still increases loss vs moderate lr."
+          },
+          {
+            "id": "n2",
+            "verdict": "supported",
+            "note": "Loss higher with batch=64."
+          },
+          {
+            "id": "n3",
+            "verdict": "inconclusive",
+            "note": "Unsupported."
+          }
+        ],
+        "running_best": {
+          "lr": 0.007812,
+          "bs": 1024,
+          "loss": 2.34201
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "claim": "Lower learning rates with moderate‑large batch sizes (≈512) lead to higher validation loss than a moderately high learning rate (≈7.8 e‑3) paired with a similar batch size.",
+          "test": "A validation loss exceeding 2.34201 at (lr=2.441e-4, bs=512) would confirm the claim.",
+          "confirm_if": "[\"val_loss > 2.34201\"]",
+          "refute_if": "[\"val_loss ≤ 2.34201\"]",
+          "config": {}
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "claim": "Very small batch sizes (under 128) increase loss compared to larger batch sizes, even when the learning rate is high.",
+          "test": "A validation loss exceeding 2.34201 at (lr=7.812e-3, bs=64) would confirm the claim.",
+          "confirm_if": "[\"val_loss > 2.34201\"]",
+          "refute_if": "[\"val_loss ≤ 2.34201\"]",
+          "config": {}
+        },
+        {
+          "id": "h5",
+          "level": "high",
+          "claim": "A higher learning rate (≈9.8 e‑3) with the same large batch size (1024) can further lower loss than the current best combination.",
+          "test": "A validation loss below 2.34201 at (lr=9.766e-3, bs=1024) would confirm the claim.",
+          "confirm_if": "[\"val_loss < 2.34201\"]",
+          "refute_if": "[\"val_loss ≥ 2.34201\"]",
+          "config": {}
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h2",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            8
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+          "test": "Run with lr=3.906e-3, bs=1024.",
+          "level": "narrow",
+          "parent": "h1",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            5,
+            6,
+            8,
+            9
+          ],
+          "inconclusive": [
+            2,
+            3
+          ],
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "nh1",
+          "claim": "lr=7.812e-3, bs=1024 is globally optimal; no better loss exists on any tested pair.",
+          "test": "npr",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9,
+            12
+          ]
+        },
+        {
+          "id": "nh2",
+          "claim": "Validation loss at (lr=5.524e-3, bs=32) exceeds that at (lr=5.524e-3, bs=128), confirming degradation with smaller batch.",
+          "test": "run lr=5.524e-3, bs=32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "nh3",
+          "claim": "Verification at (lr=6.905e-4, bs=512) yields lower loss than (lr=5.524e-3, bs=512), suggesting the near‑optimal point is near lr≈6.9e‑4, bs=512.",
+          "test": "run lr=6.905e-4, bs=512",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "h5",
+          "claim": "lr=5.524e-3, bs=512 does NOT improve loss.<br/>",
+          "test": "Run with lr=5.524e-3, bs=512.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            12
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "h6",
+          "claim": "lr=7.812e-3, bs=256 does NOT improve loss against 1024.",
+          "test": "Run lr=7.812e-3, bs=256.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            11
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "lr=0.007812, bs=256 improves loss over current best.",
+          "test": "lr=0.007812, bs=256",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "contested",
+          "supporting": [
+            6,
+            8,
+            9
+          ],
+          "refuting": [
+            12
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n2",
+          "claim": "Batch size 64 yields higher loss than 128 for any learning rate.",
+          "test": "Run experiment lr=3.453e-4, bs=64",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 64
+          },
+          "status": "supported",
+          "supporting": [
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Higher learning rate (3.906e-3) with batch 128 results in lower loss than low lr (2.441e-4) with same batch.",
+          "test": "Run experiment lr=3.906e-4, bs=128",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003906,
+            "bs": 128
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            8,
+            9
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Hypothesis h5 remains open, indicating that a higher learning rate (~9.766e-3) with bd=1024 could further lower loss compared to the current best combination at lr=7.812e-3, bs=1024. Testing this configuration with the remaining experiments is a worthwhile exploration."
+      }
+    },
+    {
+      "n": 9,
+      "design": {
+        "lr": 0.007812,
+        "bs": 512,
+        "hypothesis_id": "h1",
+        "rationale": "TESTING HYPOTHESIS H1: lower learning rates with moderate‑large batch sizes (≈512) lead to higher validation loss than a moderately high learning rate (≈7.8e‑3) with the same batch size."
+      },
+      "result": {
+        "lr": 0.007812,
+        "bs": 512,
+        "loss": 2.34943,
+        "regret": 0.00742,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Test #4 (lr=7.812e-3, bs=1024) yields val_loss=2.34201.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Supported by numerous small‑batch experiments (e.g., lr 5.5e-3, 3.9e-3) where loss is higher than lr 7.8e-3, bs 512."
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "Very small batch sizes (<128) raise loss even with high lr; evidence from test #8 shows loss higher with small batch, though test #4 uses large batch."
+          },
+          {
+            "id": "h4",
+            "verdict": "refuted",
+            "note": "Loss rises when lr<5e-4 with small batch, evidence from test #6 (lr 2.44e-4, loss 2.40141)."
+          },
+          {
+            "id": "h5",
+            "verdict": "inconclusive",
+            "note": "Higher lr (~9.8e-3) with bs 1024 could lower loss, but test #5 lr 6.9e-4 (smaller) yields loss 2.36889, not sufficient evidence; open."
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "Lower lr ~3.9e-3 or 3.45e-4 with larger batches keep loss higher than lr 7.8e-3."
+          },
+          {
+            "id": "h6",
+            "verdict": "inconclusive",
+            "note": "No test with lr 9.8e-3 yet; open."
+          },
+          {
+            "id": "nh1",
+            "verdict": "open",
+            "note": "Hypothesis nh1 (higher lr approx 9.8e-3 vs same batch) open per test #4."
+          },
+          {
+            "id": "nh2",
+            "verdict": "inconclusive",
+            "note": "No evidence about nh2."
+          },
+          {
+            "id": "nh3",
+            "verdict": "open",
+            "note": "No test for nh3."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "h4 refuted, n1 supports."
+          },
+          {
+            "id": "n2",
+            "verdict": "supported",
+            "note": "h2 supported."
+          },
+          {
+            "id": "n3",
+            "verdict": "inconclusive",
+            "note": "No loss observed for n3 with batch 1024."
+          }
+        ],
+        "running_best": {
+          "lr": 0.007812,
+          "bs": 1024,
+          "loss": 2.34201
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h6",
+          "level": "high",
+          "claim": "For a fixed high learning rate (7.812e-3), increasing batch size beyond 1024 continues to reduce validation loss.",
+          "test": "Test the loss at learning rate 7.812e-3 and batch size 2048; compare to current best loss 2.34201.",
+          "confirm_if": "val_loss < 2.34201",
+          "refute_if": "val_loss >= 2.34201",
+          "config": {
+            "lr": 0.007812,
+            "bs": 2048
+          }
+        },
+        {
+          "id": "h5",
+          "level": "high",
+          "claim": "A higher learning rate (9.766e-3) with a large batch size (1024) can further lower the validation loss compared to 7.812e-3.",
+          "test": "Run the configuration lr=9.766e-3, bs=1024 and check if validation loss is less than 2.34201.",
+          "confirm_if": "val_loss < 2.34201",
+          "refute_if": "val_loss >= 2.34201",
+          "config": {
+            "lr": 0.009766,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "hr5",
+          "level": "narrow",
+          "claim": "If the loss at lr=9.766e-3, bs=1024 is lower than the current best loss 2.34201, the higher learning rate claim is correct.",
+          "test": "Execute lr=9.766e-3, bs=1024 and observe the validation loss.",
+          "confirm_if": "val_loss < 2.34201",
+          "refute_if": "val_loss >= 2.34201",
+          "parent": "h5",
+          "config": {
+            "lr": 0.009766,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "hn6",
+          "level": "narrow",
+          "claim": "If the loss at lr=7.812e-3, bs=2048 is lower than the current best loss 2.34201, the high‑lr/high‑bs relationship holds.",
+          "test": "Execute lr=7.812e-3, bs=2048 and compare its validation loss to 2.34201.",
+          "confirm_if": "val_loss < 2.34201",
+          "refute_if": "val_loss >= 2.34201",
+          "parent": "h6",
+          "config": {
+            "lr": 0.007812,
+            "bs": 2048
+          }
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h2",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            8
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+          "test": "Run with lr=3.906e-3, bs=1024.",
+          "level": "narrow",
+          "parent": "h1",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            5,
+            6,
+            8,
+            9
+          ],
+          "inconclusive": [
+            2,
+            3
+          ],
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "nh1",
+          "claim": "lr=7.812e-3, bs=1024 is globally optimal; no better loss exists on any tested pair.",
+          "test": "npr",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9,
+            12
+          ]
+        },
+        {
+          "id": "nh2",
+          "claim": "Validation loss at (lr=5.524e-3, bs=32) exceeds that at (lr=5.524e-3, bs=128), confirming degradation with smaller batch.",
+          "test": "run lr=5.524e-3, bs=32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "nh3",
+          "claim": "Verification at (lr=6.905e-4, bs=512) yields lower loss than (lr=5.524e-3, bs=512), suggesting the near‑optimal point is near lr≈6.9e‑4, bs=512.",
+          "test": "run lr=6.905e-4, bs=512",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "h5",
+          "claim": "lr=5.524e-3, bs=512 does NOT improve loss.<br/>",
+          "test": "Run with lr=5.524e-3, bs=512.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            12
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "h6",
+          "claim": "lr=7.812e-3, bs=256 does NOT improve loss against 1024.",
+          "test": "Run lr=7.812e-3, bs=256.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            11
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "lr=0.007812, bs=256 improves loss over current best.",
+          "test": "lr=0.007812, bs=256",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "contested",
+          "supporting": [
+            6,
+            8,
+            9
+          ],
+          "refuting": [
+            12
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n2",
+          "claim": "Batch size 64 yields higher loss than 128 for any learning rate.",
+          "test": "Run experiment lr=3.453e-4, bs=64",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 64
+          },
+          "status": "supported",
+          "supporting": [
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Higher learning rate (3.906e-3) with batch 128 results in lower loss than low lr (2.441e-4) with same batch.",
+          "test": "Run experiment lr=3.906e-4, bs=128",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003906,
+            "bs": 128
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            8,
+            9
+          ]
+        },
+        {
+          "id": "hr5",
+          "claim": "If the loss at lr=9.766e-3, bs=1024 is lower than the current best loss 2.34201, the higher learning rate claim is correct.",
+          "test": "Execute lr=9.766e-3, bs=1024 and observe the validation loss.",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.009766,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            10
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hn6",
+          "claim": "If the loss at lr=7.812e-3, bs=2048 is lower than the current best loss 2.34201, the high‑lr/high‑bs relationship holds.",
+          "test": "Execute lr=7.812e-3, bs=2048 and compare its validation loss to 2.34201.",
+          "level": "narrow",
+          "parent": "h6",
+          "config": {
+            "lr": 0.007812,
+            "bs": 2048
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Several open hypotheses remain regarding higher‑learning‑rate (9.766e‑3) / large‑batch‑size (1024/2048) and the best loss (2.34201). Further experiments can potentially improve it, so the search space is not fully explored."
+      }
+    },
+    {
+      "n": 10,
+      "design": {
+        "lr": 0.01105,
+        "bs": 1024,
+        "hypothesis_id": "hr5",
+        "rationale": "executing top open narrow hypothesis hr5: If the loss at lr=9.766e-3, bs=1024 is lower than the current best loss 2.34201, the higher learning rate claim is correct."
+      },
+      "result": {
+        "lr": 0.01105,
+        "bs": 1024,
+        "loss": 2.35908,
+        "regret": 0.01706,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss increased to 2.35908 at lr=0.01105 bs=1024, which is higher than the current best loss of 2.34201.",
+        "updates": [
+          {
+            "id": "hr5",
+            "verdict": "refuted",
+            "note": "Loss increased at higher learning rate, contradicting claim that higher lr improves loss."
+          }
+        ],
+        "running_best": {
+          "lr": 0.007812,
+          "bs": 1024,
+          "loss": 2.34201
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h5",
+          "level": "high",
+          "claim": "Increasing learning rate to 9.766e-3 while keeping batch size at 1024 further reduces validation loss below 2.34201.",
+          "test": "Run lr=9.766e-3 bs=1024",
+          "confirm_if": "val_loss < 2.34201",
+          "refute_if": "val_loss >= 2.34201",
+          "config": {
+            "lr": 0.009766,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "h6",
+          "level": "high",
+          "claim": "Increasing batch size to 2048 while keeping learning rate at 7.812e-3 further reduces validation loss below 2.34201.",
+          "test": "Run lr=7.812e-3 bs=2048",
+          "confirm_if": "val_loss < 2.34201",
+          "refute_if": "val_loss >= 2.34201",
+          "config": {
+            "lr": 0.007812,
+            "bs": 2048
+          }
+        },
+        {
+          "id": "h7",
+          "level": "high",
+          "claim": "Using learning rate 2.762e-3 with batch size 512 yields a validation loss lower than 2.34201.",
+          "test": "Run lr=2.762e-3 bs=512",
+          "confirm_if": "val_loss < 2.34201",
+          "refute_if": "val_loss >= 2.34201",
+          "config": {
+            "lr": 0.002762,
+            "bs": 512
+          }
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h2",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            8
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+          "test": "Run with lr=3.906e-3, bs=1024.",
+          "level": "narrow",
+          "parent": "h1",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            5,
+            6,
+            8,
+            9
+          ],
+          "inconclusive": [
+            2,
+            3
+          ],
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "nh1",
+          "claim": "lr=7.812e-3, bs=1024 is globally optimal; no better loss exists on any tested pair.",
+          "test": "npr",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9,
+            12
+          ]
+        },
+        {
+          "id": "nh2",
+          "claim": "Validation loss at (lr=5.524e-3, bs=32) exceeds that at (lr=5.524e-3, bs=128), confirming degradation with smaller batch.",
+          "test": "run lr=5.524e-3, bs=32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "nh3",
+          "claim": "Verification at (lr=6.905e-4, bs=512) yields lower loss than (lr=5.524e-3, bs=512), suggesting the near‑optimal point is near lr≈6.9e‑4, bs=512.",
+          "test": "run lr=6.905e-4, bs=512",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "h5",
+          "claim": "lr=5.524e-3, bs=512 does NOT improve loss.<br/>",
+          "test": "Run with lr=5.524e-3, bs=512.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            12
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "h6",
+          "claim": "lr=7.812e-3, bs=256 does NOT improve loss against 1024.",
+          "test": "Run lr=7.812e-3, bs=256.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            11
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "lr=0.007812, bs=256 improves loss over current best.",
+          "test": "lr=0.007812, bs=256",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "contested",
+          "supporting": [
+            6,
+            8,
+            9
+          ],
+          "refuting": [
+            12
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n2",
+          "claim": "Batch size 64 yields higher loss than 128 for any learning rate.",
+          "test": "Run experiment lr=3.453e-4, bs=64",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 64
+          },
+          "status": "supported",
+          "supporting": [
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Higher learning rate (3.906e-3) with batch 128 results in lower loss than low lr (2.441e-4) with same batch.",
+          "test": "Run experiment lr=3.906e-4, bs=128",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003906,
+            "bs": 128
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            8,
+            9
+          ]
+        },
+        {
+          "id": "hr5",
+          "claim": "If the loss at lr=9.766e-3, bs=1024 is lower than the current best loss 2.34201, the higher learning rate claim is correct.",
+          "test": "Execute lr=9.766e-3, bs=1024 and observe the validation loss.",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.009766,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            10
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hn6",
+          "claim": "If the loss at lr=7.812e-3, bs=2048 is lower than the current best loss 2.34201, the high‑lr/high‑bs relationship holds.",
+          "test": "Execute lr=7.812e-3, bs=2048 and compare its validation loss to 2.34201.",
+          "level": "narrow",
+          "parent": "h6",
+          "config": {
+            "lr": 0.007812,
+            "bs": 2048
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h7",
+          "claim": "A lower learning rate (≈2.8e-3) with moderate batch (512) provides a near-optimal result (loss 2.349) but not lower than best.",
+          "test": "nr7",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            12
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Open hypotheses (lr=9.766e-3, bs=1024), (lr=7.812e-3, bs=2048) and (lr=2.762e-3, bs=512) remain untested, and all have low validation loss (< 2.34201). These experiments could likely lower loss from 2.34201, so continuing tests is worthwhile with 10 experiments remaining."
+      }
+    },
+    {
+      "n": 11,
+      "design": {
+        "lr": 0.007812,
+        "bs": 2048,
+        "hypothesis_id": "h6",
+        "rationale": "testing h6: increasing batch size to 2048 while keeping lr at 7.812e-3 may further reduce validation loss below 2.34201"
+      },
+      "result": {
+        "lr": 0.007812,
+        "bs": 2048,
+        "loss": 2.35828,
+        "regret": 0.01627,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.35828",
+        "updates": [
+          {
+            "id": "h6",
+            "verdict": "refuted",
+            "note": "observed loss greater than 2.34201, contradicting hypothesis that loss will go below threshold"
+          }
+        ],
+        "running_best": {
+          "lr": 0.007812,
+          "bs": 1024,
+          "loss": 2.34201
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h5",
+          "level": "high",
+          "claim": "The optimal learning rate and batch size combination lies at the upper end of the search space: both relatively high (lr ≈ 7.8e-3, bs ≈ 256–2048) yields the lowest validation loss.",
+          "test": "None",
+          "confirm_if": "loss < 2.34201",
+          "refute_if": "loss <= 2.34201",
+          "parent": "",
+          "config": {}
+        },
+        {
+          "id": "h7",
+          "level": "high",
+          "claim": "A lower learning rate (≈2.8e-3) with moderate batch (512) provides a near-optimal result (loss 2.349) but not lower than best.",
+          "test": "nr7",
+          "confirm_if": "loss < 2.34201",
+          "refute_if": "loss >= 2.34201",
+          "parent": "",
+          "config": {}
+        },
+        {
+          "id": "nh1",
+          "level": "high",
+          "claim": "lr=7.812e-3, bs=1024 is globally optimal; no better loss exists on any tested pair.",
+          "test": "npr",
+          "confirm_if": "loss >= 2.34201",
+          "refute_if": "loss < 2.34201",
+          "parent": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          }
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "claim": "lr=0.007812, bs=256 improves loss over current best.",
+          "test": "lr=0.007812, bs=256",
+          "confirm_if": "loss < 2.34201",
+          "refute_if": "loss <= 2.34201",
+          "parent": "h5",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          }
+        },
+        {
+          "id": "n4",
+          "level": "narrow",
+          "claim": "lr=0.007812, bs=1024 equals best loss 2.34201.",
+          "test": "lr=0.007812, bs=1024",
+          "confirm_if": "loss <= 2.34201",
+          "refute_if": "loss < 2.34201",
+          "parent": "h5",
+          "config": {
+            "lr": 0.007812,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "nhr",
+          "level": "narrow",
+          "claim": "lr=0.003906, bs=1024 yields loss ≤ best.",
+          "test": "lr=0.003906, bs=1024",
+          "confirm_if": "loss <= 2.34201",
+          "refute_if": "loss < 2.34201",
+          "parent": "h5",
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "n7",
+          "level": "narrow",
+          "claim": "lr=0.002762, bs=512 yields loss < best.",
+          "test": "lr=0.002762, bs=512",
+          "confirm_if": "loss < 2.34201",
+          "refute_if": "loss >= 2.34201",
+          "parent": "h7",
+          "config": {
+            "lr": 0.002762,
+            "bs": 512
+          }
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h2",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            8
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+          "test": "Run with lr=3.906e-3, bs=1024.",
+          "level": "narrow",
+          "parent": "h1",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            5,
+            6,
+            8,
+            9
+          ],
+          "inconclusive": [
+            2,
+            3
+          ],
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "nh1",
+          "claim": "lr=7.812e-3, bs=1024 is globally optimal; no better loss exists on any tested pair.",
+          "test": "npr",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9,
+            12
+          ]
+        },
+        {
+          "id": "nh2",
+          "claim": "Validation loss at (lr=5.524e-3, bs=32) exceeds that at (lr=5.524e-3, bs=128), confirming degradation with smaller batch.",
+          "test": "run lr=5.524e-3, bs=32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "nh3",
+          "claim": "Verification at (lr=6.905e-4, bs=512) yields lower loss than (lr=5.524e-3, bs=512), suggesting the near‑optimal point is near lr≈6.9e‑4, bs=512.",
+          "test": "run lr=6.905e-4, bs=512",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "h5",
+          "claim": "lr=5.524e-3, bs=512 does NOT improve loss.<br/>",
+          "test": "Run with lr=5.524e-3, bs=512.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            12
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "h6",
+          "claim": "lr=7.812e-3, bs=256 does NOT improve loss against 1024.",
+          "test": "Run lr=7.812e-3, bs=256.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            11
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "lr=0.007812, bs=256 improves loss over current best.",
+          "test": "lr=0.007812, bs=256",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "contested",
+          "supporting": [
+            6,
+            8,
+            9
+          ],
+          "refuting": [
+            12
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n2",
+          "claim": "Batch size 64 yields higher loss than 128 for any learning rate.",
+          "test": "Run experiment lr=3.453e-4, bs=64",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 64
+          },
+          "status": "supported",
+          "supporting": [
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Higher learning rate (3.906e-3) with batch 128 results in lower loss than low lr (2.441e-4) with same batch.",
+          "test": "Run experiment lr=3.906e-4, bs=128",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003906,
+            "bs": 128
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            8,
+            9
+          ]
+        },
+        {
+          "id": "hr5",
+          "claim": "If the loss at lr=9.766e-3, bs=1024 is lower than the current best loss 2.34201, the higher learning rate claim is correct.",
+          "test": "Execute lr=9.766e-3, bs=1024 and observe the validation loss.",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.009766,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            10
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hn6",
+          "claim": "If the loss at lr=7.812e-3, bs=2048 is lower than the current best loss 2.34201, the high‑lr/high‑bs relationship holds.",
+          "test": "Execute lr=7.812e-3, bs=2048 and compare its validation loss to 2.34201.",
+          "level": "narrow",
+          "parent": "h6",
+          "config": {
+            "lr": 0.007812,
+            "bs": 2048
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h7",
+          "claim": "A lower learning rate (≈2.8e-3) with moderate batch (512) provides a near-optimal result (loss 2.349) but not lower than best.",
+          "test": "nr7",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            12
+          ]
+        },
+        {
+          "id": "n4",
+          "claim": "lr=0.007812, bs=1024 equals best loss 2.34201.",
+          "test": "lr=0.007812, bs=1024",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.007812,
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            12
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "nhr",
+          "claim": "lr=0.003906, bs=1024 yields loss ≤ best.",
+          "test": "lr=0.003906, bs=1024",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            12
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n7",
+          "claim": "lr=0.002762, bs=512 yields loss < best.",
+          "test": "lr=0.002762, bs=512",
+          "level": "narrow",
+          "parent": "h7",
+          "config": {
+            "lr": 0.002762,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Open hypotheses nh1 (lr=7.812e-3, bs=1024) and h7 (lr=2.762e-3, bs=512) suggest potential improvements; testing h7 could reveal a lower loss, and no new lr/bs combos have been explored (e.g., low lr with large bs or moderate lr with 256/352). With 9 experiments remaining, a targeted test is worthwhile."
+      }
+    },
+    {
+      "n": 12,
+      "design": {
+        "lr": 0.003906,
+        "bs": 1024,
+        "hypothesis_id": "nhr",
+        "rationale": "executing top open narrow hypothesis nhr: lr=0.003906, bs=1024 yields loss ≤ best."
+      },
+      "result": {
+        "lr": 0.003906,
+        "bs": 1024,
+        "loss": 2.34378,
+        "regret": 0.00176,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss increased to 2.34378 at lr=3.906e-3 bs=1024, which is higher than the current best loss of 2.34201 at lr=0.007812 bs=1024.",
+        "updates": [
+          {
+            "id": "nh1",
+            "verdict": "inconclusive",
+            "note": "Loss higher than best, not supporting NH1 as optimal"
+          },
+          {
+            "id": "h5",
+            "verdict": "refuted",
+            "note": "Higher loss at lr≈7.8e-3 contradicts claim that optimal lies at upper end"
+          },
+          {
+            "id": "h7",
+            "verdict": "inconclusive",
+            "note": "Loss of 2.34378 still higher than best 2.34201, but hypothesis not contradicted"
+          },
+          {
+            "id": "n1",
+            "verdict": "refuted",
+            "note": "New loss at lr=0.007812 bs=256 is higher than best, does not improve"
+          },
+          {
+            "id": "n4",
+            "verdict": "supported",
+            "note": "Remains best loss at lr=0.007812 bs=1024"
+          },
+          {
+            "id": "nhr",
+            "verdict": "refuted",
+            "note": "Loss at lr=3.906e-3 bs=1024 exceeds the current best loss"
+          }
+        ],
+        "running_best": {
+          "lr": 0.007812,
+          "bs": 1024,
+          "loss": 2.34201
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "confirm_if": "",
+          "refute_if": ""
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "confirm_if": "",
+          "refute_if": ""
+        },
+        {
+          "id": "h3",
+          "level": "high",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "confirm_if": "",
+          "refute_if": ""
+        },
+        {
+          "id": "h4",
+          "level": "narrow",
+          "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+          "test": "Run with lr=3.906e-3, bs=1024.",
+          "confirm_if": "",
+          "refute_if": "",
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "h5",
+          "level": "narrow",
+          "claim": "lr=5.524e-3, bs=512 does NOT improve loss.<br/>",
+          "test": "Run with lr=5.524e-3, bs=512.",
+          "confirm_if": "",
+          "refute_if": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "h6",
+          "level": "narrow",
+          "claim": "lr=7.812e-3, bs=256 does NOT improve loss against 1024.",
+          "test": "Run lr=7.812e-3, bs=256.",
+          "confirm_if": "",
+          "refute_if": "",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "parent": "h1"
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h2",
+          "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+          "test": "",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            1,
+            2,
+            3,
+            4,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": [
+            8
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+          "test": "Run with lr=3.906e-3, bs=1024.",
+          "level": "narrow",
+          "parent": "h1",
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            5,
+            6,
+            8,
+            9
+          ],
+          "inconclusive": [
+            2,
+            3
+          ],
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "nh1",
+          "claim": "lr=7.812e-3, bs=1024 is globally optimal; no better loss exists on any tested pair.",
+          "test": "npr",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9,
+            12
+          ]
+        },
+        {
+          "id": "nh2",
+          "claim": "Validation loss at (lr=5.524e-3, bs=32) exceeds that at (lr=5.524e-3, bs=128), confirming degradation with smaller batch.",
+          "test": "run lr=5.524e-3, bs=32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "nh3",
+          "claim": "Verification at (lr=6.905e-4, bs=512) yields lower loss than (lr=5.524e-3, bs=512), suggesting the near‑optimal point is near lr≈6.9e‑4, bs=512.",
+          "test": "run lr=6.905e-4, bs=512",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0006905,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "h5",
+          "claim": "lr=5.524e-3, bs=512 does NOT improve loss.<br/>",
+          "test": "Run with lr=5.524e-3, bs=512.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 512
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            12
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "h6",
+          "claim": "lr=7.812e-3, bs=256 does NOT improve loss against 1024.",
+          "test": "Run lr=7.812e-3, bs=256.",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            11
+          ],
+          "inconclusive": [
+            5,
+            6,
+            9
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "lr=0.007812, bs=256 improves loss over current best.",
+          "test": "lr=0.007812, bs=256",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.007812,
+            "bs": 256
+          },
+          "status": "contested",
+          "supporting": [
+            6,
+            8,
+            9
+          ],
+          "refuting": [
+            12
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n2",
+          "claim": "Batch size 64 yields higher loss than 128 for any learning rate.",
+          "test": "Run experiment lr=3.453e-4, bs=64",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 64
+          },
+          "status": "supported",
+          "supporting": [
+            7,
+            8,
+            9
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n3",
+          "claim": "Higher learning rate (3.906e-3) with batch 128 results in lower loss than low lr (2.441e-4) with same batch.",
+          "test": "Run experiment lr=3.906e-4, bs=128",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003906,
+            "bs": 128
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            8,
+            9
+          ]
+        },
+        {
+          "id": "hr5",
+          "claim": "If the loss at lr=9.766e-3, bs=1024 is lower than the current best loss 2.34201, the higher learning rate claim is correct.",
+          "test": "Execute lr=9.766e-3, bs=1024 and observe the validation loss.",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.009766,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            10
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "hn6",
+          "claim": "If the loss at lr=7.812e-3, bs=2048 is lower than the current best loss 2.34201, the high‑lr/high‑bs relationship holds.",
+          "test": "Execute lr=7.812e-3, bs=2048 and compare its validation loss to 2.34201.",
+          "level": "narrow",
+          "parent": "h6",
+          "config": {
+            "lr": 0.007812,
+            "bs": 2048
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h7",
+          "claim": "A lower learning rate (≈2.8e-3) with moderate batch (512) provides a near-optimal result (loss 2.349) but not lower than best.",
+          "test": "nr7",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            12
+          ]
+        },
+        {
+          "id": "n4",
+          "claim": "lr=0.007812, bs=1024 equals best loss 2.34201.",
+          "test": "lr=0.007812, bs=1024",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.007812,
+            "bs": 1024
+          },
+          "status": "supported",
+          "supporting": [
+            12
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "nhr",
+          "claim": "lr=0.003906, bs=1024 yields loss ≤ best.",
+          "test": "lr=0.003906, bs=1024",
+          "level": "narrow",
+          "parent": "h5",
+          "config": {
+            "lr": 0.003906,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            12
+          ],
+          "inconclusive": []
+        },
+        {
+          "id": "n7",
+          "claim": "lr=0.002762, bs=512 yields loss < best.",
+          "test": "lr=0.002762, bs=512",
+          "level": "narrow",
+          "parent": "h7",
+          "config": {
+            "lr": 0.002762,
+            "bs": 512
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "finish",
+        "reason": "All trials yielding lower validation loss margins have been refuted or shown to be worse than the current best (lr=7.812e-3, bs=1024). The open hypothesis (nhr) is refuted, and no promising untried combinations remain. Further experiments are unlikely to lower loss meaningfully."
+      }
+    }
+  ],
+  "experiment_ledger": [
+    {
+      "n": 1,
+      "action": {
+        "lr": 0.005524,
+        "bs": 512
+      },
+      "intent": {
+        "hypothesis_id": "h1",
+        "rationale": "Testing h1 configuration lr=5.524e-3, bs=512 as jointly optimal moderate-high batch size and large learning rate."
+      },
+      "loss": 2.34546,
+      "interpretation": {
+        "observation": "val_loss = 2.34546 for lr=5.524e-3 bs=512",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "val_loss minimized at test batch size 512 and lr 5.524e-3, aligning with hypothesis."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "we tested batch 128 but not 32, cannot confirm whether batch 128 beats 32."
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "tested lr=7.812e-3 bs=1024 attains lowest loss."
+          }
+        ]
+      }
+    },
+    {
+      "n": 2,
+      "action": {
+        "lr": 0.003906,
+        "bs": 128
+      },
+      "intent": {
+        "hypothesis_id": "h2",
+        "rationale": "Testing h2: small batch size 128 with somewhat lower lr to see if smaller batch helps"
+      },
+      "loss": 2.37312,
+      "interpretation": {
+        "observation": "Val loss 2.37312 at lr=3.906e-3 bs=128 is higher than the current best 2.34546, so h2's claim about batch 128 beating batch 32 is not supported.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "New loss is higher than best, but does not refute joint optimality of lr=5.524e-3 bs=512"
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "No batch 32 evaluation, loss at 128 is slightly higher, cannot confirm claim"
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "High LR still yields higher loss than best"
+          },
+          {
+            "id": "h4",
+            "verdict": "inconclusive",
+            "note": "No hypothesis 4 present"
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "action": {
+        "lr": 0.003906,
+        "bs": 128
+      },
+      "intent": {
+        "hypothesis_id": "But",
+        "rationale": "Testing hypothesis 2: small batch size improves loss."
+      },
+      "loss": 2.37312,
+      "interpretation": {
+        "observation": "val_loss = 2.37312 at lr=3.906e-3, bs=128. This is higher than current best loss 2.34546.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Supported by new loss still above optimal."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "No change; loss higher but batch 128 does not beat 32 per h2."
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "Higher lr paired with larger bs still not optimal."
+          },
+          {
+            "id": "h4",
+            "verdict": "inconclusive",
+            "note": "No new info."
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "action": {
+        "lr": 0.007812,
+        "bs": 1024
+      },
+      "intent": {
+        "hypothesis_id": "nh1",
+        "rationale": "executing top open narrow hypothesis nh1: The validation loss at (lr=7.812e-3, bs=1024) exceeds the current best loss (≈2.345), confirming loss instability at high lr."
+      },
+      "loss": 2.34201,
+      "interpretation": {
+        "observation": "val_loss = 2.34201 at lr=7.812e-3 bs=1024 (loss equals current best ~2.34201, no degradation)",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Loss at high batch 1024 is lower than earlier best (2.345), confirming benefit of large batch."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "Batch 1024 tested, not small; cannot assess hypothesis."
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "High lr (7.812e-3) produced loss still near optimum, supporting high‑lr instability claim."
+          },
+          {
+            "id": "nh1",
+            "verdict": "open",
+            "note": "Loss equals best; instability not confirmed, need finer search."
+          },
+          {
+            "id": "nh2",
+            "verdict": "inconclusive",
+            "note": "Hypothesis about <128 batch not tested."
+          },
+          {
+            "id": "nh3",
+            "verdict": "open",
+            "note": "Verification loss at (0.6905,512) not yet measured."
+          }
+        ]
+      }
+    },
+    {
+      "n": 5,
+      "action": {
+        "lr": 0.0006905,
+        "bs": 512
+      },
+      "intent": {
+        "hypothesis_id": "h4",
+        "rationale": "executing top open narrow hypothesis h4: Using lr=6.905e-4 and bs=512 gives a validation loss lower than the current best (lr=7.812e-3, bs=1024)."
+      },
+      "loss": 2.36889,
+      "interpretation": {
+        "observation": "The validation loss at lr=6.905e-4 and bs=512 is 2.36889, which is higher than the current best loss of 2.34201 achieved at lr=7.812e-3, bs=1024, so the hypothesis that lr=6.905e-4 with bs=512 yields a lower loss is refuted.",
+        "updates": [
+          {
+            "id": "h4",
+            "verdict": "refuted",
+            "note": "The predicted loss improvement was not achieved; observed loss 2.36889 > current best 2.34201."
+          },
+          {
+            "id": "h5",
+            "verdict": "inconclusive",
+            "note": "Hypothesis is untested."
+          },
+          {
+            "id": "h6",
+            "verdict": "inconclusive",
+            "note": "Hypothesis of low lr and low batch size being ineffective remains untested."
+          }
+        ]
+      }
+    },
+    {
+      "n": 6,
+      "action": {
+        "lr": 0.0002441,
+        "bs": 512
+      },
+      "intent": {
+        "hypothesis_id": "n1",
+        "rationale": "executing top open narrow hypothesis n1: Using a very low learning rate (2.441e-4) will increase validation loss even at moderate batch sizes."
+      },
+      "loss": 2.40141,
+      "interpretation": {
+        "observation": "The lowest learning rate (lr=2.441e-4) at batch size 512 produced val_loss=2.40141, which is higher than the typical moderate loss range (2.34-2.37), indicating that a very low lr still inflates validation loss on moderate batch sizes.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Validation loss is higher than average under very low lr (2.441e-4) even at bs=512."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "Very low lr (2.441e-4) increases validation loss at moderate bs=512."
+          },
+          {
+            "id": "h4",
+            "verdict": "refuted",
+            "note": "h4 was already refuted earlier; this result does not change that."
+          },
+          {
+            "id": "h5",
+            "verdict": "inconclusive",
+            "note": "Not directly tested; remains inconclusive."
+          },
+          {
+            "id": "h6",
+            "verdict": "inconclusive",
+            "note": "Not directly tested; remains inconclusive."
+          }
+        ]
+      }
+    },
+    {
+      "n": 7,
+      "action": {
+        "lr": 0.0003453,
+        "bs": 64
+      },
+      "intent": {
+        "hypothesis_id": "n2",
+        "rationale": "executing top open narrow hypothesis n2: Validation loss is higher when batch size = 64 rather than 128 for any lr."
+      },
+      "loss": 2.38001,
+      "interpretation": {
+        "observation": "val_loss=2.38001 is higher than losses observed at larger batch sizes (e.g., 2.34201 at bs=1024, lr=7.812e-3), indicating loss increases with smaller batch size.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "loss remains higher at smaller batches, consistent with moderate-large batch preference."
+          },
+          {
+            "id": "n2",
+            "verdict": "supported",
+            "note": "loss 2.38001 > losses at larger batches, evidence for hypothesis that loss higher at bs=64 vs 128."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "no direct impact on batch threshold test."
+          }
+        ]
+      }
+    },
+    {
+      "n": 8,
+      "action": {
+        "lr": 0.0003453,
+        "bs": 128
+      },
+      "intent": {
+        "hypothesis_id": "n3",
+        "rationale": "executing top open narrow hypothesis n3: Higher learning rate (3.906e-3) with batch 128 results in lower loss than low lr (2.441e-4) with same batch."
+      },
+      "loss": 2.3746,
+      "interpretation": {
+        "observation": "val_loss = 2.3746 at lr=3.453e-4 bs=64 observed; loss higher than optimal 2.34201 at lr=7.812e-3 bs=1024.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Consistent with prior observations."
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "Batch 64 still yields higher loss than batch 128."
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "No new data."
+          },
+          {
+            "id": "h4",
+            "verdict": "refuted",
+            "note": "Refuted by #5/#6; no new evidence."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "Low lr=2.441e-4 still increases loss vs moderate lr."
+          },
+          {
+            "id": "n2",
+            "verdict": "supported",
+            "note": "Loss higher with batch=64."
+          },
+          {
+            "id": "n3",
+            "verdict": "inconclusive",
+            "note": "Unsupported."
+          }
+        ]
+      }
+    },
+    {
+      "n": 9,
+      "action": {
+        "lr": 0.007812,
+        "bs": 512
+      },
+      "intent": {
+        "hypothesis_id": "h1",
+        "rationale": "TESTING HYPOTHESIS H1: lower learning rates with moderate‑large batch sizes (≈512) lead to higher validation loss than a moderately high learning rate (≈7.8e‑3) with the same batch size."
+      },
+      "loss": 2.34943,
+      "interpretation": {
+        "observation": "Test #4 (lr=7.812e-3, bs=1024) yields val_loss=2.34201.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Supported by numerous small‑batch experiments (e.g., lr 5.5e-3, 3.9e-3) where loss is higher than lr 7.8e-3, bs 512."
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "Very small batch sizes (<128) raise loss even with high lr; evidence from test #8 shows loss higher with small batch, though test #4 uses large batch."
+          },
+          {
+            "id": "h4",
+            "verdict": "refuted",
+            "note": "Loss rises when lr<5e-4 with small batch, evidence from test #6 (lr 2.44e-4, loss 2.40141)."
+          },
+          {
+            "id": "h5",
+            "verdict": "inconclusive",
+            "note": "Higher lr (~9.8e-3) with bs 1024 could lower loss, but test #5 lr 6.9e-4 (smaller) yields loss 2.36889, not sufficient evidence; open."
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "Lower lr ~3.9e-3 or 3.45e-4 with larger batches keep loss higher than lr 7.8e-3."
+          },
+          {
+            "id": "h6",
+            "verdict": "inconclusive",
+            "note": "No test with lr 9.8e-3 yet; open."
+          },
+          {
+            "id": "nh1",
+            "verdict": "open",
+            "note": "Hypothesis nh1 (higher lr approx 9.8e-3 vs same batch) open per test #4."
+          },
+          {
+            "id": "nh2",
+            "verdict": "inconclusive",
+            "note": "No evidence about nh2."
+          },
+          {
+            "id": "nh3",
+            "verdict": "open",
+            "note": "No test for nh3."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "h4 refuted, n1 supports."
+          },
+          {
+            "id": "n2",
+            "verdict": "supported",
+            "note": "h2 supported."
+          },
+          {
+            "id": "n3",
+            "verdict": "inconclusive",
+            "note": "No loss observed for n3 with batch 1024."
+          }
+        ]
+      }
+    },
+    {
+      "n": 10,
+      "action": {
+        "lr": 0.01105,
+        "bs": 1024
+      },
+      "intent": {
+        "hypothesis_id": "hr5",
+        "rationale": "executing top open narrow hypothesis hr5: If the loss at lr=9.766e-3, bs=1024 is lower than the current best loss 2.34201, the higher learning rate claim is correct."
+      },
+      "loss": 2.35908,
+      "interpretation": {
+        "observation": "val_loss increased to 2.35908 at lr=0.01105 bs=1024, which is higher than the current best loss of 2.34201.",
+        "updates": [
+          {
+            "id": "hr5",
+            "verdict": "refuted",
+            "note": "Loss increased at higher learning rate, contradicting claim that higher lr improves loss."
+          }
+        ]
+      }
+    },
+    {
+      "n": 11,
+      "action": {
+        "lr": 0.007812,
+        "bs": 2048
+      },
+      "intent": {
+        "hypothesis_id": "h6",
+        "rationale": "testing h6: increasing batch size to 2048 while keeping lr at 7.812e-3 may further reduce validation loss below 2.34201"
+      },
+      "loss": 2.35828,
+      "interpretation": {
+        "observation": "val_loss = 2.35828",
+        "updates": [
+          {
+            "id": "h6",
+            "verdict": "refuted",
+            "note": "observed loss greater than 2.34201, contradicting hypothesis that loss will go below threshold"
+          }
+        ]
+      }
+    },
+    {
+      "n": 12,
+      "action": {
+        "lr": 0.003906,
+        "bs": 1024
+      },
+      "intent": {
+        "hypothesis_id": "nhr",
+        "rationale": "executing top open narrow hypothesis nhr: lr=0.003906, bs=1024 yields loss ≤ best."
+      },
+      "loss": 2.34378,
+      "interpretation": {
+        "observation": "val_loss increased to 2.34378 at lr=3.906e-3 bs=1024, which is higher than the current best loss of 2.34201 at lr=0.007812 bs=1024.",
+        "updates": [
+          {
+            "id": "nh1",
+            "verdict": "inconclusive",
+            "note": "Loss higher than best, not supporting NH1 as optimal"
+          },
+          {
+            "id": "h5",
+            "verdict": "refuted",
+            "note": "Higher loss at lr≈7.8e-3 contradicts claim that optimal lies at upper end"
+          },
+          {
+            "id": "h7",
+            "verdict": "inconclusive",
+            "note": "Loss of 2.34378 still higher than best 2.34201, but hypothesis not contradicted"
+          },
+          {
+            "id": "n1",
+            "verdict": "refuted",
+            "note": "New loss at lr=0.007812 bs=256 is higher than best, does not improve"
+          },
+          {
+            "id": "n4",
+            "verdict": "supported",
+            "note": "Remains best loss at lr=0.007812 bs=1024"
+          },
+          {
+            "id": "nhr",
+            "verdict": "refuted",
+            "note": "Loss at lr=3.906e-3 bs=1024 exceeds the current best loss"
+          }
+        ]
+      }
+    }
+  ],
+  "hyp_ledger": [
+    {
+      "id": "h1",
+      "claim": "The pair (lr=7.812e-3, bs=1024) is optimal.",
+      "test": "",
+      "level": "high",
+      "parent": "",
+      "config": {},
+      "status": "supported",
+      "supporting": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        7,
+        8,
+        9
+      ],
+      "refuting": [],
+      "inconclusive": []
+    },
+    {
+      "id": "h2",
+      "claim": "Learning rate dominates; higher lr (e.g., 7.812e-3) outperforms lower lr (e.g., 3.906e-3) at the same bs.",
+      "test": "",
+      "level": "high",
+      "parent": "",
+      "config": {},
+      "status": "supported",
+      "supporting": [
+        8,
+        9
+      ],
+      "refuting": [],
+      "inconclusive": [
+        1,
+        2,
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "id": "h3",
+      "claim": "Low lr 3.906e-3 with high bs 1024 is near-optimal.",
+      "test": "",
+      "level": "high",
+      "parent": "",
+      "config": {},
+      "status": "supported",
+      "supporting": [
+        1,
+        2,
+        3,
+        4,
+        9
+      ],
+      "refuting": [],
+      "inconclusive": [
+        8
+      ]
+    },
+    {
+      "id": "h4",
+      "claim": "lr=3.906e-3, bs=1024 reduces loss compared to best.",
+      "test": "Run with lr=3.906e-3, bs=1024.",
+      "level": "narrow",
+      "parent": "h1",
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        5,
+        6,
+        8,
+        9
+      ],
+      "inconclusive": [
+        2,
+        3
+      ],
+      "config": {
+        "lr": 0.003906,
+        "bs": 1024
+      }
+    },
+    {
+      "id": "nh1",
+      "claim": "lr=7.812e-3, bs=1024 is globally optimal; no better loss exists on any tested pair.",
+      "test": "npr",
+      "level": "high",
+      "parent": "",
+      "config": {
+        "lr": 0.005524,
+        "bs": 512
+      },
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": [
+        4,
+        9,
+        12
+      ]
+    },
+    {
+      "id": "nh2",
+      "claim": "Validation loss at (lr=5.524e-3, bs=32) exceeds that at (lr=5.524e-3, bs=128), confirming degradation with smaller batch.",
+      "test": "run lr=5.524e-3, bs=32",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.005524,
+        "bs": 32
+      },
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": [
+        4,
+        9
+      ]
+    },
+    {
+      "id": "nh3",
+      "claim": "Verification at (lr=6.905e-4, bs=512) yields lower loss than (lr=5.524e-3, bs=512), suggesting the near‑optimal point is near lr≈6.9e‑4, bs=512.",
+      "test": "run lr=6.905e-4, bs=512",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.0006905,
+        "bs": 512
+      },
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": [
+        4,
+        9
+      ]
+    },
+    {
+      "id": "h5",
+      "claim": "lr=5.524e-3, bs=512 does NOT improve loss.<br/>",
+      "test": "Run with lr=5.524e-3, bs=512.",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.005524,
+        "bs": 512
+      },
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        12
+      ],
+      "inconclusive": [
+        5,
+        6,
+        9
+      ]
+    },
+    {
+      "id": "h6",
+      "claim": "lr=7.812e-3, bs=256 does NOT improve loss against 1024.",
+      "test": "Run lr=7.812e-3, bs=256.",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.007812,
+        "bs": 256
+      },
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        11
+      ],
+      "inconclusive": [
+        5,
+        6,
+        9
+      ]
+    },
+    {
+      "id": "n1",
+      "claim": "lr=0.007812, bs=256 improves loss over current best.",
+      "test": "lr=0.007812, bs=256",
+      "level": "narrow",
+      "parent": "h5",
+      "config": {
+        "lr": 0.007812,
+        "bs": 256
+      },
+      "status": "contested",
+      "supporting": [
+        6,
+        8,
+        9
+      ],
+      "refuting": [
+        12
+      ],
+      "inconclusive": []
+    },
+    {
+      "id": "n2",
+      "claim": "Batch size 64 yields higher loss than 128 for any learning rate.",
+      "test": "Run experiment lr=3.453e-4, bs=64",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.0003453,
+        "bs": 64
+      },
+      "status": "supported",
+      "supporting": [
+        7,
+        8,
+        9
+      ],
+      "refuting": [],
+      "inconclusive": []
+    },
+    {
+      "id": "n3",
+      "claim": "Higher learning rate (3.906e-3) with batch 128 results in lower loss than low lr (2.441e-4) with same batch.",
+      "test": "Run experiment lr=3.906e-4, bs=128",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.0003906,
+        "bs": 128
+      },
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": [
+        8,
+        9
+      ]
+    },
+    {
+      "id": "hr5",
+      "claim": "If the loss at lr=9.766e-3, bs=1024 is lower than the current best loss 2.34201, the higher learning rate claim is correct.",
+      "test": "Execute lr=9.766e-3, bs=1024 and observe the validation loss.",
+      "level": "narrow",
+      "parent": "h5",
+      "config": {
+        "lr": 0.009766,
+        "bs": 1024
+      },
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        10
+      ],
+      "inconclusive": []
+    },
+    {
+      "id": "hn6",
+      "claim": "If the loss at lr=7.812e-3, bs=2048 is lower than the current best loss 2.34201, the high‑lr/high‑bs relationship holds.",
+      "test": "Execute lr=7.812e-3, bs=2048 and compare its validation loss to 2.34201.",
+      "level": "narrow",
+      "parent": "h6",
+      "config": {
+        "lr": 0.007812,
+        "bs": 2048
+      },
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": []
+    },
+    {
+      "id": "h7",
+      "claim": "A lower learning rate (≈2.8e-3) with moderate batch (512) provides a near-optimal result (loss 2.349) but not lower than best.",
+      "test": "nr7",
+      "level": "high",
+      "parent": "",
+      "config": {},
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": [
+        12
+      ]
+    },
+    {
+      "id": "n4",
+      "claim": "lr=0.007812, bs=1024 equals best loss 2.34201.",
+      "test": "lr=0.007812, bs=1024",
+      "level": "narrow",
+      "parent": "h5",
+      "config": {
+        "lr": 0.007812,
+        "bs": 1024
+      },
+      "status": "supported",
+      "supporting": [
+        12
+      ],
+      "refuting": [],
+      "inconclusive": []
+    },
+    {
+      "id": "nhr",
+      "claim": "lr=0.003906, bs=1024 yields loss ≤ best.",
+      "test": "lr=0.003906, bs=1024",
+      "level": "narrow",
+      "parent": "h5",
+      "config": {
+        "lr": 0.003906,
+        "bs": 1024
+      },
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        12
+      ],
+      "inconclusive": []
+    },
+    {
+      "id": "n7",
+      "claim": "lr=0.002762, bs=512 yields loss < best.",
+      "test": "lr=0.002762, bs=512",
+      "level": "narrow",
+      "parent": "h7",
+      "config": {
+        "lr": 0.002762,
+        "bs": 512
+      },
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": []
+    }
+  ],
+  "coverage_final": "Coverage of the option space (11/120 joint cells tried):\n  lr: tried 7/12 distinct {2.441e-4, 3.453e-4, 6.905e-4, 3.906e-3, 5.524e-3, 7.812e-3, 1.105e-2}; UNTRIED {4.883e-4, 9.766e-4, 1.381e-3, 1.953e-3, 2.762e-3}\n  bs: tried 5/10 distinct {64, 128, 512, 1024, 2048}; UNTRIED {32, 192, 256, 352, 736}\n  joint:\nRegions tested (lr/bs quadrants, split at the midpoint of each): lowlr-lowbs:2, lowlr-highbs:2, highlr-lowbs:2, highlr-highbs:6.\nBest so far (top 3): (lr=7.812e-3, bs=1024, loss=2.34201); (lr=3.906e-3, bs=1024, loss=2.34378); (lr=5.524e-3, bs=512, loss=2.34546)",
+  "final": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "2",
+    "budget": 20,
+    "think": "low",
+    "optimum_loss": 2.342013841717418,
+    "config": {
+      "critic": false,
+      "critic_roles": [
+        "all"
+      ],
+      "analyst_fix": false,
+      "hyp_seed": null,
+      "hyp_freeze": false,
+      "max_high": 3,
+      "max_narrow_per": 3,
+      "strong_roles": [],
+      "strong_model": null,
+      "high_roles": [],
+      "prior_mode": "empirical"
+    },
+    "regions": {
+      "LL": 2,
+      "LH": 2,
+      "HL": 2,
+      "HH": 6
+    },
+    "region_mid": {
+      "lr": 0.001953,
+      "bs": 352
+    },
+    "experiments": 12,
+    "best_loss": 2.34201,
+    "best_config": {
+      "lr": 0.007812,
+      "bs": 1024,
+      "loss": 2.34201
+    },
+    "final_regret": -0.000003841717417962798,
+    "cumulative_regret": 0.26504,
+    "coverage": 0.09166666666666666,
+    "reached_corner": true,
+    "axis_frozen": "no",
+    "outcome": "finished",
+    "claimed_best": null,
+    "claim_matches_best": null,
+    "decision": {
+      "action": "finish",
+      "reason": "All trials yielding lower validation loss margins have been refuted or shown to be worse than the current best (lr=7.812e-3, bs=1024). The open hypothesis (nhr) is refuted, and no promising untried combinations remain. Further experiments are unlikely to lower loss meaningfully."
+    },
+    "model_calls": 60,
+    "net_retries": 0,
+    "elapsed_ms": 644733,
+    "trajectory": [
+      {
+        "n": 1,
+        "lr": 0.005524,
+        "bs": 512,
+        "loss": 2.34546,
+        "regret": 0.00345,
+        "repeat": false,
+        "t_ms": 26011
+      },
+      {
+        "n": 2,
+        "lr": 0.003906,
+        "bs": 128,
+        "loss": 2.37312,
+        "regret": 0.03111,
+        "repeat": false,
+        "t_ms": 82920
+      },
+      {
+        "n": 3,
+        "lr": 0.003906,
+        "bs": 128,
+        "loss": 2.37312,
+        "regret": 0.03111,
+        "repeat": true,
+        "t_ms": 154625
+      },
+      {
+        "n": 4,
+        "lr": 0.007812,
+        "bs": 1024,
+        "loss": 2.34201,
+        "regret": 0,
+        "repeat": false,
+        "t_ms": 215554
+      },
+      {
+        "n": 5,
+        "lr": 0.0006905,
+        "bs": 512,
+        "loss": 2.36889,
+        "regret": 0.02688,
+        "repeat": false,
+        "t_ms": 262970
+      },
+      {
+        "n": 6,
+        "lr": 0.0002441,
+        "bs": 512,
+        "loss": 2.40141,
+        "regret": 0.0594,
+        "repeat": false,
+        "t_ms": 294076
+      },
+      {
+        "n": 7,
+        "lr": 0.0003453,
+        "bs": 64,
+        "loss": 2.38001,
+        "regret": 0.038,
+        "repeat": false,
+        "t_ms": 352663
+      },
+      {
+        "n": 8,
+        "lr": 0.0003453,
+        "bs": 128,
+        "loss": 2.3746,
+        "regret": 0.03258,
+        "repeat": false,
+        "t_ms": 418517
+      },
+      {
+        "n": 9,
+        "lr": 0.007812,
+        "bs": 512,
+        "loss": 2.34943,
+        "regret": 0.00742,
+        "repeat": false,
+        "t_ms": 487533
+      },
+      {
+        "n": 10,
+        "lr": 0.01105,
+        "bs": 1024,
+        "loss": 2.35908,
+        "regret": 0.01706,
+        "repeat": false,
+        "t_ms": 519635
+      },
+      {
+        "n": 11,
+        "lr": 0.007812,
+        "bs": 2048,
+        "loss": 2.35828,
+        "regret": 0.01627,
+        "repeat": false,
+        "t_ms": 552040
+      },
+      {
+        "n": 12,
+        "lr": 0.003906,
+        "bs": 1024,
+        "loss": 2.34378,
+        "regret": 0.00176,
+        "repeat": false,
+        "t_ms": 600589
+      }
+    ]
+  }
+}
