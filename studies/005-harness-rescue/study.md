@@ -7,6 +7,7 @@ children:
   - studies/005-harness-rescue/investigations/001-steplaw-substrate
   - studies/005-harness-rescue/investigations/002-rich-harness
   - studies/005-harness-rescue/investigations/003-process-judges
+  - studies/005-harness-rescue/investigations/004-alternative-models
 related:
   - studies/003-automated-w2s-replication
   - studies/004-researcher-diagnostics
