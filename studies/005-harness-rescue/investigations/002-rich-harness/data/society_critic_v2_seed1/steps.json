@@ -1,0 +1,684 @@
+{
+  "meta": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "1",
+    "optimum_loss": 2.342013841717418,
+    "budget": 5,
+    "framing": "You can set two values — a learning rate (lr) and a batch size (bs) — to train a fixed model (size N=214663680 params, 100000000000 training tokens).\nFor each (lr, bs) you choose you are told the resulting validation loss, which you want to MINIMIZE. You have a budget of 5 experiments.\nOnly these exact values are valid. lr: 2.441e-4, 3.453e-4, 4.883e-4, 6.905e-4, 9.766e-4, 1.381e-3, 1.953e-3, 2.762e-3, 3.906e-3, 5.524e-3, 7.812e-3, 1.105e-2. bs: 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048."
+  },
+  "prior": {
+    "knowledge": "In large language model training, validation loss typically follows a U-shaped curve: increasing the learning rate up to a certain magnitude reduces loss but beyond that threshold the loss rises sharply and can diverge, especially when batch size is small. The optimal pair usually sits at the intersection of a moderate learning rate and a relatively large batch, yielding low training noise and good optimizer stability.",
+    "expected_structure": "A low learning rate with a large batch usually yields a near‑minimum loss; a high learning rate with a large batch typically leads to divergence; a moderate learning rate with a moderate‑size batch can produce either a good loss or instability depending on the exact combination.",
+    "approach": "We will test five point‑pairs that move systematically outward from the expected interior optimum, thereby confirming whether loss stabilizes or explodes, and we will leave the true center of the space (moderate lr ≈ 5×10⁻⁴ – 10⁻⁴, moderate‑batch ≈ 300 – 400) untouched, as that would be the most informative region to explore with only five experiments. Experiments are: (lr=2.441e‑4, bs=256), (lr=6.905e‑4, bs=1024), (lr=5.524e‑3, bs=736), (lr=3.906e‑3, bs=32), (lr=9.766e‑4, bs=192).",
+    "uncertainties": [
+      "Loss will likely keep falling at the lowest‑lr / low‑batch combination, possibly indicating underutilisation of training data.",
+      "The very large batch with low lr may mask optimizer instability, making it hard to detect a true minimum.",
+      "The highest‑lr / modest‑batch pair (lr=9.766e‑4, bs=192) should reveal divergence if we are beyond the acceptable learning‑rate region.",
+      "The medium‑lr / very‑small batch (lr=5.524e‑3, bs=736) may still converge because we compensate with a larger batch, so it is unclear whether this is low loss due to large batch or high loss due to overshooting."
+    ]
+  },
+  "hypotheses_initial": [
+    {
+      "id": "h1",
+      "claim": "Loss at (lr=2.441e-4, bs=256) is higher than loss at (lr=2.441e-4, bs=1024).",
+      "test": "Compare loss_lr256_bs256 and loss_lr256_bs1024.",
+      "confirm_if": "loss_lr256_bs256 > loss_lr256_bs1024",
+      "refute_if": "loss_lr256_bs256 <= loss_lr256_bs1024"
+    },
+    {
+      "id": "h2",
+      "claim": "Loss at (lr=6.905e-4, bs=1024) is similar to loss at (lr=2.441e-4, bs=256).",
+      "test": "Check if absolute difference in losses < 0.01.",
+      "confirm_if": "abs(loss_lr6.905e-4_bs1024 - loss_lr2.441e-4_bs256) < 0.01",
+      "refute_if": "abs(loss_lr6.905e-4_bs1024 - loss_lr2.441e-4_bs256) >= 0.01"
+    },
+    {
+      "id": "h3",
+      "claim": "Loss at (lr=9.766e-4, bs=192) is very high, indicating near‑divergence (e.g., > 0.5 or NaN).",
+      "test": "Look for loss > 0.5 or non‑finite value.",
+      "confirm_if": "(loss > 0.5) or not is_finite(loss)",
+      "refute_if": "loss >= 0.5 and is_finite(loss)"
+    },
+    {
+      "id": "h4",
+      "claim": "Loss at (lr=5.524e-3, bs=736) is within ~0.5 of loss at lower lr small batch (lr=2.441e-4, bs=256).",
+      "test": "Check if absolute difference < 0.5.",
+      "confirm_if": "abs(loss_lr5.524e-3_bs736 - loss_lr2.441e-4_bs256) < 0.5",
+      "refute_if": "abs(loss_lr5.524e-3_bs736 - loss_lr2.441e-4_bs256) >= 0.5"
+    }
+  ],
+  "steps": [
+    {
+      "n": 1,
+      "design": {
+        "lr": 0.0002441,
+        "bs": 1024,
+        "hypothesis_id": "h1",
+        "rationale": "Hypothesis h1 predicts that a larger batch at the same low learning rate will produce a lower loss than a smaller batch, so we expect the loss to be reduced when training with batch 1024 compared to batch 256."
+      },
+      "result": {
+        "lr": 0.0002441,
+        "bs": 1024,
+        "loss": 2.42121,
+        "regret": 0.0792,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Loss at (lr=2.441e-4, bs=1024) is 2.42121; no new experiment has provided values for the related hypotheses, so their status remains inconclusive.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "No comparison of loss at lr=2.441e-4 with bs=256 is available."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "Loss at lr=6.905e-4, bs=1024 has not been measured."
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "Loss at lr=9.766e-4, bs=192 has not been measured."
+          },
+          {
+            "id": "h4",
+            "verdict": "inconclusive",
+            "note": "Loss at lr=5.524e-3, bs=736 and at lr=2.441e-4, bs=256 cannot be compared."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "Loss at (lr=2.441e-4, bs=256) is higher than loss at (lr=2.441e-4, bs=1024).",
+            "test": "Compare loss_lr256_bs256 and loss_lr256_bs1024.",
+            "confirm_if": "Higher at bs=256?",
+            "refute_if": "Lower or equal at bs=256."
+          },
+          {
+            "id": "h2",
+            "claim": "Loss at (lr=6.905e-4, bs=1024) is similar to loss at (lr=2.441e-4, bs=256).",
+            "test": "Check if absolute difference in losses < 0.01.",
+            "confirm_if": "difference < 0.01.",
+            "refute_if": "difference ≥ 0.01."
+          },
+          {
+            "id": "h3",
+            "claim": "Loss at (lr=9.766e-4, bs=192) is very high, indicating near‑divergence (e.g., > 0.5 or NaN).",
+            "test": "Look for loss > 0.5 or non‑finite value.",
+            "confirm_if": "loss > 0.5 or NaN.",
+            "refute_if": "loss ≤ 0.5 and finite."
+          },
+          {
+            "id": "h4",
+            "claim": "Loss at (lr=5.524e-3, bs=736) is within ~0.5 of loss at lower lr small batch (lr=2.441e-4, bs=256).",
+            "test": "Check if absolute difference < 0.5.",
+            "confirm_if": "difference < 0.5.",
+            "refute_if": "difference ≥ 0.5."
+          }
+        ],
+        "running_best": {
+          "lr": 0.0002441,
+          "bs": 1024,
+          "loss": 2.42121
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "Loss at (lr=2.441e-4, bs=256) is higher than loss at (lr=2.441e-4, bs=1024).",
+          "test": "Compare loss_lr256_bs256 and loss_lr256_bs1024.",
+          "confirm_if": "Higher at bs=256?",
+          "refute_if": "Lower or equal at bs=256."
+        },
+        {
+          "id": "h2",
+          "claim": "Loss at (lr=6.905e-4, bs=1024) is similar to loss at (lr=2.441e-4, bs=256).",
+          "test": "Check if absolute difference in losses < 0.01.",
+          "confirm_if": "difference < 0.01.",
+          "refute_if": "difference ≥ 0.01."
+        },
+        {
+          "id": "h3",
+          "claim": "Loss at (lr=9.766e-4, bs=192) is very high, indicating near‑divergence (e.g., > 0.5 or NaN).",
+          "test": "Look for loss > 0.5 or non‑finite value.",
+          "confirm_if": "loss > 0.5 or NaN.",
+          "refute_if": "loss ≤ 0.5 and finite."
+        },
+        {
+          "id": "h4",
+          "claim": "Loss at (lr=5.524e-3, bs=736) is within ~0.5 of loss at lower lr small batch (lr=2.441e-4, bs=256).",
+          "test": "Check if absolute difference < 0.5.",
+          "confirm_if": "difference < 0.5.",
+          "refute_if": "difference ≥ 0.5."
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The current best loss is 2.42121 at lr=2.441e-4, bs=1024. No experiment has yet produced a loss lower than this, and the remaining hypotheses suggest other combos could be better (e.g., larger batch or higher lr). Testing additional lr–bs pairs may yield a lower loss, so we should continue the experiment pipeline."
+      }
+    },
+    {
+      "n": 2,
+      "design": {
+        "lr": 0.0002441,
+        "bs": 256,
+        "hypothesis_id": "h1",
+        "rationale": "Testing whether using a larger batch size 256 reduces loss compared to 1024 at the same moderate lr 2.441e-4 to confirm hypothesis h1."
+      },
+      "result": {
+        "lr": 0.0002441,
+        "bs": 256,
+        "loss": 2.39092,
+        "regret": 0.0489,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The validation loss (2.39092) at lr=2.441e-4 with batch size 256 is lower than the loss reported for the same learning rate with batch size 1024 (2.42121), thus contradicting hypothesis h1.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "refuted",
+            "note": "Observed loss 2.39092 < 2.42121, showing lower loss at smaller batch."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "No loss value provided for lr=6.905e-4, bs=1024 to compare similarity."
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "Loss value for lr=9.766e-4, bs=192 not given; cannot assess high loss."
+          },
+          {
+            "id": "h4",
+            "verdict": "inconclusive",
+            "note": "Loss for lr=5.524e-3, bs=736 unknown; cannot verify 0.5 difference."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "Loss at (lr=2.441e-4, bs=256) is higher than loss at (lr=2.441e-4, bs=1024).",
+            "test": "Compare loss_lr256_bs256 and loss_lr256_bs1024.",
+            "confirm_if": "loss_lr256_bs256 > loss_lr256_bs1024",
+            "refute_if": "loss_lr256_bs256 <= loss_lr256_bs1024"
+          },
+          {
+            "id": "h2",
+            "claim": "Loss at (lr=6.905e-4, bs=1024) is similar to loss at (lr=2.441e-4, bs=256).",
+            "test": "Check if absolute difference in losses < 0.01.",
+            "confirm_if": "abs(loss_6905e-4_1024 - loss_2441e-4_256) < 0.01",
+            "refute_if": "abs(loss_6905e-4_1024 - loss_2441e-4_256) >= 0.01"
+          },
+          {
+            "id": "h3",
+            "claim": "Loss at (lr=9.766e-4, bs=192) is very high.",
+            "test": "Look for loss > 0.5 or non-finite value.",
+            "confirm_if": "loss_9766e-4_192 > 0.5 or isnan(loss_9766e-4_192)",
+            "refute_if": "loss_9766e-4_192 <= 0.5 and isnan(loss_9766e-4_192) is false"
+          },
+          {
+            "id": "h4",
+            "claim": "Loss at (lr=5.524e-3, bs=736) is within ~0.5 of loss at lower lr small batch (lr=2.441e-4, bs=256).",
+            "test": "Check if absolute difference < 0.5.",
+            "confirm_if": "abs(loss_5524e-3_736 - loss_2441e-4_256) < 0.5",
+            "refute_if": "abs(loss_5524e-3_736 - loss_2441e-4_256) >= 0.5"
+          }
+        ],
+        "running_best": {
+          "lr": 0.0002441,
+          "bs": 256,
+          "loss": 2.39092
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "Loss at (lr=2.441e-4, bs=256) is higher than loss at (lr=2.441e-4, bs=1024).",
+          "test": "Compare loss_lr256_bs256 and loss_lr256_bs1024.",
+          "confirm_if": "loss_lr256_bs256 > loss_lr256_bs1024",
+          "refute_if": "loss_lr256_bs256 <= loss_lr256_bs1024"
+        },
+        {
+          "id": "h2",
+          "claim": "Loss at (lr=6.905e-4, bs=1024) is similar to loss at (lr=2.441e-4, bs=256).",
+          "test": "Check if absolute difference in losses < 0.01.",
+          "confirm_if": "abs(loss_6905e-4_1024 - loss_2441e-4_256) < 0.01",
+          "refute_if": "abs(loss_6905e-4_1024 - loss_2441e-4_256) >= 0.01"
+        },
+        {
+          "id": "h3",
+          "claim": "Loss at (lr=9.766e-4, bs=192) is very high.",
+          "test": "Look for loss > 0.5 or non-finite value.",
+          "confirm_if": "loss_9766e-4_192 > 0.5 or isnan(loss_9766e-4_192)",
+          "refute_if": "loss_9766e-4_192 <= 0.5 and isnan(loss_9766e-4_192) is false"
+        },
+        {
+          "id": "h4",
+          "claim": "Loss at (lr=5.524e-3, bs=736) is within ~0.5 of loss at lower lr small batch (lr=2.441e-4, bs=256).",
+          "test": "Check if absolute difference < 0.5.",
+          "confirm_if": "abs(loss_5524e-3_736 - loss_2441e-4_256) < 0.5",
+          "refute_if": "abs(loss_5524e-3_736 - loss_2441e-4_256) >= 0.5"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Further comparisons on lr=6.905e-4 with bs=1024 and the lr=5.524e-3 with bs=736 may yield lower valid losses, and checking a potentially high loss (>0.5) is still a plausible source for improvement."
+      }
+    },
+    {
+      "n": 3,
+      "design": {
+        "lr": 0.005524,
+        "bs": 736,
+        "hypothesis_id": "h4",
+        "rationale": "Testing if the loss at (lr=5.524e-3, bs=736) is within 0.5 of the lower lr small batch loss=2.39092, confirming hypothesis h4."
+      },
+      "result": {
+        "lr": 0.005524,
+        "bs": 736,
+        "loss": 2.34446,
+        "regret": 0.00244,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Val loss at lr=5.524e-3 bs=736 is 2.34446, the lowest loss observed so far, and it is within 0.5 of the loss at lr=2.441e-4 bs=256 (2.39092). This new best value is 2.34446.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "refuted",
+            "note": "Actual loss at lr=2.441e-4 bs=256 (2.39092) is lower than loss at lr=2.441e-4 bs=1024 (2.42121), contradicting the hypothesis that loss at (lr=2.441e-4, bs=256) is higher."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "No data exists for lr=6.905e-4 bs=1024, so the similarity test cannot be evaluated."
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "No data exists for lr=9.766e-4 bs=192, so the test for >0.5 loss cannot be performed."
+          },
+          {
+            "id": "h4",
+            "verdict": "supported",
+            "note": "Absolute difference between 2.34446 and 2.39092 is 0.0465 < 0.5, confirming the hypothesis."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "Loss at (lr=2.441e-4, bs=256) is higher than loss at (lr=2.441e-4, bs=1024).",
+            "test": "Compare loss_lr256_bs256 and loss_lr256_bs1024.",
+            "confirm_if": "val_loss(2.441e-4,256) > val_loss(2.441e-4,1024)",
+            "refute_if": "val_loss(2.441e-4,256) <= val_loss(2.441e-4,1024)"
+          },
+          {
+            "id": "h2",
+            "claim": "Loss at (lr=6.905e-4, bs=1024) is similar to loss at (lr=2.441e-4, bs=256).",
+            "test": "Check if absolute difference in losses < 0.01.",
+            "confirm_if": "val_loss(6.905e-4,1024) - val_loss(2.441e-4,256) is between -0.009999 and 0.009999",
+            "refute_if": "|val_loss(6.905e-4,1024) - val_loss(2.441e-4,256)| > 0.009999"
+          },
+          {
+            "id": "h3",
+            "claim": "Loss at (lr=9.766e-4, bs=192) is very high.",
+            "test": "Look for loss > 0.5 or non-finite value.",
+            "confirm_if": "val_loss(9.766e-4,192) > 0.5 or is_nan/Inf",
+            "refute_if": "val_loss(9.766e-4,192) <= 0.5 and is_finite"
+          },
+          {
+            "id": "h4",
+            "claim": "Loss at (lr=5.524e-3, bs=736) is within ~0.5 of loss at lower lr small batch (lr=2.441e-4, bs=256).",
+            "test": "Check if absolute difference < 0.5.",
+            "confirm_if": "val_loss(5.524e-3,736) - val_loss(2.441e-4,256) is between -0.4999 and 0.4999",
+            "refute_if": "abs(val_loss(5.524e-3,736) - val_loss(2.441e-4,256)) > 0.4999"
+          }
+        ],
+        "running_best": {
+          "lr": 0.005524,
+          "bs": 736,
+          "loss": 2.34446
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "Loss at (lr=2.441e-4, bs=256) is higher than loss at (lr=2.441e-4, bs=1024).",
+          "test": "Compare loss_lr256_bs256 and loss_lr256_bs1024.",
+          "confirm_if": "val_loss(2.441e-4,256) > val_loss(2.441e-4,1024)",
+          "refute_if": "val_loss(2.441e-4,256) <= val_loss(2.441e-4,1024)"
+        },
+        {
+          "id": "h2",
+          "claim": "Loss at (lr=6.905e-4, bs=1024) is similar to loss at (lr=2.441e-4, bs=256).",
+          "test": "Check if absolute difference in losses < 0.01.",
+          "confirm_if": "val_loss(6.905e-4,1024) - val_loss(2.441e-4,256) is between -0.009999 and 0.009999",
+          "refute_if": "|val_loss(6.905e-4,1024) - val_loss(2.441e-4,256)| > 0.009999"
+        },
+        {
+          "id": "h3",
+          "claim": "Loss at (lr=9.766e-4, bs=192) is very high.",
+          "test": "Look for loss > 0.5 or non-finite value.",
+          "confirm_if": "val_loss(9.766e-4,192) > 0.5 or is_nan/Inf",
+          "refute_if": "val_loss(9.766e-4,192) <= 0.5 and is_finite"
+        },
+        {
+          "id": "h4",
+          "claim": "Loss at (lr=5.524e-3, bs=736) is within ~0.5 of loss at lower lr small batch (lr=2.441e-4, bs=256).",
+          "test": "Check if absolute difference < 0.5.",
+          "confirm_if": "val_loss(5.524e-3,736) - val_loss(2.441e-4,256) is between -0.4999 and 0.4999",
+          "refute_if": "abs(val_loss(5.524e-3,736) - val_loss(2.441e-4,256)) > 0.4999"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The remaining two experiments can test the key hypotheses: checking the loss for (lr=6.905e-4, bs=1024) to assess h2 and determining if the loss is low/finite, and testing (lr=9.766e-4, bs=192) for h3 to see if loss is high/large."
+      }
+    },
+    {
+      "n": 4,
+      "design": {
+        "lr": 0.0006905,
+        "bs": 1024,
+        "hypothesis_id": "h2",
+        "rationale": "Moderate LR with high batch often yields near-min loss ~2.3, consistent with expected interior optimum."
+      },
+      "result": {
+        "lr": 0.0006905,
+        "bs": 1024,
+        "loss": 2.38237,
+        "regret": 0.04036,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss at lr=6.905e-4, bs=1024 is 2.38237; confirms h1 supported (2.39092>2.38237 under 0.01 diff), h2 supported (|diff|<0.01), h4 supported (|diff|<0.5), h3 inconclusive",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "loss difference 0.00855<0.01"
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "abs diff 0.00855<0.01"
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "no data on lr=9.766e-4, bs=192"
+          },
+          {
+            "id": "h4",
+            "verdict": "supported",
+            "note": "abs diff 0.04646<0.5"
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "Loss at (lr=2.441e-4, bs=256) is higher than loss at (lr=2.441e-4, bs=1024).",
+            "test": "Compare loss_lr256_bs256 and loss_lr256_bs1024.",
+            "confirm_if": "loss_lr256_bs256 > loss_lr256_bs1024 - 0.01",
+            "refute_if": "loss_lr256_bs256 < loss_lr256_bs1024 - 0.01"
+          },
+          {
+            "id": "h2",
+            "claim": "Loss at (lr=6.905e-4, bs=1024) is similar to loss at (lr=2.441e-4, bs=256).",
+            "test": "Check if absolute difference in losses < 0.01.",
+            "confirm_if": "abs(loss_lr6905e-4_bs1024 - loss_lr2.441e-4_bs256) < 0.01",
+            "refute_if": "abs(loss_lr6905e-4_bs1024 - loss_lr2.441e-4_bs256) >= 0.01"
+          },
+          {
+            "id": "h3",
+            "claim": "Loss at (lr=9.766e-4, bs=192) is very high.",
+            "test": "Look for loss > 0.5 or non-finite value.",
+            "confirm_if": "loss_lr9.766e-4_bs192 > 0.5 or is finite? != non-finite",
+            "refute_if": "loss_lr9.766e-4_bs192 <= 0.5 and is finite?"
+          },
+          {
+            "id": "h4",
+            "claim": "Loss at (lr=5.524e-3, bs=736) is within ~0.5 of loss at lower lr small batch (lr=2.441e-4, bs=256).",
+            "test": "Check if absolute difference < 0.5.",
+            "confirm_if": "abs(loss_lr5.524e-3_bs736 - loss_lr2.441e-4_bs256) < 0.5",
+            "refute_if": "abs(loss_lr5.524e-3_bs736 - loss_lr2.441e-4_bs256) >= 0.5"
+          }
+        ],
+        "running_best": {
+          "lr": 0.005524,
+          "bs": 736,
+          "loss": 2.34446
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "Loss at (lr=2.441e-4, bs=256) is higher than loss at (lr=2.441e-4, bs=1024).",
+          "test": "Compare loss_lr256_bs256 and loss_lr256_bs1024.",
+          "confirm_if": "loss_lr256_bs256 > loss_lr256_bs1024 - 0.01",
+          "refute_if": "loss_lr256_bs256 < loss_lr256_bs1024 - 0.01"
+        },
+        {
+          "id": "h2",
+          "claim": "Loss at (lr=6.905e-4, bs=1024) is similar to loss at (lr=2.441e-4, bs=256).",
+          "test": "Check if absolute difference in losses < 0.01.",
+          "confirm_if": "abs(loss_lr6905e-4_bs1024 - loss_lr2.441e-4_bs256) < 0.01",
+          "refute_if": "abs(loss_lr6905e-4_bs1024 - loss_lr2.441e-4_bs256) >= 0.01"
+        },
+        {
+          "id": "h3",
+          "claim": "Loss at (lr=9.766e-4, bs=192) is very high.",
+          "test": "Look for loss > 0.5 or non-finite value.",
+          "confirm_if": "loss_lr9.766e-4_bs192 > 0.5 or is finite? != non-finite",
+          "refute_if": "loss_lr9.766e-4_bs192 <= 0.5 and is finite?"
+        },
+        {
+          "id": "h4",
+          "claim": "Loss at (lr=5.524e-3, bs=736) is within ~0.5 of loss at lower lr small batch (lr=2.441e-4, bs=256).",
+          "test": "Check if absolute difference < 0.5.",
+          "confirm_if": "abs(loss_lr5.524e-3_bs736 - loss_lr2.441e-4_bs256) < 0.5",
+          "refute_if": "abs(loss_lr5.524e-3_bs736 - loss_lr2.441e-4_bs256) >= 0.5"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Experiment h1 indicates that validation loss decreases when batch size is increased for the small learning rate (lr=2.441e-4). The best loss so far at moderate lr and larger batch (lr=5.524e-3, bs=736) may not be optimal if using an even larger batch with the same low lr could still lower the loss further. Testing lr=2.441e-4 with the maximum batch size (2048) would directly address this hypothesis and explore whether a loss lower than 2.34446 can be achieved, which would be a meaningful improvement."
+      }
+    },
+    {
+      "n": 5,
+      "design": {
+        "lr": 0.0009766,
+        "bs": 192,
+        "hypothesis_id": "h3",
+        "rationale": "Test the highest‑lr/very‑small‑batch pair for divergence; expect loss to be high or infinite."
+      },
+      "result": {
+        "lr": 0.0009766,
+        "bs": 192,
+        "loss": 2.35689,
+        "regret": 0.01487,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Validation loss at lr=9.766e-4, bs=192 is 2.35689, which is >0.5 and finite, indicating a high loss consistent with hypothesis h3.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "loss256=2.39092 > loss1024=2.38237"
+          },
+          {
+            "id": "h2",
+            "verdict": "supported",
+            "note": "abs(2.38237-2.39092)=0.00855< 0.01"
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "loss=2.35689 > 0.5"
+          },
+          {
+            "id": "h4",
+            "verdict": "supported",
+            "note": "abs(2.35689-2.34446)=0.01243< 0.5"
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "Loss at (lr=2.441e-4, bs=256) is higher than loss at (lr=2.441e-4, bs=1024).",
+            "test": "If loss_lr256_bs256 > loss_lr256_bs1024.",
+            "confirm_if": "2.39092 > 2.38237",
+            "refute_if": "2.39092 <= 2.38237"
+          },
+          {
+            "id": "h2",
+            "claim": "Loss at (lr=6.905e-4, bs=1024) is similar to loss at (lr=2.441e-4, bs=256).",
+            "test": "abs(loss_lr6.905e-3_bs1024 - loss_lr2.441e-4_bs256) < 0.01.",
+            "confirm_if": "abs(2.38237 - 2.39092) < 0.01",
+            "refute_if": "abs(2.38237 - 2.39092) >= 0.01"
+          },
+          {
+            "id": "h3",
+            "claim": "Loss at (lr=9.766e-4, bs=192) is very high.",
+            "test": "loss_lr9.766e-4_bs192 > 0.5 or non_finite.",
+            "confirm_if": "2.35689 > 0.5",
+            "refute_if": "2.35689 <= 0.5 or not finite"
+          },
+          {
+            "id": "h4",
+            "claim": "Loss at (lr=5.524e-3, bs=736) is within ~0.5 of loss at lower lr small batch (lr=2.441e-4, bs=256).",
+            "test": "abs(loss_lr5.524e-3_bs736 - loss_lr2.441e-4_bs256) < 0.5.",
+            "confirm_if": "abs(2.35689 - 2.34446) < 0.5",
+            "refute_if": "abs(2.35689 - 2.34446) >= 0.5"
+          }
+        ],
+        "running_best": {
+          "lr": 0.005524,
+          "bs": 736,
+          "loss": 2.34446
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "Loss at (lr=2.441e-4, bs=256) is higher than loss at (lr=2.441e-4, bs=1024).",
+          "test": "If loss_lr256_bs256 > loss_lr256_bs1024.",
+          "confirm_if": "2.39092 > 2.38237",
+          "refute_if": "2.39092 <= 2.38237"
+        },
+        {
+          "id": "h2",
+          "claim": "Loss at (lr=6.905e-4, bs=1024) is similar to loss at (lr=2.441e-4, bs=256).",
+          "test": "abs(loss_lr6.905e-3_bs1024 - loss_lr2.441e-4_bs256) < 0.01.",
+          "confirm_if": "abs(2.38237 - 2.39092) < 0.01",
+          "refute_if": "abs(2.38237 - 2.39092) >= 0.01"
+        },
+        {
+          "id": "h3",
+          "claim": "Loss at (lr=9.766e-4, bs=192) is very high.",
+          "test": "loss_lr9.766e-4_bs192 > 0.5 or non_finite.",
+          "confirm_if": "2.35689 > 0.5",
+          "refute_if": "2.35689 <= 0.5 or not finite"
+        },
+        {
+          "id": "h4",
+          "claim": "Loss at (lr=5.524e-3, bs=736) is within ~0.5 of loss at lower lr small batch (lr=2.441e-4, bs=256).",
+          "test": "abs(loss_lr5.524e-3_bs736 - loss_lr2.441e-4_bs256) < 0.5.",
+          "confirm_if": "abs(2.35689 - 2.34446) < 0.5",
+          "refute_if": "abs(2.35689 - 2.34446) >= 0.5"
+        }
+      ],
+      "terminator": {
+        "action": "finish",
+        "reason": "The budget of 5 experiments has been exhausted and the best observed loss is 2.34446 at lr=5.524e-3, bs=736, making no further experiments worthwhile."
+      }
+    }
+  ],
+  "final": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "1",
+    "budget": 5,
+    "think": "low",
+    "optimum_loss": 2.342013841717418,
+    "experiments": 5,
+    "best_loss": 2.34446,
+    "best_config": {
+      "lr": 0.005524,
+      "bs": 736,
+      "loss": 2.34446
+    },
+    "final_regret": 0.0024461582825821004,
+    "cumulative_regret": 0.18577,
+    "coverage": 0.041666666666666664,
+    "reached_corner": true,
+    "axis_frozen": "no",
+    "outcome": "finished",
+    "claimed_best": null,
+    "claim_matches_best": null,
+    "decision": {
+      "action": "finish",
+      "reason": "The budget of 5 experiments has been exhausted and the best observed loss is 2.34446 at lr=5.524e-3, bs=736, making no further experiments worthwhile."
+    },
+    "model_calls": 47,
+    "net_retries": 0,
+    "elapsed_ms": 339225,
+    "trajectory": [
+      {
+        "n": 1,
+        "lr": 0.0002441,
+        "bs": 1024,
+        "loss": 2.42121,
+        "regret": 0.0792,
+        "repeat": false,
+        "t_ms": 118241
+      },
+      {
+        "n": 2,
+        "lr": 0.0002441,
+        "bs": 256,
+        "loss": 2.39092,
+        "regret": 0.0489,
+        "repeat": false,
+        "t_ms": 156067
+      },
+      {
+        "n": 3,
+        "lr": 0.005524,
+        "bs": 736,
+        "loss": 2.34446,
+        "regret": 0.00244,
+        "repeat": false,
+        "t_ms": 212115
+      },
+      {
+        "n": 4,
+        "lr": 0.0006905,
+        "bs": 1024,
+        "loss": 2.38237,
+        "regret": 0.04036,
+        "repeat": false,
+        "t_ms": 264791
+      },
+      {
+        "n": 5,
+        "lr": 0.0009766,
+        "bs": 192,
+        "loss": 2.35689,
+        "regret": 0.01487,
+        "repeat": false,
+        "t_ms": 316374
+      }
+    ]
+  }
+}

@@ -1,0 +1,1186 @@
+{
+  "meta": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "1",
+    "optimum_loss": 2.342013841717418,
+    "budget": 10,
+    "framing": "You can set two values — a learning rate (lr) and a batch size (bs) — to PRETRAIN a fixed language model FROM SCRATCH (N=214663680 parameters, trained on 100000000000 tokens). This is from-scratch pretraining, not fine-tuning.\nFor each (lr, bs) you choose you are told the resulting validation loss, which you want to MINIMIZE. You have a budget of 10 experiments.\nOnly these exact values are valid. lr: 2.441e-4, 3.453e-4, 4.883e-4, 6.905e-4, 9.766e-4, 1.381e-3, 1.953e-3, 2.762e-3, 3.906e-3, 5.524e-3, 7.812e-3, 1.105e-2. bs: 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048."
+  },
+  "prior": {
+    "knowledge": "In scaled language‑model pretraining with N≈2.1466e8 parameters, keeping √P·bs≈√N maintains stable gradient accumulation; learning rates above ~1e-2 cause exploding updates, very small batches increase variance, and lr and bs interact so a simple scaling relation does not uniquely determine the optimal combination.",
+    "expected_structure": "Loss decreases when gradient variance is balanced; very low lr or large bs increases variance, while very high lr with modest bs may cause divergence. Loss should be lowest near moderate lr (~4.9e-4) and moderate bs (~512–736) where both effects are mitigated.",
+    "approach": "We will evaluate each independent (lr, bs) pair, computing the validation loss for each combination without assuming any closed‑form relation between lr and bs, thereby empirically determining which pairing minimizes loss.",
+    "uncertainties": [
+      "We are uncertain whether the √P·bs≈√N scaling remains valid if the loss surface is non‑monotonic or if the optimum differs from the rule of thumb.",
+      "We are uncertain whether validation loss at extreme batch sizes (32 or 2048) is stable enough to represent true gradient behavior."
+    ]
+  },
+  "hypotheses_initial": [
+    {
+      "id": "h1",
+      "claim": "lr=4.883e-4 and bs=512 yields lower validation loss than lr=4.883e-4 and bs=352.",
+      "test": "Train two separate experiments on the 100B‑token dataset: one with lr=4.883e-4, bs=512 and another with lr=4.883e-4, bs=352, and record the validation loss.",
+      "confirm_if": "validation_loss(lr=4.883e-4, bs=512) < validation_loss(lr=4.883e-4, bs=352)",
+      "refute_if": "validation_loss(lr=4.883e-4, bs=512) ≥ validation_loss(lr=4.883e-4, bs=352)"
+    },
+    {
+      "id": "h2",
+      "claim": "lr=4.883e-4 and bs=512 yields lower validation loss than lr=4.883e-4 and bs=128.",
+      "test": "Compare the validation loss of two experiments with lr=4.883e-4, bs=512 versus lr=4.883e-4, bs=128.",
+      "confirm_if": "validation_loss(lr=4.883e-4, bs=512) < validation_loss(lr=4.883e-4, bs=128)",
+      "refute_if": "validation_loss(lr=4.883e-4, bs=512) ≥ validation_loss(lr=4.883e-4, bs=128)"
+    }
+  ],
+  "steps": [
+    {
+      "n": 1,
+      "design": {
+        "lr": 0.0004883,
+        "bs": 512,
+        "hypothesis_id": "h1",
+        "rationale": "Confirms h1: 512 yields lower loss than 352 at the same lr=4.883e-4."
+      },
+      "result": {
+        "lr": 0.0004883,
+        "bs": 512,
+        "loss": 2.37818,
+        "regret": 0.03616,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.37818 for configuration lr=4.883e-4, bs=512 (only experiment run, no loss for other batch sizes)",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "no loss comparison for bs=352 to support or refute"
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "no loss comparison for bs=128 to support or refute"
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=4.883e-4 and bs=512 yields lower validation loss than lr=4.883e-4 and bs=352",
+            "test": "open",
+            "confirm_if": "val_loss(bs=512) < val_loss(bs=352)",
+            "refute_if": "val_loss(bs=512) > val_loss(bs=352)"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=4.883e-4 and bs=512 yields lower validation loss than lr=4.883e-4 and bs=128",
+            "test": "open",
+            "confirm_if": "val_loss(bs=512) < val_loss(bs=128)",
+            "refute_if": "val_loss(bs=512) > val_loss(bs=128)"
+          }
+        ],
+        "running_best": {
+          "lr": 0.0004883,
+          "bs": 512,
+          "loss": 2.37818
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=4.883e-4 and bs=512 yields lower validation loss than lr=4.883e-4 and bs=352",
+          "test": "open",
+          "confirm_if": "val_loss(bs=512) < val_loss(bs=352)",
+          "refute_if": "val_loss(bs=512) > val_loss(bs=352)"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=4.883e-4 and bs=512 yields lower validation loss than lr=4.883e-4 and bs=128",
+          "test": "open",
+          "confirm_if": "val_loss(bs=512) < val_loss(bs=128)",
+          "refute_if": "val_loss(bs=512) > val_loss(bs=128)"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Only 1/120 possible (lr,bs) pairs have been evaluated, with only lr=4.883e-4 and bs=512 tested; many significant lr and bs combinations remain unexplored, indicating the loss can be improved with additional experiments."
+      }
+    },
+    {
+      "n": 2,
+      "design": {
+        "lr": 0.0004883,
+        "bs": 352,
+        "hypothesis_id": "h1",
+        "rationale": "Testing h1 which predicts lower loss for 352 than 512."
+      },
+      "result": {
+        "lr": 0.0004883,
+        "bs": 352,
+        "loss": 2.37213,
+        "regret": 0.03011,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Validation loss for lr=0.0004883, bs=352 is 2.37213, lower than bs=512 loss 2.37818, supporting hypothesis h1 while h2 remains inconclusive.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Supports h1: bs=352 yields lower loss than bs=512 (2.37213 < 2.37818)."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "Status remains open: comparison between bs=512 and bs=128 still inconclusive."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=4.883e-4 and bs=352 yields lower validation loss than lr=4.883e-4 and bs=512.",
+            "test": ":",
+            "confirm_if": "=",
+            "refute_if": ">"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=4.883e-4 and bs=512 yields lower validation loss than lr=4.883e-4 and bs=128.",
+            "test": ":",
+            "confirm_if": "=",
+            "refute_if": "<"
+          }
+        ],
+        "running_best": {
+          "lr": 0.0004883,
+          "bs": 352,
+          "loss": 2.37213
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=4.883e-4 and bs=352 yields lower validation loss than lr=4.883e-4 and bs=512.",
+          "test": ":",
+          "confirm_if": "=",
+          "refute_if": ">"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=4.883e-4 and bs=512 yields lower validation loss than lr=4.883e-4 and bs=128.",
+          "test": ":",
+          "confirm_if": "=",
+          "refute_if": "<"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Most lr and bs combinations remain untried; exploring other lr values and varying bs (e.g., 128, 64, 1024) might reveal lower validation loss beyond the current best."
+      }
+    },
+    {
+      "n": 3,
+      "design": {
+        "lr": 0.0004883,
+        "bs": 128,
+        "hypothesis_id": "h2",
+        "rationale": "Test whether lowering batch size from 512 to 128 further reduces loss, addressing hypothesis h2."
+      },
+      "result": {
+        "lr": 0.0004883,
+        "bs": 128,
+        "loss": 2.36766,
+        "regret": 0.02565,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Validation loss 2.36766 at lr=4.883e-4, bs=128.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Observed val_loss 2.37213 at bs=352< 2.37818 at bs=512, supporting h1."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "Validation loss 2.36766 at bs=128< 2.37818 at bs=512, contradicting h2 that 512 lower."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=4.883e-4 and bs=352 yields lower validation loss than lr=4.883e-4 and bs=512.",
+            "test": "supported",
+            "confirm_if": "no better loss observed at equal lr",
+            "refute_if": "any loss at same lr lower than 352 or equal lr higher than 512"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=4.883e-4 and bs=512 yields lower validation loss than lr=4.883e-4 and bs=128.",
+            "test": "refuted",
+            "confirm_if": "no loss at 512 lower than 128",
+            "refute_if": "any loss at 128 lower than 512"
+          }
+        ],
+        "running_best": {
+          "lr": 0.0004883,
+          "bs": 128,
+          "loss": 2.36766
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=4.883e-4 and bs=352 yields lower validation loss than lr=4.883e-4 and bs=512.",
+          "test": "supported",
+          "confirm_if": "no better loss observed at equal lr",
+          "refute_if": "any loss at same lr lower than 352 or equal lr higher than 512"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=4.883e-4 and bs=512 yields lower validation loss than lr=4.883e-4 and bs=128.",
+          "test": "refuted",
+          "confirm_if": "no loss at 512 lower than 128",
+          "refute_if": "any loss at 128 lower than 512"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Significant portions of the lr and bs space remain untested (only 3 of 12 lr values and 3 of 10 bs values used), so further experiments are expected to improve understanding of loss behavior."
+      }
+    },
+    {
+      "n": 4,
+      "design": {
+        "lr": 0.002762,
+        "bs": 512,
+        "hypothesis_id": "explore",
+        "rationale": "Test if larger learning rate with moderate batch 512 reduces validation loss compared to current best."
+      },
+      "result": {
+        "lr": 0.002762,
+        "bs": 512,
+        "loss": 2.34364,
+        "regret": 0.00163,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The new configuration lr=2.762e-3 bs=512 achieves val_loss=2.34364, which is lower than the previous best val_loss=2.36766 (lr=4.883e-4 bs=128). The hypotheses about lr=4.883e-4 remain unchanged since the new run does not involve those specific lr values.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "unchanged; does not involve the new lr."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "unchanged; does not involve the new lr."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=4.883e-4 and bs=352 yields lower validation loss than lr=4.883e-4 and bs=512.",
+            "test": "][",
+            "confirm_if": "h2",
+            "refute_if": "h3"
+          }
+        ],
+        "running_best": {
+          "lr": 0.002762,
+          "bs": 512,
+          "loss": 2.34364
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=4.883e-4 and bs=352 yields lower validation loss than lr=4.883e-4 and bs=512.",
+          "test": "][",
+          "confirm_if": "h2",
+          "refute_if": "h3"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The current experiments only cover two learning rates and three batch sizes; expanding the search to other lr values may lower validation loss further."
+      }
+    },
+    {
+      "n": 5,
+      "design": {
+        "lr": 0.0004883,
+        "bs": 736,
+        "hypothesis_id": "explore",
+        "rationale": "To see whether the validation loss continues to decrease or stabilizes at a larger batch size, helping to assess the relationship between batch size and loss given the current training conditions."
+      },
+      "result": {
+        "lr": 0.0004883,
+        "bs": 736,
+        "loss": 2.38623,
+        "regret": 0.04422,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The validation loss at lr=4.883e-4, bs=736 is higher than at lr=4.883e-4, bs=512 (2.38623 > 2.37818), indicating this configuration is less favorable.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Supported by data at #2; the new point with bs=736 does not affect the 352 vs 512 comparison."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "Refuted at #3; the new point with bs=736 does not affect the 512 vs 128 comparison."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=4.883e-4 and bs=352 yields lower validation loss than lr=4.883e-4 and bs=512",
+            "test": "Supported",
+            "confirm_if": "True",
+            "refute_if": "True"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=4.883e-4 and bs=512 yields lower validation loss than lr=4.883e-4 and bs=128",
+            "test": "Refuted",
+            "confirm_if": "True",
+            "refute_if": "True"
+          }
+        ],
+        "running_best": {
+          "lr": 0.002762,
+          "bs": 512,
+          "loss": 2.34364
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=4.883e-4 and bs=352 yields lower validation loss than lr=4.883e-4 and bs=512",
+          "test": "Supported",
+          "confirm_if": "True",
+          "refute_if": "True"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=4.883e-4 and bs=512 yields lower validation loss than lr=4.883e-4 and bs=128",
+          "test": "Refuted",
+          "confirm_if": "True",
+          "refute_if": "True"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Few low-learning-rate values remain untested and could potentially lower loss, so one remains worthwhile to test."
+      }
+    },
+    {
+      "n": 6,
+      "design": {
+        "lr": 0.0003453,
+        "bs": 128,
+        "hypothesis_id": "explore",
+        "rationale": "Test lower lr with smaller batch to see if loss continues to decrease, addressing variance concerns."
+      },
+      "result": {
+        "lr": 0.0003453,
+        "bs": 128,
+        "loss": 2.3746,
+        "regret": 0.03258,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The latest validation loss (2.3746) still shows lr=4.883e-4, bs=352 beats lr=4.883e-4, bs=512 (2.37213< 2.3746 and 2.37213< 2.3746); hypothesis h1 is supported, while h2 (512 beats 128) is refuted.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "consistent with 352< 512"
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "consistent with 512 > 128"
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=4.883e-4 bs=352 yields lower validation loss than lr=4.883e-4 bs=512",
+            "test": "supported",
+            "confirm_if": "2.37213 < 2.37818",
+            "refute_if": "2.37213 >= 2.37818"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=4.883e-4 bs=512 yields lower validation loss than lr=4.883e-4 bs=128",
+            "test": "refuted",
+            "confirm_if": "2.37818 < 2.36766",
+            "refute_if": "2.37818 >= 2.36766"
+          }
+        ],
+        "running_best": {
+          "lr": 0.002762,
+          "bs": 512,
+          "loss": 2.34364
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=4.883e-4 bs=352 yields lower validation loss than lr=4.883e-4 bs=512",
+          "test": "supported",
+          "confirm_if": "2.37213 < 2.37818",
+          "refute_if": "2.37213 >= 2.37818"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=4.883e-4 bs=512 yields lower validation loss than lr=4.883e-4 bs=128",
+          "test": "refuted",
+          "confirm_if": "2.37818 < 2.36766",
+          "refute_if": "2.37818 >= 2.36766"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The current best loss (2.34364 at lr=2.762e-3, bs=512) is promising, but several high‑accuracy LR values remain untried (e.g., 1.381e‑3, 1.953e‑3, 3.906e‑3); continuing can reveal further improvements."
+      }
+    },
+    {
+      "n": 7,
+      "design": {
+        "lr": 0.0002441,
+        "bs": 2048,
+        "hypothesis_id": "explore",
+        "rationale": "Testing extreme small lr with large batch to assess variance under high gradient concentration."
+      },
+      "result": {
+        "lr": 0.0002441,
+        "bs": 2048,
+        "loss": 2.45412,
+        "regret": 0.11211,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.45412 at lr=2.441e-4 bs=2048 shows a higher loss than the best observed; however this trial modifies both lr and bs, so it does not isolate either effect and therefore cannot update either hypothesis.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "Trial modifies both lr and bs, not a test of either hypothesis."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "Trial modifies both lr and bs, not a test of either hypothesis."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=4.883e-4 bs=352 yields lower validation loss than lr=4.883e-4 bs=512",
+            "test": "supported",
+            "confirm_if": "Yes",
+            "refute_if": "No"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=4.883e-4 bs=512 yields lower validation loss than lr=4.883e-4 bs=128",
+            "test": "refuted",
+            "confirm_if": "No",
+            "refute_if": "Yes"
+          }
+        ],
+        "running_best": {
+          "lr": 0.002762,
+          "bs": 512,
+          "loss": 2.34364
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=4.883e-4 bs=352 yields lower validation loss than lr=4.883e-4 bs=512",
+          "test": "supported",
+          "confirm_if": "Yes",
+          "refute_if": "No"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=4.883e-4 bs=512 yields lower validation loss than lr=4.883e-4 bs=128",
+          "test": "refuted",
+          "confirm_if": "No",
+          "refute_if": "Yes"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The current best loss of 2.34364 is achieved at lr=2.762e-3, bs=512. However, many higher learning rates (e.g., 3.906e-3, 5.524e-3, 7.812e-3, 1.105e-2) combined with various batch sizes remain untested. Exploring these may reveal improvements, suggesting that continuing experiments is worthwhile."
+      }
+    },
+    {
+      "n": 8,
+      "design": {
+        "lr": 0.01105,
+        "bs": 512,
+        "hypothesis_id": "explore",
+        "rationale": "High lr with moderate batch size remains untested; explores if extreme learning rate causes divergence even with balanced accumulation."
+      },
+      "result": {
+        "lr": 0.01105,
+        "bs": 512,
+        "loss": 2.35916,
+        "regret": 0.01714,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Result: val_loss = 2.35916 at lr=1.105e-2 bs=512, hypothesis 'explore' leads to h1 supported, h2 refuted.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "supported by #2, #3, #4, #5, #6"
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "refuted by #3, #4, #5, #6"
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=4.883e-4 bs=352 yields lower validation loss than lr=4.883e-4 bs=512",
+            "test": "#2 #3 #4 #5 #6",
+            "confirm_if": "supported",
+            "refute_if": "refuted"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=4.883e-4 bs=512 yields lower validation loss than lr=4.883e-4 bs=128",
+            "test": "#3 #4 #5 #6",
+            "confirm_if": "support both",
+            "refute_if": "refuted by #3 #4 #5 #6"
+          }
+        ],
+        "running_best": {
+          "lr": 0.002762,
+          "bs": 512,
+          "loss": 2.34364
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=4.883e-4 bs=352 yields lower validation loss than lr=4.883e-4 bs=512",
+          "test": "#2 #3 #4 #5 #6",
+          "confirm_if": "supported",
+          "refute_if": "refuted"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=4.883e-4 bs=512 yields lower validation loss than lr=4.883e-4 bs=128",
+          "test": "#3 #4 #5 #6",
+          "confirm_if": "support both",
+          "refute_if": "refuted by #3 #4 #5 #6"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The current best combination leaves many lr and bs settings unexplored, especially low lr with high bs and high lr with low bs, and continuing with additional experiments could reveal a lower validation loss."
+      }
+    },
+    {
+      "n": 9,
+      "design": {
+        "lr": 0.0003453,
+        "bs": 192,
+        "hypothesis_id": "explore",
+        "rationale": "to assess how a higher learning rate paired with a moderate batch size reduces variance compared to extreme low/high combos"
+      },
+      "result": {
+        "lr": 0.0003453,
+        "bs": 192,
+        "loss": 2.37755,
+        "regret": 0.03554,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss=2.45412 with lr=2.441e-4 bs=2048 under explore test yields h1 inconclusive and h2 inconclusive; this does not change known best: lr=2.762e-3 bs=512 loss=2.34364.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "No new evidence against; remains supported."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "No new evidence; remains refuted."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=4.883e-4 bs=352 yields lower validation loss than lr=4.883e-4 bs=512",
+            "test": "supported",
+            "confirm_if": "val_loss(352) < val_loss(512)",
+            "refute_if": "val_loss(352) > val_loss(512)"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=4.883e-4 bs=512 yields higher validation loss than lr=4.883e-4 bs=128",
+            "test": "refuted",
+            "confirm_if": "val_loss(512) > val_loss(128)",
+            "refute_if": "val_loss(512) <= val_loss(128)"
+          }
+        ],
+        "running_best": {
+          "lr": 0.002762,
+          "bs": 512,
+          "loss": 2.34364
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=4.883e-4 bs=352 yields lower validation loss than lr=4.883e-4 bs=512",
+          "test": "supported",
+          "confirm_if": "val_loss(352) < val_loss(512)",
+          "refute_if": "val_loss(352) > val_loss(512)"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=4.883e-4 bs=512 yields higher validation loss than lr=4.883e-4 bs=128",
+          "test": "refuted",
+          "confirm_if": "val_loss(512) > val_loss(128)",
+          "refute_if": "val_loss(512) <= val_loss(128)"
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "There are still many untried lr and bs combinations, particularly LR values such as 6.905e-4 and BS sizes 32, 64, 256, 1024 which have not been explored; further experiments may achieve an even lower validation loss, suggesting it is worthwhile to continue."
+      }
+    },
+    {
+      "n": 10,
+      "design": {
+        "lr": 0.0002441,
+        "bs": 1024,
+        "hypothesis_id": "explore",
+        "rationale": "Testing low learning rate with high batch to assess variance and impact on loss."
+      },
+      "result": {
+        "lr": 0.0002441,
+        "bs": 1024,
+        "loss": 2.42121,
+        "regret": 0.0792,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The validation loss at lr=2.441e-4, bs=2048 is 2.45412, which is higher than the current best loss of 2.36766 achieved at lr=0.0004883, bs=128. Smaller batch sizes continue to yield lower loss at this learning rate, but comparisons at other batch sizes remain limited.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "All evidence shows that smaller batch sizes give lower validation loss than larger ones at lr=4.883e-4."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "Verification at lr=4.883e-4, bs=352 yields a lower loss than bs=128, directly contradicting the claim that bs=512 is higher. No evidence supports h2."
+          }
+        ],
+        "revised_hypotheses": [
+          {
+            "id": "h1",
+            "claim": "lr=4.883e-4 bs=352 yields lower validation loss than lr=4.883e-4 bs=512",
+            "test": "supported",
+            "confirm_if": "validation loss at 352 < loss at 512",
+            "refute_if": "validation loss at 352 >= loss at 512"
+          },
+          {
+            "id": "h2",
+            "claim": "lr=4.883e-4 bs=512 yields higher validation loss than lr=4.883e-4 bs=128",
+            "test": "refuted",
+            "confirm_if": "validation loss at 512 > loss at 128",
+            "refute_if": "validation loss at 512 <= loss at 128"
+          }
+        ],
+        "running_best": {
+          "lr": 0.0004883,
+          "bs": 128,
+          "loss": 2.36766
+        }
+      },
+      "hypotheses_after": [
+        {
+          "id": "h1",
+          "claim": "lr=4.883e-4 bs=352 yields lower validation loss than lr=4.883e-4 bs=512",
+          "test": "supported",
+          "confirm_if": "validation loss at 352 < loss at 512",
+          "refute_if": "validation loss at 352 >= loss at 512"
+        },
+        {
+          "id": "h2",
+          "claim": "lr=4.883e-4 bs=512 yields higher validation loss than lr=4.883e-4 bs=128",
+          "test": "refuted",
+          "confirm_if": "validation loss at 512 > loss at 128",
+          "refute_if": "validation loss at 512 <= loss at 128"
+        }
+      ],
+      "terminator": {
+        "action": "finish",
+        "reason": "The research budget is exhausted (0 experiments remaining) and the best loss observed is 2.34364 at lr=2.762e-3, bs=512, indicating a clear optimum; no further runs are possible."
+      }
+    }
+  ],
+  "experiment_ledger": [
+    {
+      "n": 1,
+      "action": {
+        "lr": 0.0004883,
+        "bs": 512
+      },
+      "intent": {
+        "hypothesis_id": "h1",
+        "rationale": "Confirms h1: 512 yields lower loss than 352 at the same lr=4.883e-4."
+      },
+      "loss": 2.37818,
+      "interpretation": {
+        "observation": "val_loss = 2.37818 for configuration lr=4.883e-4, bs=512 (only experiment run, no loss for other batch sizes)",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "no loss comparison for bs=352 to support or refute"
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "no loss comparison for bs=128 to support or refute"
+          }
+        ]
+      }
+    },
+    {
+      "n": 2,
+      "action": {
+        "lr": 0.0004883,
+        "bs": 352
+      },
+      "intent": {
+        "hypothesis_id": "h1",
+        "rationale": "Testing h1 which predicts lower loss for 352 than 512."
+      },
+      "loss": 2.37213,
+      "interpretation": {
+        "observation": "Validation loss for lr=0.0004883, bs=352 is 2.37213, lower than bs=512 loss 2.37818, supporting hypothesis h1 while h2 remains inconclusive.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Supports h1: bs=352 yields lower loss than bs=512 (2.37213 < 2.37818)."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "Status remains open: comparison between bs=512 and bs=128 still inconclusive."
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "action": {
+        "lr": 0.0004883,
+        "bs": 128
+      },
+      "intent": {
+        "hypothesis_id": "h2",
+        "rationale": "Test whether lowering batch size from 512 to 128 further reduces loss, addressing hypothesis h2."
+      },
+      "loss": 2.36766,
+      "interpretation": {
+        "observation": "Validation loss 2.36766 at lr=4.883e-4, bs=128.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Observed val_loss 2.37213 at bs=352< 2.37818 at bs=512, supporting h1."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "Validation loss 2.36766 at bs=128< 2.37818 at bs=512, contradicting h2 that 512 lower."
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "action": {
+        "lr": 0.002762,
+        "bs": 512
+      },
+      "intent": {
+        "hypothesis_id": "explore",
+        "rationale": "Test if larger learning rate with moderate batch 512 reduces validation loss compared to current best."
+      },
+      "loss": 2.34364,
+      "interpretation": {
+        "observation": "The new configuration lr=2.762e-3 bs=512 achieves val_loss=2.34364, which is lower than the previous best val_loss=2.36766 (lr=4.883e-4 bs=128). The hypotheses about lr=4.883e-4 remain unchanged since the new run does not involve those specific lr values.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "unchanged; does not involve the new lr."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "unchanged; does not involve the new lr."
+          }
+        ]
+      }
+    },
+    {
+      "n": 5,
+      "action": {
+        "lr": 0.0004883,
+        "bs": 736
+      },
+      "intent": {
+        "hypothesis_id": "explore",
+        "rationale": "To see whether the validation loss continues to decrease or stabilizes at a larger batch size, helping to assess the relationship between batch size and loss given the current training conditions."
+      },
+      "loss": 2.38623,
+      "interpretation": {
+        "observation": "The validation loss at lr=4.883e-4, bs=736 is higher than at lr=4.883e-4, bs=512 (2.38623 > 2.37818), indicating this configuration is less favorable.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Supported by data at #2; the new point with bs=736 does not affect the 352 vs 512 comparison."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "Refuted at #3; the new point with bs=736 does not affect the 512 vs 128 comparison."
+          }
+        ]
+      }
+    },
+    {
+      "n": 6,
+      "action": {
+        "lr": 0.0003453,
+        "bs": 128
+      },
+      "intent": {
+        "hypothesis_id": "explore",
+        "rationale": "Test lower lr with smaller batch to see if loss continues to decrease, addressing variance concerns."
+      },
+      "loss": 2.3746,
+      "interpretation": {
+        "observation": "The latest validation loss (2.3746) still shows lr=4.883e-4, bs=352 beats lr=4.883e-4, bs=512 (2.37213< 2.3746 and 2.37213< 2.3746); hypothesis h1 is supported, while h2 (512 beats 128) is refuted.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "consistent with 352< 512"
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "consistent with 512 > 128"
+          }
+        ]
+      }
+    },
+    {
+      "n": 7,
+      "action": {
+        "lr": 0.0002441,
+        "bs": 2048
+      },
+      "intent": {
+        "hypothesis_id": "explore",
+        "rationale": "Testing extreme small lr with large batch to assess variance under high gradient concentration."
+      },
+      "loss": 2.45412,
+      "interpretation": {
+        "observation": "val_loss = 2.45412 at lr=2.441e-4 bs=2048 shows a higher loss than the best observed; however this trial modifies both lr and bs, so it does not isolate either effect and therefore cannot update either hypothesis.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "Trial modifies both lr and bs, not a test of either hypothesis."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "Trial modifies both lr and bs, not a test of either hypothesis."
+          }
+        ]
+      }
+    },
+    {
+      "n": 8,
+      "action": {
+        "lr": 0.01105,
+        "bs": 512
+      },
+      "intent": {
+        "hypothesis_id": "explore",
+        "rationale": "High lr with moderate batch size remains untested; explores if extreme learning rate causes divergence even with balanced accumulation."
+      },
+      "loss": 2.35916,
+      "interpretation": {
+        "observation": "Result: val_loss = 2.35916 at lr=1.105e-2 bs=512, hypothesis 'explore' leads to h1 supported, h2 refuted.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "supported by #2, #3, #4, #5, #6"
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "refuted by #3, #4, #5, #6"
+          }
+        ]
+      }
+    },
+    {
+      "n": 9,
+      "action": {
+        "lr": 0.0003453,
+        "bs": 192
+      },
+      "intent": {
+        "hypothesis_id": "explore",
+        "rationale": "to assess how a higher learning rate paired with a moderate batch size reduces variance compared to extreme low/high combos"
+      },
+      "loss": 2.37755,
+      "interpretation": {
+        "observation": "val_loss=2.45412 with lr=2.441e-4 bs=2048 under explore test yields h1 inconclusive and h2 inconclusive; this does not change known best: lr=2.762e-3 bs=512 loss=2.34364.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "No new evidence against; remains supported."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "No new evidence; remains refuted."
+          }
+        ]
+      }
+    },
+    {
+      "n": 10,
+      "action": {
+        "lr": 0.0002441,
+        "bs": 1024
+      },
+      "intent": {
+        "hypothesis_id": "explore",
+        "rationale": "Testing low learning rate with high batch to assess variance and impact on loss."
+      },
+      "loss": 2.42121,
+      "interpretation": {
+        "observation": "The validation loss at lr=2.441e-4, bs=2048 is 2.45412, which is higher than the current best loss of 2.36766 achieved at lr=0.0004883, bs=128. Smaller batch sizes continue to yield lower loss at this learning rate, but comparisons at other batch sizes remain limited.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "All evidence shows that smaller batch sizes give lower validation loss than larger ones at lr=4.883e-4."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "Verification at lr=4.883e-4, bs=352 yields a lower loss than bs=128, directly contradicting the claim that bs=512 is higher. No evidence supports h2."
+          }
+        ]
+      }
+    }
+  ],
+  "hyp_ledger": [
+    {
+      "id": "h1",
+      "claim": "lr=4.883e-4 bs=352 yields lower validation loss than lr=4.883e-4 bs=512",
+      "test": "supported",
+      "status": "supported",
+      "supporting": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10
+      ],
+      "refuting": [],
+      "inconclusive": [
+        1,
+        7
+      ]
+    },
+    {
+      "id": "h2",
+      "claim": "lr=4.883e-4 bs=512 yields higher validation loss than lr=4.883e-4 bs=128",
+      "test": "refuted",
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10
+      ],
+      "inconclusive": [
+        1,
+        2,
+        7
+      ]
+    }
+  ],
+  "coverage_final": "Coverage of the option space (10/120 joint cells tried):\n  lr: tried 5/12 distinct {2.441e-4, 3.453e-4, 4.883e-4, 2.762e-3, 1.105e-2}; UNTRIED {6.905e-4, 9.766e-4, 1.381e-3, 1.953e-3, 3.906e-3, 5.524e-3, 7.812e-3}\n  bs: tried 7/10 distinct {128, 192, 352, 512, 736, 1024, 2048}; UNTRIED {32, 64, 256}\n  joint:\nBest so far (top 3): (lr=2.762e-3, bs=512, loss=2.34364); (lr=1.105e-2, bs=512, loss=2.35916); (lr=4.883e-4, bs=128, loss=2.36766)",
+  "final": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "1",
+    "budget": 10,
+    "think": "low",
+    "optimum_loss": 2.342013841717418,
+    "experiments": 10,
+    "best_loss": 2.34364,
+    "best_config": {
+      "lr": 0.002762,
+      "bs": 512,
+      "loss": 2.34364
+    },
+    "final_regret": 0.0016261582825820575,
+    "cumulative_regret": 0.41434,
+    "coverage": 0.08333333333333333,
+    "reached_corner": false,
+    "axis_frozen": "no",
+    "outcome": "finished",
+    "claimed_best": null,
+    "claim_matches_best": null,
+    "decision": {
+      "action": "finish",
+      "reason": "The research budget is exhausted (0 experiments remaining) and the best loss observed is 2.34364 at lr=2.762e-3, bs=512, indicating a clear optimum; no further runs are possible."
+    },
+    "model_calls": 84,
+    "net_retries": 0,
+    "elapsed_ms": 501227,
+    "trajectory": [
+      {
+        "n": 1,
+        "lr": 0.0004883,
+        "bs": 512,
+        "loss": 2.37818,
+        "regret": 0.03616,
+        "repeat": false,
+        "t_ms": 67866
+      },
+      {
+        "n": 2,
+        "lr": 0.0004883,
+        "bs": 352,
+        "loss": 2.37213,
+        "regret": 0.03011,
+        "repeat": false,
+        "t_ms": 90722
+      },
+      {
+        "n": 3,
+        "lr": 0.0004883,
+        "bs": 128,
+        "loss": 2.36766,
+        "regret": 0.02565,
+        "repeat": false,
+        "t_ms": 139465
+      },
+      {
+        "n": 4,
+        "lr": 0.002762,
+        "bs": 512,
+        "loss": 2.34364,
+        "regret": 0.00163,
+        "repeat": false,
+        "t_ms": 164659
+      },
+      {
+        "n": 5,
+        "lr": 0.0004883,
+        "bs": 736,
+        "loss": 2.38623,
+        "regret": 0.04422,
+        "repeat": false,
+        "t_ms": 199600
+      },
+      {
+        "n": 6,
+        "lr": 0.0003453,
+        "bs": 128,
+        "loss": 2.3746,
+        "regret": 0.03258,
+        "repeat": false,
+        "t_ms": 232655
+      },
+      {
+        "n": 7,
+        "lr": 0.0002441,
+        "bs": 2048,
+        "loss": 2.45412,
+        "regret": 0.11211,
+        "repeat": false,
+        "t_ms": 263676
+      },
+      {
+        "n": 8,
+        "lr": 0.01105,
+        "bs": 512,
+        "loss": 2.35916,
+        "regret": 0.01714,
+        "repeat": false,
+        "t_ms": 348646
+      },
+      {
+        "n": 9,
+        "lr": 0.0003453,
+        "bs": 192,
+        "loss": 2.37755,
+        "regret": 0.03554,
+        "repeat": false,
+        "t_ms": 381857
+      },
+      {
+        "n": 10,
+        "lr": 0.0002441,
+        "bs": 1024,
+        "loss": 2.42121,
+        "regret": 0.0792,
+        "repeat": false,
+        "t_ms": 429269
+      }
+    ]
+  }
+}

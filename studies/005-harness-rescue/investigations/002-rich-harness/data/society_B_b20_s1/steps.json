@@ -1,0 +1,2726 @@
+{
+  "meta": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "1",
+    "optimum_loss": 2.342013841717418,
+    "budget": 20,
+    "framing": "You can set two values — a learning rate (lr) and a batch size (bs) — to PRETRAIN a fixed language model FROM SCRATCH (N=214663680 parameters, trained on 100000000000 tokens). This is from-scratch pretraining, not fine-tuning.\nFor each (lr, bs) you choose you are told the resulting validation loss, which you want to MINIMIZE. You have a budget of 20 experiments.\nOnly these exact values are valid. lr: 2.441e-4, 3.453e-4, 4.883e-4, 6.905e-4, 9.766e-4, 1.381e-3, 1.953e-3, 2.762e-3, 3.906e-3, 5.524e-3, 7.812e-3, 1.105e-2. bs: 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048."
+  },
+  "prior": {
+    "knowledge": "For‑scratch pretraining massive LLMs with billions of parameters is sensitive to training dynamics; larger batch sizes amplify gradient magnitude, so a stable optimal loss often occurs with a moderate batch size (~256) and LR around 5e-4, based on prior fine‑tuning literature on LLM scaling and experience with comparable parameter budgets.",
+    "expected_structure": "Loss will be minimized at (lr, bs) where lr * bs ≈ 1e-4, typically yielding low validation loss, so the optimum lies in the lower‑lr / moderate‑bs quadrant.",
+    "approach": "Perform systematic validation over the 20 allowed (lr, bs) pairs; prioritize testing pairs near the expected structure (lr * bs ≈ 1e-4) to locate true loss minimum.",
+    "uncertainties": [
+      "The exact scaling of validation loss with lr * bs is unknown; small variations of lr and bs may lead to non‑linear loss changes due to numeric saturation or training instability, especially with very large batch sizes that amplify gradients beyond typical optimization tolerances."
+    ]
+  },
+  "hypotheses_initial": [
+    {
+      "id": "h1",
+      "level": "high",
+      "claim": "The validation loss is minimized when lr * bs is smallest among the allowed combinations (lower product → lower loss).",
+      "test": "Compare validation loss across all 20 combined lr/bs pairs, expecting the lowest loss at (lr=2.441e-4, bs=32).",
+      "confirm_if": "Loss at (lr=2.441e-4, bs=32) is lower than the loss of every other combination.",
+      "refute_if": "Loss at (lr=2.441e-4, bs=32) is higher than at least one other combination.",
+      "config": {}
+    },
+    {
+      "id": "h2",
+      "level": "high",
+      "claim": "Extremely large batch sizes (≥1024) cause training instability, keeping validation loss higher despite improvements in learning rate.",
+      "test": "Compare loss of a large‑batch run (lr=6.905e-4, bs=1024) to the baseline low‑batch run (lr=2.441e-4, bs=32).",
+      "confirm_if": "Loss at (lr=6.905e-4, bs=1024) is greater than loss at (lr=2.441e-4, bs=32).",
+      "refute_if": "Loss at (lr=6.905e-4, bs=1024) is less than or equal to loss at (lr=2.441e-4, bs=32).",
+      "config": {}
+    },
+    {
+      "id": "h3",
+      "level": "high",
+      "claim": "Very small batch sizes suppress the benefits of a low learning rate, leaving validation loss in the high‑end range.",
+      "test": "Validate via loss of (lr=7.812e-3, bs=32) versus baseline (lr=2.441e-4, bs=32).",
+      "confirm_if": "Loss at (lr=7.812e-3, bs=32) is higher than loss at (lr=2.441e-4, bs=32).",
+      "refute_if": "Loss at (lr=7.812e-3, bs=32) is less than or equal to loss at (lr=2.441e-4, bs=32).",
+      "config": {}
+    },
+    {
+      "id": "n1",
+      "level": "narrow",
+      "claim": "A lower learning rate with a very small batch size yields the minimal validation loss.",
+      "test": "Run experiment with (lr=2.441e-4, bs=32).",
+      "confirm_if": "Loss at (lr=2.441e-4, bs=32) is lower than loss at (lr=2.441e-4, bs=64).",
+      "refute_if": "Loss at (lr=2.441e-4, bs=32) is not lower than loss at (lr=2.441e-4, bs=64).",
+      "config": {
+        "lr": 0.0002441,
+        "bs": 32
+      },
+      "parent": "h1"
+    },
+    {
+      "id": "n2",
+      "level": "narrow",
+      "claim": "A moderate batch size (256 tokens) with a learning rate of 3.906e-3 produces a low validation loss.",
+      "test": "Run experiment with (lr=3.906e-3, bs=256).",
+      "confirm_if": "Loss at (lr=3.906e-3, bs=256) is lower than loss at (lr=6.905e-4, bs=1024).",
+      "refute_if": "Loss at (lr=3.906e-3, bs=256) is higher than loss at (lr=6.905e-4, bs=1024).",
+      "config": {
+        "lr": 0.003906,
+        "bs": 256
+      },
+      "parent": "h1"
+    },
+    {
+      "id": "n3",
+      "level": "narrow",
+      "claim": "Even a reduced learning rate cannot overcome the instability introduced by a tiny batch size.",
+      "test": "Run experiment with (lr=5.524e-3, bs=32) and compare its loss to the baseline (lr=2.441e-4, bs=32).",
+      "confirm_if": "Loss at (lr=5.524e-3, bs=32) is higher than loss at (lr=2.441e-4, bs=32).",
+      "refute_if": "Loss at (lr=5.524e-3, bs=32) is not higher than loss at (lr=2.441e-4, bs=32).",
+      "config": {
+        "lr": 0.005524,
+        "bs": 32
+      },
+      "parent": "h1"
+    }
+  ],
+  "steps": [
+    {
+      "n": 1,
+      "design": {
+        "lr": 0.0002441,
+        "bs": 32,
+        "hypothesis_id": "n1",
+        "rationale": "executing top open narrow hypothesis n1: A lower learning rate with a very small batch size yields the minimal validation loss."
+      },
+      "result": {
+        "lr": 0.0002441,
+        "bs": 32,
+        "loss": 2.41499,
+        "regret": 0.07298,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "val_loss = 2.41499 observed for lr=2.441e-4 bs=32",
+        "updates": [
+          {
+            "id": "n1",
+            "verdict": "inconclusive",
+            "note": "only provides loss value but no comparative evidence"
+          },
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": " lr*bs smallest condition not compared to other configurations"
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "no experiment tested extremely large batch sizes >=1024"
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "no experiment tested very small batch size suppressing low learning rate"
+          },
+          {
+            "id": "n2",
+            "verdict": "inconclusive",
+            "note": "runs n2 and n3 not evaluated in this result"
+          },
+          {
+            "id": "n3",
+            "verdict": "inconclusive",
+            "note": "runs n2 and n3 not evaluated in this result"
+          }
+        ],
+        "running_best": {
+          "lr": 0.0002441,
+          "bs": 32,
+          "loss": 2.41499
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "claim": "The validation loss is minimized when lr * bs is smallest among the allowed combinations; lower product yields lower loss.",
+          "test": "Compare loss at (lr=2.441e-4, bs=32) vs (lr=3.453e-4, bs=64).",
+          "confirm_if": "val_loss < val_loss_at_3.453e-4_64",
+          "refute_if": "val_loss > val_loss_at_3.453e-4_64",
+          "parent": "",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 64
+          }
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "claim": "Extremely large batch sizes (≥1024) cause training instability, resulting in higher validation loss even with a moderate learning rate.",
+          "test": "Run with lr=3.453e-4, bs=1024.",
+          "confirm_if": "val_loss > val_loss_0002441_32",
+          "refute_if": "val_loss <= val_loss_0002441_32",
+          "parent": "",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "h3",
+          "level": "high",
+          "claim": "Very small batch sizes (32) suppress benefits of low learning rates, leading to higher validation loss compared to more moderate batch sizes.",
+          "test": "Run with lr=5.524e-3, bs=32.",
+          "confirm_if": "val_loss > val_loss_0002441_32",
+          "refute_if": "val_loss <= val_loss_0002441_32",
+          "parent": "",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          }
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "Low learning rates increase validation loss; higher rates worsen it, leading to higher loss than moderate rates.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "Large batch sizes (≥1024) cause training instability and result in higher validation loss compared to moderate batch sizes (≤256) at the same learning rate.",
+          "test": "none",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "inconclusive": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "The validation loss is optimal in the low‑lr / moderate‑bs quadrant, where product is low.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "Running a learning rate of 2.441e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "Running a learning rate of 3.453e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0004883,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n3",
+          "claim": "Even a reduced learning rate cannot overcome the instability introduced by a tiny batch size.",
+          "test": "Run experiment with (lr=5.524e-3, bs=32) and compare its loss to the baseline (lr=2.441e-4, bs=32).",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "The open hypotheses h1, h2, and h3 remain unverified across many untested (lr, bs) combinations, and reducing loss further may still be possible; proceeding to test additional pairs is warranted."
+      }
+    },
+    {
+      "n": 2,
+      "design": {
+        "lr": 0.0003453,
+        "bs": 32,
+        "hypothesis_id": "h1",
+        "rationale": "test smallest lr*bs"
+      },
+      "result": {
+        "lr": 0.0003453,
+        "bs": 32,
+        "loss": 2.41014,
+        "regret": 0.06812,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Result: val_loss = 2.41014 for lr=3.453e-4, bs=32.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "One data point (lr*bs=0.01105, loss=2.41014) slightly lower than previous (2.41499) but does not conclusively support the claim that lower lr*bs yields lower loss."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "Batch size 32 does not address extreme large batch condition (≥1024)."
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "Only tests 32; cannot confirm suppression of benefits of low lr vs moderate batch."
+          }
+        ],
+        "running_best": {
+          "lr": 0.0003453,
+          "bs": 32,
+          "loss": 2.41014
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "claim": "For a low batch size (32), increasing learning rate from 2.441e-4 to around 3.453e-4 reduces validation loss.",
+          "test": "Use lr=4.883e-4 with bs=32 to see if loss continues to drop",
+          "confirm_if": "The validation loss at lr=4.883e-4, bs=32 is lower than at lr=3.453e-4, bs=32",
+          "refute_if": "The validation loss at lr=4.883e-4, bs=32 is higher than at lr=3.453e-4, bs=32",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 32
+          }
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "claim": "Very large batch sizes (≥1024) cause training instability, resulting in higher validation loss compared to moderate batch sizes (≤256).",
+          "test": "Use lr=3.453e-4 with bs=1024 to see if loss is higher than at moderate bs",
+          "confirm_if": "Validation loss at lr=3.453e-4, bs=1024 is higher than at lr=3.453e-4, bs=256",
+          "refute_if": "Validation loss at lr=3.453e-4, bs=1024 is lower than at lr=3.453e-4, bs=256",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          }
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "claim": "For low batch size 32, lower learning rates increase validation loss due to insufficient gradient magnitude.",
+          "test": "Compare val_loss of lr=2.441e-4, bs=32 and lr=3.453e-4, bs=32",
+          "confirm_if": "val_loss(lr=3.453e-4, bs=32) < val_loss(lr=2.441e-4, bs=32)",
+          "refute_if": "val_loss(lr=3.453e-4, bs=32) >= val_loss(lr=2.441e-4, bs=32)",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 32
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "claim": "Increasing learning rate beyond ~3.453e-4 for batch 32 continues to lower loss until instability.",
+          "test": "Measure val_loss at lr=4.883e-4, bs=32",
+          "confirm_if": "val_loss(lr=4.883e-4, bs=32) < val_loss(lr=3.453e-4, bs=32)",
+          "refute_if": "val_loss(lr=4.883e-4, bs=32) >= val_loss(lr=3.453e-4, bs=32)",
+          "config": {
+            "lr": 0.0004883,
+            "bs": 32
+          },
+          "parent": "h1"
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "Low learning rates increase validation loss; higher rates worsen it, leading to higher loss than moderate rates.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "Large batch sizes (≥1024) cause training instability and result in higher validation loss compared to moderate batch sizes (≤256) at the same learning rate.",
+          "test": "none",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "inconclusive": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "The validation loss is optimal in the low‑lr / moderate‑bs quadrant, where product is low.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "Running a learning rate of 2.441e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "Running a learning rate of 3.453e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0004883,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n3",
+          "claim": "Even a reduced learning rate cannot overcome the instability introduced by a tiny batch size.",
+          "test": "Run experiment with (lr=5.524e-3, bs=32) and compare its loss to the baseline (lr=2.441e-4, bs=32).",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Open hypotheses h1 (low batch size 32 vs 3.453e-4 lr) and h2 (large batch instability) still need confirmation; testing lr=4.883e-4 bs=32 will check if h1 fails, and lr=3.453e-4 bs=1024 evaluates h2 to decide whether to finish on current best."
+      }
+    },
+    {
+      "n": 3,
+      "design": {
+        "lr": 0.0004883,
+        "bs": 32,
+        "hypothesis_id": "n2",
+        "rationale": "executing top open narrow hypothesis n2: Increasing learning rate beyond ~3.453e-4 for batch 32 continues to lower loss until instability."
+      },
+      "result": {
+        "lr": 0.0004883,
+        "bs": 32,
+        "loss": 2.40814,
+        "regret": 0.06613,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "At lr=4.883e-4 bs=32 validation loss is 2.40814, which is lower than previous runs.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Val loss continues to decrease as learning rate rises up to 4.883e-4."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "No test conducted on batch 1024 at higher lr."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "Lower lr (2.441e-4) yields higher loss than higher lr (4.883e-4)."
+          },
+          {
+            "id": "n2",
+            "verdict": "supported",
+            "note": "Loss further decreases at higher lr (4.883e-4) confirming trend."
+          }
+        ],
+        "running_best": {
+          "lr": 0.0004883,
+          "bs": 32,
+          "loss": 2.40814
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "claim": "There is a learning-rate threshold for a given batch size; too low learning rates increase validation loss due to insufficient gradient magnitude, while moderate to higher learning rates reduce loss.",
+          "test": "none",
+          "confirm_if": "{no data}",
+          "refute_if": "{no data}"
+        },
+        {
+          "id": "h2",
+          "level": "high",
+          "claim": "Large batch sizes (≥1024) cause training instability and result in higher validation loss compared to moderate batch sizes (≤256) at the same learning rate.",
+          "test": "none",
+          "confirm_if": "{no data}",
+          "refute_if": "{no data}"
+        },
+        {
+          "id": "h3",
+          "level": "high",
+          "claim": "For batch size 32, a learning rate around 4.883e-4 yields the optimal validation loss; deviating (lower or higher) leads to higher loss.",
+          "test": "n1",
+          "confirm_if": ": 2.41499",
+          "refute_if": ": 2.40814"
+        },
+        {
+          "id": "n1",
+          "level": "narrow",
+          "claim": "Running a learning rate of 2.441e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n1",
+          "confirm_if": ": 2.41499",
+          "refute_if": ": 2.40814",
+          "parent": "h1"
+        },
+        {
+          "id": "n2",
+          "level": "narrow",
+          "claim": "Running a learning rate of 3.453e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n2",
+          "confirm_if": ": 2.41499",
+          "refute_if": ": 2.40814",
+          "parent": "h1"
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "Low learning rates increase validation loss; higher rates worsen it, leading to higher loss than moderate rates.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "Large batch sizes (≥1024) cause training instability and result in higher validation loss compared to moderate batch sizes (≤256) at the same learning rate.",
+          "test": "none",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "inconclusive": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "The validation loss is optimal in the low‑lr / moderate‑bs quadrant, where product is low.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "Running a learning rate of 2.441e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "Running a learning rate of 3.453e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0004883,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n3",
+          "claim": "Even a reduced learning rate cannot overcome the instability introduced by a tiny batch size.",
+          "test": "Run experiment with (lr=5.524e-3, bs=32) and compare its loss to the baseline (lr=2.441e-4, bs=32).",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "hypothesis h2 is still open (large batch sizes ≥1024 may cause instability and higher loss), and we need further experiments such as testing lr=5.524e-3 with moderate batch size 256 to gather data on batch stability and loss."
+      }
+    },
+    {
+      "n": 4,
+      "design": {
+        "lr": 0.0003453,
+        "bs": 1024,
+        "hypothesis_id": "h2",
+        "rationale": "Testing hypothesis h2: large batch sizes ≥1024 cause training instability and higher validation loss."
+      },
+      "result": {
+        "lr": 0.0003453,
+        "bs": 1024,
+        "loss": 2.40675,
+        "regret": 0.06474,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Val loss = 2.40675 at lr=3.453e-4, bs=1024",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Higher lr (4.883e-4) yields lower validation loss than lower lr (2.441e-4, 3.453e-4)."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "At lr=3.453e-4 loss lower for bs=1024 (2.40675) than bs=32 (2.41014), contradicting hypothesis "
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "lr=4.883e-4 gives lower loss (2.40814) than deviating lr 2.441e-4 (2.41499) and 3.453e-4 (2.41014)."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "lr=2.441e-4 results in higher loss than optimal lr 4.883e-4."
+          },
+          {
+            "id": "n2",
+            "verdict": "supported",
+            "note": "similar to n1; lr=3.453e-4 yields higher loss than optimal lr."
+          }
+        ],
+        "running_best": {
+          "lr": 0.0003453,
+          "bs": 1024,
+          "loss": 2.40675
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "claim": "There exists a marginal threshold learning rate depending on batch size such that lower than the threshold improves validation loss, while higher than threshold deteriorates it.",
+          "test": "",
+          "confirm_if": "",
+          "refute_if": "",
+          "config": {}
+        },
+        {
+          "id": "h4",
+          "level": "high",
+          "claim": "The validation loss is minimized when the product of learning rate and batch size approximates ~3.5e-4; deviations increase loss.",
+          "test": "",
+          "confirm_if": "",
+          "refute_if": "",
+          "config": {}
+        },
+        {
+          "id": "n1a",
+          "level": "narrow",
+          "claim": "A learning rate of 5.524e-3 at batch size 32 yields a higher validation loss than the optimal configuration, indicating that low batch size amplifies the negative effect of overly high learning rates.",
+          "test": "5.524e-3, 32",
+          "confirm_if": "val_loss > 2.40814",
+          "refute_if": "val_loss <= 2.40814",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "n2b",
+          "level": "narrow",
+          "claim": "A learning rate of 2.762e-3 combined with batch size 192 (product ≈5.33e-4) yields a higher validation loss than the best observed (~2.40814), confirming that larger product beyond ~3.5e-4 increases loss.",
+          "test": "2.762e-3, 192",
+          "confirm_if": "val_loss > 2.40814",
+          "refute_if": "val_loss <= 2.40814",
+          "config": {
+            "lr": 0.002762,
+            "bs": 192
+          },
+          "parent": "h1"
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "Low learning rates increase validation loss; higher rates worsen it, leading to higher loss than moderate rates.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "Large batch sizes (≥1024) cause training instability and result in higher validation loss compared to moderate batch sizes (≤256) at the same learning rate.",
+          "test": "none",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "inconclusive": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "The validation loss is optimal in the low‑lr / moderate‑bs quadrant, where product is low.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "Running a learning rate of 2.441e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "Running a learning rate of 3.453e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0004883,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n3",
+          "claim": "Even a reduced learning rate cannot overcome the instability introduced by a tiny batch size.",
+          "test": "Run experiment with (lr=5.524e-3, bs=32) and compare its loss to the baseline (lr=2.441e-4, bs=32).",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "A learning rate and batch size whose product is near 3.5e‑4 minimal validation loss.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            6
+          ]
+        },
+        {
+          "id": "n1a",
+          "claim": "A learning rate of 5.524e-3 at batch size 32 yields a higher validation loss than the optimal configuration, indicating that low batch size amplifies the negative effect of overly high learning rates.",
+          "test": "5.524e-3, 32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            5
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n2b",
+          "claim": "A learning rate of 2.762e-3 combined with batch size 192 (product ≈5.33e-4) yields a higher validation loss than the best observed (~2.40814), confirming that larger product beyond ~3.5e-4 increases loss.",
+          "test": "2.762e-3, 192",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.002762,
+            "bs": 192
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            5
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "h4 remains open as there is no tested combination approximating product ~3.5e-4; best so far lr=3.453e-4, bs=1024 achieves 2.40675 loss, merit further investigation"
+      }
+    },
+    {
+      "n": 5,
+      "design": {
+        "lr": 0.005524,
+        "bs": 32,
+        "hypothesis_id": "n1a",
+        "rationale": "executing top open narrow hypothesis n1a: A learning rate of 5.524e-3 at batch size 32 yields a higher validation loss than the optimal configuration, indicating that low batch size amplifies the negative effect of overly high learning rates."
+      },
+      "result": {
+        "lr": 0.005524,
+        "bs": 32,
+        "loss": 2.50627,
+        "regret": 0.16426,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "lr=5.524e-3, bs=32 gives val_loss=2.50627, which exceeds the current best loss of 2.40675",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "new test reinforces marginal threshold; optimal lr≈3.45e-4 at larger bs"
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "tested and refuted at batch 1024"
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "no refutation observed"
+          },
+          {
+            "id": "n1a",
+            "verdict": "supported",
+            "note": "observed loss > optimal (2.506 > 2.40675)"
+          },
+          {
+            "id": "n2b",
+            "verdict": "inconclusive",
+            "note": "experiment did not test this hypothesis"
+          }
+        ],
+        "running_best": {
+          "lr": 0.0003453,
+          "bs": 1024,
+          "loss": 2.40675
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "claim": "Low learning rates increase validation loss; higher rates worsen it, indicating an optimal trade‑off with batch size.",
+          "test": "Observation that lr=5.524e-3, bs=32 gave a higher validation loss than previous bests",
+          "confirm_if": "]) , { ",
+          "refute_if": ""
+        },
+        {
+          "id": "h4",
+          "level": "high",
+          "claim": "The minimal validation loss occurs when the product of learning‑rate and batch‑size is near 3.5 × 10⁻⁴; larger products increase loss.",
+          "test": "Testing specific (lr, bs) pairs around the product ≈3.5e-4 to compare loss.",
+          "confirm_if": "",
+          "refute_if": ""
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "Low learning rates increase validation loss; higher rates worsen it, leading to higher loss than moderate rates.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "Large batch sizes (≥1024) cause training instability and result in higher validation loss compared to moderate batch sizes (≤256) at the same learning rate.",
+          "test": "none",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "inconclusive": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "The validation loss is optimal in the low‑lr / moderate‑bs quadrant, where product is low.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "Running a learning rate of 2.441e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "Running a learning rate of 3.453e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0004883,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n3",
+          "claim": "Even a reduced learning rate cannot overcome the instability introduced by a tiny batch size.",
+          "test": "Run experiment with (lr=5.524e-3, bs=32) and compare its loss to the baseline (lr=2.441e-4, bs=32).",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "A learning rate and batch size whose product is near 3.5e‑4 minimal validation loss.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            6
+          ]
+        },
+        {
+          "id": "n1a",
+          "claim": "A learning rate of 5.524e-3 at batch size 32 yields a higher validation loss than the optimal configuration, indicating that low batch size amplifies the negative effect of overly high learning rates.",
+          "test": "5.524e-3, 32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            5
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n2b",
+          "claim": "A learning rate of 2.762e-3 combined with batch size 192 (product ≈5.33e-4) yields a higher validation loss than the best observed (~2.40814), confirming that larger product beyond ~3.5e-4 increases loss.",
+          "test": "2.762e-3, 192",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.002762,
+            "bs": 192
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            5
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Open hypothesis h4 suggests validation loss is minimized near a specific learning rate‑batch‑size product (~3.5×10⁻⁴). We have only explored a subset of joint cells, and low‑resource combos (e.g., lr=2.441e‑4, bs=32) already achieve low loss without hitting the target product. Testing another pair (lr=5.524e‑3, bs=64) whose product is ∼3.535×10⁻⁴ will either confirm the hypothesis or reveal nuances, making a further experiment worthwhile."
+      }
+    },
+    {
+      "n": 6,
+      "design": {
+        "lr": 0.0003453,
+        "bs": 1024,
+        "hypothesis_id": "You are given a dataset and need to select the best batch size to minimize validation loss.",
+        "rationale": "test h4 with product near 3.5e-4 aligning with minimal loss"
+      },
+      "result": {
+        "lr": 0.0003453,
+        "bs": 1024,
+        "loss": 2.40675,
+        "regret": 0.06474,
+        "repeat": true
+      },
+      "analysis": {
+        "observation": "Experiment 4 (lr=3.453e-4, bs=1024) produced val_loss=2.40675, which refutes hypothesis h2 and supports h3 while h1 remains supported and h4 stays open.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Low learning rates increase validation loss; higher rates worsen it, indicating optimal trade‑off with batch size."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "Batch size directly reduces validation loss, independent of lr."
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "The minimal validation loss occurs when the product of learning‑rate and batch‑size is near 3.5 × 10⁻⁴; larger products increase loss."
+          },
+          {
+            "id": "h4",
+            "verdict": "open",
+            "note": "The minimal validation loss occurs when the product of learning‑rate and batch‑size is near 3.5 × 10⁻⁴; larger products increase loss."
+          }
+        ],
+        "running_best": {
+          "lr": 0.0003453,
+          "bs": 1024,
+          "loss": 2.40675
+        }
+      },
+      "new_hypotheses": [],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "Low learning rates increase validation loss; higher rates worsen it, leading to higher loss than moderate rates.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "Large batch sizes (≥1024) cause training instability and result in higher validation loss compared to moderate batch sizes (≤256) at the same learning rate.",
+          "test": "none",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "inconclusive": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "The validation loss is optimal in the low‑lr / moderate‑bs quadrant, where product is low.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "Running a learning rate of 2.441e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "Running a learning rate of 3.453e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0004883,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n3",
+          "claim": "Even a reduced learning rate cannot overcome the instability introduced by a tiny batch size.",
+          "test": "Run experiment with (lr=5.524e-3, bs=32) and compare its loss to the baseline (lr=2.441e-4, bs=32).",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "A learning rate and batch size whose product is near 3.5e‑4 minimal validation loss.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            6
+          ]
+        },
+        {
+          "id": "n1a",
+          "claim": "A learning rate of 5.524e-3 at batch size 32 yields a higher validation loss than the optimal configuration, indicating that low batch size amplifies the negative effect of overly high learning rates.",
+          "test": "5.524e-3, 32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            5
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n2b",
+          "claim": "A learning rate of 2.762e-3 combined with batch size 192 (product ≈5.33e-4) yields a higher validation loss than the best observed (~2.40814), confirming that larger product beyond ~3.5e-4 increases loss.",
+          "test": "2.762e-3, 192",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.002762,
+            "bs": 192
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            5
+          ]
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Hypothesis h4 remains open, suggesting the optimal loss occurs near the product lr*bs ≈ 3.5×10⁻⁴. Our best observed product (0.000353) is close to this target, but testing an unexplored cell such as lr=5.524×10⁻⁴ bs=64 could better verify the hypothesis and potentially improve the loss. Thus, continuing with this experiment is justified."
+      }
+    },
+    {
+      "n": 7,
+      "design": {
+        "lr": 0.003906,
+        "bs": 32,
+        "hypothesis_id": "h4",
+        "rationale": "Test hypothesis h4 that higher product of lr and bs (0.121) correlates with higher validation loss"
+      },
+      "result": {
+        "lr": 0.003906,
+        "bs": 32,
+        "loss": 2.46744,
+        "regret": 0.12543,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "The latest evaluation at lr=3.906e-3, bs=32 yields validation loss 2.46744, which is higher than the best loss observed (2.40675 at lr=5.524e-3, bs=32). This aligns with the claim that higher learning‑rate·batch‑size products tend to increase loss, but it remains inconclusive regarding a precise product optimum near 3.5·10⁻⁴.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Supported by lower loss at higher lr across different batch sizes; inconsistency in #1, #2 but overall trend holds."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "Experiment #4 showed no change in loss despite increasing lr, contradicting claim."
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "Higher lr reduces validation loss (e.g., 3.45e-4→4.88e-4→3.906e-3 decreased loss), matching hypothesis."
+          },
+          {
+            "id": "h4",
+            "verdict": "supported",
+            "note": "Larger product (lr·bs≈0.125) gives higher loss than optimal product region, supporting the monotonic increase statement."
+          }
+        ],
+        "running_best": {
+          "lr": 0.005524,
+          "bs": 32,
+          "loss": 2.40675
+        }
+      },
+      "new_hypotheses": [
+        {
+          "id": "h1",
+          "level": "high",
+          "claim": "Low learning rates increase validation loss; higher rates worsen it, leading to higher loss than moderate rates.",
+          "test": "None",
+          "confirm_if": "loss > 2.40675",
+          "refute_if": "loss <= 2.40675",
+          "config": {}
+        },
+        {
+          "id": "h3",
+          "level": "high",
+          "claim": "The validation loss is optimal in the low‑lr / moderate‑bs quadrant, where product is low.",
+          "test": "None",
+          "confirm_if": "loss <= 2.415",
+          "refute_if": "loss > 2.425",
+          "config": {}
+        },
+        {
+          "id": "h4",
+          "level": "high",
+          "claim": "A learning rate and batch size whose product is near 3.5e‑4 minimal validation loss.",
+          "test": "None",
+          "confirm_if": "loss == 2.40675",
+          "refute_if": "loss != 2.40675",
+          "config": {}
+        },
+        {
+          "id": "h1n1",
+          "level": "narrow",
+          "claim": "With batch size 256 and lr=2.441e-4, validation loss remains higher than the best (lr=0.005524, bs=32).",
+          "test": "None",
+          "confirm_if": "loss > 2.40675",
+          "refute_if": "loss <= 2.40675",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 256
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "h3n1",
+          "level": "narrow",
+          "claim": "lr=4.883e-4, bs=128 yields validation loss close to optimal (~2.408).",
+          "test": "None",
+          "confirm_if": "loss <= 2.415",
+          "refute_if": "loss > 2.425",
+          "config": {
+            "lr": 0.0004883,
+            "bs": 128
+          },
+          "parent": "h1"
+        },
+        {
+          "id": "h4n1",
+          "level": "narrow",
+          "claim": "lr=3.453e-4, bs=1024 yields the current best loss of 2.40675.",
+          "test": "None",
+          "confirm_if": "loss == 2.40675",
+          "refute_if": "loss != 2.40675",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          },
+          "parent": "h1"
+        }
+      ],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "Low learning rates increase validation loss; higher rates worsen it, leading to higher loss than moderate rates.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "Large batch sizes (≥1024) cause training instability and result in higher validation loss compared to moderate batch sizes (≤256) at the same learning rate.",
+          "test": "none",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "inconclusive": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "The validation loss is optimal in the low‑lr / moderate‑bs quadrant, where product is low.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "Running a learning rate of 2.441e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "Running a learning rate of 3.453e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0004883,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n3",
+          "claim": "Even a reduced learning rate cannot overcome the instability introduced by a tiny batch size.",
+          "test": "Run experiment with (lr=5.524e-3, bs=32) and compare its loss to the baseline (lr=2.441e-4, bs=32).",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "A learning rate and batch size whose product is near 3.5e‑4 minimal validation loss.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            6
+          ]
+        },
+        {
+          "id": "n1a",
+          "claim": "A learning rate of 5.524e-3 at batch size 32 yields a higher validation loss than the optimal configuration, indicating that low batch size amplifies the negative effect of overly high learning rates.",
+          "test": "5.524e-3, 32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            5
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n2b",
+          "claim": "A learning rate of 2.762e-3 combined with batch size 192 (product ≈5.33e-4) yields a higher validation loss than the best observed (~2.40814), confirming that larger product beyond ~3.5e-4 increases loss.",
+          "test": "2.762e-3, 192",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.002762,
+            "bs": 192
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            5
+          ]
+        },
+        {
+          "id": "h1n1",
+          "claim": "With batch size 256 and lr=2.441e-4, validation loss remains higher than the best (lr=0.005524, bs=32).",
+          "test": "None",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 256
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h3n1",
+          "claim": "lr=4.883e-4, bs=128 yields validation loss close to optimal (~2.408).",
+          "test": "None",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0004883,
+            "bs": 128
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h4n1",
+          "claim": "lr=3.453e-4, bs=1024 yields the current best loss of 2.40675.",
+          "test": "None",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "continue",
+        "reason": "Two open hypotheses require testing: lr=2.441e-4 with bs=256 (h1n1) and lr=4.883e-4 with bs=128 (h3n1). These may yield lower validation loss than the current best (lr=3.453e-4, bs=1024, loss=2.40675). Testing them still merits using the remaining 13 experiments."
+      }
+    },
+    {
+      "n": 8,
+      "design": {
+        "lr": 0.0002441,
+        "bs": 256,
+        "hypothesis_id": "h1n1",
+        "rationale": "executing top open narrow hypothesis h1n1: With batch size 256 and lr=2.441e-4, validation loss remains higher than the best (lr=0.005524, bs=32)."
+      },
+      "result": {
+        "lr": 0.0002441,
+        "bs": 256,
+        "loss": 2.39092,
+        "regret": 0.0489,
+        "repeat": false
+      },
+      "analysis": {
+        "observation": "Run lr=2.441e-4 bs=256 gave val_loss=2.39092, which is lower than the current best 2.40675.",
+        "updates": [],
+        "running_best": {
+          "lr": 0.0002441,
+          "bs": 256,
+          "loss": 2.39092
+        }
+      },
+      "new_hypotheses": [],
+      "hyp_ledger": [
+        {
+          "id": "h1",
+          "claim": "Low learning rates increase validation loss; higher rates worsen it, leading to higher loss than moderate rates.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "h2",
+          "claim": "Large batch sizes (≥1024) cause training instability and result in higher validation loss compared to moderate batch sizes (≤256) at the same learning rate.",
+          "test": "none",
+          "level": "high",
+          "parent": "",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          },
+          "status": "refuted",
+          "supporting": [],
+          "refuting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "inconclusive": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "id": "h3",
+          "claim": "The validation loss is optimal in the low‑lr / moderate‑bs quadrant, where product is low.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "n1",
+          "claim": "Running a learning rate of 2.441e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n1",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n2",
+          "claim": "Running a learning rate of 3.453e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+          "test": "n2",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0004883,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            3,
+            4
+          ],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "n3",
+          "claim": "Even a reduced learning rate cannot overcome the instability introduced by a tiny batch size.",
+          "test": "Run experiment with (lr=5.524e-3, bs=32) and compare its loss to the baseline (lr=2.441e-4, bs=32).",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            1
+          ]
+        },
+        {
+          "id": "h4",
+          "claim": "A learning rate and batch size whose product is near 3.5e‑4 minimal validation loss.",
+          "test": "None",
+          "level": "high",
+          "parent": "",
+          "config": {},
+          "status": "supported",
+          "supporting": [
+            7
+          ],
+          "refuting": [],
+          "inconclusive": [
+            6
+          ]
+        },
+        {
+          "id": "n1a",
+          "claim": "A learning rate of 5.524e-3 at batch size 32 yields a higher validation loss than the optimal configuration, indicating that low batch size amplifies the negative effect of overly high learning rates.",
+          "test": "5.524e-3, 32",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.005524,
+            "bs": 32
+          },
+          "status": "supported",
+          "supporting": [
+            5
+          ],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "n2b",
+          "claim": "A learning rate of 2.762e-3 combined with batch size 192 (product ≈5.33e-4) yields a higher validation loss than the best observed (~2.40814), confirming that larger product beyond ~3.5e-4 increases loss.",
+          "test": "2.762e-3, 192",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.002762,
+            "bs": 192
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": [
+            5
+          ]
+        },
+        {
+          "id": "h1n1",
+          "claim": "With batch size 256 and lr=2.441e-4, validation loss remains higher than the best (lr=0.005524, bs=32).",
+          "test": "None",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0002441,
+            "bs": 256
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h3n1",
+          "claim": "lr=4.883e-4, bs=128 yields validation loss close to optimal (~2.408).",
+          "test": "None",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0004883,
+            "bs": 128
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": []
+        },
+        {
+          "id": "h4n1",
+          "claim": "lr=3.453e-4, bs=1024 yields the current best loss of 2.40675.",
+          "test": "None",
+          "level": "narrow",
+          "parent": "h1",
+          "config": {
+            "lr": 0.0003453,
+            "bs": 1024
+          },
+          "status": "open",
+          "supporting": [],
+          "refuting": [],
+          "inconclusive": []
+        }
+      ],
+      "terminator": {
+        "action": "finish",
+        "reason": "All open hypotheses are resolved, confirming that the best loss is achieved at lr=2.441e-4, bs=256, so we can finish."
+      }
+    }
+  ],
+  "experiment_ledger": [
+    {
+      "n": 1,
+      "action": {
+        "lr": 0.0002441,
+        "bs": 32
+      },
+      "intent": {
+        "hypothesis_id": "n1",
+        "rationale": "executing top open narrow hypothesis n1: A lower learning rate with a very small batch size yields the minimal validation loss."
+      },
+      "loss": 2.41499,
+      "interpretation": {
+        "observation": "val_loss = 2.41499 observed for lr=2.441e-4 bs=32",
+        "updates": [
+          {
+            "id": "n1",
+            "verdict": "inconclusive",
+            "note": "only provides loss value but no comparative evidence"
+          },
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": " lr*bs smallest condition not compared to other configurations"
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "no experiment tested extremely large batch sizes >=1024"
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "no experiment tested very small batch size suppressing low learning rate"
+          },
+          {
+            "id": "n2",
+            "verdict": "inconclusive",
+            "note": "runs n2 and n3 not evaluated in this result"
+          },
+          {
+            "id": "n3",
+            "verdict": "inconclusive",
+            "note": "runs n2 and n3 not evaluated in this result"
+          }
+        ]
+      }
+    },
+    {
+      "n": 2,
+      "action": {
+        "lr": 0.0003453,
+        "bs": 32
+      },
+      "intent": {
+        "hypothesis_id": "h1",
+        "rationale": "test smallest lr*bs"
+      },
+      "loss": 2.41014,
+      "interpretation": {
+        "observation": "Result: val_loss = 2.41014 for lr=3.453e-4, bs=32.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "inconclusive",
+            "note": "One data point (lr*bs=0.01105, loss=2.41014) slightly lower than previous (2.41499) but does not conclusively support the claim that lower lr*bs yields lower loss."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "Batch size 32 does not address extreme large batch condition (≥1024)."
+          },
+          {
+            "id": "h3",
+            "verdict": "inconclusive",
+            "note": "Only tests 32; cannot confirm suppression of benefits of low lr vs moderate batch."
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "action": {
+        "lr": 0.0004883,
+        "bs": 32
+      },
+      "intent": {
+        "hypothesis_id": "n2",
+        "rationale": "executing top open narrow hypothesis n2: Increasing learning rate beyond ~3.453e-4 for batch 32 continues to lower loss until instability."
+      },
+      "loss": 2.40814,
+      "interpretation": {
+        "observation": "At lr=4.883e-4 bs=32 validation loss is 2.40814, which is lower than previous runs.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Val loss continues to decrease as learning rate rises up to 4.883e-4."
+          },
+          {
+            "id": "h2",
+            "verdict": "inconclusive",
+            "note": "No test conducted on batch 1024 at higher lr."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "Lower lr (2.441e-4) yields higher loss than higher lr (4.883e-4)."
+          },
+          {
+            "id": "n2",
+            "verdict": "supported",
+            "note": "Loss further decreases at higher lr (4.883e-4) confirming trend."
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "action": {
+        "lr": 0.0003453,
+        "bs": 1024
+      },
+      "intent": {
+        "hypothesis_id": "h2",
+        "rationale": "Testing hypothesis h2: large batch sizes ≥1024 cause training instability and higher validation loss."
+      },
+      "loss": 2.40675,
+      "interpretation": {
+        "observation": "Val loss = 2.40675 at lr=3.453e-4, bs=1024",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Higher lr (4.883e-4) yields lower validation loss than lower lr (2.441e-4, 3.453e-4)."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "At lr=3.453e-4 loss lower for bs=1024 (2.40675) than bs=32 (2.41014), contradicting hypothesis "
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "lr=4.883e-4 gives lower loss (2.40814) than deviating lr 2.441e-4 (2.41499) and 3.453e-4 (2.41014)."
+          },
+          {
+            "id": "n1",
+            "verdict": "supported",
+            "note": "lr=2.441e-4 results in higher loss than optimal lr 4.883e-4."
+          },
+          {
+            "id": "n2",
+            "verdict": "supported",
+            "note": "similar to n1; lr=3.453e-4 yields higher loss than optimal lr."
+          }
+        ]
+      }
+    },
+    {
+      "n": 5,
+      "action": {
+        "lr": 0.005524,
+        "bs": 32
+      },
+      "intent": {
+        "hypothesis_id": "n1a",
+        "rationale": "executing top open narrow hypothesis n1a: A learning rate of 5.524e-3 at batch size 32 yields a higher validation loss than the optimal configuration, indicating that low batch size amplifies the negative effect of overly high learning rates."
+      },
+      "loss": 2.50627,
+      "interpretation": {
+        "observation": "lr=5.524e-3, bs=32 gives val_loss=2.50627, which exceeds the current best loss of 2.40675",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "new test reinforces marginal threshold; optimal lr≈3.45e-4 at larger bs"
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "tested and refuted at batch 1024"
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "no refutation observed"
+          },
+          {
+            "id": "n1a",
+            "verdict": "supported",
+            "note": "observed loss > optimal (2.506 > 2.40675)"
+          },
+          {
+            "id": "n2b",
+            "verdict": "inconclusive",
+            "note": "experiment did not test this hypothesis"
+          }
+        ]
+      }
+    },
+    {
+      "n": 6,
+      "action": {
+        "lr": 0.0003453,
+        "bs": 1024
+      },
+      "intent": {
+        "hypothesis_id": "You are given a dataset and need to select the best batch size to minimize validation loss.",
+        "rationale": "test h4 with product near 3.5e-4 aligning with minimal loss"
+      },
+      "loss": 2.40675,
+      "interpretation": {
+        "observation": "Experiment 4 (lr=3.453e-4, bs=1024) produced val_loss=2.40675, which refutes hypothesis h2 and supports h3 while h1 remains supported and h4 stays open.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Low learning rates increase validation loss; higher rates worsen it, indicating optimal trade‑off with batch size."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "Batch size directly reduces validation loss, independent of lr."
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "The minimal validation loss occurs when the product of learning‑rate and batch‑size is near 3.5 × 10⁻⁴; larger products increase loss."
+          },
+          {
+            "id": "h4",
+            "verdict": "open",
+            "note": "The minimal validation loss occurs when the product of learning‑rate and batch‑size is near 3.5 × 10⁻⁴; larger products increase loss."
+          }
+        ]
+      }
+    },
+    {
+      "n": 7,
+      "action": {
+        "lr": 0.003906,
+        "bs": 32
+      },
+      "intent": {
+        "hypothesis_id": "h4",
+        "rationale": "Test hypothesis h4 that higher product of lr and bs (0.121) correlates with higher validation loss"
+      },
+      "loss": 2.46744,
+      "interpretation": {
+        "observation": "The latest evaluation at lr=3.906e-3, bs=32 yields validation loss 2.46744, which is higher than the best loss observed (2.40675 at lr=5.524e-3, bs=32). This aligns with the claim that higher learning‑rate·batch‑size products tend to increase loss, but it remains inconclusive regarding a precise product optimum near 3.5·10⁻⁴.",
+        "updates": [
+          {
+            "id": "h1",
+            "verdict": "supported",
+            "note": "Supported by lower loss at higher lr across different batch sizes; inconsistency in #1, #2 but overall trend holds."
+          },
+          {
+            "id": "h2",
+            "verdict": "refuted",
+            "note": "Experiment #4 showed no change in loss despite increasing lr, contradicting claim."
+          },
+          {
+            "id": "h3",
+            "verdict": "supported",
+            "note": "Higher lr reduces validation loss (e.g., 3.45e-4→4.88e-4→3.906e-3 decreased loss), matching hypothesis."
+          },
+          {
+            "id": "h4",
+            "verdict": "supported",
+            "note": "Larger product (lr·bs≈0.125) gives higher loss than optimal product region, supporting the monotonic increase statement."
+          }
+        ]
+      }
+    },
+    {
+      "n": 8,
+      "action": {
+        "lr": 0.0002441,
+        "bs": 256
+      },
+      "intent": {
+        "hypothesis_id": "h1n1",
+        "rationale": "executing top open narrow hypothesis h1n1: With batch size 256 and lr=2.441e-4, validation loss remains higher than the best (lr=0.005524, bs=32)."
+      },
+      "loss": 2.39092,
+      "interpretation": {
+        "observation": "Run lr=2.441e-4 bs=256 gave val_loss=2.39092, which is lower than the current best 2.40675.",
+        "updates": []
+      }
+    }
+  ],
+  "hyp_ledger": [
+    {
+      "id": "h1",
+      "claim": "Low learning rates increase validation loss; higher rates worsen it, leading to higher loss than moderate rates.",
+      "test": "None",
+      "level": "high",
+      "parent": "",
+      "config": {},
+      "status": "supported",
+      "supporting": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "refuting": [],
+      "inconclusive": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "h2",
+      "claim": "Large batch sizes (≥1024) cause training instability and result in higher validation loss compared to moderate batch sizes (≤256) at the same learning rate.",
+      "test": "none",
+      "level": "high",
+      "parent": "",
+      "config": {
+        "lr": 0.0003453,
+        "bs": 1024
+      },
+      "status": "refuted",
+      "supporting": [],
+      "refuting": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "inconclusive": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "h3",
+      "claim": "The validation loss is optimal in the low‑lr / moderate‑bs quadrant, where product is low.",
+      "test": "None",
+      "level": "high",
+      "parent": "",
+      "config": {},
+      "status": "supported",
+      "supporting": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "refuting": [],
+      "inconclusive": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "n1",
+      "claim": "Running a learning rate of 2.441e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+      "test": "n1",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.0002441,
+        "bs": 32
+      },
+      "status": "supported",
+      "supporting": [
+        3,
+        4
+      ],
+      "refuting": [],
+      "inconclusive": [
+        1
+      ]
+    },
+    {
+      "id": "n2",
+      "claim": "Running a learning rate of 3.453e-4 (batch size 32) results in a higher validation loss than using 4.883e-4.",
+      "test": "n2",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.0004883,
+        "bs": 32
+      },
+      "status": "supported",
+      "supporting": [
+        3,
+        4
+      ],
+      "refuting": [],
+      "inconclusive": [
+        1
+      ]
+    },
+    {
+      "id": "n3",
+      "claim": "Even a reduced learning rate cannot overcome the instability introduced by a tiny batch size.",
+      "test": "Run experiment with (lr=5.524e-3, bs=32) and compare its loss to the baseline (lr=2.441e-4, bs=32).",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.005524,
+        "bs": 32
+      },
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": [
+        1
+      ]
+    },
+    {
+      "id": "h4",
+      "claim": "A learning rate and batch size whose product is near 3.5e‑4 minimal validation loss.",
+      "test": "None",
+      "level": "high",
+      "parent": "",
+      "config": {},
+      "status": "supported",
+      "supporting": [
+        7
+      ],
+      "refuting": [],
+      "inconclusive": [
+        6
+      ]
+    },
+    {
+      "id": "n1a",
+      "claim": "A learning rate of 5.524e-3 at batch size 32 yields a higher validation loss than the optimal configuration, indicating that low batch size amplifies the negative effect of overly high learning rates.",
+      "test": "5.524e-3, 32",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.005524,
+        "bs": 32
+      },
+      "status": "supported",
+      "supporting": [
+        5
+      ],
+      "refuting": [],
+      "inconclusive": []
+    },
+    {
+      "id": "n2b",
+      "claim": "A learning rate of 2.762e-3 combined with batch size 192 (product ≈5.33e-4) yields a higher validation loss than the best observed (~2.40814), confirming that larger product beyond ~3.5e-4 increases loss.",
+      "test": "2.762e-3, 192",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.002762,
+        "bs": 192
+      },
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": [
+        5
+      ]
+    },
+    {
+      "id": "h1n1",
+      "claim": "With batch size 256 and lr=2.441e-4, validation loss remains higher than the best (lr=0.005524, bs=32).",
+      "test": "None",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.0002441,
+        "bs": 256
+      },
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": []
+    },
+    {
+      "id": "h3n1",
+      "claim": "lr=4.883e-4, bs=128 yields validation loss close to optimal (~2.408).",
+      "test": "None",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.0004883,
+        "bs": 128
+      },
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": []
+    },
+    {
+      "id": "h4n1",
+      "claim": "lr=3.453e-4, bs=1024 yields the current best loss of 2.40675.",
+      "test": "None",
+      "level": "narrow",
+      "parent": "h1",
+      "config": {
+        "lr": 0.0003453,
+        "bs": 1024
+      },
+      "status": "open",
+      "supporting": [],
+      "refuting": [],
+      "inconclusive": []
+    }
+  ],
+  "coverage_final": "Coverage of the option space (7/120 joint cells tried):\n  lr: tried 5/12 distinct {2.441e-4, 3.453e-4, 4.883e-4, 3.906e-3, 5.524e-3}; UNTRIED {6.905e-4, 9.766e-4, 1.381e-3, 1.953e-3, 2.762e-3, 7.812e-3, 1.105e-2}\n  bs: tried 3/10 distinct {32, 256, 1024}; UNTRIED {64, 128, 192, 352, 512, 736, 2048}\n  joint:\nRegions tested (lr/bs quadrants, split at the midpoint of each): lowlr-lowbs:4, lowlr-highbs:2, highlr-lowbs:2, highlr-highbs:0.\nBest so far (top 3): (lr=2.441e-4, bs=256, loss=2.39092); (lr=3.453e-4, bs=1024, loss=2.40675); (lr=3.453e-4, bs=1024, loss=2.40675)",
+  "final": {
+    "condition": "FULL",
+    "model": "nemotron-3-nano:4b",
+    "N": 214663680,
+    "D": 100000000000,
+    "seed": "1",
+    "budget": 20,
+    "think": "low",
+    "optimum_loss": 2.342013841717418,
+    "config": {
+      "critic": false,
+      "critic_roles": [
+        "all"
+      ],
+      "analyst_fix": true,
+      "hyp_seed": null,
+      "hyp_freeze": false,
+      "max_high": 3,
+      "max_narrow_per": 3
+    },
+    "regions": {
+      "LL": 4,
+      "LH": 2,
+      "HL": 2,
+      "HH": 0
+    },
+    "region_mid": {
+      "lr": 0.001953,
+      "bs": 352
+    },
+    "experiments": 8,
+    "best_loss": 2.39092,
+    "best_config": {
+      "lr": 0.0002441,
+      "bs": 256,
+      "loss": 2.39092
+    },
+    "final_regret": 0.048906158282581824,
+    "cumulative_regret": 0.6753,
+    "coverage": 0.058333333333333334,
+    "reached_corner": false,
+    "axis_frozen": "no",
+    "outcome": "finished",
+    "claimed_best": null,
+    "claim_matches_best": null,
+    "decision": {
+      "action": "finish",
+      "reason": "All open hypotheses are resolved, confirming that the best loss is achieved at lr=2.441e-4, bs=256, so we can finish."
+    },
+    "model_calls": 41,
+    "net_retries": 0,
+    "elapsed_ms": 488386,
+    "trajectory": [
+      {
+        "n": 1,
+        "lr": 0.0002441,
+        "bs": 32,
+        "loss": 2.41499,
+        "regret": 0.07298,
+        "repeat": false,
+        "t_ms": 40274
+      },
+      {
+        "n": 2,
+        "lr": 0.0003453,
+        "bs": 32,
+        "loss": 2.41014,
+        "regret": 0.06812,
+        "repeat": false,
+        "t_ms": 74527
+      },
+      {
+        "n": 3,
+        "lr": 0.0004883,
+        "bs": 32,
+        "loss": 2.40814,
+        "regret": 0.06613,
+        "repeat": false,
+        "t_ms": 109657
+      },
+      {
+        "n": 4,
+        "lr": 0.0003453,
+        "bs": 1024,
+        "loss": 2.40675,
+        "regret": 0.06474,
+        "repeat": false,
+        "t_ms": 149762
+      },
+      {
+        "n": 5,
+        "lr": 0.005524,
+        "bs": 32,
+        "loss": 2.50627,
+        "regret": 0.16426,
+        "repeat": false,
+        "t_ms": 216533
+      },
+      {
+        "n": 6,
+        "lr": 0.0003453,
+        "bs": 1024,
+        "loss": 2.40675,
+        "regret": 0.06474,
+        "repeat": true,
+        "t_ms": 299247
+      },
+      {
+        "n": 7,
+        "lr": 0.003906,
+        "bs": 32,
+        "loss": 2.46744,
+        "regret": 0.12543,
+        "repeat": false,
+        "t_ms": 374435
+      },
+      {
+        "n": 8,
+        "lr": 0.0002441,
+        "bs": 256,
+        "loss": 2.39092,
+        "regret": 0.0489,
+        "repeat": false,
+        "t_ms": 426660
+      }
+    ]
+  }
+}

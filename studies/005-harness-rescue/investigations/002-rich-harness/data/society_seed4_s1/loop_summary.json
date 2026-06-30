@@ -1,0 +1,96 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "1",
+  "budget": 5,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "config": {
+    "critic": false,
+    "hyp_seed": "4regions",
+    "hyp_freeze": true,
+    "max_high": 3,
+    "max_narrow_per": 3
+  },
+  "regions": {
+    "LL": 2,
+    "LH": 2,
+    "HL": 1,
+    "HH": 0
+  },
+  "region_mid": {
+    "lr": 0.001953,
+    "bs": 352
+  },
+  "experiments": 5,
+  "best_loss": 2.37972,
+  "best_config": {
+    "lr": 0.0003453,
+    "bs": 256,
+    "loss": 2.37972
+  },
+  "final_regret": 0.037706158282581725,
+  "cumulative_regret": 0.35709,
+  "coverage": 0.041666666666666664,
+  "reached_corner": false,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": null,
+  "claim_matches_best": null,
+  "decision": {
+    "action": "continue",
+    "reason": "Hypotheses are still contested and no clear winner is resolved, so the current best (lr=3.453e-4, bs=256) remains provisional and further testing would refine the selection."
+  },
+  "model_calls": 16,
+  "net_retries": 0,
+  "elapsed_ms": 97862,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.0002441,
+      "bs": 32,
+      "loss": 2.41499,
+      "regret": 0.07298,
+      "repeat": false,
+      "t_ms": 8124
+    },
+    {
+      "n": 2,
+      "lr": 0.0002441,
+      "bs": 1024,
+      "loss": 2.42121,
+      "regret": 0.0792,
+      "repeat": false,
+      "t_ms": 21230
+    },
+    {
+      "n": 3,
+      "lr": 0.0003453,
+      "bs": 256,
+      "loss": 2.37972,
+      "regret": 0.03771,
+      "repeat": false,
+      "t_ms": 39055
+    },
+    {
+      "n": 4,
+      "lr": 0.002762,
+      "bs": 32,
+      "loss": 2.44447,
+      "regret": 0.10246,
+      "repeat": false,
+      "t_ms": 62149
+    },
+    {
+      "n": 5,
+      "lr": 0.0003453,
+      "bs": 1024,
+      "loss": 2.40675,
+      "regret": 0.06474,
+      "repeat": false,
+      "t_ms": 84508
+    }
+  ]
+}

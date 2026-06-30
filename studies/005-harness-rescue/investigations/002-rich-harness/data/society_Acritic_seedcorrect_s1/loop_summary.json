@@ -1,0 +1,91 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "1",
+  "budget": 6,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "config": {
+    "critic": true,
+    "critic_roles": [
+      "analyst"
+    ],
+    "analyst_fix": false,
+    "hyp_seed": "correct",
+    "hyp_freeze": false,
+    "max_high": 3,
+    "max_narrow_per": 3
+  },
+  "regions": {
+    "LL": 2,
+    "LH": 1,
+    "HL": 1,
+    "HH": 0
+  },
+  "region_mid": {
+    "lr": 0.001953,
+    "bs": 352
+  },
+  "experiments": 4,
+  "best_loss": 2.37972,
+  "best_config": {
+    "lr": 0.0003453,
+    "bs": 256,
+    "loss": 2.37972
+  },
+  "final_regret": 0.037706158282581725,
+  "cumulative_regret": 0.23379999999999998,
+  "coverage": 0.03333333333333333,
+  "reached_corner": false,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": null,
+  "claim_matches_best": null,
+  "decision": {
+    "action": "finish",
+    "reason": "All remaining hypotheses are resolved or inconclusive; the best loss of 2.37972 is achieved with lr=3.453e-4, bs=256 and further testing is unlikely to materially improve the loss."
+  },
+  "model_calls": 34,
+  "net_retries": 0,
+  "elapsed_ms": 296247,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.0002441,
+      "bs": 2048,
+      "loss": 2.45412,
+      "regret": 0.11211,
+      "repeat": false,
+      "t_ms": 22335
+    },
+    {
+      "n": 2,
+      "lr": 0.0002441,
+      "bs": 128,
+      "loss": 2.38443,
+      "regret": 0.04242,
+      "repeat": false,
+      "t_ms": 144204
+    },
+    {
+      "n": 3,
+      "lr": 0.01105,
+      "bs": 256,
+      "loss": 2.38358,
+      "regret": 0.04156,
+      "repeat": false,
+      "t_ms": 183874
+    },
+    {
+      "n": 4,
+      "lr": 0.0003453,
+      "bs": 256,
+      "loss": 2.37972,
+      "regret": 0.03771,
+      "repeat": false,
+      "t_ms": 241263
+    }
+  ]
+}

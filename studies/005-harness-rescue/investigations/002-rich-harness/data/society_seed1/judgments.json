@@ -1,0 +1,15 @@
+{
+  "judge_model": "claude-opus-4-8 (omniscient: full trajectory + ground truth)",
+  "orienter": {
+    "verdict": "weak",
+    "dims": {
+      "relevance": "Engages the right variables (lr, bs) and objective, topically on-target, but the framing actively misdirects.",
+      "correctness": "Wrong on every load-bearing claim — caps lr near 1.38e-3, predicts loss rises above it, places optimum at bs=256, whereas truth is lr=7.81e-3 / bs=1024 in the high-lr large-bs corner.",
+      "anticipates_interaction": "Fails the pivotal test — treats lr as a fixed U-shaped optimum independent of bs and explicitly says to fix lr near 1.38e-3 and sweep bs, the textbook freeze, rather than recognizing they must rise jointly toward the corner.",
+      "actionability": "Highly actionable but in the wrong direction — concrete first pairs and an explicit 'isolate batch-size by fixing lr' protocol that hard-codes the trap."
+    },
+    "error_note": "The error is seeded here: the prior invents a hard lr ceiling at ~1.38e-3 and prescribes fixing lr to sweep bs, directing the actor straight into the confident-wrong minimum and away from the high-lr/large-bs corner.",
+    "decision_error_or_information_gap": "Decision error — with zero experiments the interaction (large batches tolerate higher lr) was knowable from priors, yet the Orienter asserted a confident lr ceiling and an explicit freeze protocol instead of hedging toward joint escalation.",
+    "bifurcation": "Whether the orientation set up joint lr-bs escalation toward the corner or seeded an axis-freeze — and it decisively did the latter, both capping lr and prescribing the fix-lr/sweep-bs protocol."
+  }
+}

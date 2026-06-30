@@ -1,0 +1,111 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "1",
+  "budget": 20,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "config": {
+    "critic": false,
+    "critic_roles": [
+      "all"
+    ],
+    "analyst_fix": false,
+    "hyp_seed": null,
+    "hyp_freeze": false,
+    "max_high": 3,
+    "max_narrow_per": 3,
+    "strong_roles": [],
+    "strong_model": null
+  },
+  "regions": {
+    "LL": 4,
+    "LH": 1,
+    "HL": 1,
+    "HH": 0
+  },
+  "region_mid": {
+    "lr": 0.001953,
+    "bs": 352
+  },
+  "experiments": 6,
+  "best_loss": 2.37755,
+  "best_config": {
+    "lr": 0.0003453,
+    "bs": 192,
+    "loss": 2.37755
+  },
+  "final_regret": 0.03553615828258172,
+  "cumulative_regret": 0.27304000000000006,
+  "coverage": 0.05,
+  "reached_corner": false,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": null,
+  "claim_matches_best": null,
+  "decision": {
+    "action": "finish",
+    "reason": "The current best loss is 2.37755 at lr=3.453e-4 and bs=192. Open hypotheses h2 and h5 are consistent with this configuration: very low lr leads to higher loss regardless of bs, and higher lr (≥3.453e-4) is optimal, and bs=192 minimizes loss. Further experiments are unlikely to improve loss materially."
+  },
+  "model_calls": 31,
+  "net_retries": 0,
+  "elapsed_ms": 305309,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.0003453,
+      "bs": 64,
+      "loss": 2.38001,
+      "regret": 0.038,
+      "repeat": false,
+      "t_ms": 40830
+    },
+    {
+      "n": 2,
+      "lr": 0.0002441,
+      "bs": 64,
+      "loss": 2.38699,
+      "regret": 0.04497,
+      "repeat": false,
+      "t_ms": 66318
+    },
+    {
+      "n": 3,
+      "lr": 0.005524,
+      "bs": 64,
+      "loss": 2.41742,
+      "regret": 0.07541,
+      "repeat": false,
+      "t_ms": 108731
+    },
+    {
+      "n": 4,
+      "lr": 0.0003453,
+      "bs": 192,
+      "loss": 2.37755,
+      "regret": 0.03554,
+      "repeat": false,
+      "t_ms": 166582
+    },
+    {
+      "n": 5,
+      "lr": 0.0003453,
+      "bs": 256,
+      "loss": 2.37972,
+      "regret": 0.03771,
+      "repeat": false,
+      "t_ms": 211025
+    },
+    {
+      "n": 6,
+      "lr": 0.0003453,
+      "bs": 352,
+      "loss": 2.38342,
+      "regret": 0.04141,
+      "repeat": false,
+      "t_ms": 239278
+    }
+  ]
+}

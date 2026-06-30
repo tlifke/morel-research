@@ -1,0 +1,122 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "1",
+  "budget": 20,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "config": {
+    "critic": false,
+    "critic_roles": [
+      "all"
+    ],
+    "analyst_fix": false,
+    "hyp_seed": null,
+    "hyp_freeze": false,
+    "max_high": 3,
+    "max_narrow_per": 3,
+    "strong_roles": [
+      "hypothesizer"
+    ],
+    "strong_model": "gemini-3.1-flash-lite"
+  },
+  "regions": {
+    "LL": 0,
+    "LH": 0,
+    "HL": 1,
+    "HH": 6
+  },
+  "region_mid": {
+    "lr": 0.001953,
+    "bs": 352
+  },
+  "experiments": 7,
+  "best_loss": 2.34446,
+  "best_config": {
+    "lr": 0.005524,
+    "bs": 736,
+    "loss": 2.34446
+  },
+  "final_regret": 0.0024461582825821004,
+  "cumulative_regret": 0.25023,
+  "coverage": 0.058333333333333334,
+  "reached_corner": true,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": null,
+  "claim_matches_best": null,
+  "decision": {
+    "action": "finish",
+    "reason": "The hypotheses indicate that the learning rate of 5.524e-3 is optimal, with batch size 736 giving the lowest observed validation loss. Experiments decreasing the learning rate or trying other combinations are unlikely to improve the loss, so further testing offers little value. Therefore, the best parameters are lr=5.524e-3 and bs=736."
+  },
+  "model_calls": 28,
+  "net_retries": 0,
+  "elapsed_ms": 157569,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.01105,
+      "bs": 2048,
+      "loss": 2.36667,
+      "regret": 0.02465,
+      "repeat": false,
+      "t_ms": 8873
+    },
+    {
+      "n": 2,
+      "lr": 0.01105,
+      "bs": 32,
+      "loss": 2.5328,
+      "regret": 0.19079,
+      "repeat": false,
+      "t_ms": 26891
+    },
+    {
+      "n": 3,
+      "lr": 0.01105,
+      "bs": 512,
+      "loss": 2.35916,
+      "regret": 0.01714,
+      "repeat": false,
+      "t_ms": 42009
+    },
+    {
+      "n": 4,
+      "lr": 0.005524,
+      "bs": 512,
+      "loss": 2.34546,
+      "regret": 0.00345,
+      "repeat": false,
+      "t_ms": 64068
+    },
+    {
+      "n": 5,
+      "lr": 0.007812,
+      "bs": 512,
+      "loss": 2.34943,
+      "regret": 0.00742,
+      "repeat": false,
+      "t_ms": 85751
+    },
+    {
+      "n": 6,
+      "lr": 0.003906,
+      "bs": 512,
+      "loss": 2.34636,
+      "regret": 0.00434,
+      "repeat": false,
+      "t_ms": 124639
+    },
+    {
+      "n": 7,
+      "lr": 0.005524,
+      "bs": 736,
+      "loss": 2.34446,
+      "regret": 0.00244,
+      "repeat": false,
+      "t_ms": 143817
+    }
+  ]
+}

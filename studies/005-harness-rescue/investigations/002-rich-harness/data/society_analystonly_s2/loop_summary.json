@@ -1,0 +1,122 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "2",
+  "budget": 20,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "config": {
+    "critic": false,
+    "critic_roles": [
+      "all"
+    ],
+    "analyst_fix": false,
+    "hyp_seed": null,
+    "hyp_freeze": false,
+    "max_high": 3,
+    "max_narrow_per": 3,
+    "strong_roles": [
+      "analyst"
+    ],
+    "strong_model": "gemini-3.1-flash-lite"
+  },
+  "regions": {
+    "LL": 3,
+    "LH": 1,
+    "HL": 1,
+    "HH": 2
+  },
+  "region_mid": {
+    "lr": 0.001953,
+    "bs": 352
+  },
+  "experiments": 7,
+  "best_loss": 2.36071,
+  "best_config": {
+    "lr": 0.002762,
+    "bs": 2048,
+    "loss": 2.36071
+  },
+  "final_regret": 0.018696158282581976,
+  "cumulative_regret": 0.43898,
+  "coverage": 0.058333333333333334,
+  "reached_corner": false,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": null,
+  "claim_matches_best": null,
+  "decision": {
+    "action": "finish",
+    "reason": "All open hypotheses (h7 and h8) are supported by existing results. Lowering learning rate or decreasing batch size (e.g., lr=2.441e-4, bs=2048 vs lr=2.762e-3, bs=2048) increases validation loss, while the maximum batch size (2048) with lr=2.762e-3 yields the lowest loss. No further improvements are expected, so the budget can be ended."
+  },
+  "model_calls": 29,
+  "net_retries": 0,
+  "elapsed_ms": 282878,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.0004883,
+      "bs": 256,
+      "loss": 2.36973,
+      "regret": 0.02772,
+      "repeat": false,
+      "t_ms": 52217
+    },
+    {
+      "n": 2,
+      "lr": 0.007812,
+      "bs": 32,
+      "loss": 2.53325,
+      "regret": 0.19123,
+      "repeat": false,
+      "t_ms": 101830
+    },
+    {
+      "n": 3,
+      "lr": 0.0004883,
+      "bs": 128,
+      "loss": 2.36766,
+      "regret": 0.02565,
+      "repeat": false,
+      "t_ms": 127582
+    },
+    {
+      "n": 4,
+      "lr": 0.0004883,
+      "bs": 64,
+      "loss": 2.37545,
+      "regret": 0.03343,
+      "repeat": false,
+      "t_ms": 156156
+    },
+    {
+      "n": 5,
+      "lr": 0.002762,
+      "bs": 2048,
+      "loss": 2.36071,
+      "regret": 0.0187,
+      "repeat": false,
+      "t_ms": 178604
+    },
+    {
+      "n": 6,
+      "lr": 0.0002441,
+      "bs": 2048,
+      "loss": 2.45412,
+      "regret": 0.11211,
+      "repeat": false,
+      "t_ms": 209036
+    },
+    {
+      "n": 7,
+      "lr": 0.001953,
+      "bs": 2048,
+      "loss": 2.37215,
+      "regret": 0.03014,
+      "repeat": false,
+      "t_ms": 256467
+    }
+  ]
+}

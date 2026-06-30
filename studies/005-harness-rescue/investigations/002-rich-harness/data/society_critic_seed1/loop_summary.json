@@ -1,0 +1,79 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "1",
+  "budget": 5,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "experiments": 5,
+  "best_loss": 2.36889,
+  "best_config": {
+    "lr": 0.0006905,
+    "bs": 512,
+    "loss": 2.36889
+  },
+  "final_regret": 0.02687615828258183,
+  "cumulative_regret": 0.23142,
+  "coverage": 0.041666666666666664,
+  "reached_corner": false,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": null,
+  "claim_matches_best": null,
+  "decision": {
+    "action": "finish",
+    "reason": "Our five experiments identified a validation loss of 2.36889 at lr=6.905e-4, bs=512, which is the lowest among tested pairs. However, the hypotheses suggest optimal behavior at lr=9.766e-4, bs=736 (maximum loss) and at lr=2.441e-4, bs=256 (a dip), neither of which have been evaluated. Because we have exhausted the experiment budget, we cannot verify whether any other combination yields a lower loss than 2.36889. Thus, based on the available data, the best reported configuration is lr=6.905e-4, bs=512."
+  },
+  "model_calls": 75,
+  "net_retries": 0,
+  "elapsed_ms": 481275,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.0004883,
+      "bs": 352,
+      "loss": 2.37213,
+      "regret": 0.03011,
+      "repeat": false,
+      "t_ms": 39381
+    },
+    {
+      "n": 2,
+      "lr": 0.0006905,
+      "bs": 512,
+      "loss": 2.36889,
+      "regret": 0.02688,
+      "repeat": false,
+      "t_ms": 131129
+    },
+    {
+      "n": 3,
+      "lr": 0.0002441,
+      "bs": 512,
+      "loss": 2.40141,
+      "regret": 0.0594,
+      "repeat": false,
+      "t_ms": 216173
+    },
+    {
+      "n": 4,
+      "lr": 0.0002441,
+      "bs": 256,
+      "loss": 2.39092,
+      "regret": 0.0489,
+      "repeat": false,
+      "t_ms": 306157
+    },
+    {
+      "n": 5,
+      "lr": 0.0004883,
+      "bs": 32,
+      "loss": 2.40814,
+      "regret": 0.06613,
+      "repeat": false,
+      "t_ms": 394475
+    }
+  ]
+}

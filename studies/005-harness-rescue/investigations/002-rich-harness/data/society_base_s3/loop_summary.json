@@ -1,0 +1,98 @@
+{
+  "condition": "FULL",
+  "model": "nemotron-3-nano:4b",
+  "N": 214663680,
+  "D": 100000000000,
+  "seed": "3",
+  "budget": 20,
+  "think": "low",
+  "optimum_loss": 2.342013841717418,
+  "config": {
+    "critic": false,
+    "critic_roles": [
+      "all"
+    ],
+    "analyst_fix": false,
+    "hyp_seed": null,
+    "hyp_freeze": false,
+    "max_high": 3,
+    "max_narrow_per": 3,
+    "strong_roles": [],
+    "strong_model": null
+  },
+  "regions": {
+    "LL": 2,
+    "LH": 2,
+    "HL": 0,
+    "HH": 0
+  },
+  "region_mid": {
+    "lr": 0.001953,
+    "bs": 352
+  },
+  "experiments": 4,
+  "best_loss": 2.36428,
+  "best_config": {
+    "lr": 0.0006905,
+    "bs": 352,
+    "loss": 2.36428
+  },
+  "final_regret": 0.022266158282581827,
+  "cumulative_regret": 0.24507,
+  "coverage": 0.03333333333333333,
+  "reached_corner": false,
+  "axis_frozen": "no",
+  "outcome": "finished",
+  "claimed_best": {
+    "lr": 0.0006905,
+    "bs": 352
+  },
+  "claim_matches_best": true,
+  "decision": {
+    "action": "finish",
+    "reason": "All open hypotheses have been empirically supported by the data: the best validation loss (2.36428) occurs at lr=6.905e-4 and bs=352, matching HQ1, confirming HQ2 with low lr large batch higher loss, and supporting HQ3 that small batches increase loss.",
+    "best_lr": 0.0006905,
+    "best_bs": 352
+  },
+  "model_calls": 22,
+  "net_retries": 0,
+  "elapsed_ms": 218014,
+  "trajectory": [
+    {
+      "n": 1,
+      "lr": 0.0002441,
+      "bs": 32,
+      "loss": 2.41499,
+      "regret": 0.07298,
+      "repeat": false,
+      "t_ms": 53184
+    },
+    {
+      "n": 2,
+      "lr": 0.0002441,
+      "bs": 2048,
+      "loss": 2.45412,
+      "regret": 0.11211,
+      "repeat": false,
+      "t_ms": 81464
+    },
+    {
+      "n": 3,
+      "lr": 0.0003453,
+      "bs": 256,
+      "loss": 2.37972,
+      "regret": 0.03771,
+      "repeat": false,
+      "t_ms": 129986
+    },
+    {
+      "n": 4,
+      "lr": 0.0006905,
+      "bs": 352,
+      "loss": 2.36428,
+      "regret": 0.02227,
+      "repeat": false,
+      "t_ms": 178103
+    }
+  ]
+}
