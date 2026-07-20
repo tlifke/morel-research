@@ -45,8 +45,34 @@ def load_tasks() -> list[dict]:
     return data.get("tasks", [])
 
 
+POSITION_CYCLE = [
+    "top center", "bottom center", "top right", "bottom left",
+    "top left", "bottom right", "middle right", "middle left",
+]
+
+
+def assign_label_positions(tasks: list[dict], tol: float = 0.06) -> dict[str, str]:
+    positions: dict[str, str] = {}
+    placed: list[tuple[float, float, int]] = []
+    for task in tasks:
+        x = float(task.get("llm_capability", 0.5))
+        y = float(task.get("human_capability", 0.5))
+        taken = {
+            slot for px, py, slot in placed
+            if abs(px - x) <= tol and abs(py - y) <= tol
+        }
+        slot = next(
+            (i for i in range(len(POSITION_CYCLE)) if i not in taken),
+            len(placed) % len(POSITION_CYCLE),
+        )
+        positions[task.get("id", task.get("label", ""))] = POSITION_CYCLE[slot]
+        placed.append((x, y, slot))
+    return positions
+
+
 def build_figure(tasks: list[dict]) -> go.Figure:
     fig = go.Figure()
+    label_positions = assign_label_positions(tasks)
 
     # Diagonal reference: where LLM and human capability are equal.
     fig.add_shape(
@@ -109,7 +135,10 @@ def build_figure(tasks: list[dict]) -> go.Figure:
             mode="markers+text",
             name=style["label"],
             text=labels,
-            textposition="top center",
+            textposition=[
+                label_positions.get(t.get("id", t.get("label", "")), "top center")
+                for t in items
+            ],
             textfont=dict(size=10),
             hovertext=hover,
             hoverinfo="text",

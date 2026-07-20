@@ -50,6 +50,39 @@ tasks:
     llm_capability: 0.9
     human_capability: 0.5
     status: hypothesized
+    notes: Still unbuilt as of 2026-07-20 — and the 2026-07-20 drift audit is
+      the evidence for why it matters. Named as a follow-on in 001-initial-
+      scaffold on day one; never built; 13 of 28 documents subsequently carried
+      a status contradicting their own contents. See
+      studies/000-research-organization/framework-drift-evidence.md §4.
+
+  - id: audit-metadata-drift
+    label: Audit declared vs. actual status across corpus
+    study: 000-research-organization
+    investigation: null
+    llm_capability: 0.9
+    human_capability: 0.4
+    status: done
+    notes: 2026-07-20. Subagent read all 6 study.md + 22 investigation.md and
+      produced an accurate declared-vs-actual table with quoted evidence.
+      Strong LLM / weak human asymmetry, and the asymmetry is the point — the
+      task is mechanical, high-volume, and boring, which is exactly why the
+      human never did it and the metadata drifted for ~7 weeks.
+
+  - id: adjudicate-investigation-status
+    label: Adjudicate ambiguous investigation status
+    study: 000-research-organization
+    investigation: null
+    llm_capability: 0.35
+    human_capability: 0.9
+    status: done
+    notes: 2026-07-20. The inverse asymmetry to audit-metadata-drift. The LLM
+      resolved 15 of 22 investigations from text alone, but 7 were genuinely
+      undecidable from the artifacts — cases where a headline criterion went
+      unmet while a successor absorbed the work ("complete with a negative
+      result" vs "abandoned"). Each turned on original intent, which the human
+      supplied instantly and the documents never recorded. The 0.35 is the
+      honest ceiling for text-only adjudication, not a harness limitation.
 
   # ----- Study 1: tool calibration -----------------------------------------
   - id: design-tool-palette
@@ -247,7 +280,47 @@ tasks:
       construct held-out pairs at requested difficulty levels for a
       target model. Second of study 002's two top-level goals.
 
+  # ----- Repo maintenance / publishing -------------------------------------
+  - id: repo-history-surgery
+    label: Rewrite git history (purge bulk + secrets)
+    study: null
+    investigation: null
+    llm_capability: 0.9
+    human_capability: 0.6
+    status: done
+    notes: 2026-07-20. Two git-filter-repo passes — 47 Plotly figure-HTML paths
+      (clone ~957MB → 105MB), then literal replacement of network identifiers
+      across all 150 commits. LLM strength here is the verification, not the
+      command - path-level before/after diffing over full history to prove
+      only the intended blobs moved. Human capability marked 0.6 because the
+      operation is irreversible and easy to get subtly wrong, not because it
+      is conceptually hard.
+
+  - id: sanitize-network-identifiers
+    label: Sanitize network identifiers from repo + history
+    study: null
+    investigation: null
+    llm_capability: 0.85
+    human_capability: 0.5
+    status: done
+    notes: 2026-07-20. Human flagged one file from memory; grep found the values
+      in 26. LLM did the sweep and the env-var refactor, but silently broke two
+      files by introducing os.getenv without `import os` — caught only by an
+      explicit post-edit check, since py_compile passes on the missing import.
+      Coordinate reflects both — high on coverage, but edits need verification.
+
   # ----- Cross-cutting -----------------------------------------------------
+  - id: write-framework-retrospective
+    label: Write framework retrospective prose
+    study: 000-research-organization
+    investigation: null
+    llm_capability: 0.0
+    human_capability: 0.9
+    status: human-only
+    notes: 2026-07-20. Same policy as write-one-pager-prose. Claude assembled
+      the evidence pack (framework-drift-evidence.md) with its assumptions
+      flagged for rejection; the argument and the words are the human's.
+
   - id: write-one-pager-prose
     label: Write one-pager prose
     study: null
