@@ -92,7 +92,7 @@ USER_PROMPT = "Begin the probe."
 
 
 async def run_probe() -> int:
-    base_url = os.getenv("OLLAMA_OPENAI_BASE_URL", "http://<mac-tailscale-ip>:11434")
+    base_url = os.getenv("OLLAMA_OPENAI_BASE_URL", os.getenv("MAC_OLLAMA_URL", "http://127.0.0.1:11434"))
     print(f"[probe] base_url={base_url}")
 
     server = make_echo_server()

@@ -61,7 +61,7 @@ class OllamaBackend(InferenceBackend):
     name = "ollama"
 
     def __init__(self, host: str | None = None, timeout: float | None = None) -> None:
-        self.host = host or os.environ.get("OLLAMA_HOST", "http://<desktop-tailscale-ip>:11434")
+        self.host = host or os.environ.get("OLLAMA_HOST", os.getenv("DESKTOP_OLLAMA_URL", "http://127.0.0.1:11434"))
         if timeout is None:
             timeout = float(os.environ.get("OLLAMA_TIMEOUT", "300"))
         self.timeout = timeout

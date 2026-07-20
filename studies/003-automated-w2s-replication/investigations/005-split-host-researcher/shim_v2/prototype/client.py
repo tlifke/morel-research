@@ -19,7 +19,7 @@ from typing import Any, AsyncIterator, Dict, List, Optional, Tuple, Union
 import httpx
 
 
-_DEFAULT_BASE_URL_FALLBACK = "http://<desktop-tailscale-ip>:11434"
+_DEFAULT_BASE_URL_FALLBACK = os.getenv("DESKTOP_OLLAMA_URL", "http://127.0.0.1:11434")
 
 
 def _resolve_default_base_url() -> str:

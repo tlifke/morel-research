@@ -3,7 +3,7 @@ import os
 import sys
 import anthropic
 
-BASE = os.getenv("MAC_OLLAMA", "http://<mac-tailscale-ip>:11434")
+BASE = os.getenv("MAC_OLLAMA", os.getenv("MAC_OLLAMA_URL", "http://127.0.0.1:11434"))
 MODEL = "nemotron-3-nano:4b"
 
 TOOLS = [{

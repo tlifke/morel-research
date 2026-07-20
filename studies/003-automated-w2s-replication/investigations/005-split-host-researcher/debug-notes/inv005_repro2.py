@@ -10,7 +10,7 @@ for noisy in ("httpcore.http11", "httpcore.connection"):
     logging.getLogger(noisy).setLevel(logging.DEBUG)
 logging.getLogger("httpx").setLevel(logging.DEBUG)
 
-BASE = "http://<mac-tailscale-ip>:11434"
+BASE = os.getenv("MAC_OLLAMA_URL", "http://127.0.0.1:11434")
 MODEL = "nemotron-3-nano:4b"
 
 TOOLS = [{

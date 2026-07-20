@@ -88,7 +88,7 @@ def main():
     ap.add_argument("--provider", choices=["gemini", "ollama"], required=True)
     ap.add_argument("--model", required=True)
     ap.add_argument("--method", choices=list(METHODS), default="baseline")
-    ap.add_argument("--ollama-url", default="http://<desktop-tailscale-ip>:11434/v1/chat/completions")
+    ap.add_argument("--ollama-url", default=os.getenv("DESKTOP_OLLAMA_URL", "http://127.0.0.1:11434") + "/v1/chat/completions")
     ap.add_argument("--rubric", default=str(Path(__file__).resolve().parents[1] / "rubric_v2.md"))
     args = ap.parse_args()
 

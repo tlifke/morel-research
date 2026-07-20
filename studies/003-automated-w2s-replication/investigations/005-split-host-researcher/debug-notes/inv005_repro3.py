@@ -6,7 +6,7 @@ sys.path.insert(0, "/home/tlifke/inv003_shim/shim_pkg")
 from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions, create_builtin_tools_server
 from claude_agent_sdk.types import AssistantMessage, ResultMessage
 
-os.environ["OLLAMA_ANTHROPIC_BASE_URL"] = "http://<mac-tailscale-ip>:11434"
+os.environ["OLLAMA_ANTHROPIC_BASE_URL"] = os.getenv("MAC_OLLAMA_URL", "http://127.0.0.1:11434")
 
 async def one_session(label):
     print(f"[{label}] enter", flush=True)

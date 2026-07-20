@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import re
 import urllib.request
 from pathlib import Path
@@ -38,7 +39,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("input_dir")
     ap.add_argument("out_json")
-    ap.add_argument("--url", default="http://<desktop-tailscale-ip>:11434/v1/chat/completions")
+    ap.add_argument("--url", default=os.getenv("DESKTOP_OLLAMA_URL", "http://127.0.0.1:11434") + "/v1/chat/completions")
     ap.add_argument("--model", default="nemotron-3-nano:4b")
     ap.add_argument("--rubric", default=str(Path(__file__).resolve().parents[1] / "rubric.md"))
     args = ap.parse_args()

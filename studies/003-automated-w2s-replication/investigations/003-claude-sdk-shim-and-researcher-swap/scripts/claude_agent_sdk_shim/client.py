@@ -19,7 +19,7 @@ from .tools import SdkMcpServer, SdkTool
 from .parser import synthesize_tool_use_blocks
 
 
-DEFAULT_BASE_URL = os.getenv("OLLAMA_ANTHROPIC_BASE_URL", "http://<desktop-tailscale-ip>:11434")
+DEFAULT_BASE_URL = os.getenv("OLLAMA_ANTHROPIC_BASE_URL", os.getenv("DESKTOP_OLLAMA_URL", "http://127.0.0.1:11434"))
 
 
 class ClaudeSDKClient:

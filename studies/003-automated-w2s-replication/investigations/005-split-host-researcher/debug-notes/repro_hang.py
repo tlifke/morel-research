@@ -14,6 +14,7 @@ Run on desktop:
     /home/tlifke/Projects/automated-w2s-research/.venv/bin/python repro_hang.py
 """
 import asyncio
+import os
 import time
 
 import anthropic
@@ -76,12 +77,12 @@ async def one_call(client, label, with_thinking, timeout=45):
 
 
 async def main():
-    c1 = anthropic.AsyncAnthropic(base_url="http://<mac-tailscale-ip>:11434", api_key="ollama")
+    c1 = anthropic.AsyncAnthropic(base_url=os.getenv("MAC_OLLAMA_URL", "http://127.0.0.1:11434"), api_key="ollama")
     await one_call(c1, "A_with_thinking", with_thinking=True)
     await one_call(c1, "B_no_thinking_same_client", with_thinking=False)
     await c1.close()
 
-    c2 = anthropic.AsyncAnthropic(base_url="http://<mac-tailscale-ip>:11434", api_key="ollama")
+    c2 = anthropic.AsyncAnthropic(base_url=os.getenv("MAC_OLLAMA_URL", "http://127.0.0.1:11434"), api_key="ollama")
     await one_call(c2, "C_no_thinking_fresh_client", with_thinking=False)
     await c2.close()
 
