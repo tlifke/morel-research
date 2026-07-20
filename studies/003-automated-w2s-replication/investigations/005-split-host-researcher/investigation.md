@@ -1,7 +1,7 @@
 ---
 id: studies/003-automated-w2s-replication/investigations/005-split-host-researcher
 title: Split-host researcher — does evicting the researcher from the GPU let the loop close end-to-end?
-status: planned
+status: in-progress
 parents:
   - studies/003-automated-w2s-replication
 children: []
@@ -18,7 +18,7 @@ tags:
   - qwen
   - nemotron
 created: 2026-05-31
-updated: 2026-05-31
+updated: 2026-07-20
 
 ---
 

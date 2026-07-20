@@ -1,7 +1,7 @@
 ---
 id: studies/003-automated-w2s-replication/investigations/004-qwen-researcher-floor
 title: Qwen researcher floor — machinery, prompt induction, harness shape
-status: in-progress
+status: complete
 parents:
   - studies/003-automated-w2s-replication
 children: []
@@ -17,7 +17,7 @@ tags:
   - weak-researcher
   - capability-floor
 created: 2026-05-25
-updated: 2026-05-26
+updated: 2026-07-20
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 id: studies/001-tool-calibration/investigations/003-bulk-generation
 title: Bulk corpus generation (Phase A3)
-status: in-progress
+status: complete
 parents:
   - studies/001-tool-calibration
 children: []
@@ -19,7 +19,7 @@ aliases:
   - A3
   - phase-a3
 created: 2026-05-11
-updated: 2026-05-12
+updated: 2026-07-20
 ---
 
 # Investigation 3 — Bulk corpus generation (Phase A3)

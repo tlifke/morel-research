@@ -1,7 +1,7 @@
 ---
 id: studies/002-principle-bootstrapped-difficulty/investigations/001-self-prediction-baseline
 title: Self-prediction baseline — does the target model know what's hard for itself?
-status: in-progress
+status: complete
 parents:
   - studies/002-principle-bootstrapped-difficulty
 children: []
@@ -20,7 +20,7 @@ aliases:
   - 002-001
   - self-pred-baseline
 created: 2026-05-22
-updated: 2026-05-23
+updated: 2026-07-20
 ---
 
 # Investigation 1 — Self-prediction baseline

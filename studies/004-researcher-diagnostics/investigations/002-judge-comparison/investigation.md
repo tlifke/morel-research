@@ -1,7 +1,7 @@
 ---
 id: studies/004-researcher-diagnostics/investigations/002-judge-comparison
 title: Judge comparison
-status: in-progress
+status: complete
 parents:
   - studies/004-researcher-diagnostics
 children: []
@@ -15,7 +15,7 @@ tags:
   - evaluation
   - tool-use
 created: 2026-06-03
-updated: 2026-06-03
+updated: 2026-07-20
 ---
 
 # Investigation 2 — Judge comparison

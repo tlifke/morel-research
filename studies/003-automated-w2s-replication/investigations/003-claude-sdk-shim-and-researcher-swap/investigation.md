@@ -1,7 +1,7 @@
 ---
 id: studies/003-automated-w2s-replication/investigations/003-claude-sdk-shim-and-researcher-swap
 title: Claude Agent SDK shim and local-researcher swap
-status: in-progress
+status: complete
 parents:
   - studies/003-automated-w2s-replication
 children: []
@@ -21,7 +21,7 @@ aliases:
   - 003-003
   - sdk-shim-researcher-swap
 created: 2026-05-24
-updated: 2026-05-24
+updated: 2026-07-20
 ---
 
 # Investigation 3 — Claude Agent SDK shim and local-researcher swap

@@ -1,7 +1,7 @@
 ---
 id: studies/000-research-organization/investigations/001-initial-scaffold
 title: Initial scaffold
-status: in-progress
+status: complete
 parents:
   - studies/000-research-organization
 children: []
@@ -14,7 +14,7 @@ tags:
   - meta
   - scaffolding
 created: 2026-05-11
-updated: 2026-05-11
+updated: 2026-07-20
 ---
 
 # Initial scaffold

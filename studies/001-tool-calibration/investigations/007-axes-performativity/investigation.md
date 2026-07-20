@@ -1,7 +1,7 @@
 ---
 id: studies/001-tool-calibration/investigations/007-axes-performativity
 title: Axes performativity — do our difficulty axes predict tool-call calibration?
-status: in-progress
+status: complete
 parents:
   - studies/001-tool-calibration
 children: []
@@ -21,7 +21,7 @@ aliases:
   - 007
   - axes-perf
 created: 2026-05-12
-updated: 2026-05-23
+updated: 2026-07-20
 ---
 
 # Investigation 7 — Axes performativity

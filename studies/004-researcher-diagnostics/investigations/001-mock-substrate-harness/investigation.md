@@ -1,7 +1,7 @@
 ---
 id: studies/004-researcher-diagnostics/investigations/001-mock-substrate-harness
 title: Mock-substrate researcher harness
-status: in-progress
+status: complete
 parents:
   - studies/004-researcher-diagnostics
 children: []
@@ -17,7 +17,7 @@ tags:
   - tracing
   - tool-use
 created: 2026-06-03
-updated: 2026-06-03
+updated: 2026-07-20
 ---
 
 # Inv 001 — Mock-substrate researcher harness

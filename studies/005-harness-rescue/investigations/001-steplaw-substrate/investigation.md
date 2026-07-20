@@ -1,7 +1,7 @@
 ---
 id: studies/005-harness-rescue/investigations/001-steplaw-substrate
 title: StepLaw lookup substrate + minimal-harness baseline
-status: in-progress
+status: complete
 parents:
   - studies/005-harness-rescue
 children: []
@@ -15,7 +15,7 @@ tags:
   - substrate
   - regret
 created: 2026-06-05
-updated: 2026-06-05
+updated: 2026-07-20
 ---
 
 # Inv 001 — StepLaw lookup substrate + minimal-harness baseline

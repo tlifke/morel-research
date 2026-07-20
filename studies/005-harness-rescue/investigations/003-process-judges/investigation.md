@@ -1,7 +1,7 @@
 ---
 id: studies/005-harness-rescue/investigations/003-process-judges
 title: Process judges (per-step LLM judging of the researcher's reasoning)
-status: planned
+status: in-progress
 parents:
   - studies/005-harness-rescue
 children: []
@@ -17,7 +17,7 @@ tags:
   - evaluation
   - mdp
 created: 2026-06-14
-updated: 2026-06-14
+updated: 2026-07-20
 ---
 
 # Inv 003 — Process judges

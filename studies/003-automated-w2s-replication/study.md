@@ -1,7 +1,7 @@
 ---
 id: studies/003-automated-w2s-replication
 title: Automated weak-to-strong researcher replication
-status: planned
+status: in-progress
 parents: []
 children:
   - studies/003-automated-w2s-replication/investigations/001-hardware-derisk
@@ -22,7 +22,7 @@ axes:
   llm_capability: medium
   human_capability: medium
 created: 2026-05-23
-updated: 2026-05-23
+updated: 2026-07-20
 ---
 
 # Study 3 — Automated weak-to-strong researcher replication

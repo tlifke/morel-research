@@ -1,7 +1,7 @@
 ---
 id: studies/001-tool-calibration/investigations/002-difficulty-axes
 title: Per-tool difficulty axes (Phase A2)
-status: in-progress
+status: complete
 parents:
   - studies/001-tool-calibration
 children: []
@@ -18,7 +18,7 @@ aliases:
   - A2
   - phase-a2
 created: 2026-05-11
-updated: 2026-05-11
+updated: 2026-07-20
 ---
 
 # Investigation 2 — Per-tool difficulty axes (Phase A2)

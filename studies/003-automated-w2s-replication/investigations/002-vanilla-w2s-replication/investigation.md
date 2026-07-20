@@ -1,7 +1,7 @@
 ---
 id: studies/003-automated-w2s-replication/investigations/002-vanilla-w2s-replication
 title: Mechanical replication of vanilla_w2s baseline
-status: in-progress
+status: complete
 parents:
   - studies/003-automated-w2s-replication
 children: []
@@ -19,7 +19,7 @@ aliases:
   - 003-002
   - vanilla-w2s-replication
 created: 2026-05-23
-updated: 2026-05-23
+updated: 2026-07-20
 ---
 
 # Investigation 2 — Mechanical replication of vanilla_w2s baseline

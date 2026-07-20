@@ -1,7 +1,7 @@
 ---
 id: studies/005-harness-rescue/investigations/002-rich-harness
 title: Rich-harness build + ablation
-status: planned
+status: in-progress
 parents:
   - studies/005-harness-rescue
 children: []
@@ -17,7 +17,7 @@ tags:
   - reflexion
   - long-horizon
 created: 2026-06-07
-updated: 2026-06-07
+updated: 2026-07-20
 ---
 
 # Inv 002 — Rich-harness build + ablation

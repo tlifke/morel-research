@@ -39,3 +39,13 @@ are written by humans — Claude scaffolds but does not write prose.
 python3 scripts/update_lineage.py        # rebuild lineage.yaml from frontmatter
 python3 capability-map/plot.py           # rebuild capability-map.png from tasks.yaml
 ```
+
+## License
+
+Code — harnesses, shims, figure scripts, and repo tooling — is licensed under
+the **Apache License 2.0** (see `LICENSE`). This includes the explicit patent
+grant in section 3.
+
+Written research content — `studies/**/*.md`, one-pagers, and figures — is
+licensed **CC BY 4.0**. If you build on the findings, please cite the study or
+investigation by its path ID.

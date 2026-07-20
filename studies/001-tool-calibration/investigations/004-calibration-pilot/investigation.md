@@ -1,7 +1,7 @@
 ---
 id: studies/001-tool-calibration/investigations/004-calibration-pilot
 title: Calibration pilot — neutral-baseline empirical runs
-status: in-progress
+status: complete
 parents:
   - studies/001-tool-calibration
 children: []
@@ -20,7 +20,7 @@ aliases:
   - A4
   - phase-a4-pilot
 created: 2026-05-12
-updated: 2026-05-12
+updated: 2026-07-20
 ---
 
 # Investigation 4 — Calibration pilot (neutral baseline)

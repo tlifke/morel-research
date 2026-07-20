@@ -1,7 +1,7 @@
 ---
 id: studies/002-principle-bootstrapped-difficulty
 title: Principle-bootstrapped difficulty
-status: planned
+status: in-progress
 parents: []
 children:
   - studies/002-principle-bootstrapped-difficulty/investigations/001-self-prediction-baseline
@@ -18,7 +18,7 @@ tags:
   - actor-critic
   - dataset-construction
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-07-20
 ---
 
 # Study 2 — Principle-bootstrapped difficulty
