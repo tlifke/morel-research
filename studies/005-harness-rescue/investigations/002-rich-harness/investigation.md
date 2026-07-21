@@ -261,6 +261,142 @@ is the source of its bad low-lr pushes). C4 already handles the termination flaw
 This keeps the *generalizable* mechanism (detect freezing, prompt joint coverage,
 no assumption about where the optimum is) and removes the env-specific noise.
 
+### Phase 2 — decomposition into a society of agents (2026-06-17 → 2026-06-21)
+
+_Lifted into this doc on 2026-07-20 from the raw run data
+(`data/society_*/loop_summary.json`) — the numbers below were recomputed from
+those files. **Evidentiary status: exploratory.** Every result in this section is
+n=1–3 on Env A only; the role-ablation ladder is 3 seeds/arm at `BUDGET=20`, the
+Critic and ledger runs are single-seed at smaller budgets. Nothing here has been
+through the 20-seed confirmation run the methods section calls for. Per the small-
+scale-first protocol these are promising signals to be confirmed, not established
+results. One drift caveat: the runs' `condition` field is uniformly `"FULL"`, so
+the arm each run belongs to is encoded only in its directory name / launch flags,
+not in a stored field — read the directory names as the source of truth._
+
+Rather than keep adding components to the monolithic single-prompt harness
+(Phase 1's C1–C4), Phase 2 **decomposes** the researcher into a society of
+role-specialized agents over a shared blackboard: **Orienter → Hypothesizer →
+[Designer → `run_config` → Analyst → Terminator]\***, with an optional **Critic**
+gate and a **Generalizer**. Each role is a separate ollama call. Implementation:
+`harness/src/society.ts`. The motivation is diagnostic as much as performance —
+a monolith can only report "it froze"; a society can show *which role* froze.
+
+**What decomposition bought — causal localization (the main result).** The
+axis-freeze from Phase 1 is not diffuse. Across the society runs it localizes
+cleanly:
+
+- **The freeze is born in the Orienter and inherited.** Downstream roles
+  faithfully execute a flawed initial frame. The monolith could not have shown
+  this; the decomposed blackboard makes the origin legible.
+- **It is the Designer's actuation, not missing knowledge.** In the primed-
+  correct diagnostic runs — where the agent is *handed* the correct hypothesis
+  ("optimum at HIGH lr AND HIGH bs") — only **1/3 reached the corner**
+  (`society_Bprompt_seedcorrect_s1`, bs=512 lr=1.4e-3, corner ✓); the other two
+  froze on a half-move: `society_seed1correct_s1` reached bs=1024 but pinned lr
+  at 9.8e-4 (high bs, low lr — regret 0.029), `society_Acritic_seedcorrect_s1`
+  stayed low on both (bs=256, regret 0.038). The model **names** the lr×bs
+  interaction and then **cannot translate the joint claim into a joint action.**
+  This is the sharpest statement of the Phase-1 failure and it is only visible
+  because decomposition separated "orient/hypothesize" from "design/actuate."
+
+**The role-ablation ladder** — which role is the bottleneck? Swap individual
+society roles from nemotron-4b to gemini (or change the 4B's context frame),
+3 seeds each, Env A, `BUDGET=20`:
+
+| condition | regret (s1 / s2 / s3) | median | corner |
+|---|---|---|---|
+| base — all 4B | 0.0355 / 0.0109 / 0.0223 | 0.0223 | 1/3 |
+| Analyst → gemini | 0.0106 / 0.0187 / 0.0277 | 0.0187 | 0/3 |
+| **Hypothesizer → gemini** | 0.0024 / ≈0 / ≈0 | **≈0.0000** | **3/3** |
+| both → gemini | ≈0 / ≈0 / ≈0 | **≈0.0000** | **3/3** |
+| 4B Hypothesizer @ reasoning=high | 0.0136 / 0.0136 / 0.0136 | 0.0136 | 2/3 |
+| 4B + empirical prior | 0.0059 / ≈0 / 0.0277 | 0.0059 | 1/3 |
+| 4B + general-principles injection | ≈0 / 0.0269 / 0.0001 | **0.0001** | 2/3 |
+
+Readings, in order of how much weight each bears:
+
+- **The Hypothesizer is the bottleneck role.** Swapping *it* to gemini gets 3/3
+  corners at ≈0 regret; swapping the Analyst instead gets 0/3 and barely moves
+  the median. And swapping *both* buys nothing over swapping the Hypothesizer
+  alone (both 3/3, ≈0) — so the deficit is concentrated in hypothesis
+  generation/prioritization, not analysis. This is the localization payoff made
+  quantitative.
+- **A 4B in that role, with the right frame and no model swap, produced the one
+  "4B-can-do-it" signal — held at low confidence.** The general-principles
+  context injection reached median regret 0.0001 (corner 2/3). But the three
+  seeds were ≈0 / 0.0269 / 0.0001 — **one seed failed badly and the median hides
+  it** — and there is an unverified assumption that "general principles" did not
+  smuggle the env-specific answer in. **Verifying that leak question is the
+  cheapest high-value experiment left in this study.** Until then this is a
+  promising signal, not a result.
+- **More reasoning and a better prior help partially.** `reasoning=high` on the
+  4B Hypothesizer (0.0136, 2/3) and an empirical prior (0.0059, 1/3) both beat
+  base without a model swap, but neither reaches the injection or gemini result.
+
+Honest cross-comparison caveat: the base society at `BUDGET=20` (median 0.0223)
+is **not** cleanly better or worse than the Phase-1 monolith A0, which ran at
+`BUDGET=50` (median 0.0016) — the budgets differ, and a single-seed base society
+at budget 20 landed at 0.112 while a budget-40 single-seed run landed at 0.0016.
+Budget dominates that comparison, so decomposition's demonstrated value is the
+**localization** above, not a headline regret improvement over the monolith.
+
+**The Critic — when a review gate helped and when it hurt.** A peer-review gate
+was added to let a role's output be challenged before the blackboard accepts it.
+Two versions, single seed each:
+
+| run | budget | regret | corner | model calls |
+|---|---|---|---|---|
+| no critic (reference) | 40 | 0.0016 | ✗ | 25 |
+| Critic **v1** | 5 | 0.0269 | ✗ | 75 |
+| Critic **v2** | 10 | 0.0098 | ✗ | 105 |
+| Critic **v2** | 5 | 0.0025 | **✓** | 47 |
+
+- **Critic v1 was net-negative, and the reason is mechanical, not incidental.**
+  Its proceed/revise gate was **decoupled from its own critique content**: on the
+  Orienter it raised the exact lr×bs interaction concern in its challenge text
+  and then decided *proceed* anyway — while spending ~12 revise-cycles on the
+  **Terminator** (the least consequential role). So it misallocated scrutiny to
+  where it didn't matter and waved through the one place the freeze is born. It
+  added cost (75 calls) without touching the root cause. (The regret numbers
+  across the Critic rows sit at different experiment budgets, so read them as
+  the direction — added cost, no corner — not as a clean controlled delta.)
+- **Critic v2 was useful — once, and possibly for the wrong reason.** The fix
+  bound the gate to the critique (revision = reconcile with the challenge) and
+  only critiqued the Terminator on a *premature* finish. On one seed it reached
+  the corner the base misses (0.0025, corner ✓) at fewer calls than v1 (47 vs
+  75), with Terminator critiques dropping 16→1. **But** this is a single
+  stochastic seed, and the most likely mechanism is that breaking the linear
+  Orienter→…→Terminator frame let the society *sample* the high-lr region and
+  stumble into a good cell — not that the critique made the reasoning correct.
+  At `BUDGET=10` the same v2 missed the corner (0.0098), consistent with luck
+  rather than a reliable fix.
+- **The generalizable lesson.** A review/critic step at 4B helps only if its
+  accept/revise decision is *bound to the content of its own critique*. A critic
+  that can raise the right concern and then proceed anyway is **worse than no
+  critic**: it adds model calls and misallocates scrutiny while leaving the
+  failure in place. This is a concrete instance of the study's broader pattern —
+  an opinionated harness component ("revise until satisfied") that is harmful
+  when its opinion is implicit and unmeasured, and only defensible once its gate
+  is made explicit and tested.
+
+**Ledger / marginal-vs-joint coverage (brief).** A three-ledger addition
+(pre-registered in `ledger-hypothesis.md`) broke the freeze on one seed —
+`society_ledger_b10_seed1` reached distinct batch sizes and 0.0016 regret — but
+still did **not** reach the corner (`corner ✗`). Marginal per-axis coverage is
+not joint coverage: varying each axis *separately* still misses the cell that
+needs both high at once. Consistent with the Designer-actuation localization above.
+
+**Reframe (Phase 1 + Phase 2 together).** The rich harness substitutes for the
+4B's **mechanical / coordination / stamina** deficits — C4 fixes finishing,
+decomposition fixes observability and coordination — but **not** for the
+**reasoning floor at hypothesis generation and joint actuation**. The two levers
+that actually moved regret were (a) a context-frame change (general-principles
+injection) and (b) a model swap in the Hypothesizer role. Neither is "more
+scaffolding"; both are interventions at the reasoning bottleneck the scaffolding
+localized. See `studies/000-research-organization/claude-cross-study-reflections-2026-07-20.md`
+for the cross-study synthesis this feeds.
+
 ## Forward-looking
 
 _To be populated — the winning harness graduates to inv 003 (real-W2S desktop
