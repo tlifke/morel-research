@@ -134,10 +134,21 @@ The optimum sits at lr index 11/12 and bs index 9/10 — *diagonally adjacent*
 to the high-lr/large-bs corner, not at it. The log entries below use "corner"
 as shorthand for that region; read it as the region, not the extreme cell.
 
-Env A's flatness is in the **tight** band: only 3/120 cells are within 0.001
-of the optimum and 13/120 within 0.005, but 41% are within 0.02 and the median
-cell is just 0.029 above optimum. By the wide band Env C is flatter (62%), so
-claims that "Env A is the flat env" should cite the 0.005 column, not 0.02.
+**On "Env A is the flat env."** It is the flattest of the 16 full-width envs
+at every band from 0.005 up — 11% of cells within 0.005 and 41% within 0.02,
+against 2–10% and 12–34% elsewhere — and its median cell sits just 0.029 above
+optimum. The exception is **Env C, which is flatter than Env A at every band**
+(21% within 0.005, 62% within 0.02, median gap 0.015). So the claim holds
+against the 12×10 envs, including Env B, but **not** against Env C, and citing
+a tighter band does not rescue it.
+
+Env C is not a like-for-like comparison — 47 cells over a narrow 5-value lr
+window, so a larger share of its grid sits near an optimum it is also much
+easier to stumble into. But that cuts both ways for the "stalling tracks
+landscape flatness" reading in the log below: neither model stalled on Env C,
+the flattest env in the CSV. That reading rests on the A-vs-B contrast;
+flatness and search difficulty come apart on C. Worth re-examining before the
+claim carries weight in a writeup.
 
 ### All 17 environments
 
