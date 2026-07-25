@@ -15,7 +15,7 @@ tags:
   - substrate
   - regret
 created: 2026-06-05
-updated: 2026-07-20
+updated: 2026-07-25
 ---
 
 # Inv 001 — StepLaw lookup substrate + minimal-harness baseline
@@ -68,8 +68,11 @@ StepLaw (1911 rows; columns include `N`, `D`, `lr`, `bs`, `smooth loss`):
 
 - **17 `(N, D)` environments** (param-size × token-budget). Within each, the
   action space is **lr × bs**, typically **12 lr × 10 bs ≈ 120 configs**
-  (range 47–120; the global "26 lr / 13 bs" counts are float-precision
-  duplicates across env files — per env the grid is clean).
+  (range 47–120). The global counts (26 lr, 13 bs) are *not* the per-env axis
+  sizes: each env sweeps its own **window** of a shared 14-value √2 lr ladder,
+  and some envs record the same physical lr at 3 s.f. and others at 4 s.f.
+  (`0.00276` vs `0.002762`, 0.07% apart) — so 14 physical values appear as 26
+  distinct strings. Per env the grid is clean. See "Environment catalogue".
 - Per-env **known optimum** (grid-min loss) → **simple-regret**.
 - This is ~10× the study-004 toy (12 configs). A 50-experiment run touches
   ~40% of a dense env: real room to explore, so repeats signal incoherence,
@@ -79,19 +82,190 @@ StepLaw (1911 rows; columns include `N`, `D`, `lr`, `bs`, `smooth loss`):
 
 | label | N (params) | D (tokens) | D/N | grid | optimum |
 |---|---|---|---|---|---|
-| Env A (default) | 215M | 100B | 466 (over-trained) | 12×10 dense | 2.342 |
+| Env A (default) | 215M | 100B | 466 (most over-trained env in the CSV) | 12×10 dense (120/120) | 2.342 |
 | Env B | 537M | 50B | 93 | 12×10 (119) | 2.217 |
-| Env C | 1.07B | 57B | 53 (compute-balanced) | **5×10 sparse (47)** | 2.121 |
+| Env C | 1.07B | 57B | 53 (least over-trained *of these three*) | **5×10 sparse (47)** | 2.121 |
 
 Bigger model + more tokens → lower achievable loss (2.34→2.12). Env C only
 swept **5 low learning rates** (≤2e-3) — a real Step-Law signature (optimal
 lr falls as N grows), making it a narrower, lower-lr search.
+
+A/B/C are **our labels**; StepLaw names no environments, and the letters
+appear nowhere in the CSV or the paper. The canonical identity of an env is
+its `(N, D)` pair. Env A is the harness **default** (`src/researcher.ts:14-15`,
+`src/society.ts:52-53`), so any run whose command did not set `N`/`D` is Env A.
+Three of 17 were swept because seeds-per-env buys statistical power and
+17×n=1 does not — not because the substrate is limited to three
+(`scripts/steplaw_query.py list-envs` enumerates all of them, and `N`/`D` are
+plain env vars). Note `D/N ≈ 18.6` is the compute-balanced (Chinchilla-ish)
+family across the full 17; on that scale Env C's 53 is already ~3×
+over-trained.
 
 The substrate (`scripts/steplaw_query.py`) is a CSV lookup over the **real
 measured grid**: a requested `(lr, bs)` is matched to a grid point within 3%
 (log space); **off-grid requests are rejected** (no fabricated loss — StepLaw
 has no interpolation), with the nearest valid values returned for recovery.
 Dead-simple guts, rich behavior. No AutoLLMResearch / verl dependency.
+
+## Environment catalogue
+
+Every table in this section is generated from the vendored CSV by
+`harness/scripts/env_catalogue.py` (stdlib only, no pandas). Regenerate with
+`python3 scripts/env_catalogue.py`; `--check` re-asserts the invariants the
+prose below relies on and exits non-zero if the data stops supporting them.
+
+### Env A, precisely
+
+| property | value |
+|---|---|
+| N | 214,663,680 (~215M) **non-embedding** parameters |
+| D | 1.0e11 tokens (100B) |
+| D/N | 465.8 |
+| architecture | `d_model=960`, `ffn_hidden=9368`, 15 heads, 7 layers (fixed across all 120 cells) |
+| sequence length | 2048 |
+| lr axis | 12 values, 2.441e-4 → 1.105e-2, √2-spaced |
+| bs axis | 10 values (sequences): 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| grid | 12 × 10 = **120 cells, all measured** — no holes |
+| metric | the `smooth loss` column (smoothed final val loss), not raw `loss` |
+| optimum | **2.342014** at lr = 7.812e-3, bs = 1024 |
+| worst cell | 2.5332 at lr = 7.812e-3, bs = 32 (spread 0.191) |
+
+The optimum sits at lr index 11/12 and bs index 9/10 — *diagonally adjacent*
+to the high-lr/large-bs corner, not at it. The log entries below use "corner"
+as shorthand for that region; read it as the region, not the extreme cell.
+
+**On "Env A is the flat env."** It is the flattest of the 16 full-width envs
+at every band from 0.005 up — 11% of cells within 0.005 and 41% within 0.02,
+against 2–10% and 12–34% elsewhere — and its median cell sits just 0.029 above
+optimum. The exception is **Env C, which is flatter than Env A at every band**
+(21% within 0.005, 62% within 0.02, median gap 0.015). So the claim holds
+against the 12×10 envs, including Env B, but **not** against Env C, and citing
+a tighter band does not rescue it.
+
+Env C is not a like-for-like comparison — 47 cells over a narrow 5-value lr
+window, so a larger share of its grid sits near an optimum it is also much
+easier to stumble into. But that cuts both ways for the "stalling tracks
+landscape flatness" reading in the log below: neither model stalled on Env C,
+the flattest env in the CSV. That reading rests on the A-vs-B contrast;
+flatness and search difficulty come apart on C. Worth re-examining before the
+claim carries weight in a writeup.
+
+### All 17 environments
+
+`lr*`/`bs*` are the argmin cell; `med−opt` is the median cell's gap to the
+optimum; the last two columns are the fraction of cells within 0.005 and 0.02
+of it.
+
+| label | N (non-emb) | D | D/N | cells | grid | lr* | bs* | optimum | med−opt | <.005 | <.02 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| — | 214.7M | 4.0B | 18.6 | 119/120 | 12×10 | 0.00276 | 128 | 2.6214 | 0.098 | 3% | 12% |
+| — | 214.7M | 11.4B | 53.1 | 119/120 | 12×10 | 0.00276 | 192 | 2.4847 | 0.063 | 3% | 14% |
+| — | 214.7M | 20.0B | 93.2 | 118/120 | 12×10 | 0.00391 | 256 | 2.4401 | 0.059 | 3% | 18% |
+| **A** | 214.7M | 100.0B | 465.8 | 120/120 | 12×10 | 0.00781 | 1024 | 2.3420 | 0.029 | 11% | 41% |
+| — | 268.3M | 5.0B | 18.6 | 118/120 | 12×10 | 0.00195 | 128 | 2.5577 | 0.094 | 3% | 14% |
+| — | 268.3M | 14.2B | 52.9 | 120/120 | 12×10 | 0.00391 | 192 | 2.4319 | 0.055 | 6% | 19% |
+| — | 268.3M | 25.0B | 93.2 | 119/120 | 12×10 | 0.00391 | 352 | 2.3849 | 0.049 | 4% | 22% |
+| — | 268.3M | 80.0B | 298.2 | 120/120 | 12×10 | 0.00391 | 512 | 2.3050 | 0.032 | 9% | 34% |
+| — | 429.3M | 8.0B | 18.6 | 120/120 | 12×10 | 0.00195 | 128 | 2.4373 | 0.069 | 2% | 15% |
+| — | 429.3M | 22.7B | 52.9 | 118/120 | 12×10 | 0.00195 | 192 | 2.3226 | 0.042 | 6% | 25% |
+| — | 429.3M | 40.0B | 93.2 | 100/110 | 11×10 | 0.00276 | 256 | 2.2749 | 0.041 | 10% | 33% |
+| — | 429.3M | 50.0B | 116.5 | 113/120 | 12×10 | 0.00195 | 256 | 2.2566 | 0.031 | 7% | 32% |
+| — | 536.9M | 10.0B | 18.6 | 106/120 | 12×10 | 0.000977 | 128 | 2.3833 | 0.065 | 4% | 19% |
+| — | 536.9M | 28.4B | 52.9 | 117/120 | 12×10 | 0.00195 | 192 | 2.2629 | 0.043 | 4% | 23% |
+| **B** | 536.9M | 50.0B | 93.1 | 119/120 | 12×10 | 0.00276 | 352 | 2.2171 | 0.038 | 7% | 30% |
+| — | 1073.7M | 20.0B | 18.6 | 118/120 | 12×10 | 0.00138 | 256 | 2.2255 | 0.042 | 6% | 25% |
+| **C** | 1073.7M | 56.9B | 53.0 | 47/50 | 5×10 | 0.00138 | 256 | 2.1206 | 0.015 | 21% | 62% |
+
+### How a row-group is derived
+
+An "environment" is exactly `groupby(N, D)` over the CSV
+(`steplaw_query.py:24`). Three things follow:
+
+**N is an architecture, not a knob.** Each of the 5 distinct N values maps to
+exactly one shape, and N is that shape's non-embedding parameter count —
+`numl × (4·d_model² + 3·d_model·ffn_hidden)`, i.e. attention plus a 3-matrix
+(SwiGLU-style) FFN, with embeddings and head excluded. All five reproduce
+exactly:
+
+| N (non-emb) | d_model | ffn hidden | heads | layers | recomputed |
+|---|---|---|---|---|---|
+| 214,663,680 | 960 | 9368 | 15 | 7 | 214,663,680 |
+| 268,304,384 | 1024 | 9552 | 16 | 8 | 268,304,384 |
+| 429,260,800 | 1280 | 9472 | 10 | 10 | 429,260,800 |
+| 536,872,960 | 1280 | 9048 | 10 | 13 | 536,872,960 |
+| 1,073,741,824 | 2048 | 8192 | 16 | 16 | 1,073,741,824 |
+
+Note 429M and 537M share `d_model=1280` and differ only in depth — the size
+axis is not a clean rescale. Because the shape is fixed within a group, lr and
+bs really are the only free variables.
+
+**D comes in ratio families.** The base design is 5 model sizes × 3 token
+multiples, `D/N ∈ {18.6, ~53, ~93}` — 15 points less the missing 1074M/~100B
+cell = 14 — **plus 3 over-trained extensions**: 429M/50B (117), 268M/80B
+(298), and 215M/100B (466), which is Env A.
+
+**Sequence length is 2048, and bs counts sequences.** `bs × ti × 2048` lands
+within 0.4% of D for all 17 groups (exactly, for the 13 whose D isn't rounded
+to 3 s.f.). The token budget is held fixed across the bs axis by varying step
+count: in Env A, `ti` runs 1,525,878 at bs=32 down to 23,841 at bs=2048.
+
+### Axis windows slide (the Step Law, visible in the raw grid)
+
+Envs do **not** share an action space. There are 14 physical lr values
+globally, √2-spaced from 2.441e-4 to 2.21e-2; each env sweeps a 12-value
+*window* of that ladder, and the window shifts down as N and D grow:
+
+| N | D | lr window (12 unless noted) | bs values |
+|---|---|---|---|
+| 214.7M | 4.0B | 0.000488 … 0.0221 | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| 214.7M | 11.4B | 0.000488 … 0.0221 | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| 214.7M | 20.0B | 0.000488 … 0.0221 | 16, 24, 32, 64, 96, 128, 192, 256, 512, 1024 |
+| 214.7M | 100.0B | 0.000244 … 0.0111 | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| 268.3M | 5.0B | 0.000488 … 0.0221 | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| 268.3M | 14.2B | 0.000488 … 0.0221 | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| 268.3M | 25.0B | 0.000488 … 0.0221 | 16, 32, 64, 96, 128, 192, 256, 352, 512, 1024 |
+| 268.3M | 80.0B | 0.000244 … 0.0111 | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| 429.3M | 8.0B | 0.000345 … 0.0156 | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| 429.3M | 22.7B | 0.000345 … 0.0156 | 32, 64, 96, 128, 192, 256, 352, 512, 1024, 2048 |
+| 429.3M | 40.0B | 0.000488 … 0.0156 (11 values) | 32, 64, 96, 128, 192, 256, 352, 512, 1024, 2048 |
+| 429.3M | 50.0B | 0.000244 … 0.0111 | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| 536.9M | 10.0B | 0.000345 … 0.0156 | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| 536.9M | 28.4B | 0.000345 … 0.0156 | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| 536.9M | 50.0B | 0.000345 … 0.0156 | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| 1073.7M | 20.0B | 0.000244 … 0.0111 | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+| 1073.7M | 56.9B | 0.000488 … 0.00195 (5 values) | 32, 64, 128, 192, 256, 352, 512, 736, 1024, 2048 |
+
+Env A's window is the *lowest* of the 215M envs (shifted two notches below
+215M/4B), yet its optimum sits near the window's top at 7.812e-3 — the largest
+`lr*` of all 17. bs is usually `32…2048`, except three envs that swap in
+16/24/96. Reading the `lr*`/`bs*` columns of the catalogue: `lr*` falls with N
+at fixed ratio (2.76e-3 → 9.77e-4 across the 18.6 family) and rises with D at
+fixed N (2.76e-3 → 7.81e-3 across the 215M family), while `bs*` tracks D almost
+alone (128 at ≤10B → 1024 at 100B). That is StepLaw's fitted
+`lr* = f(N, D)`, `bs* = g(D)` showing up before any fitting.
+
+### Holes, and what they mean for the agent
+
+Only 4 of 17 grids are complete (Env A, 268M/14.2B, 268M/80B, 429M/8B). The
+rest carry 1–14 unmeasured cells, scattered rather than structured — worst are
+537M/10B (14 holes across 7 different lr values) and 429M/40B (10, including
+the whole lowest-lr row). There are **no** duplicate `(N,D,lr,bs)` keys
+anywhere in the 1911 rows.
+
+Holes surface to the agent as `pair_not_measured` — a rejection distinct from
+`off_grid`, carrying the batch sizes actually measured at that lr. **Env A has
+zero holes**, so no Env A run ever exercised that path; any claim about
+rejection-handling behavior rests on Env B/C evidence only.
+
+### What the CSV is not
+
+`dense_lr_bs_loss.csv` is 1911 rows = the **dense** joint lr×bs sweep at 17
+`(N, D)` points. StepLaw's headline "3,700 LLMs / ~1M H800-hours / ~100T
+tokens" covers their whole program: their repo also ships a **MoE** smooth-loss
+CSV (not vendored here) and `1004_fitted_lr_bs_scaling_model_parameters.csv`
+(1,000 bootstrap fits), on top of runs behind other parts of the paper. The
+exact decomposition of the 3,700 should be cited from the paper, not inferred
+from this file.
 
 ## Metrics
 
@@ -273,3 +447,10 @@ two traces (move-coded steps + outcome banner), in the agent-trace-report style.
 - Gemini baseline ran **reasoning-off** (unintended). A reasoning-on arm would
   be a fairer "natural config" comparison and would expose its reasoning for
   the artifacts.
+- **Env A/B/C are repo-local labels** — StepLaw names no environments. Cite
+  envs by `(N, D)` in anything external. Two earlier phrasings were corrected
+  against the data when the catalogue was added: Env C's `D/N=53` was called
+  "compute-balanced" (the compute-balanced family across the full 17 is
+  `D/N≈18.6`; 53 is ~3× over-trained), and the global "26 lr / 13 bs" counts
+  were called float-precision duplicates (they are *sliding per-env windows*
+  over a 14-value ladder, plus a 3-vs-4-s.f. recording difference).
