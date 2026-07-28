@@ -17,6 +17,11 @@ acceptance:
   - "summary computes per-instance delta_accuracy and mean_improvement_pct vs baseline"
   - "A/B comparison summary (optimized vs baseline) is embedded or linked in optimized-results.json"
 assignee_class: small-agent
+agent_explanation: >
+  Re-running the same instances with a fixed, documented harness is pure execution.
+  No reasoning needed; small-agent loads the optimized harness, runs the SLM on the
+  original 5–10 instances, logs trajectories and deltas. Frontier-model work unnecessary.
+  Small-agent is sufficient and weakest class.
 depends_on:
   - 006-one-harness-optimization-run
 produces:

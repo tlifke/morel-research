@@ -16,6 +16,11 @@ acceptance:
   - "budget-approval-test.jsonl contains one valid trajectory with > 0 completion steps (may succeed or fail on the task, but environment must work)"
   - "env-setup.md documents the harness used (prompt template, schema definition) and is reproducible by following the steps"
 assignee_class: frontier-agent
+agent_explanation: >
+  Running a budget-approval instance requires Claude API orchestration (frontier model).
+  Small-agent cannot call Claude API or interpret task results. Claude choice is deliberate:
+  at smoke-test stage, SLM capability is unknown (ticket 003 measures it), so using a known-capable
+  frontier model minimizes environment-validation risk. Frontier-agent is weakest sufficient class.
 depends_on: []
 produces:
   - env-setup.md

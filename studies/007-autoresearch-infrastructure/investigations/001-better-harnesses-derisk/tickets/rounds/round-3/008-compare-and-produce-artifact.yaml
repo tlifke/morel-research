@@ -18,6 +18,11 @@ acceptance:
   - "comparison-summary.json contains: baseline_accuracy, optimized_accuracy, improvement_pct, cost_proxy, plan_verdict (pass/fail), and notes"
   - "plan_verdict field references specific claims from replication-plan.md and documents whether evidence threshold was met"
 assignee_class: frontier-agent
+agent_explanation: >
+  Interpreting results against the fidelity contract requires judgment: did we meet pre-registered
+  thresholds? Designing a responsive HTML artifact for phone review (resources.md: "phone, asynchronously")
+  requires design reasoning. Small-agent can compute metrics but cannot make verdict judgments or
+  design responsively. Frontier-agent reasoning is necessary; it is the weakest sufficient class.
 depends_on:
   - 007-measure-optimized-harness-on-same-instances
   - 005-run-baseline-with-generic-harness

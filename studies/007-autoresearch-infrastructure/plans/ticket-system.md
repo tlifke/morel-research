@@ -84,6 +84,22 @@ quoted (round-1 failure class). Decomposition experiments live in
   all review pages show title + summary + human_needed at top level,
   everything else behind disclosure.
 
+### agent_explanation (added to v1.1, 2026-07-27)
+
+Required field: the drafting agent's own explanation of its capability
+choices — why the chosen `assignee_class` is the weakest class that can
+pass acceptance, and why any model named inside the task (meta-agent,
+judge, SLM) was selected, grounded in the shipped sources (1-3
+sentences, citing the facts used). Rationale: which LLM does which task
+is a key decision that today is only a prompted heuristic (AI-first +
+weakest-capable) with unrecorded reasoning. The field makes the
+prediction inspectable now, and empirical later: provenance outcomes
+joined against these explanations become the delegation dataset (feeds
+the principles corpus, backlog 6, and the capability map). Round-3
+tickets were backfilled by their original drafter agent (same session,
+same model) rather than by the reviewer, so the recorded reasoning is
+the chooser's own.
+
 ## Schema v1.2 (proposal, 2026-07-27 — not yet applied)
 
 Handoffs as a K/Q/V match (Tyler's framing): producers declare keys

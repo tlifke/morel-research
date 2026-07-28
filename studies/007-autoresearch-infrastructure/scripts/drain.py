@@ -13,9 +13,9 @@ import yaml
 
 REQUIRED = [
     "id", "title", "summary", "why", "claim", "description", "acceptance",
-    "assignee_class", "depends_on", "produces", "consumes",
-    "human_needed", "gate", "cost_ceiling_usd", "status", "provenance",
-    "related", "created",
+    "assignee_class", "agent_explanation", "depends_on", "produces",
+    "consumes", "human_needed", "gate", "cost_ceiling_usd", "status",
+    "provenance", "related", "created",
 ]
 STATUSES = {"draft", "blocked", "ready", "in-progress", "done", "failed", "abandoned"}
 CLASSES = {"human", "frontier-agent", "small-agent"}
@@ -280,6 +280,7 @@ def ticket_html(t):
         f"<details><summary>details</summary>"
         f"<p class='meta'>gate: {e(str(t.get('gate')))} · depends on: {e(deps)} · serves: {e(t['claim'])}</p>"
         f"<p class='meta'>why: {e(str(t.get('why', ''))).strip()}</p>"
+        f"<p class='meta'>assignee rationale: {e(str(t.get('agent_explanation', ''))).strip()}</p>"
         f"<p class='meta'>produces: {e(produces)} · consumes: {e(consumes)}</p>"
         f"<p>{e(t['description']).strip()}</p>"
         f"<h2>Acceptance</h2><ul>{acc}</ul>{prov}</details></div>"

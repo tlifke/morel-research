@@ -19,7 +19,7 @@ NOTES = {
     "003-measure-slm-vram-feasibility": ("agree", "Grounding worked: names our actual fleet (nemotron-4b, qwen3.5:4b) and carries resources.md's measure-don't-assume language verbatim. Round 2 listed llama2-7b and neural-chat here."),
     "004-setup-software-agent-sdk-and-test-env": ("agree", "Correctly frontier-agent now, and self-scopes as a smoke test. Minor: its description references repo-audit.md findings without declaring the handoff in consumes."),
     "005-run-baseline-with-generic-harness": ("agree", "Solid — reduced instances, raw trajectories, cost-proxy note per resources.md. Minor gap: it doesn't consume env-setup.md from 004, so the baseline could run in a subtly different environment than the one the smoke test validated."),
-    "006-one-harness-optimization-run": ("flag", "Flagged as a choice to review, not an error (per Tyler, 2026-07-27): picking flash-lite as meta-agent to protect the budget is defensible cost logic — but the shipped Lesson 1 says meta-agent quality is the binding factor, and the Claude subscription offers frontier-class at $0 marginal, so we judge the choice misaligned with the replication. The ticket is otherwise well-grounded (raw JSON per Lesson 1, failure-mode list from claim 4). This is exactly the judgment class a reviewer layer should surface rather than the drafting contract over-constrain."),
+    "006-one-harness-optimization-run": ("flag", "Flagged as a choice to review, not an error (per Tyler, 2026-07-27): picking flash-lite as meta-agent to protect the budget is defensible cost logic — but the shipped Lesson 1 says meta-agent quality is the binding factor, and the Claude subscription offers frontier-class at $0 marginal, so we judge the choice misaligned with the replication. The ticket is otherwise well-grounded (raw JSON per Lesson 1, failure-mode list from claim 4). This is exactly the judgment class a reviewer layer should surface rather than the drafting contract over-constrain. Its own backfilled agent_explanation confirms it knew Lesson 1 and chose an explicit budget-fidelity tradeoff — the miss was option enumeration (the $0 subscription route), not ignorance of the lesson."),
     "007-measure-optimized-harness-on-same-instances": ("agree", "New versus both prior rounds, and good experimental hygiene: the optimized harness is measured on the same instances as the baseline, cleanly separated from the optimization loop itself."),
     "008-compare-and-produce-artifact": ("agree", "Right assignee; comparison keyed to the pre-registered fidelity contract."),
 }
@@ -201,6 +201,7 @@ def ticket_card(t):
   <details>
     <summary>details · {len(t['acceptance'])} acceptance criteria · handoffs</summary>
     <h3>Why</h3><p>{esc(str(t.get('why'))).strip()}</p>
+    <h3>Who runs it, and why</h3><p>{esc(str(t.get('agent_explanation', 'not recorded (pre-v1.1 addendum)'))).strip()}</p>
     <h3>What</h3><p>{esc(t['description']).strip()}</p>
     <h3>Acceptance</h3><ul>{acc}</ul>
     <h3>Handoffs</h3>

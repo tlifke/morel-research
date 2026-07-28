@@ -21,6 +21,12 @@ acceptance:
   - "optimized-results.json contains re-run results on the same instances: per-instance accuracy, total tokens, cost_usd_total (from optimization-log)"
   - "optimization-cost.txt documents API spend vs $4 budget and reasoning if budget was exceeded"
 assignee_class: frontier-agent
+agent_explanation: >
+  Orchestrating a meta-agent loop requires frontier-model reasoning: interpret raw JSON trajectories,
+  infer failure modes, propose harness changes, iterate intelligently. Small-agent cannot use Gemini
+  API or reason about optimization trade-offs. Gemini-3.1-flash-lite (not paper's pro) is budget-driven:
+  resources.md ceiling $5, paper spent $20; flash-lite substitution fits derisk budget. Paper Lesson 1
+  warned cheaper meta-agents produce worse harnesses—this is an explicit budget-fidelity tradeoff.
 depends_on:
   - 005-run-baseline-with-generic-harness
   - 001-author-replication-plan

@@ -16,6 +16,11 @@ acceptance:
   - "At least one SLM has load_success=true and free_vram_mb > 500 (margin for batch inference)"
   - "If all candidates fail to load, fallback is documented (e.g., 'recommend Modal escalation' or 'use frontier-model baseline only')"
 assignee_class: small-agent
+agent_explanation: >
+  Measurement is pure execution: load SLMs on GPU, log VRAM/throughput. No reasoning needed.
+  Model choices (nemotron-4b, qwen3.5:4b) from resources.md: "verified in past studies"; 8B
+  candidate per resources.md constraint "8B dense at Q4 fits". Small-agent can run ollama
+  and record metrics; frontier-agent reasoning unneeded.
 depends_on: []
 produces:
   - slm-feasibility.json

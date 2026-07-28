@@ -35,6 +35,12 @@ starts from. Append as discoveries happen; date entries.
   keys (produces), consumers declare queries (consumes), the artifact is
   the value; edges are derived by matching, orphaned keys and unmatched
   queries are surfaced. See ticket-system.md v1.2.
+- **LLM-selection as recorded prediction**: every ticket carries
+  `agent_explanation` — the drafter's own reasoning for its
+  assignee-class and any in-task model choices. Joined with provenance
+  outcomes this becomes empirical model-selection data (which
+  explanations predicted success); until then it makes the choice
+  reviewable instead of implicit.
 - Idea backlog as a first-class store — agent memory (including
   non-Anthropic and weaker models) is not durable.
 - Resource elicitation as a structured flow (Skill first, platform form
