@@ -84,6 +84,27 @@ quoted (round-1 failure class). Decomposition experiments live in
   all review pages show title + summary + human_needed at top level,
   everything else behind disclosure.
 
+## Schema v1.2 (proposal, 2026-07-27 — not yet applied)
+
+Handoffs as a K/Q/V match (Tyler's framing): producers declare keys
+(`produces`), consumers declare queries (`consumes`), the artifact is the
+value transmitted over the matched edge. Adopted parts:
+
+- `depends_on` becomes **derived**, not authored: the resolver matches
+  each consume-query against produce-keys and materializes the edges.
+  Producers never need to know their consumers (the N-way asymmetry that
+  motivated the framing).
+- Unmatched query → error (a ticket needs something nobody makes).
+  Orphaned key → warning unless the producer declares it `terminal:
+  true` (an artifact made for the record, not for a consumer — e.g. the
+  final comparison artifact).
+
+Deliberately NOT adopted from the analogy: soft/fuzzy matching. Attention
+matches by learned similarity; here a near-miss name match must be a loud
+error, not a weak edge. Matching stays exact and nominal (a registry of
+artifact names), which keeps the analogy honest: it describes the
+direction of resolution, not the mechanism of similarity.
+
 ## Two-gate workflow (observed in round 1, now explicit)
 
 Gate 1 approves the high-level plan (Stage 1 of the walkthrough). Gate 2

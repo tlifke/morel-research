@@ -11,7 +11,11 @@ live here in the repo where any agent can read them.
    beat improving the core agent's specification; Tyler + the interactive
    frontier agent currently fill this role. *Revisit when:* gate reviews
    become the human bottleneck, or drafting contracts stabilize enough
-   that compliance checking is mechanical.
+   that compliance checking is mechanical. *Refinement (2026-07-27):*
+   its job is flagging judgment calls (e.g. round-3 006's budget-driven
+   meta-agent choice), not enforcing them via drafting prompts —
+   overtuning the drafter is wasted effort. Fuel: the principles corpus
+   from item 6.
 
 2. **Idea backlog inside the ticketing system** — a first-class backlog
    (ideas → draft tickets) with the same progressive-disclosure render as
@@ -35,3 +39,11 @@ live here in the repo where any agent can read them.
    captured as structured signals for future delegation modeling.
    *Revisit when:* tickets begin executing and provenance records exist
    to attach the signal to.
+
+6. **Approve/reject principles corpus** — every gate decision and
+   review-flag resolution records what was chosen and why (first entry:
+   round-3 006 meta-agent — reviewer note initially called it a failure;
+   Tyler reclassified it as a legitimate choice misaligned with the
+   replication, review-layer territory). Over time the corpus trains a
+   classifier or prompts an LLM reviewer, and doubles as documentation of
+   our choices. *Revisit when:* ~10+ recorded decisions exist.

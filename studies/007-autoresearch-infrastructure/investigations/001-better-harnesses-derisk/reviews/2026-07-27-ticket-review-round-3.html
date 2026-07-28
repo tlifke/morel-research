@@ -13,6 +13,11 @@
 :root[data-theme="light"] { --bg:#f7f6f3; --fg:#232220; --muted:#6e6c66;
   --card:#fffefb; --line:#dedcd4; --accent:#a4711f; --accent-soft:#a4711f14; }
 * { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } }
+.card { scroll-margin-top:.8rem; }
+.graphwrap a { cursor:pointer; }
+.card:target { border-color:var(--accent); background:var(--accent-soft); }
 body { margin:0 auto; max-width:44rem; padding:1.4rem 1rem 4rem;
   background:var(--bg); color:var(--fg);
   font:16px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
@@ -70,7 +75,7 @@ footer { margin-top:2rem; color:var(--muted); font-size:.8rem; }
 <button id='revbtn'>Reviewer layer: off</button>
 <div class='gatebar'>Gate <b>derisk-approval</b> is unapproved. Approving this round promotes these tickets and opens wave 1 (four tickets in parallel).</div>
 <section>
-<div class='card'><h2>Execution graph</h2><p class='oneliner meta'>left to right = dependency waves; everything in a column can run in parallel</p><div class='graphwrap'><svg viewBox='0 0 624 216' width='624' height='216' role='img' aria-label='ticket dependency graph'><path d='M76 123.0 C 104.0 123.0, 104.0 27.0, 132 27.0'/><path d='M76 27.0 C 104.0 27.0, 104.0 27.0, 132 27.0'/><path d='M196 27.0 C 224.0 27.0, 224.0 27.0, 252 27.0'/><path d='M76 27.0 C 164.0 27.0, 164.0 27.0, 252 27.0'/><path d='M316 27.0 C 344.0 27.0, 344.0 27.0, 372 27.0'/><path d='M436 27.0 C 464.0 27.0, 464.0 27.0, 492 27.0'/><path d='M196 27.0 C 344.0 27.0, 344.0 27.0, 492 27.0'/><path d='M76 27.0 C 284.0 27.0, 284.0 27.0, 492 27.0'/><g><rect class='box' x='12' y='12' width='64' height='30' rx='7'/><rect x='12' y='38' width='64' height='4' rx='2' fill='#7d5bb0'/><text x='44.0' y='31' text-anchor='middle' font-size='13'>001</text><title>Author replication plan with pre-registered fidelity contract (frontier-agent)</title></g><g><rect class='box' x='12' y='60' width='64' height='30' rx='7'/><rect x='12' y='86' width='64' height='4' rx='2' fill='#3572b0'/><text x='44.0' y='79' text-anchor='middle' font-size='13'>002</text><title>Clone and audit migration-analysis repo for task pipelines (small-agent)</title></g><g><rect class='box' x='12' y='108' width='64' height='30' rx='7'/><rect x='12' y='134' width='64' height='4' rx='2' fill='#3572b0'/><text x='44.0' y='127' text-anchor='middle' font-size='13'>003</text><title>Measure SLM models that fit on 3080 12GB VRAM (small-agent)</title></g><g><rect class='box' x='12' y='156' width='64' height='30' rx='7'/><rect x='12' y='182' width='64' height='4' rx='2' fill='#7d5bb0'/><text x='44.0' y='175' text-anchor='middle' font-size='13'>004</text><title>Set up software-agent-sdk locally and run one budget-approval instance (frontier-agent)</title></g><g><rect class='box' x='132' y='12' width='64' height='30' rx='7'/><rect x='132' y='38' width='64' height='4' rx='2' fill='#3572b0'/><text x='164.0' y='31' text-anchor='middle' font-size='13'>005</text><title>Run generic-harness baseline on reduced budget-approval instance set (small-agent)</title></g><g><rect class='box' x='252' y='12' width='64' height='30' rx='7'/><rect x='252' y='38' width='64' height='4' rx='2' fill='#7d5bb0'/><text x='284.0' y='31' text-anchor='middle' font-size='13'>006</text><title>Run one harness-optimization iteration under budget (frontier-agent)</title></g><g><rect class='box' x='372' y='12' width='64' height='30' rx='7'/><rect x='372' y='38' width='64' height='4' rx='2' fill='#3572b0'/><text x='404.0' y='31' text-anchor='middle' font-size='13'>007</text><title>Re-run the same budget-approval instances with the optimized harness (small-agent)</title></g><g><rect class='box' x='492' y='12' width='64' height='30' rx='7'/><rect x='492' y='38' width='64' height='4' rx='2' fill='#7d5bb0'/><text x='524.0' y='31' text-anchor='middle' font-size='13'>008</text><title>Compare baseline vs optimized results; produce artifact for review (frontier-agent)</title></g></svg></div><p class='legend'><i style='background:#7d5bb0'></i>frontier-agent<i style='background:#3572b0'></i>small-agent<i style='background:#c77d2e'></i>human</p></div>
+<div class='card'><h2>Execution graph</h2><p class='oneliner meta'>left to right = dependency waves; everything in a column can run in parallel</p><div class='graphwrap'><svg viewBox='0 0 624 238' width='624' height='238' role='img' aria-label='ticket dependency graph'><path d='M76 145.0 C 104.0 145.0, 104.0 49.0, 132 49.0'/><path d='M76 49.0 C 104.0 49.0, 104.0 49.0, 132 49.0'/><path d='M196 49.0 C 224.0 49.0, 224.0 49.0, 252 49.0'/><path d='M76 49.0 C 164.0 23.0, 164.0 23.0, 252 49.0'/><path d='M316 49.0 C 344.0 49.0, 344.0 49.0, 372 49.0'/><path d='M436 49.0 C 464.0 49.0, 464.0 49.0, 492 49.0'/><path d='M196 49.0 C 344.0 16.0, 344.0 16.0, 492 49.0'/><path d='M76 49.0 C 284.0 9.0, 284.0 9.0, 492 49.0'/><a href='#t-001'><g><rect class='box' x='12' y='34' width='64' height='30' rx='7'/><rect x='12' y='60' width='64' height='4' rx='2' fill='#7d5bb0'/><text x='44.0' y='53' text-anchor='middle' font-size='13'>001</text><title>Author replication plan with pre-registered fidelity contract (frontier-agent)</title></g></a><a href='#t-002'><g><rect class='box' x='12' y='82' width='64' height='30' rx='7'/><rect x='12' y='108' width='64' height='4' rx='2' fill='#3572b0'/><text x='44.0' y='101' text-anchor='middle' font-size='13'>002</text><title>Clone and audit migration-analysis repo for task pipelines (small-agent)</title></g></a><a href='#t-003'><g><rect class='box' x='12' y='130' width='64' height='30' rx='7'/><rect x='12' y='156' width='64' height='4' rx='2' fill='#3572b0'/><text x='44.0' y='149' text-anchor='middle' font-size='13'>003</text><title>Measure SLM models that fit on 3080 12GB VRAM (small-agent)</title></g></a><a href='#t-004'><g><rect class='box' x='12' y='178' width='64' height='30' rx='7'/><rect x='12' y='204' width='64' height='4' rx='2' fill='#7d5bb0'/><text x='44.0' y='197' text-anchor='middle' font-size='13'>004</text><title>Set up software-agent-sdk locally and run one budget-approval instance (frontier-agent)</title></g></a><a href='#t-005'><g><rect class='box' x='132' y='34' width='64' height='30' rx='7'/><rect x='132' y='60' width='64' height='4' rx='2' fill='#3572b0'/><text x='164.0' y='53' text-anchor='middle' font-size='13'>005</text><title>Run generic-harness baseline on reduced budget-approval instance set (small-agent)</title></g></a><a href='#t-006'><g><rect class='box' x='252' y='34' width='64' height='30' rx='7'/><rect x='252' y='60' width='64' height='4' rx='2' fill='#7d5bb0'/><text x='284.0' y='53' text-anchor='middle' font-size='13'>006</text><title>Run one harness-optimization iteration under budget (frontier-agent)</title></g></a><a href='#t-007'><g><rect class='box' x='372' y='34' width='64' height='30' rx='7'/><rect x='372' y='60' width='64' height='4' rx='2' fill='#3572b0'/><text x='404.0' y='53' text-anchor='middle' font-size='13'>007</text><title>Re-run the same budget-approval instances with the optimized harness (small-agent)</title></g></a><a href='#t-008'><g><rect class='box' x='492' y='34' width='64' height='30' rx='7'/><rect x='492' y='60' width='64' height='4' rx='2' fill='#7d5bb0'/><text x='524.0' y='53' text-anchor='middle' font-size='13'>008</text><title>Compare baseline vs optimized results; produce artifact for review (frontier-agent)</title></g></a></svg></div><p class='legend'><i style='background:#7d5bb0'></i>frontier-agent<i style='background:#3572b0'></i>small-agent<i style='background:#c77d2e'></i>human</p></div>
 
 <div class='card rev'>
 <h2>Rounds compared</h2>
@@ -86,16 +91,16 @@ footer { margin-top:2rem; color:var(--muted); font-size:.8rem; }
 <tr><td>meta-agent class correct</td><td>—</td><td>no (small)</td><td>yes (wrong model)</td></tr>
 </table>
 </div>
-<div class='card rev'><h2>Grounding worked</h2><p class='oneliner'>The three round-2 drift flags are gone: real fleet named in 003, the paper&#x27;s raw-JSON lesson cited inside 006, the optimization run assigned frontier-class, claim fields reference actual paper claims. Shipping primary sources instead of paraphrases did exactly what it was supposed to.</p></div><div class='card rev'><h2>One synthesis failure survives</h2><p class='oneliner'>006 chose a cheap meta-agent to protect the $5 budget, missing that the subscription provides a frontier meta-agent at $0. Grounding fixed facts; reasoning across two sources (paper lesson + resource ladder) still failed once. That&#x27;s the residual gap between context provision and judgment.</p></div><div class='card rev'><h2>Missing handoffs</h2><p class='oneliner'>repo-audit.md is produced but never consumed; env-setup.md isn&#x27;t consumed by the baseline. Candidate rule for v1.2: every produced artifact has a consumer or an explicit terminal declaration.</p></div><div class='card rev'><h2>human_needed: 8/8 empty</h2><p class='oneliner'>Now an explicit assertion rather than an omission, rendered on every card. Watch which tickets actually generate human moments at execution — that delta is delegation data.</p></div><div class='card rev'><h2>Depth 5 vs round 2&#x27;s 4 — and that&#x27;s fine</h2><p class='oneliner'>The extra depth is a genuinely new stage: 007 re-measures on the same instances. Better science, slightly longer critical path. Depth is a cost, not a score.</p></div>
+<div class='card rev'><h2>Grounding worked</h2><p class='oneliner'>The three round-2 drift flags are gone: real fleet named in 003, the paper&#x27;s raw-JSON lesson cited inside 006, the optimization run assigned frontier-class, claim fields reference actual paper claims. Shipping primary sources instead of paraphrases did exactly what it was supposed to.</p></div><div class='card rev'><h2>A choice to review, not a failure</h2><p class='oneliner'>006&#x27;s flash-lite meta-agent is defensible budget logic that we judge misaligned with the replication (Lesson 1 + the $0 subscription option). Per Tyler: don&#x27;t overtune the drafting prompt to force such choices — surface them for review. Accumulating approve/reject rationales become a principles corpus for a future reviewer (classifier or prompted LLM), and a documented record of why we chose what we chose.</p></div><div class='card rev'><h2>Missing handoffs</h2><p class='oneliner'>repo-audit.md is produced but never consumed; env-setup.md isn&#x27;t consumed by the baseline. Candidate rule for v1.2: every produced artifact has a consumer or an explicit terminal declaration.</p></div><div class='card rev'><h2>human_needed: 8/8 empty</h2><p class='oneliner'>Now an explicit assertion rather than an omission, rendered on every card. Watch which tickets actually generate human moments at execution — that delta is delegation data.</p></div><div class='card rev'><h2>Depth 5 vs round 2&#x27;s 4 — and that&#x27;s fine</h2><p class='oneliner'>The extra depth is a genuinely new stage: 007 re-measures on the same instances. Better science, slightly longer critical path. Depth is a cost, not a score.</p></div>
 
-<div class='card'>
+<div class='card' id='t-001'>
   <span class='tid'>001</span>
   <h2>Author replication plan with pre-registered fidelity contract</h2>
-  <span class='meta'>· frontier-agent · $</span> <span class='chip' style='background:#3d8a4e'>agree</span>
+  <span class='meta'>· frontier-agent</span> <span class='chip' style='background:#3d8a4e'>agree</span>
   <p class='oneliner'>Document what &#x27;replication&#x27; means for each claim before executing any experiments.</p>
   <p class='hn'><b>Human needed:</b> none</p>
   <details>
-    <summary>details</summary>
+    <summary>details · 3 acceptance criteria · handoffs</summary>
     <h3>Why</h3><p>Prevents p-hacking and sets approval criteria; needed by all downstream work to measure success uniformly.</p>
     <h3>What</h3><p>Use a frontier model (Claude) to draft a fidelity contract specifying what metrics/evidence would satisfy each of the 7 claims from the paper card. Include acceptable model substitutions (4B vs 26B), what counts as &quot;closed the gap&quot;, tolerable substitutions (budget-approval from TheAgentCompany vs other sources), and reduced-scale instance counts. Document any assumptions about hardware, cost proxies (tokens/instance as stand-in for API $), and success thresholds. Review with the human at gate time before any experiments run.</p>
     <h3>Acceptance</h3><ul><li>replication-plan.md exists and contains a section per claim with concrete success criteria (e.g., &#x27;claim 1: baseline accuracy + delta &gt; 25 percentage points&#x27;)</li><li>Plan addresses Claim 3 derisk risk: specifies the minimum capability level for an SLM to benefit from adaptation</li><li>Plan documents acceptable model substitutions (4B-class vs paper&#x27;s 26B) with rationale</li></ul>
@@ -105,14 +110,14 @@ footer { margin-top:2rem; color:var(--muted); font-size:.8rem; }
   </details>
   <div class='note rev'><b>Review note — Fable</b>Right assignee, claim fields now reference the real paper claims. Still open from round 1: should the plan get an amendment pass once the repo audit lands? Currently nothing consumes the audit — see 002.</div>
 </div>
-<div class='card'>
+<div class='card' id='t-002'>
   <span class='tid'>002</span>
   <h2>Clone and audit migration-analysis repo for task pipelines</h2>
-  <span class='meta'>· small-agent · $</span> <span class='chip' style='background:#c77d2e'>flag</span>
+  <span class='meta'>· small-agent</span> <span class='chip' style='background:#c77d2e'>flag</span>
   <p class='oneliner'>Verify the released code includes task-instance generation or only the optimizer.</p>
   <p class='hn'><b>Human needed:</b> none</p>
   <details>
-    <summary>details</summary>
+    <summary>details · 4 acceptance criteria · handoffs</summary>
     <h3>Why</h3><p>Reproducibility risk: if task pipelines aren&#x27;t included, we cannot generate budget-approval instances and must work around by sourcing them externally or with custom code.</p>
     <h3>What</h3><p>Clone https://github.com/malusamayo/migration-analysis to the Mac or 3080. Walk the directory structure and identify: task generation scripts, task data sources, the optimizer code, and dependencies (especially software-agent-sdk version). Document what&#x27;s present, absent, or unclear. If task generation is missing, recommend a workaround (e.g., use public budget-approval templates from TheAgentCompany directly).</p>
     <h3>Acceptance</h3><ul><li>repo-audit.md exists and includes directory tree and file inventory</li><li>repo-audit.md identifies which tasks have pipeline code vs. are assumed to be sourced externally</li><li>repo-audit.md documents software-agent-sdk dependency version and installation method</li><li>repo-audit.md recommends whether we can use released code as-is for PoC or must add workarounds</li></ul>
@@ -122,14 +127,14 @@ footer { margin-top:2rem; color:var(--muted); font-size:.8rem; }
   </details>
   <div class='note rev'><b>Review note — Fable</b>Good ticket, but its output is orphaned: repo-audit.md is produced and no ticket consumes it, so the audit findings never flow into the plan or the environment setup. Wire it into 001 (amendment) or 004, or it is dead work. Suggests a rule: every produced artifact needs a consumer or an explicit terminal note.</div>
 </div>
-<div class='card'>
+<div class='card' id='t-003'>
   <span class='tid'>003</span>
   <h2>Measure SLM models that fit on 3080 12GB VRAM</h2>
-  <span class='meta'>· small-agent · $</span> <span class='chip' style='background:#3d8a4e'>agree</span>
+  <span class='meta'>· small-agent</span> <span class='chip' style='background:#3d8a4e'>agree</span>
   <p class='oneliner'>Test actual load success and tokens/sec for candidates; don&#x27;t estimate.</p>
   <p class='hn'><b>Human needed:</b> none</p>
   <details>
-    <summary>details</summary>
+    <summary>details · 3 acceptance criteria · handoffs</summary>
     <h3>Why</h3><p>Claim 3 derisk risk: need to confirm a capable SLM fits on hardware before investing in baseline/optimization runs. Also informs model selection for tickets 005 and 006.</p>
     <h3>What</h3><p>On the 3080 via SSH, attempt to load each candidate SLM [nemotron-4b, qwen3.5:4b, one 8B candidate if available — check current ollama list at execution time] at Q4 quantization. For each attempt, record: model name, quantization, load_success (true/false), free_vram_mb after load, and tokens_per_sec (via 100-token generation sample). Document any OOM or load-timeout failures. The output guides model selection for baseline and optimization work.</p>
     <h3>Acceptance</h3><ul><li>slm-feasibility.json exists with an entry per model attempt: (model_name, quantization, load_success, free_vram_mb, tokens_per_sec, notes)</li><li>At least one SLM has load_success=true and free_vram_mb &gt; 500 (margin for batch inference)</li><li>If all candidates fail to load, fallback is documented (e.g., &#x27;recommend Modal escalation&#x27; or &#x27;use frontier-model baseline only&#x27;)</li></ul>
@@ -139,14 +144,14 @@ footer { margin-top:2rem; color:var(--muted); font-size:.8rem; }
   </details>
   <div class='note rev'><b>Review note — Fable</b>Grounding worked: names our actual fleet (nemotron-4b, qwen3.5:4b) and carries resources.md&#x27;s measure-don&#x27;t-assume language verbatim. Round 2 listed llama2-7b and neural-chat here.</div>
 </div>
-<div class='card'>
+<div class='card' id='t-004'>
   <span class='tid'>004</span>
   <h2>Set up software-agent-sdk locally and run one budget-approval instance</h2>
-  <span class='meta'>· frontier-agent · $</span> <span class='chip' style='background:#3d8a4e'>agree</span>
+  <span class='meta'>· frontier-agent</span> <span class='chip' style='background:#3d8a4e'>agree</span>
   <p class='oneliner'>Verify the environment works with a generic harness and frontier model.</p>
   <p class='hn'><b>Human needed:</b> none</p>
   <details>
-    <summary>details</summary>
+    <summary>details · 3 acceptance criteria · handoffs</summary>
     <h3>Why</h3><p>Reproducibility risk: if the environment or budget-approval task can&#x27;t run, all downstream work fails. This ticket validates the end-to-end pipeline (task generation, harness execution, logging).</p>
     <h3>What</h3><p>Install software-agent-sdk on the Mac (or 3080; recommend Mac for orchestration). Generate one budget-approval task instance using public templates (e.g., from TheAgentCompany or per repo-audit.md findings). Run it with a minimal harness (task description + schema in the prompt, no special context) using Claude as the agent. Log the full JSON trajectory. Document installation steps, task generation method, and success/failure of the run. This is a smoke test, not a full baseline.</p>
     <h3>Acceptance</h3><ul><li>env-setup.md documents installation steps, dependencies, and any configuration needed</li><li>budget-approval-test.jsonl contains one valid trajectory with &gt; 0 completion steps (may succeed or fail on the task, but environment must work)</li><li>env-setup.md documents the harness used (prompt template, schema definition) and is reproducible by following the steps</li></ul>
@@ -156,14 +161,14 @@ footer { margin-top:2rem; color:var(--muted); font-size:.8rem; }
   </details>
   <div class='note rev'><b>Review note — Fable</b>Correctly frontier-agent now, and self-scopes as a smoke test. Minor: its description references repo-audit.md findings without declaring the handoff in consumes.</div>
 </div>
-<div class='card'>
+<div class='card' id='t-005'>
   <span class='tid'>005</span>
   <h2>Run generic-harness baseline on reduced budget-approval instance set</h2>
-  <span class='meta'>· small-agent · $</span> <span class='chip' style='background:#3d8a4e'>agree</span>
+  <span class='meta'>· small-agent</span> <span class='chip' style='background:#3d8a4e'>agree</span>
   <p class='oneliner'>Establish performance floor with the chosen SLM before optimization.</p>
   <p class='hn'><b>Human needed:</b> none</p>
   <details>
-    <summary>details</summary>
+    <summary>details · 4 acceptance criteria · handoffs</summary>
     <h3>Why</h3><p>Needed to measure adaptation effectiveness (claim 1); defines the comparison target for optimized harness. Reduced instance count fits within derisk budget and validates the methodology before scaling.</p>
     <h3>What</h3><p>Using the SLM confirmed feasible in ticket 003, run the budget-approval task on 5–10 instances (reduced from full set per resources.md derisk scope and $5 budget) with a generic, unoptimized harness (task description + schema in the prompt, no examples or context). Use the SLM named in slm-feasibility.json with the highest (tokens_per_sec, free_vram_mb) score. Log each trajectory as raw JSON. Record per-instance: task_id, outcome (pass/fail), accuracy_score, tokens_used. Use batch or queued inference if available to reduce wall-clock time on the single GPU.</p>
     <h3>Acceptance</h3><ul><li>baseline-results.json exists with &gt;= 5 instances, each recording: task_id, outcome, accuracy_score, tokens_used</li><li>baseline-trajectories.jsonl contains one line per instance with full trajectory data</li><li>summary in baseline-results.json includes: mean_accuracy, std_accuracy, total_tokens, cost_proxy_note (e.g., &#x27;tokens sum to X; at frontier rate ~$Y reference&#x27;)</li><li>harness used (prompt, schema) is documented for reproducibility and matches the &#x27;generic&#x27; spec</li></ul>
@@ -173,14 +178,14 @@ footer { margin-top:2rem; color:var(--muted); font-size:.8rem; }
   </details>
   <div class='note rev'><b>Review note — Fable</b>Solid — reduced instances, raw trajectories, cost-proxy note per resources.md. Minor gap: it doesn&#x27;t consume env-setup.md from 004, so the baseline could run in a subtly different environment than the one the smoke test validated.</div>
 </div>
-<div class='card'>
+<div class='card' id='t-006'>
   <span class='tid'>006</span>
   <h2>Run one harness-optimization iteration under budget</h2>
-  <span class='meta'>· frontier-agent · $4</span> <span class='chip' style='background:#c77d2e'>flag</span>
+  <span class='meta'>· frontier-agent · $4 cap</span> <span class='chip' style='background:#c77d2e'>flag</span>
   <p class='oneliner'>Use Gemini to optimize the harness for the SLM on budget-approval; log all trajectories.</p>
   <p class='hn'><b>Human needed:</b> none</p>
   <details>
-    <summary>details</summary>
+    <summary>details · 4 acceptance criteria · handoffs</summary>
     <h3>Why</h3><p>Core derisk work: tests whether we can replicate the adaptation claim (1) at smaller scale. The one-time meta-agent cost (budget: $4 for Gemini-3.1-flash-lite, vs paper&#x27;s $20 for Gemini-3.1-pro) is the derisk gate; success validates the optimization loop methodology.</p>
     <h3>What</h3><p>Use Gemini-3.1-flash-lite (or similar; cheaper than paper&#x27;s Gemini-3.1-pro) to optimize a harness for the SLM on the same 5–10 budget-approval instances from ticket 005. Feed the meta-agent: raw JSON trajectories from baseline (not summaries, per paper Lesson 1), task descriptions, and a list of failure modes to address (instruction-following, knowledge, tool-use, long-context). Set a hard API budget of $4 USD. Run the optimizer loop: (a) analyze baseline failures, (b) propose harness changes (prompt context, tools, templates), (c) re-run instances with proposed harness, (d) evaluate, (e) iterate if budget allows. Log every optimization trajectory; document the final harness (prompt, tools, workflows) as a reproducible artifact.</p>
     <h3>Acceptance</h3><ul><li>optimization-log.jsonl contains &gt;= 3 iterations, each with: input_trajectories_count, proposed_changes, re_eval_results, cost_usd_this_iteration</li><li>optimized-harness.md documents the final harness: prompt template, tool definitions, workflow changes vs. generic baseline</li><li>optimized-results.json contains re-run results on the same instances: per-instance accuracy, total tokens, cost_usd_total (from optimization-log)</li><li>optimization-cost.txt documents API spend vs $4 budget and reasoning if budget was exceeded</li></ul>
@@ -188,16 +193,16 @@ footer { margin-top:2rem; color:var(--muted); font-size:.8rem; }
     <p class='meta'>depends on: 005-run-baseline-with-generic-harness, 001-author-replication-plan<br>produces: optimization-log.jsonl, optimized-harness.md, optimized-results.json, optimization-cost.txt<br>consumes: baseline-results.json, baseline-trajectories.jsonl, replication-plan.md</p>
     <p class='meta'>serves: Claim 1 (adaptation closes most of the gap); Claim 4 (adaptations explainable by failure-mode framework)</p>
   </details>
-  <div class='note rev'><b>Review note — Fable</b>The round&#x27;s one real failure, and it&#x27;s a synthesis failure, not a fact failure: it picks Gemini flash-lite as the meta-agent to save money — directly against the shipped Lesson 1 (a cheaper meta-agent produced worse harnesses). resources.md offers the Claude subscription at zero marginal cost for exactly this frontier-class work: the meta-agent should be Claude, the $4 ceiling drops to ~$0, and the freed budget buys more instances. Everything else in the ticket (raw JSON trajectories per Lesson 1, failure-mode list from claim 4) is correctly grounded.</div>
+  <div class='note rev'><b>Review note — Fable</b>Flagged as a choice to review, not an error (per Tyler, 2026-07-27): picking flash-lite as meta-agent to protect the budget is defensible cost logic — but the shipped Lesson 1 says meta-agent quality is the binding factor, and the Claude subscription offers frontier-class at $0 marginal, so we judge the choice misaligned with the replication. The ticket is otherwise well-grounded (raw JSON per Lesson 1, failure-mode list from claim 4). This is exactly the judgment class a reviewer layer should surface rather than the drafting contract over-constrain.</div>
 </div>
-<div class='card'>
+<div class='card' id='t-007'>
   <span class='tid'>007</span>
   <h2>Re-run the same budget-approval instances with the optimized harness</h2>
-  <span class='meta'>· small-agent · $</span> <span class='chip' style='background:#3d8a4e'>agree</span>
+  <span class='meta'>· small-agent</span> <span class='chip' style='background:#3d8a4e'>agree</span>
   <p class='oneliner'>Evaluate the optimized harness on the original baseline instances for direct comparison.</p>
   <p class='hn'><b>Human needed:</b> none</p>
   <details>
-    <summary>details</summary>
+    <summary>details · 4 acceptance criteria · handoffs</summary>
     <h3>Why</h3><p>Measures the adaptation gain (claim 1) without confounding from instance variability. Running the same instances ensures a fair A/B comparison.</p>
     <h3>What</h3><p>Load the optimized harness (prompt, tools, workflows) from ticket 006. Re-run the same 5–10 instances that were used in the baseline (ticket 005) with the optimized harness. Log trajectories in the same JSON format as baseline. Record per-instance: task_id, outcome, accuracy_score, tokens_used. Compute delta accuracy (optimized - baseline) and annotate key behavioral differences (e.g., improved tool use, fewer hallucinations).</p>
     <h3>Acceptance</h3><ul><li>optimized-results.json contains results for the exact same instances as baseline, structured identically: task_id, outcome, accuracy_score, tokens_used per instance</li><li>optimized-trajectories.jsonl contains full trajectory data per instance</li><li>summary computes per-instance delta_accuracy and mean_improvement_pct vs baseline</li><li>A/B comparison summary (optimized vs baseline) is embedded or linked in optimized-results.json</li></ul>
@@ -207,14 +212,14 @@ footer { margin-top:2rem; color:var(--muted); font-size:.8rem; }
   </details>
   <div class='note rev'><b>Review note — Fable</b>New versus both prior rounds, and good experimental hygiene: the optimized harness is measured on the same instances as the baseline, cleanly separated from the optimization loop itself.</div>
 </div>
-<div class='card'>
+<div class='card' id='t-008'>
   <span class='tid'>008</span>
   <h2>Compare baseline vs optimized results; produce artifact for review</h2>
-  <span class='meta'>· frontier-agent · $</span> <span class='chip' style='background:#3d8a4e'>agree</span>
+  <span class='meta'>· frontier-agent</span> <span class='chip' style='background:#3d8a4e'>agree</span>
   <p class='oneliner'>Verify findings against the replication plan; hand off comparison data.</p>
   <p class='hn'><b>Human needed:</b> none</p>
   <details>
-    <summary>details</summary>
+    <summary>details · 4 acceptance criteria · handoffs</summary>
     <h3>Why</h3><p>Gate-check before scaling to full replication. Produces a human-reviewable artifact (optimized for phone review per resources.md) to decide whether derisk was successful.</p>
     <h3>What</h3><p>Load baseline-results.json, optimized-results.json, and replication-plan.md. Compute: accuracy improvement (%), cost proxy (tokens/instance), key failure-mode shifts. Produce a side-by-side comparison artifact (HTML table or heatmap) suitable for phone review, showing baseline vs optimized per instance and aggregate metrics. Produce a summary JSON with headline metrics: baseline_accuracy, optimized_accuracy, improvement_pct, cost_proxy_note, and verdict_vs_plan (did we meet the fidelity contract?).</p>
     <h3>Acceptance</h3><ul><li>comparison-artifact.html renders without errors and displays baseline/optimized side-by-side per instance and in aggregate</li><li>comparison-artifact.html is responsive (phone-friendly per resources.md)</li><li>comparison-summary.json contains: baseline_accuracy, optimized_accuracy, improvement_pct, cost_proxy, plan_verdict (pass/fail), and notes</li><li>plan_verdict field references specific claims from replication-plan.md and documents whether evidence threshold was met</li></ul>
