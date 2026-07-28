@@ -1,0 +1,37 @@
+id: 002-audit-migration-analysis-repo
+title: "Clone and audit migration-analysis repo for task pipelines"
+summary: "Verify the released code includes task-instance generation or only the optimizer."
+why: >
+  Reproducibility risk: if task pipelines aren't included, we cannot generate budget-approval
+  instances and must work around by sourcing them externally or with custom code.
+claim: "Reproducibility assessment; all claims depend on running the task pipeline"
+description: >
+  Clone https://github.com/malusamayo/migration-analysis to the Mac or 3080. Walk the
+  directory structure and identify: task generation scripts, task data sources, the optimizer
+  code, and dependencies (especially software-agent-sdk version). Document what's present,
+  absent, or unclear. If task generation is missing, recommend a workaround (e.g., use
+  public budget-approval templates from TheAgentCompany directly).
+acceptance:
+  - "repo-audit.md exists and includes directory tree and file inventory"
+  - "repo-audit.md identifies which tasks have pipeline code vs. are assumed to be sourced externally"
+  - "repo-audit.md documents software-agent-sdk dependency version and installation method"
+  - "repo-audit.md recommends whether we can use released code as-is for PoC or must add workarounds"
+assignee_class: small-agent
+depends_on: []
+produces:
+  - repo-audit.md
+consumes: []
+human_needed: []
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

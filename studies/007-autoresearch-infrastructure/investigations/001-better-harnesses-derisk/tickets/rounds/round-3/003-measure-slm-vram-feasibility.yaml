@@ -1,0 +1,36 @@
+id: 003-measure-slm-vram-feasibility
+title: "Measure SLM models that fit on 3080 12GB VRAM"
+summary: "Test actual load success and tokens/sec for candidates; don't estimate."
+why: >
+  Claim 3 derisk risk: need to confirm a capable SLM fits on hardware before investing
+  in baseline/optimization runs. Also informs model selection for tickets 005 and 006.
+claim: "Claim 3 (base capability predicts adaptation); Reproducibility assessment (VRAM constraint)"
+description: >
+  On the 3080 via SSH, attempt to load each candidate SLM [nemotron-4b, qwen3.5:4b,
+  one 8B candidate if available — check current ollama list at execution time] at Q4 quantization.
+  For each attempt, record: model name, quantization, load_success (true/false), free_vram_mb after load,
+  and tokens_per_sec (via 100-token generation sample). Document any OOM or load-timeout failures.
+  The output guides model selection for baseline and optimization work.
+acceptance:
+  - "slm-feasibility.json exists with an entry per model attempt: (model_name, quantization, load_success, free_vram_mb, tokens_per_sec, notes)"
+  - "At least one SLM has load_success=true and free_vram_mb > 500 (margin for batch inference)"
+  - "If all candidates fail to load, fallback is documented (e.g., 'recommend Modal escalation' or 'use frontier-model baseline only')"
+assignee_class: small-agent
+depends_on: []
+produces:
+  - slm-feasibility.json
+consumes: []
+human_needed: []
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

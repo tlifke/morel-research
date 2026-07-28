@@ -1,0 +1,52 @@
+id: 007-optimization-run
+title: Execute harness-optimization run on SLM under budget constraint
+summary: >
+  Use the migration-analysis optimizer to adapt the harness for the SLM,
+  log all trajectories and optimization decisions.
+why: >
+  The core derisk: does harness adaptation improve SLM performance?
+  This run generates the main evidence. Logged trajectories and optimizer
+  decisions are essential for the fidelity comparison (ticket 008).
+claim: "derisk phases 6-7 — optimization + comparison readiness"
+description: >
+  Using the optimizer from migration-analysis, run one full harness-adaptation
+  cycle on the SLM with budget constraint (local compute equivalent, or time
+  limit e.g., 2 hours). Seed the optimizer with: the SLM baseline results
+  from ticket 006, the SLM model name, budget and task (budget-approval).
+  The optimizer proposes harness variants and evaluates them on N reduced
+  instances. Log: all harness candidates proposed, their evaluation results,
+  optimizer reasoning/decision logic, final adapted harness. Produce
+  optimization-run.yaml (aggregate results) and optimization-trajectories.jsonl
+  (step-by-step decisions).
+acceptance:
+  - "optimization-run.yaml exists"
+  - "Contains: optimizer name/version, model (SLM), base_success_rate (from ticket 006 baseline)"
+  - "Contains: optimized_success_rate, budget_used (time in hours), num_harness_variants_tried"
+  - "Contains final adapted harness as dict or code block"
+  - "optimization-trajectories.jsonl exists with one JSON object per line"
+  - "Each trajectory line contains: iteration (int), harness_variant (dict), evaluation_results (dict with metrics), optimizer_decision_reason (string)"
+  - "All raw data preserved; no aggregation or filtering"
+assignee_class: small-agent
+depends_on:
+  - 001-write-replication-plan
+  - 006-slm-baseline
+produces:
+  - optimization-run.yaml
+  - optimization-trajectories.jsonl
+consumes:
+  - replication-plan.md
+  - baseline-slm-generic.yaml
+human_touchpoints: []
+gate: derisk-approval
+cost_ceiling_usd: 2
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

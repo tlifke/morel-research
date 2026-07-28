@@ -1,0 +1,45 @@
+id: 008-compare-and-produce-artifact
+title: "Compare baseline vs optimized results; produce artifact for review"
+summary: "Verify findings against the replication plan; hand off comparison data."
+why: >
+  Gate-check before scaling to full replication. Produces a human-reviewable artifact
+  (optimized for phone review per resources.md) to decide whether derisk was successful.
+claim: "Claim 1 (adaptation closes most of the gap)"
+description: >
+  Load baseline-results.json, optimized-results.json, and replication-plan.md. Compute:
+  accuracy improvement (%), cost proxy (tokens/instance), key failure-mode shifts.
+  Produce a side-by-side comparison artifact (HTML table or heatmap) suitable for phone
+  review, showing baseline vs optimized per instance and aggregate metrics. Produce a
+  summary JSON with headline metrics: baseline_accuracy, optimized_accuracy, improvement_pct,
+  cost_proxy_note, and verdict_vs_plan (did we meet the fidelity contract?).
+acceptance:
+  - "comparison-artifact.html renders without errors and displays baseline/optimized side-by-side per instance and in aggregate"
+  - "comparison-artifact.html is responsive (phone-friendly per resources.md)"
+  - "comparison-summary.json contains: baseline_accuracy, optimized_accuracy, improvement_pct, cost_proxy, plan_verdict (pass/fail), and notes"
+  - "plan_verdict field references specific claims from replication-plan.md and documents whether evidence threshold was met"
+assignee_class: frontier-agent
+depends_on:
+  - 007-measure-optimized-harness-on-same-instances
+  - 005-run-baseline-with-generic-harness
+  - 001-author-replication-plan
+produces:
+  - comparison-artifact.html
+  - comparison-summary.json
+consumes:
+  - baseline-results.json
+  - optimized-results.json
+  - replication-plan.md
+human_needed: []
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

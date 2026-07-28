@@ -12,8 +12,9 @@ from pathlib import Path
 import yaml
 
 REQUIRED = [
-    "id", "title", "claim", "description", "acceptance", "assignee_class",
-    "depends_on", "gate", "cost_ceiling_usd", "status", "provenance",
+    "id", "title", "summary", "why", "claim", "description", "acceptance",
+    "assignee_class", "depends_on", "produces", "consumes",
+    "human_needed", "gate", "cost_ceiling_usd", "status", "provenance",
     "related", "created",
 ]
 STATUSES = {"draft", "blocked", "ready", "in-progress", "done", "failed", "abandoned"}
@@ -28,11 +29,20 @@ STATUS_COLOR = {
 
 
 def load(tickets_dir):
-    plan = yaml.safe_load((tickets_dir / "plan.yaml").read_text())
+    plan_path = next(
+        (d / "plan.yaml" for d in [tickets_dir, *tickets_dir.parents[:2]] if (d / "plan.yaml").exists()),
+        None,
+    )
+    if plan_path is None:
+        sys.exit(f"no plan.yaml found in or above {tickets_dir}")
+    plan = yaml.safe_load(plan_path.read_text())
     tickets = {}
     for p in sorted(tickets_dir.glob("[0-9][0-9][0-9]-*.yaml")):
         t = yaml.safe_load(p.read_text())
         t["_path"] = p
+        if "human_needed" not in t and "human_touchpoints" in t:
+            t["human_needed"] = t["human_touchpoints"]
+            t["_legacy_touchpoints"] = True
         tickets[t.get("id", p.stem)] = t
     return plan, tickets
 
@@ -70,9 +80,25 @@ def check(plan, tickets):
             errors.append(f"{tid}: status '{t['status']}' with no cost ceiling")
         if not t.get("acceptance"):
             errors.append(f"{tid}: empty acceptance criteria")
+        if t.get("_legacy_touchpoints"):
+            warnings.append(f"{tid}: uses legacy field 'human_touchpoints' (schema v1.1 name is 'human_needed')")
         for a in t.get("acceptance") or []:
             if not isinstance(a, str):
                 errors.append(f"{tid}: acceptance item is not a string (unquoted colon?): {a}")
+        for d in t.get("depends_on", []):
+            dep = tickets.get(d)
+            if dep is not None:
+                produced = set(dep.get("produces") or [])
+                consumed = set(t.get("consumes") or [])
+                if produced and consumed and not (produced & consumed):
+                    warnings.append(f"{tid}: edge to '{d}' not justified by a handoff (consumes ∩ produces is empty)")
+        for c in t.get("consumes") or []:
+            providers = [
+                d for d in t.get("depends_on", [])
+                if c in (tickets.get(d, {}).get("produces") or [])
+            ]
+            if not providers:
+                warnings.append(f"{tid}: consumes '{c}' but no dependency produces it")
     state = {tid: 0 for tid in tickets}
 
     def visit(tid, stack):
@@ -242,14 +268,21 @@ def ticket_html(t):
             f"finished {e(str(p.get('finished')))} · spent ${p.get('cost_spent_usd') or 0} · "
             f"verdict {e(str(p.get('verdict')))} · artifacts: {e(arts)}</p>"
         )
+    produces = ", ".join(t.get("produces") or []) or "none"
+    consumes = ", ".join(t.get("consumes") or []) or "none"
+    needed = ", ".join(t.get("human_needed") or []) or "none"
     return (
         f"<div class='card'><span class='badge' style='background:{color}'>{e(t['status'])}</span>"
         f"<h1>{e(t['id'])} — {e(t['title'])}</h1>"
+        f"<p><b>{e(str(t.get('summary', ''))).strip()}</b></p>"
         f"<p class='meta'>assignee: {e(t['assignee_class'])} · ceiling: ${t.get('cost_ceiling_usd')} · "
-        f"gate: {e(str(t.get('gate')))} · depends on: {e(deps)}</p>"
-        f"<p class='meta'>serves: {e(t['claim'])}</p>"
+        f"human needed: {e(needed)}</p>"
+        f"<details><summary>details</summary>"
+        f"<p class='meta'>gate: {e(str(t.get('gate')))} · depends on: {e(deps)} · serves: {e(t['claim'])}</p>"
+        f"<p class='meta'>why: {e(str(t.get('why', ''))).strip()}</p>"
+        f"<p class='meta'>produces: {e(produces)} · consumes: {e(consumes)}</p>"
         f"<p>{e(t['description']).strip()}</p>"
-        f"<h2>Acceptance</h2><ul>{acc}</ul>{prov}</div>"
+        f"<h2>Acceptance</h2><ul>{acc}</ul>{prov}</details></div>"
     )
 
 
@@ -276,8 +309,9 @@ def cmd_render(args, plan, tickets):
         color = STATUS_COLOR.get(t["status"], "#888")
         items += (
             f"<p><span class='badge' style='background:{color}'>{t['status']}</span> "
-            f"<a href='{tid}.html'>{tid}</a> — {html.escape(t['title'])} "
-            f"<span class='meta'>({t['assignee_class']})</span></p>"
+            f"<a href='{tid}.html'>{tid}</a> — <b>{html.escape(t['title'])}</b> "
+            f"<span class='meta'>({t['assignee_class']})</span><br>"
+            f"<span class='meta'>{html.escape(t.get('summary', ''))}</span></p>"
         )
     idx = f"<h1>{plan.get('phase')} tickets</h1>{banner}{items}"
     (out / "index.html").write_text(page("tickets", idx))

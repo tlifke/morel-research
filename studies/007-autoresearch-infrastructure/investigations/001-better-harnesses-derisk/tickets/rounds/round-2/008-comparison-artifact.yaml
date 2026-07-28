@@ -1,0 +1,53 @@
+id: 008-comparison-artifact
+title: Compare optimization results against fidelity contract
+summary: >
+  Measure whether the optimization run satisfies the pre-registered
+  fidelity criteria; produce comparison artifact and verdict.
+why: >
+  The replication is only valid if results align with the fidelity contract
+  (ticket 001). This ticket formalizes that check and produces the evidence
+  summary for human review.
+claim: "derisk phase 7 — replication validation"
+description: >
+  Load the replication plan (ticket 001), baseline results (ticket 006),
+  and optimization results (ticket 007). For each paper claim (1-3), check:
+  did the optimization improve performance? By how much? Does the improvement
+  magnitude and reliability match the fidelity criteria? Produce comparison-artifact.html
+  (or .md) with a side-by-side table: claim | fidelity criterion | baseline
+  result | optimized result | verdict (pass/fail/inconclusive). Include a
+  summary section on claim coverage and any gaps. Highlight which claims
+  passed, which failed, and cite specific numbers.
+acceptance:
+  - "comparison-artifact.html exists and is self-contained (all CSS/JS inline)"
+  - "Contains a table with rows for all 3 paper claims"
+  - "Each row shows: claim, fidelity criterion, baseline metric, optimized metric, pass/fail verdict"
+  - "Verdict column includes reasoning (1-2 sentences per row)"
+  - "Summary section lists: claims passed, claims failed, claims inconclusive"
+  - "All numbers cited from tickets 006 and 007; no derived calculations without justification"
+  - "Artifact is readable by human reviewer without external context"
+assignee_class: frontier-agent
+depends_on:
+  - 001-write-replication-plan
+  - 006-slm-baseline
+  - 007-optimization-run
+produces:
+  - comparison-artifact.html
+consumes:
+  - replication-plan.md
+  - baseline-slm-generic.yaml
+  - optimization-run.yaml
+  - optimization-trajectories.jsonl
+human_touchpoints: []
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

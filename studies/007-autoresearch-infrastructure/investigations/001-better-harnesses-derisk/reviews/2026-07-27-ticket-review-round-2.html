@@ -1,0 +1,205 @@
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>Derisk tickets — review round 2</title>
+<style>
+:root { --bg:#f7f6f3; --fg:#232220; --muted:#6e6c66; --card:#fffefb;
+  --line:#dedcd4; --accent:#a4711f; --accent-soft:#a4711f14;
+  --mono:ui-monospace,'SF Mono',Menlo,monospace; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#191816; --fg:#e8e6e1; --muted:#98958d; --card:#211f1c;
+    --line:#3a3833; --accent:#d9a44a; --accent-soft:#d9a44a1a; } }
+:root[data-theme="dark"] { --bg:#191816; --fg:#e8e6e1; --muted:#98958d;
+  --card:#211f1c; --line:#3a3833; --accent:#d9a44a; --accent-soft:#d9a44a1a; }
+:root[data-theme="light"] { --bg:#f7f6f3; --fg:#232220; --muted:#6e6c66;
+  --card:#fffefb; --line:#dedcd4; --accent:#a4711f; --accent-soft:#a4711f14; }
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:44rem; padding:1.4rem 1rem 4rem;
+  background:var(--bg); color:var(--fg);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+header h1 { font-size:1.45rem; margin:.1rem 0; text-wrap:balance; }
+.eyebrow { color:var(--muted); font-size:.78rem; text-transform:uppercase;
+  letter-spacing:.08em; margin:0; }
+.gatebar { margin:1rem 0 1.4rem; padding:.65rem .9rem; border:1px solid var(--line);
+  border-left:4px solid #c77d2e; border-radius:8px; background:var(--card);
+  font-size:.9rem; }
+section { display:flex; flex-direction:column; gap:.8rem; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:10px;
+  padding:.85rem 1.1rem; }
+.badge, .chip { display:inline-block; color:#fff; border-radius:999px;
+  padding:.06rem .6rem; font-size:.72rem; font-weight:600; vertical-align:1px; }
+.tid { font-family:var(--mono); font-size:.8rem; color:var(--muted); }
+h2 { font-size:1rem; margin:0; display:inline; }
+h3 { font-size:.8rem; margin:.9rem 0 .2rem; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--muted); }
+.oneliner { margin:.35rem 0 0; }
+.meta { color:var(--muted); font-size:.85rem; margin:.15rem 0; }
+ul { margin:.3rem 0 0; padding-left:1.25rem; }
+li { margin:.15rem 0; }
+details { margin-top:.4rem; }
+summary { cursor:pointer; color:var(--muted); font-size:.85rem; }
+.note { margin-top:.7rem; padding:.6rem .85rem; background:var(--accent-soft);
+  border:1px dashed var(--accent); border-radius:8px; font-size:.9rem; }
+.note b { color:var(--accent); font-size:.75rem; text-transform:uppercase;
+  letter-spacing:.07em; display:block; margin-bottom:.2rem; }
+table { border-collapse:collapse; width:100%; font-size:.88rem;
+  font-variant-numeric:tabular-nums; }
+td, th { border-bottom:1px solid var(--line); padding:.35rem .5rem; text-align:left; }
+.waves { font-family:var(--mono); font-size:.82rem; overflow-x:auto;
+  white-space:nowrap; padding:.2rem 0; }
+footer { margin-top:2rem; color:var(--muted); font-size:.8rem; }
+</style>
+<header>
+  <p class='eyebrow'>Study 007 · investigation 001 · Better Harnesses derisk</p>
+  <h1>PoC ticket review — round 2</h1>
+  <p class='meta'>8 tickets · drafted blind by claude-haiku-4-5 against schema v1 · titles + one-liners first, tap for detail</p>
+</header>
+<div class='gatebar'>Gate <b>derisk-approval</b> is still unapproved. Approving this round (with rationale) promotes these tickets and opens wave 1.</div>
+<section>
+
+<div class='card'>
+<h2>Round 1 → round 2</h2>
+<p class='oneliner meta'>Same model (haiku), same task, blind rounds; only the drafting contract changed.</p>
+<table>
+<tr><th></th><th>round 1</th><th>round 2</th></tr>
+<tr><td>tickets</td><td>7</td><td>8</td></tr>
+<tr><td>assigned to human</td><td>5</td><td>0</td></tr>
+<tr><td>chain depth</td><td>7</td><td>4</td></tr>
+<tr><td>parallel width</td><td>1</td><td>4</td></tr>
+<tr><td>schema errors shipped</td><td>2</td><td>0 (self-validated)</td></tr>
+<tr><td>summary / why / handoffs</td><td>absent</td><td>all present</td></tr>
+</table>
+<h3>Execution waves</h3>
+<div class='waves'>[001 002 003 005]  →  [004 006]  →  [007]  →  [008]</div>
+</div>
+<div class='card'><h2>Shape: graph achieved</h2><p class='oneliner'>Chain depth 7 → 4, parallel width 1 → 4. Four tickets (001, 002, 003, 005) can start the moment the gate opens; every edge is justified by a named artifact handoff.</p></div><div class='card'><h2>Delegation swing</h2><p class='oneliner'>Round 1: 5/7 human. Round 2: 0/8 human, 6/8 small-agent. The AI-first rule worked, possibly too well — see the 007 flag. Both rounds are recorded hypotheses; execution settles them.</p></div><div class='card'><h2>Self-validation worked</h2><p class='oneliner'>Round 1 shipped 2 YAML parse errors. Round 2 ran drain.py check itself and shipped clean on the same model. Cheap fix, real effect.</p></div><div class='card'><h2>Content drift where context was summarized</h2><p class='oneliner'>The three flags (001&#x27;s invented claims, 004&#x27;s llama2-70b, 005&#x27;s dated fleet) share one root cause: the blind contract paraphrased the paper and hardware instead of shipping the paper card + constraints doc. That&#x27;s the strongest evidence yet that constraints.md belongs in every drafting context.</p></div><div class='card'><h2>No human touchpoints declared anywhere</h2><p class='oneliner'>Suspicious given SSH/sudo realities on the desktop. Worth watching which tickets actually generate touchpoints at execution.</p></div>
+
+<div class='card'>
+  <span class='tid'>001</span>
+  <h2>Write replication plan with fidelity contract</h2>
+  <span class='meta'>· frontier-agent · $</span> <span class='chip' style='background:#c77d2e'>flag</span>
+  <p class='oneliner'>Document what constitutes a valid replication for each paper claim before running any experiments.</p>
+  <details>
+    <summary>details — why, acceptance, handoffs, review note</summary>
+    <h3>Why</h3><p>The paper makes 3 specific claims; without a pre-registered contract defining fidelity per claim, we cannot objectively evaluate whether the replication succeeded. This gates downstream work.</p>
+    <h3>What</h3><p>Author a document laying out the 3 paper claims (claim 1: harness optimization improves SLM performance, claim 2: smaller models benefit less, claim 3: cost savings scale with model size), what counts as &quot;replicated&quot; for each, what metrics will be measured, acceptable variance, and what substitutions (e.g., local-inference cost proxy) are acceptable. Reference the full paper (arXiv 2607.08938) and GitHub repo (malusamayo/migration-analysis). Document why we selected budget-approval as the task and which SLM we will target (to be filled in after ticket 005).</p>
+    <h3>Acceptance</h3><ul><li>replication-plan.md exists and is 2-5 pages</li><li>Document lists all 3 paper claims with measurable fidelity criteria for each</li><li>Document defines cost metric proxy for local inference (since we use $0-API local ollama)</li><li>Document enumerates acceptable substitutions (e.g., reduced instance count, single task, reduced model diversity)</li><li>Forward-reference to SLM selection from ticket 005</li></ul>
+    <h3>Handoffs</h3>
+    <p class='meta'>depends on: none<br>produces: replication-plan.md<br>consumes: none<br>human touchpoints: none</p>
+    <p class='meta'>serves: research infrastructure / derisk planning</p>
+    <div class='note'><b>Review note — Fable</b>Right assignee, but real content drift: it restates the paper as 3 invented claims that don&#x27;t match the paper card&#x27;s 7. The blind contract summarized the paper instead of including the claims verbatim — contract v3 should ship the paper card itself. The plan-vs-audit ordering question from round 1 is now resolved by parallelism, but an amendment pass after the audit may still be wanted.</div>
+  </details>
+</div>
+<div class='card'>
+  <span class='tid'>002</span>
+  <h2>Audit migration-analysis repository</h2>
+  <span class='meta'>· small-agent · $</span> <span class='chip' style='background:#3d8a4e'>agree</span>
+  <p class='oneliner'>Inspect the open-source repo to confirm it includes task-instance pipelines, not just the optimizer.</p>
+  <details>
+    <summary>details — why, acceptance, handoffs, review note</summary>
+    <h3>Why</h3><p>Risk (a) states: unverified whether the repo contains task-instance generation. If it is optimizer-only, we must write our own task setup, adding weeks of work. Knowing this early unblocks sourcing or building task instances.</p>
+    <h3>What</h3><p>Clone https://github.com/malusamayo/migration-analysis. Inspect directory structure, README, and key files (tests, examples, scripts/, data/). Look for any task-definition pipelines, instance-generation code, dataset loaders, or references to external task sources. Document findings in repo-audit.md with an annotated tree, key file excerpts (or none, if absent), and an explicit verdict on whether pipelines exist.</p>
+    <h3>Acceptance</h3><ul><li>repo-audit.md exists</li><li>Includes full annotated directory tree of the repo</li><li>Cites and excerpts at least 3 key files (or notes absence)</li><li>Explicitly answers: does repo include task pipelines? (yes/no/partial)</li><li>If pipelines exist, names their entry points (e.g., scripts/generate_tasks.py)</li><li>If pipelines do not exist, notes what would be needed to add them</li></ul>
+    <h3>Handoffs</h3>
+    <p class='meta'>depends on: none<br>produces: repo-audit.md<br>consumes: none<br>human touchpoints: none</p>
+    <p class='meta'>serves: risk (a) — task-instance pipelines</p>
+    <div class='note'><b>Review note — Fable</b>Now small-agent and dependency-free — matches the round-1 review recommendation exactly. Acceptance list is stronger than round 1&#x27;s.</div>
+  </details>
+</div>
+<div class='card'>
+  <span class='tid'>003</span>
+  <h2>Install and verify software-agent-sdk on local machine</h2>
+  <span class='meta'>· small-agent · $</span> <span class='chip' style='background:#3d8a4e'>agree</span>
+  <p class='oneliner'>Set up the OpenHands SDK environment on the desktop with ollama backend, document setup steps and environment readiness.</p>
+  <details>
+    <summary>details — why, acceptance, handoffs, review note</summary>
+    <h3>Why</h3><p>The optimization run (ticket 007) depends on a working SDK environment. Standing it up early, documenting it completely, and validating with a test reduces setup friction at run time and unblocks parallel experimental work.</p>
+    <h3>What</h3><p>Clone or install migration-analysis as described in its README. Follow OpenHands docs to install software-agent-sdk. Configure to use local ollama instance via SSH tunnel (use the scripted SSH route to desktop running ollama; consult existing tunnel setup if available). Test that SDK can import, that it recognizes the remote ollama backend, and that a test agent can initialize without errors. Document all setup steps, environment variables needed, SSH tunnel command with parameters, and any quirks encountered. Include a minimal reproducible test script (test-sdk.py) that verifies imports, connects to ollama, and lists available models.</p>
+    <h3>Acceptance</h3><ul><li>sdk-setup.md exists with step-by-step instructions</li><li>All environment variables are listed and their purpose documented</li><li>SSH tunnel setup command is included with full parameters</li><li>test-sdk.py exists and runs without error</li><li>test-sdk.py output shows: ollama URL, list of available models, connection success</li><li>sdk-setup.md includes any quirks, timeouts, or gotchas encountered</li></ul>
+    <h3>Handoffs</h3>
+    <p class='meta'>depends on: none<br>produces: sdk-setup.md, test-sdk.py<br>consumes: none<br>human touchpoints: none</p>
+    <p class='meta'>serves: derisk phase 3 — environment setup</p>
+    <div class='note'><b>Review note — Fable</b>Reasonable, but zero human_touchpoints declared feels optimistic — SSH keys, installs, or sudo on the desktop are exactly the touchpoint class we predicted. Expect this ticket to generate the first real touchpoint data.</div>
+  </details>
+</div>
+<div class='card'>
+  <span class='tid'>004</span>
+  <h2>Run frontier-baseline on budget-approval task with generic harness</h2>
+  <span class='meta'>· small-agent · $1</span> <span class='chip' style='background:#c77d2e'>flag</span>
+  <p class='oneliner'>Execute one budget-approval instance with a strong baseline model and generic harness to verify end-to-end pipeline works.</p>
+  <details>
+    <summary>details — why, acceptance, handoffs, review note</summary>
+    <h3>Why</h3><p>Before measuring SLM capability or running optimization, we need proof that the full pipeline (SDK → task → generic harness → strong model → evaluation) works. This is a gate for all downstream work and reduces risk of environmental surprises later.</p>
+    <h3>What</h3><p>Using the SDK setup from ticket 003, run one budget-approval instance with a generic/minimal harness (e.g., vanilla-agent-loop or migration-analysis default) and the strongest available local model (e.g., llama2-70b or strongest ollama model available). Log the full trajectory (agent moves, tool calls, intermediate outputs). Measure: task completion (success/fail), trajectory length, time to completion, exception/error count. Capture raw logs in baseline-frontier-generic.yaml; preserve full JSON/structured trajectories.</p>
+    <h3>Acceptance</h3><ul><li>baseline-frontier-generic.yaml exists</li><li>Contains entries: model (name and version), harness (description), task (budget-approval)</li><li>Contains numeric fields: success (boolean), trajectory_length (int), completion_time_seconds (float), error_count (int)</li><li>Includes full trajectory as list of objects with: step_number, agent_action, tool_calls, outputs, timestamp</li><li>Logs are raw and unprocessed; no aggregation or filtering</li></ul>
+    <h3>Handoffs</h3>
+    <p class='meta'>depends on: 003-sdk-setup<br>produces: baseline-frontier-generic.yaml<br>consumes: sdk-setup.md, test-sdk.py<br>human touchpoints: none</p>
+    <p class='meta'>serves: derisk phase 3 — environment validation</p>
+    <div class='note'><b>Review note — Fable</b>Conflation: it wants the &#x27;frontier&#x27; baseline run on the strongest local ollama model and suggests llama2-70b — which neither fits a 12GB card nor is frontier. The paper&#x27;s baseline is a frontier API model. Either run the LLM baseline under the Claude subscription or rename this ticket an environment smoke test.</div>
+  </details>
+</div>
+<div class='card'>
+  <span class='tid'>005</span>
+  <h2>Measure which SLMs load and run on RTX 3080</h2>
+  <span class='meta'>· small-agent · $</span> <span class='chip' style='background:#c77d2e'>flag</span>
+  <p class='oneliner'>Benchmark memory and throughput for candidate SLMs to determine which fit in 12GB and deliver usable tokens/sec.</p>
+  <details>
+    <summary>details — why, acceptance, handoffs, review note</summary>
+    <h3>Why</h3><p>The optimizer and baseline depend on choosing an SLM that actually fits. Paper claim 2 states weak models benefit least from harness adaptation; if our chosen SLM sits below the capability floor, adaptation may not pay off. Measurement unblocks SLM selection and risk assessment.</p>
+    <h3>What</h3><p>Compile a list of SLMs plausible for a 3080 12GB (e.g., mistral-7b, qwen-7b, phi-3-mini, llama2-7b, neural-chat-7b). For each, attempt to load via ollama and run a 50-token generation. Measure: load success (yes/no/error), peak VRAM used (GB), tokens/sec throughput, latency per token. Document candidates, results, and recommendation in slm-measurement.md. Include reasoning on why the recommended SLM is likely to benefit from harness adaptation (relative to frontier).</p>
+    <h3>Acceptance</h3><ul><li>slm-measurement.md exists</li><li>Lists 4+ candidate SLMs with: name, size (GB), load status (yes/no), peak VRAM, tokens/sec, latency_ms/token</li><li>Final section recommends one SLM for tickets 006 and 007</li><li>Recommendation includes estimated capability level (low/medium/high) relative to frontier</li><li>Reasoning ties SLM capability to paper claim 2 (benefit floor)</li><li>If no SLM loads successfully, documents blocker, attempted workarounds, and mitigation path</li></ul>
+    <h3>Handoffs</h3>
+    <p class='meta'>depends on: none<br>produces: slm-measurement.md<br>consumes: none<br>human touchpoints: none</p>
+    <p class='meta'>serves: risk (b) — model-capability floor</p>
+    <div class='note'><b>Review note — Fable</b>Right shape, wrong fleet: candidate list (llama2-7b, neural-chat) is dated and generic; our actual local fleet (nemotron-4b, qwen3.5:4b, ministral-class) is absent. Same root cause as 001 — the constraints doc wasn&#x27;t in the drafting context.</div>
+  </details>
+</div>
+<div class='card'>
+  <span class='tid'>006</span>
+  <h2>Run SLM baseline on budget-approval with generic harness</h2>
+  <span class='meta'>· small-agent · $2</span> <span class='chip' style='background:#3d8a4e'>agree</span>
+  <p class='oneliner'>Execute reduced-instance budget-approval runs with the selected SLM and generic harness to establish performance floor.</p>
+  <details>
+    <summary>details — why, acceptance, handoffs, review note</summary>
+    <h3>Why</h3><p>The optimization run needs a baseline to measure improvement against. Running the SLM baseline first quantifies unoptimized performance and derisks whether harness adaptation is even worth attempting (i.e., is the SLM above the capability floor from paper claim 2).</p>
+    <h3>What</h3><p>Using the SLM selected in ticket 005 and the SDK from ticket 003, run N budget-approval instances where N is a reduced count (e.g., 3-5). Use the same generic harness as ticket 004. Log full trajectories per instance. Measure per-instance: success (boolean), trajectory length, time to completion, error/exception count. Aggregate results in baseline-slm-generic.yaml with per-instance logs in separate files (instance-001.yaml, instance-002.yaml, etc.). Preserve all raw data.</p>
+    <h3>Acceptance</h3><ul><li>baseline-slm-generic.yaml exists</li><li>Contains fields: model (SLM name), harness (description), task (budget-approval), num_instances (int)</li><li>Contains aggregated results: success_rate (%), avg_trajectory_length, avg_time_sec, error_count_total</li><li>Per-instance logs exist (instance-*.yaml or instance-*.jsonl)</li><li>All trajectories are raw and unprocessed</li><li>Result includes timestamp and run parameters (e.g., harness variant, model checkpoint)</li></ul>
+    <h3>Handoffs</h3>
+    <p class='meta'>depends on: 003-sdk-setup, 005-slm-measurement<br>produces: baseline-slm-generic.yaml, instance-*.yaml<br>consumes: sdk-setup.md, slm-measurement.md<br>human touchpoints: none</p>
+    <p class='meta'>serves: derisk phase 5 — SLM baseline measurement</p>
+    <div class='note'><b>Review note — Fable</b>Good ticket. Clean handoffs, per-instance raw logs, aggregate stats. Nothing to change.</div>
+  </details>
+</div>
+<div class='card'>
+  <span class='tid'>007</span>
+  <h2>Execute harness-optimization run on SLM under budget constraint</h2>
+  <span class='meta'>· small-agent · $2</span> <span class='chip' style='background:#c77d2e'>flag</span>
+  <p class='oneliner'>Use the migration-analysis optimizer to adapt the harness for the SLM, log all trajectories and optimization decisions.</p>
+  <details>
+    <summary>details — why, acceptance, handoffs, review note</summary>
+    <h3>Why</h3><p>The core derisk: does harness adaptation improve SLM performance? This run generates the main evidence. Logged trajectories and optimizer decisions are essential for the fidelity comparison (ticket 008).</p>
+    <h3>What</h3><p>Using the optimizer from migration-analysis, run one full harness-adaptation cycle on the SLM with budget constraint (local compute equivalent, or time limit e.g., 2 hours). Seed the optimizer with: the SLM baseline results from ticket 006, the SLM model name, budget and task (budget-approval). The optimizer proposes harness variants and evaluates them on N reduced instances. Log: all harness candidates proposed, their evaluation results, optimizer reasoning/decision logic, final adapted harness. Produce optimization-run.yaml (aggregate results) and optimization-trajectories.jsonl (step-by-step decisions).</p>
+    <h3>Acceptance</h3><ul><li>optimization-run.yaml exists</li><li>Contains: optimizer name/version, model (SLM), base_success_rate (from ticket 006 baseline)</li><li>Contains: optimized_success_rate, budget_used (time in hours), num_harness_variants_tried</li><li>Contains final adapted harness as dict or code block</li><li>optimization-trajectories.jsonl exists with one JSON object per line</li><li>Each trajectory line contains: iteration (int), harness_variant (dict), evaluation_results (dict with metrics), optimizer_decision_reason (string)</li><li>All raw data preserved; no aggregation or filtering</li></ul>
+    <h3>Handoffs</h3>
+    <p class='meta'>depends on: 001-write-replication-plan, 006-slm-baseline<br>produces: optimization-run.yaml, optimization-trajectories.jsonl<br>consumes: replication-plan.md, baseline-slm-generic.yaml<br>human touchpoints: none</p>
+    <p class='meta'>serves: derisk phases 6-7 — optimization + comparison readiness</p>
+    <div class='note'><b>Review note — Fable</b>Assignee disagreement: a small agent can babysit the run, but the optimizer&#x27;s meta-agent must be frontier-class — the paper&#x27;s own lesson is that a cheaper meta-agent produced worse harnesses. Suggest frontier-agent, or split driver vs meta-model explicitly.</div>
+  </details>
+</div>
+<div class='card'>
+  <span class='tid'>008</span>
+  <h2>Compare optimization results against fidelity contract</h2>
+  <span class='meta'>· frontier-agent · $</span> <span class='chip' style='background:#3d8a4e'>agree</span>
+  <p class='oneliner'>Measure whether the optimization run satisfies the pre-registered fidelity criteria; produce comparison artifact and verdict.</p>
+  <details>
+    <summary>details — why, acceptance, handoffs, review note</summary>
+    <h3>Why</h3><p>The replication is only valid if results align with the fidelity contract (ticket 001). This ticket formalizes that check and produces the evidence summary for human review.</p>
+    <h3>What</h3><p>Load the replication plan (ticket 001), baseline results (ticket 006), and optimization results (ticket 007). For each paper claim (1-3), check: did the optimization improve performance? By how much? Does the improvement magnitude and reliability match the fidelity criteria? Produce comparison-artifact.html (or .md) with a side-by-side table: claim | fidelity criterion | baseline result | optimized result | verdict (pass/fail/inconclusive). Include a summary section on claim coverage and any gaps. Highlight which claims passed, which failed, and cite specific numbers.</p>
+    <h3>Acceptance</h3><ul><li>comparison-artifact.html exists and is self-contained (all CSS/JS inline)</li><li>Contains a table with rows for all 3 paper claims</li><li>Each row shows: claim, fidelity criterion, baseline metric, optimized metric, pass/fail verdict</li><li>Verdict column includes reasoning (1-2 sentences per row)</li><li>Summary section lists: claims passed, claims failed, claims inconclusive</li><li>All numbers cited from tickets 006 and 007; no derived calculations without justification</li><li>Artifact is readable by human reviewer without external context</li></ul>
+    <h3>Handoffs</h3>
+    <p class='meta'>depends on: 001-write-replication-plan, 006-slm-baseline, 007-optimization-run<br>produces: comparison-artifact.html<br>consumes: replication-plan.md, baseline-slm-generic.yaml, optimization-run.yaml, optimization-trajectories.jsonl<br>human touchpoints: none</p>
+    <p class='meta'>serves: derisk phase 7 — replication validation</p>
+    <div class='note'><b>Review note — Fable</b>Right assignee, and it self-applies the HTML rule — self-contained, human-readable without external context. The acceptance table mirrors the fidelity contract correctly.</div>
+  </details>
+</div>
+</section>
+<footer>Generated from tickets/rounds/round-2/*.yaml by build_review_round2.py · tickets are Haiku's verbatim; chips and dashed notes are Fable's review · 2026-07-27</footer>

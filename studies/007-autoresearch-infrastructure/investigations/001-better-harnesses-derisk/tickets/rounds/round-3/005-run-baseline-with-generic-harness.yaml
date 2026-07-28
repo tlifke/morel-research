@@ -1,0 +1,44 @@
+id: 005-run-baseline-with-generic-harness
+title: "Run generic-harness baseline on reduced budget-approval instance set"
+summary: "Establish performance floor with the chosen SLM before optimization."
+why: >
+  Needed to measure adaptation effectiveness (claim 1); defines the comparison target
+  for optimized harness. Reduced instance count fits within derisk budget and validates
+  the methodology before scaling.
+claim: "Claim 1 (adaptation closes most of the gap)"
+description: >
+  Using the SLM confirmed feasible in ticket 003, run the budget-approval task on 5–10 instances
+  (reduced from full set per resources.md derisk scope and $5 budget) with a generic, unoptimized harness
+  (task description + schema in the prompt, no examples or context). Use the SLM named in slm-feasibility.json
+  with the highest (tokens_per_sec, free_vram_mb) score. Log each trajectory as raw JSON. Record per-instance:
+  task_id, outcome (pass/fail), accuracy_score, tokens_used. Use batch or queued inference if available
+  to reduce wall-clock time on the single GPU.
+acceptance:
+  - "baseline-results.json exists with >= 5 instances, each recording: task_id, outcome, accuracy_score, tokens_used"
+  - "baseline-trajectories.jsonl contains one line per instance with full trajectory data"
+  - "summary in baseline-results.json includes: mean_accuracy, std_accuracy, total_tokens, cost_proxy_note (e.g., 'tokens sum to X; at frontier rate ~$Y reference')"
+  - "harness used (prompt, schema) is documented for reproducibility and matches the 'generic' spec"
+assignee_class: small-agent
+depends_on:
+  - 003-measure-slm-vram-feasibility
+  - 001-author-replication-plan
+produces:
+  - baseline-results.json
+  - baseline-trajectories.jsonl
+consumes:
+  - slm-feasibility.json
+  - replication-plan.md
+human_needed: []
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

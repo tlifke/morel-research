@@ -1,0 +1,47 @@
+id: 004-frontier-baseline
+title: Run frontier-baseline on budget-approval task with generic harness
+summary: >
+  Execute one budget-approval instance with a strong baseline model and
+  generic harness to verify end-to-end pipeline works.
+why: >
+  Before measuring SLM capability or running optimization, we need proof
+  that the full pipeline (SDK → task → generic harness → strong model →
+  evaluation) works. This is a gate for all downstream work and reduces
+  risk of environmental surprises later.
+claim: "derisk phase 3 — environment validation"
+description: >
+  Using the SDK setup from ticket 003, run one budget-approval instance
+  with a generic/minimal harness (e.g., vanilla-agent-loop or migration-analysis
+  default) and the strongest available local model (e.g., llama2-70b or
+  strongest ollama model available). Log the full trajectory (agent moves,
+  tool calls, intermediate outputs). Measure: task completion (success/fail),
+  trajectory length, time to completion, exception/error count. Capture raw logs
+  in baseline-frontier-generic.yaml; preserve full JSON/structured trajectories.
+acceptance:
+  - "baseline-frontier-generic.yaml exists"
+  - "Contains entries: model (name and version), harness (description), task (budget-approval)"
+  - "Contains numeric fields: success (boolean), trajectory_length (int), completion_time_seconds (float), error_count (int)"
+  - "Includes full trajectory as list of objects with: step_number, agent_action, tool_calls, outputs, timestamp"
+  - "Logs are raw and unprocessed; no aggregation or filtering"
+assignee_class: small-agent
+depends_on:
+  - 003-sdk-setup
+produces:
+  - baseline-frontier-generic.yaml
+consumes:
+  - sdk-setup.md
+  - test-sdk.py
+human_touchpoints: []
+gate: derisk-approval
+cost_ceiling_usd: 1
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

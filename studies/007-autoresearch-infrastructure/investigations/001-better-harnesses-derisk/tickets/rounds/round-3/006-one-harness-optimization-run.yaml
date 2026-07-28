@@ -1,0 +1,49 @@
+id: 006-one-harness-optimization-run
+title: "Run one harness-optimization iteration under budget"
+summary: "Use Gemini to optimize the harness for the SLM on budget-approval; log all trajectories."
+why: >
+  Core derisk work: tests whether we can replicate the adaptation claim (1) at smaller scale.
+  The one-time meta-agent cost (budget: $4 for Gemini-3.1-flash-lite, vs paper's $20 for Gemini-3.1-pro)
+  is the derisk gate; success validates the optimization loop methodology.
+claim: "Claim 1 (adaptation closes most of the gap); Claim 4 (adaptations explainable by failure-mode framework)"
+description: >
+  Use Gemini-3.1-flash-lite (or similar; cheaper than paper's Gemini-3.1-pro) to optimize
+  a harness for the SLM on the same 5–10 budget-approval instances from ticket 005. Feed the meta-agent:
+  raw JSON trajectories from baseline (not summaries, per paper Lesson 1), task descriptions,
+  and a list of failure modes to address (instruction-following, knowledge, tool-use, long-context).
+  Set a hard API budget of $4 USD. Run the optimizer loop: (a) analyze baseline failures, (b) propose
+  harness changes (prompt context, tools, templates), (c) re-run instances with proposed harness,
+  (d) evaluate, (e) iterate if budget allows. Log every optimization trajectory; document the final
+  harness (prompt, tools, workflows) as a reproducible artifact.
+acceptance:
+  - "optimization-log.jsonl contains >= 3 iterations, each with: input_trajectories_count, proposed_changes, re_eval_results, cost_usd_this_iteration"
+  - "optimized-harness.md documents the final harness: prompt template, tool definitions, workflow changes vs. generic baseline"
+  - "optimized-results.json contains re-run results on the same instances: per-instance accuracy, total tokens, cost_usd_total (from optimization-log)"
+  - "optimization-cost.txt documents API spend vs $4 budget and reasoning if budget was exceeded"
+assignee_class: frontier-agent
+depends_on:
+  - 005-run-baseline-with-generic-harness
+  - 001-author-replication-plan
+produces:
+  - optimization-log.jsonl
+  - optimized-harness.md
+  - optimized-results.json
+  - optimization-cost.txt
+consumes:
+  - baseline-results.json
+  - baseline-trajectories.jsonl
+  - replication-plan.md
+human_needed: []
+gate: derisk-approval
+cost_ceiling_usd: 4
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

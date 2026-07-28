@@ -20,12 +20,18 @@ Author: claude-fable-5, 2026-07-26. Human-unreviewed draft.
   entities. Citation edges stay as text in cards until ~10 cards exist
   and a real retrieval need appears.
 
-## 2. Constraints doc (new, small, load-bearing)
+## 2. Resources doc (new, small, load-bearing)
 
-- A single `constraints.md` at study level: hardware (3080 12GB, desktop
-  via Tailscale), standing budget policy, available model fleet, judge
-  panel availability. Paper cards and replication plans read from it so
-  reproducibility assessments never hardcode stale facts.
+- A single `resources.md` at study level — **resources first, constraints
+  derived** (2026-07-27): what we have (3080 12GB primary, Modal $30/mo
+  secondary, model access, money, human attention, agent streams, time)
+  and the constraints that emerge from it. Paper cards, replication
+  plans, and every drafting contract ship this file verbatim; agent
+  knowledge of our hardware and budgets is assumed stale.
+- A separate `constraints.md` exists only if constraints that don't
+  derive from resources accumulate; not created preemptively.
+- Populating it requires human interaction: conversational elicitation
+  now, a dedicated Skill later (backlog 3).
 - **Deferred:** anything fancier than one markdown file.
 
 ## 3. Reproducibility assessment (replication plans)
@@ -61,6 +67,12 @@ Author: claude-fable-5, 2026-07-26. Human-unreviewed draft.
 - **Measured empirically:** downstream-agent success for (a); Tyler's
   comprehension checks for (b). A failed check is a recorded result that
   triggers artifact revision.
+- **Progressive disclosure (2026-07-27, from round-1 ticket review):**
+  human-facing views lead with title + one-sentence summary per unit —
+  enough to approve from — with detail behind disclosure. Top level fits a
+  phone screen. Failure mode observed round 1: full-detail cards made the
+  page unparseable for the human even though each card was individually
+  fine.
 - **Deferred:** artifact templates beyond what the derisk needs; any
   hosted gallery.
 

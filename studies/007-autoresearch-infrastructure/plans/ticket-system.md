@@ -29,6 +29,68 @@ Author: claude-fable-5, 2026-07-26. Human-unreviewed draft.
    enough. This is a human-understanding constraint, not an AI one —
    agents keep the full YAML. Same rule extends upward: plans and
    literature cards get generated HTML views for human review.
+7. **Progressive disclosure for humans.** (2026-07-27, from round-1 review
+   feedback.) The title must tell the reviewer everything they need at
+   approval level; one visible sentence (`summary`) backs it; everything
+   else — description, acceptance, handoffs, why — sits behind disclosure
+   for dig-in on demand. The top level of any human-facing artifact should
+   fit a phone screen.
+8. **AI-first assignment.** Minimize human interactions: `assignee_class:
+   human` only when the work itself is judgment/approval, or physically
+   requires a human (admin credentials, purchases, new resources).
+   Everything else goes to the weakest capable agent class; genuine human
+   moments inside agent tickets are declared as `human_touchpoints`.
+9. **The plan is a graph.** Dependencies exist only where a real artifact
+   handoff exists (`consumes` justified by another ticket's `produces`);
+   no ordering edges for tidiness. Parallelism is the default shape, and
+   the decomposition's output is a dependency graph for the higher-level
+   task, not a sequence.
+
+## Schema v1 (2026-07-27 revision, after round-1 review)
+
+Adds to v0, all required:
+
+```yaml
+summary: one sentence a reviewer can approve from (title + summary stand alone)
+why: >
+  1-2 sentences: why this ticket exists and what breaks without it.
+produces: [named artifacts this ticket hands off]
+consumes: [artifacts consumed, each produced by a ticket in depends_on]
+human_touchpoints: []
+```
+
+Rules: every `depends_on` edge must be justified by a `consumes` entry;
+`check` warns on unjustified edges. Strings containing colons must be
+quoted (round-1 failure class). Decomposition experiments live in
+`tickets/rounds/round-N/` with their drafting contract preserved as
+`rounds/round-N-contract.md`; the approved round's tickets get promoted to
+`tickets/` proper.
+
+## Schema v1.1 (2026-07-27, after round-2 review)
+
+- `human_touchpoints` becomes **`human_needed`** — an explicitly named,
+  mandatory-but-may-be-empty declaration of every human moment in the
+  ticket. Renders visibly on the card even when empty ("Human needed:
+  none") so its absence is an assertion, not an omission. Legacy field
+  name accepted with a warning. Eventually the human can mark a
+  declaration wrong; those signals feed delegation modeling (backlog 5).
+- Drafting contracts must ship **primary sources, not paraphrases**: the
+  paper card and `resources.md` go into the contract verbatim. Round-2
+  lesson: rules improved decomposition shape; only real context fixes
+  content. Content drift is the agent making choices without the
+  information to make them well — provisioning that information is the
+  system's job.
+- Progressive disclosure is a render obligation: `drain.py render` and
+  all review pages show title + summary + human_needed at top level,
+  everything else behind disclosure.
+
+## Two-gate workflow (observed in round 1, now explicit)
+
+Gate 1 approves the high-level plan (Stage 1 of the walkthrough). Gate 2
+approves the decomposition: the human reads titles + summaries only,
+drills into individual tickets where suspicious, and either requests
+changes or approves. The graph shape (parallelism, handoffs) is part of
+what Gate 2 approves.
 
 ## Layout
 

@@ -1,0 +1,48 @@
+id: 003-sdk-setup
+title: "Install and verify software-agent-sdk on local machine"
+summary: >
+  Set up the OpenHands SDK environment on the desktop with ollama backend,
+  document setup steps and environment readiness.
+why: >
+  The optimization run (ticket 007) depends on a working SDK environment.
+  Standing it up early, documenting it completely, and validating with a
+  test reduces setup friction at run time and unblocks parallel experimental work.
+claim: "derisk phase 3 — environment setup"
+description: >
+  Clone or install migration-analysis as described in its README. Follow
+  OpenHands docs to install software-agent-sdk. Configure to use local
+  ollama instance via SSH tunnel (use the scripted SSH route to desktop
+  running ollama; consult existing tunnel setup if available). Test that
+  SDK can import, that it recognizes the remote ollama backend, and that
+  a test agent can initialize without errors. Document all setup steps,
+  environment variables needed, SSH tunnel command with parameters, and
+  any quirks encountered. Include a minimal reproducible test script
+  (test-sdk.py) that verifies imports, connects to ollama, and lists
+  available models.
+acceptance:
+  - "sdk-setup.md exists with step-by-step instructions"
+  - "All environment variables are listed and their purpose documented"
+  - "SSH tunnel setup command is included with full parameters"
+  - "test-sdk.py exists and runs without error"
+  - "test-sdk.py output shows: ollama URL, list of available models, connection success"
+  - "sdk-setup.md includes any quirks, timeouts, or gotchas encountered"
+assignee_class: small-agent
+depends_on: []
+produces:
+  - sdk-setup.md
+  - test-sdk.py
+consumes: []
+human_touchpoints: []
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

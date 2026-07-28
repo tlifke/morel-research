@@ -1,0 +1,40 @@
+id: 007-measure-optimized-harness-on-same-instances
+title: "Re-run the same budget-approval instances with the optimized harness"
+summary: "Evaluate the optimized harness on the original baseline instances for direct comparison."
+why: >
+  Measures the adaptation gain (claim 1) without confounding from instance variability.
+  Running the same instances ensures a fair A/B comparison.
+claim: "Claim 1 (adaptation closes most of the gap)"
+description: >
+  Load the optimized harness (prompt, tools, workflows) from ticket 006. Re-run the same
+  5–10 instances that were used in the baseline (ticket 005) with the optimized harness.
+  Log trajectories in the same JSON format as baseline. Record per-instance: task_id,
+  outcome, accuracy_score, tokens_used. Compute delta accuracy (optimized - baseline)
+  and annotate key behavioral differences (e.g., improved tool use, fewer hallucinations).
+acceptance:
+  - "optimized-results.json contains results for the exact same instances as baseline, structured identically: task_id, outcome, accuracy_score, tokens_used per instance"
+  - "optimized-trajectories.jsonl contains full trajectory data per instance"
+  - "summary computes per-instance delta_accuracy and mean_improvement_pct vs baseline"
+  - "A/B comparison summary (optimized vs baseline) is embedded or linked in optimized-results.json"
+assignee_class: small-agent
+depends_on:
+  - 006-one-harness-optimization-run
+produces:
+  - optimized-results.json
+  - optimized-trajectories.jsonl
+consumes:
+  - optimized-harness.md
+human_needed: []
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

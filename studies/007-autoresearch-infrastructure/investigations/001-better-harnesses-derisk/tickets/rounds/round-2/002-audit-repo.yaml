@@ -1,0 +1,44 @@
+id: 002-audit-repo
+title: Audit migration-analysis repository
+summary: >
+  Inspect the open-source repo to confirm it includes task-instance
+  pipelines, not just the optimizer.
+why: >
+  Risk (a) states: unverified whether the repo contains task-instance
+  generation. If it is optimizer-only, we must write our own task setup,
+  adding weeks of work. Knowing this early unblocks sourcing or building
+  task instances.
+claim: "risk (a) — task-instance pipelines"
+description: >
+  Clone https://github.com/malusamayo/migration-analysis. Inspect directory
+  structure, README, and key files (tests, examples, scripts/, data/).
+  Look for any task-definition pipelines, instance-generation code,
+  dataset loaders, or references to external task sources. Document findings
+  in repo-audit.md with an annotated tree, key file excerpts (or none, if
+  absent), and an explicit verdict on whether pipelines exist.
+acceptance:
+  - "repo-audit.md exists"
+  - "Includes full annotated directory tree of the repo"
+  - "Cites and excerpts at least 3 key files (or notes absence)"
+  - "Explicitly answers: does repo include task pipelines? (yes/no/partial)"
+  - "If pipelines exist, names their entry points (e.g., scripts/generate_tasks.py)"
+  - "If pipelines do not exist, notes what would be needed to add them"
+assignee_class: small-agent
+depends_on: []
+produces:
+  - repo-audit.md
+consumes: []
+human_touchpoints: []
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

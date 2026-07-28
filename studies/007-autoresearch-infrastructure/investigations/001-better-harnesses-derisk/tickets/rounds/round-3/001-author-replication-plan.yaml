@@ -1,0 +1,37 @@
+id: 001-author-replication-plan
+title: "Author replication plan with pre-registered fidelity contract"
+summary: "Document what 'replication' means for each claim before executing any experiments."
+why: >
+  Prevents p-hacking and sets approval criteria;
+  needed by all downstream work to measure success uniformly.
+claim: "All (foundational for derisk scope)"
+description: >
+  Use a frontier model (Claude) to draft a fidelity contract specifying what metrics/evidence
+  would satisfy each of the 7 claims from the paper card. Include acceptable model substitutions
+  (4B vs 26B), what counts as "closed the gap", tolerable substitutions (budget-approval from
+  TheAgentCompany vs other sources), and reduced-scale instance counts. Document any assumptions
+  about hardware, cost proxies (tokens/instance as stand-in for API $), and success thresholds.
+  Review with the human at gate time before any experiments run.
+acceptance:
+  - "replication-plan.md exists and contains a section per claim with concrete success criteria (e.g., 'claim 1: baseline accuracy + delta > 25 percentage points')"
+  - "Plan addresses Claim 3 derisk risk: specifies the minimum capability level for an SLM to benefit from adaptation"
+  - "Plan documents acceptable model substitutions (4B-class vs paper's 26B) with rationale"
+assignee_class: frontier-agent
+depends_on: []
+produces:
+  - replication-plan.md
+consumes: []
+human_needed: []
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

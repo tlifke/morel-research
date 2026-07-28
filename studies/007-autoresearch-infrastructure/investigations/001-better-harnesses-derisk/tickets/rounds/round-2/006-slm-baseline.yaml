@@ -1,0 +1,50 @@
+id: 006-slm-baseline
+title: Run SLM baseline on budget-approval with generic harness
+summary: >
+  Execute reduced-instance budget-approval runs with the selected SLM
+  and generic harness to establish performance floor.
+why: >
+  The optimization run needs a baseline to measure improvement against.
+  Running the SLM baseline first quantifies unoptimized performance and
+  derisks whether harness adaptation is even worth attempting (i.e., is
+  the SLM above the capability floor from paper claim 2).
+claim: "derisk phase 5 — SLM baseline measurement"
+description: >
+  Using the SLM selected in ticket 005 and the SDK from ticket 003, run
+  N budget-approval instances where N is a reduced count (e.g., 3-5).
+  Use the same generic harness as ticket 004. Log full trajectories per
+  instance. Measure per-instance: success (boolean), trajectory length,
+  time to completion, error/exception count. Aggregate results in
+  baseline-slm-generic.yaml with per-instance logs in separate files
+  (instance-001.yaml, instance-002.yaml, etc.). Preserve all raw data.
+acceptance:
+  - "baseline-slm-generic.yaml exists"
+  - "Contains fields: model (SLM name), harness (description), task (budget-approval), num_instances (int)"
+  - "Contains aggregated results: success_rate (%), avg_trajectory_length, avg_time_sec, error_count_total"
+  - "Per-instance logs exist (instance-*.yaml or instance-*.jsonl)"
+  - "All trajectories are raw and unprocessed"
+  - "Result includes timestamp and run parameters (e.g., harness variant, model checkpoint)"
+assignee_class: small-agent
+depends_on:
+  - 003-sdk-setup
+  - 005-slm-measurement
+produces:
+  - baseline-slm-generic.yaml
+  - "instance-*.yaml"
+consumes:
+  - sdk-setup.md
+  - slm-measurement.md
+human_touchpoints: []
+gate: derisk-approval
+cost_ceiling_usd: 2
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

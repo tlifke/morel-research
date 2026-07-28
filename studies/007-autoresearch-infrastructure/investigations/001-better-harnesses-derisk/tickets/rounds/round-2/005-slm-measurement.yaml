@@ -1,0 +1,45 @@
+id: 005-slm-measurement
+title: Measure which SLMs load and run on RTX 3080
+summary: >
+  Benchmark memory and throughput for candidate SLMs to determine which
+  fit in 12GB and deliver usable tokens/sec.
+why: >
+  The optimizer and baseline depend on choosing an SLM that actually fits.
+  Paper claim 2 states weak models benefit least from harness adaptation;
+  if our chosen SLM sits below the capability floor, adaptation may not
+  pay off. Measurement unblocks SLM selection and risk assessment.
+claim: "risk (b) — model-capability floor"
+description: >
+  Compile a list of SLMs plausible for a 3080 12GB (e.g., mistral-7b,
+  qwen-7b, phi-3-mini, llama2-7b, neural-chat-7b). For each, attempt to
+  load via ollama and run a 50-token generation. Measure: load success
+  (yes/no/error), peak VRAM used (GB), tokens/sec throughput, latency per
+  token. Document candidates, results, and recommendation in slm-measurement.md.
+  Include reasoning on why the recommended SLM is likely to benefit from
+  harness adaptation (relative to frontier).
+acceptance:
+  - "slm-measurement.md exists"
+  - "Lists 4+ candidate SLMs with: name, size (GB), load status (yes/no), peak VRAM, tokens/sec, latency_ms/token"
+  - "Final section recommends one SLM for tickets 006 and 007"
+  - "Recommendation includes estimated capability level (low/medium/high) relative to frontier"
+  - "Reasoning ties SLM capability to paper claim 2 (benefit floor)"
+  - "If no SLM loads successfully, documents blocker, attempted workarounds, and mitigation path"
+assignee_class: small-agent
+depends_on: []
+produces:
+  - slm-measurement.md
+consumes: []
+human_touchpoints: []
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

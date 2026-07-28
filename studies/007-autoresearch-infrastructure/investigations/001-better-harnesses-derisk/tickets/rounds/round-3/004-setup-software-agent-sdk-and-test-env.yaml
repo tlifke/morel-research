@@ -1,0 +1,37 @@
+id: 004-setup-software-agent-sdk-and-test-env
+title: "Set up software-agent-sdk locally and run one budget-approval instance"
+summary: "Verify the environment works with a generic harness and frontier model."
+why: >
+  Reproducibility risk: if the environment or budget-approval task can't run, all downstream
+  work fails. This ticket validates the end-to-end pipeline (task generation, harness execution, logging).
+claim: "Reproducibility assessment"
+description: >
+  Install software-agent-sdk on the Mac (or 3080; recommend Mac for orchestration). Generate one
+  budget-approval task instance using public templates (e.g., from TheAgentCompany or per repo-audit.md
+  findings). Run it with a minimal harness (task description + schema in the prompt, no special context)
+  using Claude as the agent. Log the full JSON trajectory. Document installation steps, task generation
+  method, and success/failure of the run. This is a smoke test, not a full baseline.
+acceptance:
+  - "env-setup.md documents installation steps, dependencies, and any configuration needed"
+  - "budget-approval-test.jsonl contains one valid trajectory with > 0 completion steps (may succeed or fail on the task, but environment must work)"
+  - "env-setup.md documents the harness used (prompt template, schema definition) and is reproducible by following the steps"
+assignee_class: frontier-agent
+depends_on: []
+produces:
+  - env-setup.md
+  - budget-approval-test.jsonl
+consumes: []
+human_needed: []
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

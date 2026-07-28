@@ -1,0 +1,44 @@
+id: 001-write-replication-plan
+title: Write replication plan with fidelity contract
+summary: >
+  Document what constitutes a valid replication for each paper claim
+  before running any experiments.
+why: >
+  The paper makes 3 specific claims; without a pre-registered contract
+  defining fidelity per claim, we cannot objectively evaluate whether the
+  replication succeeded. This gates downstream work.
+claim: "research infrastructure / derisk planning"
+description: >
+  Author a document laying out the 3 paper claims (claim 1: harness
+  optimization improves SLM performance, claim 2: smaller models benefit
+  less, claim 3: cost savings scale with model size), what counts as
+  "replicated" for each, what metrics will be measured, acceptable
+  variance, and what substitutions (e.g., local-inference cost proxy) are
+  acceptable. Reference the full paper (arXiv 2607.08938) and GitHub repo
+  (malusamayo/migration-analysis). Document why we selected budget-approval
+  as the task and which SLM we will target (to be filled in after ticket 005).
+acceptance:
+  - "replication-plan.md exists and is 2-5 pages"
+  - "Document lists all 3 paper claims with measurable fidelity criteria for each"
+  - "Document defines cost metric proxy for local inference (since we use $0-API local ollama)"
+  - "Document enumerates acceptable substitutions (e.g., reduced instance count, single task, reduced model diversity)"
+  - "Forward-reference to SLM selection from ticket 005"
+assignee_class: frontier-agent
+depends_on: []
+produces:
+  - replication-plan.md
+consumes: []
+human_touchpoints: []
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001
