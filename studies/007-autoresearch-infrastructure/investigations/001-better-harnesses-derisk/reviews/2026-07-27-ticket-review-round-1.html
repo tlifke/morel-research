@@ -1,0 +1,132 @@
+<title>Derisk tickets — review round 1</title>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<style>
+:root {
+  --bg:#f7f6f3; --fg:#232220; --muted:#6e6c66; --card:#fffefb;
+  --line:#dedcd4; --accent:#a4711f; --accent-soft:#a4711f14; --mono:ui-monospace,'SF Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#191816; --fg:#e8e6e1; --muted:#98958d; --card:#211f1c;
+    --line:#3a3833; --accent:#d9a44a; --accent-soft:#d9a44a1a; }
+}
+:root[data-theme="dark"] { --bg:#191816; --fg:#e8e6e1; --muted:#98958d;
+  --card:#211f1c; --line:#3a3833; --accent:#d9a44a; --accent-soft:#d9a44a1a; }
+:root[data-theme="light"] { --bg:#f7f6f3; --fg:#232220; --muted:#6e6c66;
+  --card:#fffefb; --line:#dedcd4; --accent:#a4711f; --accent-soft:#a4711f14; }
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:44rem; padding:1.4rem 1rem 4rem;
+  background:var(--bg); color:var(--fg);
+  font:16px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+header h1 { font-size:1.5rem; margin:.1rem 0; text-wrap:balance; }
+.eyebrow { color:var(--muted); font-size:.78rem; text-transform:uppercase;
+  letter-spacing:.08em; margin:0; }
+.gatebar { display:flex; align-items:center; gap:.6rem; margin:1rem 0 1.6rem;
+  padding:.65rem .9rem; border:1px solid var(--line); border-left:4px solid #c77d2e;
+  border-radius:8px; background:var(--card); font-size:.9rem; }
+section { display:flex; flex-direction:column; gap:1rem; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:10px;
+  padding:1rem 1.2rem; }
+.badge { display:inline-block; color:#fff; border-radius:999px;
+  padding:.08rem .65rem; font-size:.75rem; font-weight:600; }
+.tid { font-family:var(--mono); font-size:.82rem; color:var(--muted); }
+h2 { font-size:1.08rem; margin:.35rem 0 .4rem; text-wrap:balance; }
+h3 { font-size:.85rem; margin:1rem 0 0; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--muted); }
+.meta { color:var(--muted); font-size:.85rem; margin:.15rem 0; }
+ul { margin:.35rem 0 0; padding-left:1.25rem; }
+li { margin:.2rem 0; }
+.note { margin-top:.9rem; padding:.7rem .9rem; background:var(--accent-soft);
+  border:1px dashed var(--accent); border-radius:8px; font-size:.92rem; }
+.note b { color:var(--accent); font-size:.78rem; text-transform:uppercase;
+  letter-spacing:.07em; display:block; margin-bottom:.25rem; }
+.sumitem b { display:block; }
+footer { margin-top:2.2rem; color:var(--muted); font-size:.8rem; }
+</style>
+<header>
+  <p class='eyebrow'>Study 007 · investigation 001 · Better Harnesses derisk</p>
+  <h1>PoC ticket review — round 1</h1>
+  <p class='meta'>7 tickets drafted by claude-haiku-4-5 against the pinned v0 schema · 5/7 assigned to human · phase budget $5.0</p>
+</header>
+<div class='gatebar'>Gate <b>derisk-approval</b> is unapproved — nothing below can run until you approve it (your rationale is stored verbatim in plan.yaml).</div>
+<section>
+  <div class='card sumitem'><b>Delegation skew</b>Haiku assigned 5 of 7 tickets to you. My counter-hypothesis: 002, 004, and 005 are agent-drivable. The disagreement itself is the first data for the delegation dataset — we should record both hypotheses and let execution settle it.</div><div class='card sumitem'><b>Structure</b>The chain is fully linear. 002 can run parallel to 001, and there&#x27;s a real ordering question between them (see the 001 note). Nothing else structural to complain about.</div><div class='card sumitem'><b>One schema bug caught</b>Two acceptance items contained unquoted colons and parsed as YAML dicts, not strings. drain.py check now rejects that class of error; the drafting contract for future ticket-writing agents needs a quoting rule — or a self-validation loop where the drafter runs check before finishing.</div><div class='card sumitem'><b>Costs</b>Proposed ceilings sum to $3.00 against the $5.00 derisk compute budget. Frontier-agent tickets carry $0 on the assumption they run under subscription — that assumption should be blessed or corrected at this gate.</div><div class='card sumitem'><b>Gate state</b>derisk-approval is unapproved, so no ticket is eligible to run. Approving it (with your rationale + what-would-change-your-mind, stored verbatim in plan.yaml) is the system&#x27;s first live gate record.</div>
+  
+<div class='card'>
+  <span class='badge' style='background:#8a8a86'>draft</span>
+  <span class='tid'>001-author-replication-plan</span>
+  <h2>Author replication plan with fidelity contract</h2>
+  <p class='meta'>assignee: <b>frontier-agent</b> · ceiling: $0 · depends on: none</p>
+  <p class='meta'>serves: risks (a/b/c) — establish measurable replication criteria before running</p>
+  <p>Write a pre-registered fidelity contract that specifies, for each paper claim (1-7), what measurements and thresholds constitute a successful replication on the budget-approval task with a single SLM. Document the cost-metric substitution (local compute wallclock/GPU-seconds vs API pricing) and the capability-floor hypothesis (minimum SLM capability threshold below which adaptation cannot pay off). This contract will gate the comparison artifact (ticket 007).</p>
+  <h3>Acceptance</h3>
+  <ul><li>fidelity-contract.md exists with measurable pass/fail thresholds for each paper claim</li><li>cost-metric substitution documented (e.g., GPU-wallclock-seconds as proxy for optimization cost)</li><li>capability-floor hypothesis stated with reasoning</li><li>contract authored before experimental runs (pre-registered)</li></ul>
+  <div class='note'><b>Review note — Fable</b>Right assignee, and the acceptance criteria make pre-registration explicit — good. One open question for you: should this instead depend on 002 (the repo audit)? A contract written blind is stronger science, but it can&#x27;t name concrete metrics if the repo turns out to lack the task pipelines. My proposal: keep 001 first, allow one amendment pass after 002, recorded in the deviation log.</div>
+</div>
+<div class='card'>
+  <span class='badge' style='background:#8a8a86'>draft</span>
+  <span class='tid'>002-audit-migration-repo</span>
+  <h2>Clone and audit migration-analysis repo</h2>
+  <p class='meta'>assignee: <b>human</b> · ceiling: $0 · depends on: 001-author-replication-plan</p>
+  <p class='meta'>serves: risk (a) — verify whether repo includes task-instance pipelines or just optimizer</p>
+  <p>Clone https://github.com/malusamayo/migration-analysis and inventory what&#x27;s included. Does it contain budget-approval task instances and a full pipeline, or only the optimizer? Document findings in repo-audit.md with directory structure, entry points, and explicit list of what&#x27;s present vs missing (task data, instance generators, evaluation harness, dependencies).</p>
+  <h3>Acceptance</h3>
+  <ul><li>repo-audit.md documents complete directory tree with component annotations</li><li>explicitly lists which of (task instances, optimizer, evaluation harness) are present or missing</li><li>identifies concrete file paths to entry points for each major component</li><li>notes all dependencies from README and any external data sources required</li></ul>
+  <div class='note'><b>Review note — Fable</b>Disagree with the human assignment: cloning and inventorying a repo is exactly the walkthrough&#x27;s small-agent candidate — cheap to test, and the delegation measurement we want. The dependency on 001 also looks unnecessary; these can run in parallel.</div>
+</div>
+<div class='card'>
+  <span class='badge' style='background:#8a8a86'>draft</span>
+  <span class='tid'>003-setup-software-agent-sdk</span>
+  <h2>Stand up software-agent-sdk locally</h2>
+  <p class='meta'>assignee: <b>human</b> · ceiling: $0 · depends on: 002-audit-migration-repo</p>
+  <p class='meta'>serves: paper-card claim 1 — meta-agent harness adaptation capability</p>
+  <p>Clone and install software-agent-sdk (OpenHands framework). Run one budget-approval instance with a generic (unoptimized) harness and a frontier model (Claude Opus or equivalent) to verify end-to-end environment. Document setup steps and any environment quirks in setup.md. Capture baseline-run.log to show the framework is working.</p>
+  <h3>Acceptance</h3>
+  <ul><li>software-agent-sdk installs with all dependencies resolved</li><li>one budget-approval instance completes successfully with frontier model</li><li>setup.md documents installation steps and any environment configuration needed</li><li>baseline-run.log captures complete trajectory and task outcome</li></ul>
+  <div class='note'><b>Review note — Fable</b>Human is defensible (install quirks, auth), but our working norm is frontier-agent with you watching the run. The $0 ceiling silently assumes the frontier-model smoke run happens under the Claude subscription; if it needs API spend, the ceiling must be nonzero.</div>
+</div>
+<div class='card'>
+  <span class='badge' style='background:#8a8a86'>draft</span>
+  <span class='tid'>004-measure-slm-performance-3080</span>
+  <h2>Measure which SLMs load and run on RTX 3080</h2>
+  <p class='meta'>assignee: <b>human</b> · ceiling: $0 · depends on: 003-setup-software-agent-sdk</p>
+  <p class='meta'>serves: paper-card claim 3 — weak models may fall below capability floor</p>
+  <p>Empirically test candidate SLMs (e.g., Qwen2.5:4b, Mistral-7b, similar) on the RTX 3080 12GB GPU. For each candidate, measure: load success, peak memory footprint, and steady-state throughput (tokens/sec). Run one reduced budget-approval instance per SLM to gather data. Summarize findings and select the primary SLM for tickets 005–006 with explicit rationale.</p>
+  <h3>Acceptance</h3>
+  <ul><li>slm-benchmark.md lists all candidates with (load success yes/no, peak VRAM GB, tokens/sec, test timestamp)</li><li>at least 2 SLMs tested; at least 1 confirmed runnable on 3080</li><li>selected SLM documented with reasoning tied to throughput and memory</li><li>raw benchmark logs (load output, inference logs) preserved for reproducibility</li></ul>
+  <div class='note'><b>Review note — Fable</b>Should be agent work: there is a scripted SSH route to the 3080 (the desktop-gpu-access skill). Haiku didn&#x27;t know that — which is evidence for the constraints doc: assignee hypotheses need the fleet and access routes in the drafting context.</div>
+</div>
+<div class='card'>
+  <span class='badge' style='background:#8a8a86'>draft</span>
+  <span class='tid'>005-run-baseline-budget-approval</span>
+  <h2>Run baseline with generic harness on chosen SLM</h2>
+  <p class='meta'>assignee: <b>human</b> · ceiling: $0 · depends on: 004-measure-slm-performance-3080</p>
+  <p class='meta'>serves: paper-card claim 1 — establish unoptimized baseline for comparison</p>
+  <p>Run budget-approval task with the selected SLM using a generic (unoptimized) harness. Use reduced instance count (5–10 instances) to stay within derisk GPU budget and time constraints. Capture all trajectories and aggregate results (success rate, task cost, wall-clock time) to form the baseline for comparing optimization impact in ticket 007.</p>
+  <h3>Acceptance</h3>
+  <ul><li>baseline-results.yaml records success rate, completion cost, latency for all instances</li><li>all instance trajectories logged in baseline-trajectories/ directory with unique IDs</li><li>summary statistics (mean, stdev, min, max) computed for each key metric</li><li>confirmed that SLM + generic harness completes at least one task instance successfully</li></ul>
+  <div class='note'><b>Review note — Fable</b>Human again; I&#x27;d propose small-agent execution with you watching. The acceptance list is good — summary stats plus at-least-one-success is a real capability-floor probe.</div>
+</div>
+<div class='card'>
+  <span class='badge' style='background:#8a8a86'>draft</span>
+  <span class='tid'>006-harness-optimization-run</span>
+  <h2>Execute harness-optimization run under budget</h2>
+  <p class='meta'>assignee: <b>human</b> · ceiling: $3 · depends on: 005-run-baseline-budget-approval</p>
+  <p class='meta'>serves: paper-card claims 1–2 — core replication of automatic harness adaptation</p>
+  <p>Run the meta-agent optimizer on budget-approval task with the chosen SLM, reduced instance counts to stay within $5 derisk compute budget and GPU capacity. If optimizer uses frontier-model evals for proposal scoring or decision-making, reserve frontier-API budget for those calls. Log all optimizer trajectories, intermediate harness variants, and per-instance results. Track total spend (GPU-seconds, frontier-API calls) against derisk ceiling.</p>
+  <h3>Acceptance</h3>
+  <ul><li>optimizer runs to completion or stops explicitly when budget/GPU limits reached</li><li>optimization-results.yaml records all harness variants tested (config + performance)</li><li>optimizer-trajectories/ directory contains detailed logs for each optimization step</li><li>final optimized harness saved to harness-optimized.json (or equivalent) with full config</li><li>cost accounting: GPU-wallclock-seconds and frontier-API spend (if any) documented with totals</li></ul>
+  <div class='note'><b>Review note — Fable</b>The $3 ceiling is sensible against the $5 phase budget. Human-as-driver is fine for v0 given the watch-the-run convention, but the optimizer itself is frontier-agent work — the assignee taxonomy may need a mixed value. Worth deciding at this review.</div>
+</div>
+<div class='card'>
+  <span class='badge' style='background:#8a8a86'>draft</span>
+  <span class='tid'>007-comparison-artifact</span>
+  <h2>Compare optimization results vs fidelity contract</h2>
+  <p class='meta'>assignee: <b>frontier-agent</b> · ceiling: $0 · depends on: 006-harness-optimization-run</p>
+  <p class='meta'>serves: paper-card claims 2–3 — validate replication against pre-registered criteria</p>
+  <p>Analyze optimized-harness results against the fidelity contract from ticket 001. Produce comparison.md with side-by-side baseline vs optimized performance, data tables, and small-multiple charts. For each metric in the contract, flag pass/fail against pre-registered thresholds. Revisit capability-floor hypothesis and document whether SLM remained above the floor under optimization. Recommend next phase direction.</p>
+  <h3>Acceptance</h3>
+  <ul><li>comparison.md documents each fidelity-contract metric with baseline and optimized results</li><li>baseline vs optimized shown side-by-side (table format minimum; charts preferred)</li><li>each key metric explicitly flagged pass/fail with threshold value displayed</li><li>capability-floor assessment: did SLM stay viable or fall below predicted floor?</li><li>next-phase recommendations documented (scale, refine, pivot) with reasoning</li></ul>
+  <div class='note'><b>Review note — Fable</b>Right assignee. Note the new rule applies to its output: the comparison must render as a phone-readable HTML card set — if it can&#x27;t, the analysis is trying to say too much at once.</div>
+</div>
+</section>
+<footer>Generated from tickets/*.yaml · cards are Haiku's verbatim; dashed annotations are Fable's review · 2026-07-27</footer>

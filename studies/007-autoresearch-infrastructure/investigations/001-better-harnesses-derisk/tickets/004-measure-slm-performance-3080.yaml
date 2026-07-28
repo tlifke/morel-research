@@ -1,0 +1,28 @@
+id: 004-measure-slm-performance-3080
+title: Measure which SLMs load and run on RTX 3080
+claim: paper-card claim 3 — weak models may fall below capability floor
+description: >
+  Empirically test candidate SLMs (e.g., Qwen2.5:4b, Mistral-7b, similar) on the RTX 3080
+  12GB GPU. For each candidate, measure: load success, peak memory footprint, and steady-state
+  throughput (tokens/sec). Run one reduced budget-approval instance per SLM to gather data.
+  Summarize findings and select the primary SLM for tickets 005–006 with explicit rationale.
+acceptance:
+  - slm-benchmark.md lists all candidates with (load success yes/no, peak VRAM GB, tokens/sec, test timestamp)
+  - at least 2 SLMs tested; at least 1 confirmed runnable on 3080
+  - selected SLM documented with reasoning tied to throughput and memory
+  - raw benchmark logs (load output, inference logs) preserved for reproducibility
+assignee_class: human
+depends_on: [003-setup-software-agent-sdk]
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

@@ -1,0 +1,20 @@
+<meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>001-author-replication-plan</title><style>
+:root { --bg:#ffffff; --fg:#1a1a1a; --muted:#666; --card:#f6f6f4; --line:#ddd; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#181818; --fg:#e8e8e8; --muted:#9a9a9a; --card:#222; --line:#3a3a3a; }
+}
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:46rem; padding:1.5rem 1rem; background:var(--bg);
+  color:var(--fg); font:16px/1.55 -apple-system,'Segoe UI',sans-serif; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:10px;
+  padding:1.1rem 1.3rem; margin:1rem 0; }
+.badge { display:inline-block; color:#fff; border-radius:999px; padding:.1rem .7rem;
+  font-size:.8rem; font-weight:600; }
+h1 { font-size:1.35rem; margin:.2rem 0 .6rem; }
+h2 { font-size:1.05rem; margin:1rem 0 .3rem; }
+.meta { color:var(--muted); font-size:.85rem; margin:.15rem 0; }
+ul { margin:.3rem 0; padding-left:1.3rem; }
+a { color:inherit; }
+.gate-warn { border-left:4px solid #c77d2e; padding:.5rem .9rem; background:var(--card);
+  border-radius:6px; font-size:.9rem; }
+</style><div class='card'><span class='badge' style='background:#8a8a8a'>draft</span><h1>001-author-replication-plan — Author replication plan with fidelity contract</h1><p class='meta'>assignee: frontier-agent · ceiling: $0 · gate: derisk-approval · depends on: none</p><p class='meta'>serves: risks (a/b/c) — establish measurable replication criteria before running</p><p>Write a pre-registered fidelity contract that specifies, for each paper claim (1-7), what measurements and thresholds constitute a successful replication on the budget-approval task with a single SLM. Document the cost-metric substitution (local compute wallclock/GPU-seconds vs API pricing) and the capability-floor hypothesis (minimum SLM capability threshold below which adaptation cannot pay off). This contract will gate the comparison artifact (ticket 007).</p><h2>Acceptance</h2><ul><li>fidelity-contract.md exists with measurable pass/fail thresholds for each paper claim</li><li>cost-metric substitution documented (e.g., GPU-wallclock-seconds as proxy for optimization cost)</li><li>capability-floor hypothesis stated with reasoning</li><li>contract authored before experimental runs (pre-registered)</li></ul></div>

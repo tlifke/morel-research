@@ -1,0 +1,28 @@
+id: 002-audit-migration-repo
+title: Clone and audit migration-analysis repo
+claim: risk (a) — verify whether repo includes task-instance pipelines or just optimizer
+description: >
+  Clone https://github.com/malusamayo/migration-analysis and inventory what's included.
+  Does it contain budget-approval task instances and a full pipeline, or only the optimizer?
+  Document findings in repo-audit.md with directory structure, entry points, and explicit
+  list of what's present vs missing (task data, instance generators, evaluation harness, dependencies).
+acceptance:
+  - repo-audit.md documents complete directory tree with component annotations
+  - explicitly lists which of (task instances, optimizer, evaluation harness) are present or missing
+  - identifies concrete file paths to entry points for each major component
+  - notes all dependencies from README and any external data sources required
+assignee_class: human
+depends_on: [001-author-replication-plan]
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

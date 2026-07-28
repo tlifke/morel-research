@@ -1,0 +1,28 @@
+id: 005-run-baseline-budget-approval
+title: Run baseline with generic harness on chosen SLM
+claim: paper-card claim 1 — establish unoptimized baseline for comparison
+description: >
+  Run budget-approval task with the selected SLM using a generic (unoptimized) harness.
+  Use reduced instance count (5–10 instances) to stay within derisk GPU budget and time constraints.
+  Capture all trajectories and aggregate results (success rate, task cost, wall-clock time)
+  to form the baseline for comparing optimization impact in ticket 007.
+acceptance:
+  - baseline-results.yaml records success rate, completion cost, latency for all instances
+  - all instance trajectories logged in baseline-trajectories/ directory with unique IDs
+  - summary statistics (mean, stdev, min, max) computed for each key metric
+  - confirmed that SLM + generic harness completes at least one task instance successfully
+assignee_class: human
+depends_on: [004-measure-slm-performance-3080]
+gate: derisk-approval
+cost_ceiling_usd: 0
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001

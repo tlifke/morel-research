@@ -1,0 +1,30 @@
+id: 006-harness-optimization-run
+title: Execute harness-optimization run under budget
+claim: paper-card claims 1–2 — core replication of automatic harness adaptation
+description: >
+  Run the meta-agent optimizer on budget-approval task with the chosen SLM, reduced instance counts
+  to stay within $5 derisk compute budget and GPU capacity. If optimizer uses frontier-model
+  evals for proposal scoring or decision-making, reserve frontier-API budget for those calls.
+  Log all optimizer trajectories, intermediate harness variants, and per-instance results.
+  Track total spend (GPU-seconds, frontier-API calls) against derisk ceiling.
+acceptance:
+  - optimizer runs to completion or stops explicitly when budget/GPU limits reached
+  - optimization-results.yaml records all harness variants tested (config + performance)
+  - optimizer-trajectories/ directory contains detailed logs for each optimization step
+  - final optimized harness saved to harness-optimized.json (or equivalent) with full config
+  - "cost accounting: GPU-wallclock-seconds and frontier-API spend (if any) documented with totals"
+assignee_class: human
+depends_on: [005-run-baseline-budget-approval]
+gate: derisk-approval
+cost_ceiling_usd: 3
+status: draft
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-27
+created_by: claude-haiku-4-5-20251001
