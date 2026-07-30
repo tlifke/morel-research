@@ -69,11 +69,16 @@ Updated: 2026-07-27. Drafted by claude-fable-5, human-unreviewed.
   metric.
 - Escalation ladder: 3080 → Modal ($30/mo) → anything beyond requires
   the human, explicitly.
-- Subscription vs API credits: interactive/subagent work rides the
-  subscription at $0; code that calls a model programmatically (an
-  optimizer loop, a judge script) needs a real key — Anthropic's finite
-  $17.58 or the Gemini key. Subscription-first wherever the harness
-  allows.
+- Subscription vs API credits (verified 2026-07-30): interactive/subagent
+  work rides the subscription at $0. Programmatic calls split three ways:
+  (1) our own tooling built on the Claude Agent SDK may bill the Max
+  subscription via `claude setup-token` OAuth — sanctioned personal use;
+  (2) third-party code (e.g. OpenHands software-agent-sdk) calling
+  Anthropic must use a real API key (the finite $17.58) — subscription
+  OAuth in third-party tools is banned by Anthropic policy (2026-02);
+  (3) Gemini via its own key. Anthropic's announced monthly "Agent SDK
+  credit" ($100/mo on Max 5x) was postponed 2026-06-16 and is NOT live —
+  re-verify before relying on it.
 
 ## Things I made up to review
 
