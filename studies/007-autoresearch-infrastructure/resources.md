@@ -23,6 +23,11 @@ Updated: 2026-07-27. Drafted by claude-fable-5, human-unreviewed.
 
 - **Claude Code subscription**: frontier-agent work and Haiku subagents;
   no marginal dollar cost, bounded by usage limits.
+- **Anthropic API credits**: $17.58 remaining (verified 2026-07-30) of a
+  $25 credit grant issued 2026-04-22, expiring 2027-04-23. Not a monthly
+  allotment — periodic grants; monthly invoices are $0 (no pay-as-you-go,
+  no auto-reload). For direct API calls the subscription can't cover
+  (programmatic meta-agent or judge calls); expires unused.
 - **Gemini API key**: flash-lite-class models for judge roles (small real
   API cost).
 - **Local ollama fleet** on the 3080: 4B-class models (nemotron-4b,
@@ -34,6 +39,8 @@ Updated: 2026-07-27. Drafted by claude-fable-5, human-unreviewed.
 - Study 007 replication budget: ~$20 total; derisk phase compute ceiling
   $5 (tickets/plan.yaml).
 - Modal $30/month (above), separate pool.
+- Anthropic API credit balance $17.58 (above), separate pool with a
+  2027-04-23 expiry.
 
 ## Human attention (scarcest resource)
 
@@ -62,6 +69,11 @@ Updated: 2026-07-27. Drafted by claude-fable-5, human-unreviewed.
   metric.
 - Escalation ladder: 3080 → Modal ($30/mo) → anything beyond requires
   the human, explicitly.
+- Subscription vs API credits: interactive/subagent work rides the
+  subscription at $0; code that calls a model programmatically (an
+  optimizer loop, a judge script) needs a real key — Anthropic's finite
+  $17.58 or the Gemini key. Subscription-first wherever the harness
+  allows.
 
 ## Things I made up to review
 
