@@ -50,7 +50,8 @@ test-tampering counts as failure.
   `projects/drain/scripts/matrix.ts` (latest result per model × task).
 - First sweep models: gemini-3.1-flash-lite (API), qwen35-9b-32k and
   qwen35-4b-32k (desktop 3080, serialized, 32k-context derived models per
-  investigation 002 Decision 4).
+  investigation 002 Decision 4); thinkingmachines/Inkling-Small added via
+  Tinker's OpenAI-compatible endpoint.
 - One attempt per model × task, no retries; timeout 300s counts as its own
   outcome.
 
@@ -59,15 +60,27 @@ test-tampering counts as failure.
 **Sweep 1 — 2026-07-31, N=1 per cell** (runs `2026-07-31T04-37-37-742Z`
 flash, `…04-38-11-820Z` 9b, `…04-40-39-892Z` 4b):
 
-| Task | gemini-3.1-flash-lite | qwen35-9b-32k | qwen35-4b-32k |
-|---|---|---|---|
-| 001-c1-exact-output | ✅ 7s | ✅ 9s | ✅ 12s |
-| 002-c2-module-with-test | ✅ 12s | ✅ 34s | ❌ 7s |
-| 003-c3-bugfix-median | ✅ 8s | ✅ 14s | ❌ 6s |
-| 004-c4-feature-flag | ✅ 14s | ✅ 55s | ❌ 18s |
-| 005-c5-implement-from-tests | ✅ 12s | ❌ 29s | ✅ 20s |
+| Task | gemini-3.1-flash-lite | Inkling-Small | qwen35-9b-32k | qwen35-4b-32k |
+|---|---|---|---|---|
+| 001-c1-exact-output | ✅ 7s | ✅ 11s | ✅ 9s | ✅ 12s |
+| 002-c2-module-with-test | ✅ 12s | ✅ 14s | ✅ 34s | ❌ 7s |
+| 003-c3-bugfix-median | ✅ 8s | ✅ 14s | ✅ 14s | ❌ 6s |
+| 004-c4-feature-flag | ✅ 14s | ✅ 15s | ✅ 55s | ❌ 18s |
+| 005-c5-implement-from-tests | ✅ 12s | ✅ 16s | ❌ 29s | ✅ 20s |
 
-Totals: flash-lite 5/5 (53s, $0.0073) · 9b 4/5 (141s, $0) · 4b 2/5 (63s, $0).
+Totals: flash-lite 5/5 (53s, $0.0073) · Inkling-Small 5/5 (70s, $0 metered) ·
+9b 4/5 (141s, $0) · 4b 2/5 (63s, $0).
+
+**Inkling-Small column added 2026-07-31** (run `2026-07-31T21-16-28-278Z`):
+thinkingmachines/Inkling-Small (276B MoE, 12B active) accessed through
+Tinker's beta OpenAI-compatible endpoint
+(`tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1`, key via
+`THINKING_MACHINES_KEY`). Clean 5/5 including c5, with flash-lite-class
+latency and first-try tool calling — the endpoint returned no per-token
+billing metadata, so metered cost reads $0 in the records; Tinker-side
+billing is not captured. Adding the column required only a provider block
+and route in drain config — no code changes — which is itself the Part-1
+portability claim holding.
 
 Reading the failures from the event traces:
 
