@@ -1,0 +1,41 @@
+id: 004-hello-ts-plain
+title: "Hello world in TypeScript"
+summary: "One TypeScript file that prints hello, world under bun."
+why: >
+  Language-diversity probe for the GPU route: same floor difficulty as ticket
+  001 but in TypeScript, separating language effects from backend effects in the
+  delegation dataset.
+claim: "Drain derisk: local small agents handle more than one language"
+description: >
+  Create ts/hello.ts in the working directory. Running "bun ts/hello.ts" must
+  print exactly "hello, world" to stdout and exit 0.
+acceptance:
+  - "ts/hello.ts exists"
+  - "bun ts/hello.ts prints exactly 'hello, world' and exits 0"
+assignee_class: small-agent
+agent_explanation: >
+  Identical floor difficulty to 001 with only the language varied; routed to the
+  desktop 3080 (qwen3.5:9b) so the local backend is measured on both languages.
+depends_on: []
+produces:
+  - ts/hello.ts
+consumes: []
+human_needed: []
+gate: hello-world-approval
+cost_ceiling_usd: 0.10
+status: done
+provenance:
+  executed_by: qwen35-9b-32k (opencode/desktop-ollama)
+  started: 2026-07-31
+  finished: 2026-07-31
+  cost_spent_usd: 0
+  artifacts:
+    - drain/004-hello-ts-plain
+  verdict: pass
+related: []
+created: 2026-07-30
+created_by: claude-fable-5
+route: desktop-qwen
+checks:
+  - run: "bun ts/hello.ts"
+    expect_stdout: "hello, world"

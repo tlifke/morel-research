@@ -1,0 +1,46 @@
+id: 003-hello-python-tested
+title: "Hello world in Python with a unittest"
+summary: "Hello module plus a stdlib unittest that exercises it."
+why: >
+  Probes whether a small agent can produce two coordinated files (module + test)
+  whose relationship must be correct for the check to pass.
+claim: "Drain derisk: small agents can satisfy multi-file acceptance criteria"
+description: >
+  Create py/hello3.py and py/test_hello3.py in the working directory.
+  py/hello3.py must define a function greeting() returning the string "hello,
+  world" and print it when run directly. py/test_hello3.py must be a stdlib
+  unittest module that imports greeting from hello3 and asserts its value;
+  "python3 -m unittest discover py" must pass. No third-party dependencies.
+acceptance:
+  - "py/hello3.py exists and python3 py/hello3.py prints exactly 'hello, world'"
+  - "py/test_hello3.py exists and python3 -m unittest discover py exits 0"
+assignee_class: small-agent
+agent_explanation: >
+  Two small coordinated files with a stdlib test is still trivial-tier work but
+  the hardest ticket in this set; routed to gemini-3.1-flash-lite as the
+  stronger of the two backends under test.
+depends_on: []
+produces:
+  - py/hello3.py
+  - py/test_hello3.py
+consumes: []
+human_needed: []
+gate: hello-world-approval
+cost_ceiling_usd: 0.10
+status: done
+provenance:
+  executed_by: gemini-3.1-flash-lite (opencode/google)
+  started: 2026-07-31
+  finished: 2026-07-31
+  cost_spent_usd: 0.001459575
+  artifacts:
+    - drain/003-hello-python-tested
+  verdict: pass
+related: []
+created: 2026-07-30
+created_by: claude-fable-5
+route: gemini-flash-lite
+checks:
+  - run: "python3 py/hello3.py"
+    expect_stdout: "hello, world"
+  - run: "cd py && python3 -m unittest discover ."

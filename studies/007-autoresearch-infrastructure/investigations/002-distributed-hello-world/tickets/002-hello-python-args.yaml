@@ -1,0 +1,45 @@
+id: 002-hello-python-args
+title: "Hello world in Python with an argv name"
+summary: "Greeter script that takes an optional name argument."
+why: >
+  One notch above the floor: the agent must handle a conditional (argv present
+  or absent), probing whether flash-lite can follow a two-case spec.
+claim: "Drain derisk: API-routed small agents can complete trivial tickets"
+description: >
+  Create py/greet.py in the working directory. Running "python3 py/greet.py
+  Tyler" must print exactly "hello, Tyler"; running it with no argument must
+  print exactly "hello, world". Exit 0 in both cases.
+acceptance:
+  - "py/greet.py exists"
+  - "python3 py/greet.py Tyler prints exactly 'hello, Tyler'"
+  - "python3 py/greet.py prints exactly 'hello, world'"
+assignee_class: small-agent
+agent_explanation: >
+  Trivial branching logic is squarely small-agent work; routed to
+  gemini-3.1-flash-lite to exercise the metered API path and produce a
+  cost/token record for the delegation dataset.
+depends_on: []
+produces:
+  - py/greet.py
+consumes: []
+human_needed: []
+gate: hello-world-approval
+cost_ceiling_usd: 0.10
+status: done
+provenance:
+  executed_by: gemini-3.1-flash-lite (opencode/google)
+  started: 2026-07-31
+  finished: 2026-07-31
+  cost_spent_usd: 0.001052025
+  artifacts:
+    - drain/002-hello-python-args
+  verdict: pass
+related: []
+created: 2026-07-30
+created_by: claude-fable-5
+route: gemini-flash-lite
+checks:
+  - run: "python3 py/greet.py Tyler"
+    expect_stdout: "hello, Tyler"
+  - run: "python3 py/greet.py"
+    expect_stdout: "hello, world"

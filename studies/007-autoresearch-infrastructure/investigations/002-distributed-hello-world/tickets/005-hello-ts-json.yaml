@@ -1,0 +1,44 @@
+id: 005-hello-ts-json
+title: "Hello world as JSON in TypeScript"
+summary: "TypeScript file that prints a single exact JSON object."
+why: >
+  Exact-output probe: byte-precise stdout ({"hello":"world"}) catches agents
+  that add prose, formatting, or logging around their output.
+claim: "Drain derisk: small agents can meet byte-exact output contracts"
+description: >
+  Create ts/hello-json.ts in the working directory. Running "bun
+  ts/hello-json.ts" must print exactly {"hello":"world"} on one line (no spaces,
+  no extra output) and exit 0. Use JSON.stringify rather than a hand-written
+  string.
+acceptance:
+  - "ts/hello-json.ts exists and uses JSON.stringify"
+  - "bun ts/hello-json.ts prints exactly '{\"hello\":\"world\"}' and exits 0"
+assignee_class: small-agent
+agent_explanation: >
+  Byte-exact output is a precision probe, not a reasoning probe; small-agent
+  tier is correct. Routed to gemini-3.1-flash-lite so the API path covers both
+  languages.
+depends_on: []
+produces:
+  - ts/hello-json.ts
+consumes: []
+human_needed: []
+gate: hello-world-approval
+cost_ceiling_usd: 0.10
+status: done
+provenance:
+  executed_by: gemini-3.1-flash-lite (opencode/google)
+  started: 2026-07-31
+  finished: 2026-07-31
+  cost_spent_usd: 0.001358775
+  artifacts:
+    - drain/005-hello-ts-json
+  verdict: pass
+related: []
+created: 2026-07-30
+created_by: claude-fable-5
+route: gemini-flash-lite
+checks:
+  - run: "bun ts/hello-json.ts"
+    expect_stdout: "{\"hello\":\"world\"}"
+  - run: "grep -q JSON.stringify ts/hello-json.ts"

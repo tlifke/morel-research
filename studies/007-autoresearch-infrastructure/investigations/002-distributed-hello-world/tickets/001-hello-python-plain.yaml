@@ -1,0 +1,43 @@
+id: 001-hello-python-plain
+title: "Hello world in Python"
+summary: "One Python file that prints hello, world."
+why: >
+  Floor probe for the GPU-routed small agent: can a local model complete the
+  simplest possible coding ticket through the OpenCode drain.
+claim: "Drain derisk: small agents on local models can complete trivial tickets"
+description: >
+  Create py/hello.py in the working directory. Running it with python3 must
+  print exactly "hello, world" (lowercase, comma, no trailing punctuation) to
+  stdout and exit 0.
+acceptance:
+  - "py/hello.py exists"
+  - "python3 py/hello.py prints exactly 'hello, world' and exits 0"
+assignee_class: small-agent
+agent_explanation: >
+  Hello world is the weakest-capable floor probe by construction; assigning
+  anything stronger than a small agent would tell us nothing about the
+  delegation floor. Routed to the desktop 3080 (qwen3.5:9b) to test the free
+  local path.
+depends_on: []
+produces:
+  - py/hello.py
+consumes: []
+human_needed: []
+gate: hello-world-approval
+cost_ceiling_usd: 0.10
+status: done
+provenance:
+  executed_by: qwen35-9b-32k (opencode/desktop-ollama)
+  started: 2026-07-31
+  finished: 2026-07-31
+  cost_spent_usd: 0
+  artifacts:
+    - drain/001-hello-python-plain
+  verdict: pass
+related: []
+created: 2026-07-30
+created_by: claude-fable-5
+route: desktop-qwen
+checks:
+  - run: "python3 py/hello.py"
+    expect_stdout: "hello, world"
