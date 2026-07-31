@@ -68,8 +68,18 @@ flash, `…04-38-11-820Z` 9b, `…04-40-39-892Z` 4b):
 | 004-c4-feature-flag | ✅ 14s | ✅ 15s | ✅ 55s | ❌ 18s |
 | 005-c5-implement-from-tests | ✅ 12s | ✅ 16s | ❌ 29s | ✅ 20s |
 
-Totals: flash-lite 5/5 (53s, $0.0073) · Inkling-Small 5/5 (70s, $0 metered) ·
-9b 4/5 (141s, $0) · 4b 2/5 (63s, $0).
+Totals: flash-lite 5/5 (53s, **$0.0548**) · Inkling-Small 5/5 (70s,
+**≈$0.055**) · 9b 4/5 (141s, $0) · 4b 2/5 (63s, $0).
+
+**Cost correction (2026-07-31):** figures previously read $0.0073 (flash) and
+$0 (Inkling). The drain was recording only the final assistant message's
+tokens/cost; full-session sums across all agent steps give flash-lite
+$0.0548, and Inkling-Small reconciles to ≈$0.055 against the actual Tinker
+invoice ($0.06 for 395K tokens on 2026-07-31 — implying cached input at
+≈$0.15/M, a 50% discount, not the 80% third-party blogs claim). The two
+models are at cost parity on this sweep. The drain now sums whole sessions,
+supports per-route pricing estimates for unmetered endpoints (erring high),
+and can run before/after provider balance probes.
 
 **Inkling-Small column added 2026-07-31** (run `2026-07-31T21-16-28-278Z`):
 thinkingmachines/Inkling-Small (276B MoE, 12B active) accessed through
