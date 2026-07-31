@@ -6,6 +6,7 @@ parents: []
 children:
   - studies/007-autoresearch-infrastructure/investigations/001-better-harnesses-derisk
   - studies/007-autoresearch-infrastructure/investigations/002-distributed-hello-world
+  - studies/007-autoresearch-infrastructure/investigations/003-model-complexity-floor
 related:
   - studies/003-automated-w2s-replication
   - studies/005-harness-rescue

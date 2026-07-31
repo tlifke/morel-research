@@ -1,0 +1,41 @@
+id: 001-c1-exact-output
+title: "C1 — byte-exact output script"
+summary: "Single file, one exact stdout line; the floor of the ladder."
+why: >
+  Tier 1 anchors the matrix: a model that fails here fails the harness, not
+  the task.
+claim: "Complexity floor: which model tiers clear which task tiers"
+description: >
+  Create py/c1.py. Running "python3 py/c1.py" prints exactly the single line
+  ok: 42
+  to stdout and exits 0. No other output.
+acceptance:
+  - "py/c1.py exists"
+  - "python3 py/c1.py prints exactly 'ok: 42'"
+assignee_class: small-agent
+agent_explanation: >
+  Trivial by construction; assigned small-agent because the sweep measures
+  the small-agent tier itself. The route is injected per sweep config, not
+  pinned here.
+depends_on: []
+produces:
+  - py/c1.py
+consumes: []
+human_needed: []
+gate: part3-approval
+cost_ceiling_usd: 0.05
+status: ready
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-31
+created_by: claude-fable-5
+complexity: c1
+checks:
+  - run: "python3 py/c1.py"
+    expect_stdout: "ok: 42"

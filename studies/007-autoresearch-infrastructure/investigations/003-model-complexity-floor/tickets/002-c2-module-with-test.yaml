@@ -1,0 +1,47 @@
+id: 002-c2-module-with-test
+title: "C2 — module plus its own unittest"
+summary: "Two coordinated files: a function module and a stdlib test for it."
+why: >
+  Tier 2 adds cross-file coordination: the test must import and correctly
+  exercise the module the agent just wrote.
+claim: "Complexity floor: which model tiers clear which task tiers"
+description: >
+  Create py/slug.py defining slugify(text) that lowercases, replaces runs of
+  non-alphanumeric characters with single hyphens, and strips leading and
+  trailing hyphens (e.g. "Hello, World!" -> "hello-world"). Also create
+  py/test_slug.py, a stdlib unittest module covering at least three cases
+  including the example. No third-party dependencies.
+acceptance:
+  - "py/slug.py and py/test_slug.py exist"
+  - "cd py && python3 -m unittest test_slug exits 0"
+  - "slugify('Hello, World!') returns 'hello-world'"
+assignee_class: small-agent
+agent_explanation: >
+  Small, self-contained, but requires the module and test to agree; standard
+  tier-2 probe. Route injected per sweep config.
+depends_on: []
+produces:
+  - py/slug.py
+  - py/test_slug.py
+consumes: []
+human_needed: []
+gate: part3-approval
+cost_ceiling_usd: 0.05
+status: ready
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-31
+created_by: claude-fable-5
+complexity: c2
+checks:
+  - run: "cd py && python3 -m unittest test_slug"
+  - run: "cd py && python3 -c \"from slug import slugify; print(slugify('Hello, World!'))\""
+    expect_stdout: "hello-world"
+  - run: "cd py && python3 -c \"from slug import slugify; print(slugify('  --A  B--  '))\""
+    expect_stdout: "a-b"

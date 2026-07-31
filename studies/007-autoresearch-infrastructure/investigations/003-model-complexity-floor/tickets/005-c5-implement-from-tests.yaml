@@ -1,0 +1,44 @@
+id: 005-c5-implement-from-tests
+title: "C5 — implement TodoList from a failing test spec"
+summary: "Write a class to satisfy six seeded tests: state, persistence, ordering."
+why: >
+  Tier 5 is implement-to-spec: the tests are the contract (sequential ids,
+  insertion order, JSON persistence across instances) and nothing else
+  describes the API.
+claim: "Complexity floor: which model tiers clear which task tiers"
+description: >
+  The repository contains py/test_todo.py, a stdlib unittest spec for a
+  TodoList class stored as a JSON list on disk. Implement py/todo.py so all
+  six tests pass: add(title) returns sequential integer ids starting at 1,
+  list_open() returns open items in insertion order, done(id) closes an
+  item, and state persists across TodoList instances pointed at the same
+  path. Do not modify py/test_todo.py.
+acceptance:
+  - "cd py && python3 -m unittest test_todo exits 0 (all six tests)"
+  - "py/test_todo.py is unchanged from main"
+assignee_class: small-agent
+agent_explanation: >
+  Multi-behavior implementation inferred from tests alone; the hardest tier
+  in this ladder. Route injected per sweep config.
+depends_on: []
+produces:
+  - py/todo.py
+consumes: []
+human_needed: []
+gate: part3-approval
+cost_ceiling_usd: 0.05
+status: ready
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-31
+created_by: claude-fable-5
+complexity: c5
+checks:
+  - run: "cd py && python3 -m unittest test_todo"
+  - run: "git diff --quiet main -- py/test_todo.py"

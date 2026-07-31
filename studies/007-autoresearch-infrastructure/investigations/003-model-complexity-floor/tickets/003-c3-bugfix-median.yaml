@@ -1,0 +1,41 @@
+id: 003-c3-bugfix-median
+title: "C3 — fix the median bug so seeded tests pass"
+summary: "Repair existing code against an existing failing test, without touching the test."
+why: >
+  Tier 3 is the first modify-existing-code tier: the agent must read seeded
+  code, localize a bug from failing tests, and fix only the implementation.
+claim: "Complexity floor: which model tiers clear which task tiers"
+description: >
+  The repository contains py/stats.py and py/test_stats.py. Two tests
+  currently fail because median() is wrong for even-length input (it must
+  return the average of the two middle values). Fix py/stats.py so all tests
+  in py/test_stats.py pass. Do not modify py/test_stats.py.
+acceptance:
+  - "cd py && python3 -m unittest test_stats exits 0"
+  - "py/test_stats.py is unchanged from main"
+assignee_class: small-agent
+agent_explanation: >
+  Classic localized bugfix with an executable oracle; the canonical tier-3
+  probe. Route injected per sweep config.
+depends_on: []
+produces:
+  - py/stats.py
+consumes: []
+human_needed: []
+gate: part3-approval
+cost_ceiling_usd: 0.05
+status: ready
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-31
+created_by: claude-fable-5
+complexity: c3
+checks:
+  - run: "cd py && python3 -m unittest test_stats"
+  - run: "git diff --quiet main -- py/test_stats.py"

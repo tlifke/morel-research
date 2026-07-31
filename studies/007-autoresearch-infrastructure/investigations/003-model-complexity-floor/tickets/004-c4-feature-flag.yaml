@@ -1,0 +1,43 @@
+id: 004-c4-feature-flag
+title: "C4 — add a --lines flag to the counter CLI"
+summary: "Extend seeded code with a new behavior while preserving the old one."
+why: >
+  Tier 4 tests additive feature work on existing code: new flag, old default
+  behavior intact, both verified.
+claim: "Complexity floor: which model tiers clear which task tiers"
+description: >
+  The repository contains py/counter.py, a CLI that prints the word count of
+  a file. Add support for a --lines flag given before the path that prints
+  the line count instead. Without the flag, behavior must stay exactly as
+  before (word count). Output is the bare number in both modes.
+acceptance:
+  - "python3 py/counter.py <file> still prints the word count"
+  - "python3 py/counter.py --lines <file> prints the line count"
+assignee_class: small-agent
+agent_explanation: >
+  Small feature extension with backward-compatibility constraint; tier-4
+  probe. Route injected per sweep config.
+depends_on: []
+produces:
+  - py/counter.py
+consumes: []
+human_needed: []
+gate: part3-approval
+cost_ceiling_usd: 0.05
+status: ready
+provenance:
+  executed_by: null
+  started: null
+  finished: null
+  cost_spent_usd: null
+  artifacts: []
+  verdict: null
+related: []
+created: 2026-07-31
+created_by: claude-fable-5
+complexity: c4
+checks:
+  - run: "printf 'a b\\nc d e\\n' > /tmp/drain-c4.txt && python3 py/counter.py /tmp/drain-c4.txt"
+    expect_stdout: "5"
+  - run: "printf 'a b\\nc d e\\n' > /tmp/drain-c4.txt && python3 py/counter.py --lines /tmp/drain-c4.txt"
+    expect_stdout: "2"
