@@ -1,12 +1,13 @@
 # SAMPLE / FIXTURE DATA for the gold_audit record type.
-# Six real CUAD gold spans drawn by scripts/sample_gold.py (seed 20260815, n=6,
+# Real CUAD gold spans drawn by scripts/sample_gold.py (seed 20260815, n=6,
 # context 400) purely so the app and its tests have something to run against.
-# This is NOT the audit sample; draw that with sample_gold.py at the real n.
+# Includes the duplicate census records, which are an exhaustive enumeration
+# and NOT part of the random draw. This is NOT the audit sample.
 # Gold spans from CUAD v1, The Atticus Project, CC BY 4.0.
 sampling:
-  sampler_version: gold-audit-sampler-v1
+  sampler_version: gold-audit-sampler-v3
   seed: 20260815
-  drawn_at: '2026-08-15T16:50:12+00:00'
+  drawn_at: '2026-08-15T18:03:58+00:00'
   splits:
   - dev
   - holdout
@@ -15,7 +16,7 @@ sampling:
     holdout: 8a6b7e0614c1b790
   context_chars: 400
   requested_n: 6
-  drawn_n: 6
+  drawn_n: 10
   population_n: 1288
   categories:
   - Agreement Date
@@ -56,6 +57,23 @@ sampling:
     Volume Restriction: 41
     Most Favored Nation: 7
     Source Code Escrow: 12
+  duplicate_search:
+    enabled: true
+    scope: all 510 CUAD contracts, including ft_train
+    method: exact whitespace-normalized passage match of the gold span in another contract; counterparts
+      ranked by document containment over 8-gram sketches; a passage shorter than 60 normalized characters
+      is not searched
+    min_match_chars: 60
+    n_records_with_counterpart: 4
+    n_records_searched: 9
+  draws:
+    random: 6
+    duplicate_census: 4
+    census_definition: 'every gold span in the sampled splits whose passage appears verbatim in another
+      contract where the same category is not_annotated or marked_absent. This is an exhaustive census
+      of candidates for inconsistent_across_duplicates, NOT a random draw: label disagreement is ~0.3%
+      of spans, so a random sample would contain none. Census records must be reported separately and
+      must never enter the random sample''s defect rate.'
   attribution: Gold spans from the Contract Understanding Atticus Dataset (CUAD) v1, The Atticus Project,
     licensed CC BY 4.0.
 records:
@@ -79,11 +97,16 @@ records:
     of manufacturin'
   siblings: []
   overlaps: []
+  duplicate_counterparts: []
+  n_contracts_with_passage: 0
+  has_counterpart: 'no'
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v1
+    sampler_version: gold-audit-sampler-v3
     stratum: Agreement Date
+    draw: random
     context_chars: 400
+    duplicate_min_match_chars: 60
   review:
     decision: null
     reviewer: null
@@ -125,11 +148,16 @@ records:
     gap_chars: 1
     text: Any attempted assignment or delegation without such consent will be void.
   overlaps: []
+  duplicate_counterparts: []
+  n_contracts_with_passage: 0
+  has_counterpart: 'no'
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v1
+    sampler_version: gold-audit-sampler-v3
     stratum: Anti-Assignment
+    draw: random
     context_chars: 400
+    duplicate_min_match_chars: 60
   review:
     decision: null
     reviewer: null
@@ -210,11 +238,16 @@ records:
       in contract, negligence or otherwise, shall in no event exceed an amount equal to the price paid
       for the Services out of which the claim arose.
   overlaps: []
+  duplicate_counterparts: []
+  n_contracts_with_passage: 0
+  has_counterpart: 'no'
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v1
+    sampler_version: gold-audit-sampler-v3
     stratum: Cap On Liability
+    draw: random
     context_chars: 400
+    duplicate_min_match_chars: 60
   review:
     decision: null
     reviewer: null
@@ -300,11 +333,16 @@ records:
       in accordance with Section 5.3, under the Harpoon Patents, the Harpoon Know-How, and Harpoon's interests
       in the Joint Patents and the Joint Know- How, to Develop and Manufacture the Licensed Compounds
       and Licensed Products solely to the extent necessary for AbbVie to perform [***].
+  duplicate_counterparts: []
+  n_contracts_with_passage: 0
+  has_counterpart: 'no'
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v1
+    sampler_version: gold-audit-sampler-v3
     stratum: Exclusivity
+    draw: random
     context_chars: 400
+    duplicate_min_match_chars: 60
   review:
     decision: null
     reviewer: null
@@ -352,11 +390,16 @@ records:
       is not successful or (iii) on the effective date of the resignation or  removal of the Remarketing
       Agent and the appointment of a new Remarketing Agent.
   overlaps: []
+  duplicate_counterparts: []
+  n_contracts_with_passage: 0
+  has_counterpart: 'no'
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v1
+    sampler_version: gold-audit-sampler-v3
     stratum: Expiration Date
+    draw: random
     context_chars: 400
+    duplicate_min_match_chars: 60
   review:
     decision: null
     reviewer: null
@@ -400,11 +443,297 @@ records:
     a reasonab'
   siblings: []
   overlaps: []
+  duplicate_counterparts: []
+  n_contracts_with_passage: 0
+  has_counterpart: 'no'
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v1
+    sampler_version: gold-audit-sampler-v3
     stratum: Governing Law
+    draw: random
     context_chars: 400
+    duplicate_min_match_chars: 60
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: dev/ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)/Exclusivity/0
+  contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+  title: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+  split: dev
+  category: Exclusivity
+  span_index: 0
+  n_spans_in_category: 1
+  start: 8854
+  end: 9244
+  n_chars: 390
+  offsets: 8854-9244
+  span_text: During the term of this Agreement, Consultant will not, directly or indirectly (whether for
+    compensation or without compensation) engage in or provide consulting services, or enter into any
+    agreement either written or oral, that would present a material conflict with any of the provisions
+    of this Agreement, or would preclude Consultant from complying with the terms and conditions hereof.
+  context_before: ' represents as follows:
+
+
+    (a) Consultant is not subject to any other agreement that Consultant will violate by signing this
+    Agreement;
+
+
+    (b) Consultant has and shall continue to have the knowledge, experience, qualifications and required
+    skill to perform, and shall perform, the Services in a professional manner;
+
+
+    (c) Consultant to perform the Services in accordance with all Applicable Law; and
+
+
+    (d) '
+  context_after: ' If during the term of this Agreement any situation or circumstance arises that might
+    reasonably be expected to present a conflict of interest, or if Consultant might be unable to render
+    Services or otherwise participate in such work without risk of breaching an obligation of confidentiality
+    to another party, Consultant will promptly advise the Company''s General Counsel of the situation
+    and Compan'
+  siblings: []
+  overlaps: []
+  duplicate_counterparts:
+  - contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT
+    split: ft_train
+    doc_containment: 1.0
+    twin_label: marked_absent
+    offsets: 8854-9244
+    twin_span_offsets: null
+    passage: During the term of this Agreement, Consultant will not, directly or indirectly (whether for
+      compensation or without compensation) engage in or provide consulting services, or enter into any
+      agreement either written or oral, that would present a material conflict with any of the provisions
+      of this Agreement, or would preclude Consultant from complying with the terms and conditions hereof.
+  n_contracts_with_passage: 1
+  has_counterpart: 'yes'
+  sample:
+    seed: 20260815
+    sampler_version: gold-audit-sampler-v3
+    stratum: duplicate_census
+    draw: duplicate_census
+    context_chars: 400
+    duplicate_min_match_chars: 60
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: holdout/GOOSEHEADINSURANCE,INC_04_02_2018-EX-10.6-Franchise Agreement/Minimum Commitment/3
+  contract_id: GOOSEHEADINSURANCE,INC_04_02_2018-EX-10.6-Franchise Agreement
+  title: GOOSEHEADINSURANCE,INC_04_02_2018-EX-10.6-Franchise Agreement
+  split: holdout
+  category: Minimum Commitment
+  span_index: 3
+  n_spans_in_category: 6
+  start: 38887
+  end: 38959
+  n_chars: 72
+  offsets: 38887-38959
+  span_text: written approval for the Operating Principal to hold a smaller interest.
+  context_before: 'NING 6.1 Operating Principal and Management. 6.1.1 If you are a corporation, partnership
+    or LLC, you must have an individual owner serve as your "Operating Principal." The Operating Principal
+    must supervise the operation of the Franchised Business and must own at least five percent (5%) of
+    the voting and ownership interests in the franchisee entity, unless you obtain our prior
+
+
+    Page 11 of 80
+
+
+
+
+
+
+    '
+  context_after: ' The Operating Principal must have qualifications reasonably acceptable to us to serve
+    in this capacity, must have authority over all business decisions related to the Franchised Business,
+    must have the power to bind you in all dealings with us, and must have signed and delivered to us
+    the Guarantee, Indemnification, and Acknowledgement attached to this Agreement as Exhibit B. You may
+    not change t'
+  siblings:
+  - span_index: 0
+    offsets: 22534-22887
+    n_chars: 353
+    gap_chars: 16000
+    text: 'The term "Minimum Royalty" means a minimum monthly Royalty Fee payment, beginning six (6) months
+      after the Commencement Date, in the following amounts: Number of Months following the Commencement
+      Date Amount of Monthly Minimum Royalty
+
+
+      Six (6) to Eighteen (18) Six Hundred Dollars ($600) Nineteen (19) and for the remainder of the term
+      of this Agreement'
+  - span_index: 1
+    offsets: 23908-24355
+    n_chars: 447
+    gap_chars: 14532
+    text: 'The Royalty Fee will be the following amounts: (a) the greater of (i) twenty percent (20%)
+      of Gross Revenues on insurance policies in their initial term, or (ii) the Minimum Royalty (defined
+      below); and (b) fifty percent (50%) of Gross Revenues on policies in their renewal terms and policies
+      written for existing customers on the same risk profile within a one-year period of the cancellation
+      of their existing policy (also known as "re-writes").'
+  - span_index: 2
+    offsets: 38655-38866
+    n_chars: 211
+    gap_chars: 21
+    text: The Operating Principal must supervise the operation of the Franchised Business and must own
+      at least five percent (5%) of the voting and ownership interests in the franchisee entity, unless
+      you obtain our prior
+  - span_index: 4
+    offsets: 67333-68068
+    n_chars: 735
+    gap_chars: 28374
+    text: 'If your performance under such standards fails to meet or exceed the performance of the lowest
+      twenty-five percent (25%) of all franchised Goosehead Businesses operating under the System, as
+      we determine, in any one (1) fiscal quarter of any fiscal year, we may elect to: (a) require you
+      and such other of your employees, as we determine, to attend and complete to our satisfaction such
+      additional training programs that we deem necessary; or (b) provide such on-site assistance and
+      consultation as we deem necessary. In the event we provide any such additional training, assistance
+      or consultation, you will be responsible for all costs and expenses for that training assistance
+      or consultation, which may include a fee payable to us.'
+  - span_index: 5
+    offsets: 68069-68471
+    n_chars: 402
+    gap_chars: 29110
+    text: If you fail to improve your performance under such standards by at least ten percent (10%),
+      and fail to meet or exceed the performance of the lowest twenty-five percent (25%) of all franchised
+      Goosehead Businesses operating under the System in each subsequent fiscal quarter we may, in our
+      discretion, place your agency in default status, which may result in termination pursuant to Section
+      17.3 below.
+  overlaps: []
+  duplicate_counterparts:
+  - contract_id: PfHospitalityGroupInc_20150923_10-12G_EX-10.1_9266710_EX-10.1_Franchise Agreement1
+    split: ft_train
+    doc_containment: 0.022
+    twin_label: not_annotated
+    offsets: 57059-57131
+    twin_span_offsets: null
+    passage: written approval for the Operating Principal to hold a smaller interest.
+  n_contracts_with_passage: 1
+  has_counterpart: 'yes'
+  sample:
+    seed: 20260815
+    sampler_version: gold-audit-sampler-v3
+    stratum: duplicate_census
+    draw: duplicate_census
+    context_chars: 400
+    duplicate_min_match_chars: 60
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: holdout/IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement/Governing Law/1
+  contract_id: IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement
+  title: IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement
+  split: holdout
+  category: Governing Law
+  span_index: 1
+  n_spans_in_category: 2
+  start: 27609
+  end: 27752
+  n_chars: 143
+  offsets: 27609-27752
+  span_text: The merits of the dispute shall be resolved in accordance with the laws of the State of New
+    York, without reference to its choice of law rules.
+  context_before: ' York, without giving effect to any conflicts of laws principles.   (b) Dispute Resolution.
+    Any dispute, controversy and/or difference which may arise out of or in connection with or in relation
+    to this Agreement, shall be solely and finally settled by binding arbitration pursuant to then-current
+    rules of the International Chamber of Commerce. Such arbitration shall be held in New York, New York. '
+  context_after: ' The tribunal shall consist of three arbitrators, each of whom shall be knowledgeable
+    in the subject matter hereof. The arbitration shall be conducted in the English language, and all
+    documents shall be submitted in English or be accompanied by a certified English translation. The
+    arbitrators will provide a written explanation to the parties of any arbitration award. The award
+    thereof shall be fin'
+  siblings:
+  - span_index: 0
+    offsets: 27096-27274
+    n_chars: 178
+    gap_chars: 335
+    text: This Agreement shall be governed by and construed in all respects in accordance with the laws
+      of the State of New York, without giving effect to any conflicts of laws principles.
+  overlaps: []
+  duplicate_counterparts:
+  - contract_id: IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement
+    split: ft_train
+    doc_containment: 0.745
+    twin_label: not_annotated
+    offsets: 33266-33409
+    twin_span_offsets: null
+    passage: The merits of the dispute shall be resolved in accordance with the laws of the State of New
+      York, without reference to its choice of law rules.
+  n_contracts_with_passage: 1
+  has_counterpart: 'yes'
+  sample:
+    seed: 20260815
+    sampler_version: gold-audit-sampler-v3
+    stratum: duplicate_census
+    draw: duplicate_census
+    context_chars: 400
+    duplicate_min_match_chars: 60
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: holdout/IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement/Revenue/Profit
+    Sharing/1
+  contract_id: IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement
+  title: IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement
+  split: holdout
+  category: Revenue/Profit Sharing
+  span_index: 1
+  n_spans_in_category: 3
+  start: 14776
+  end: 14941
+  n_chars: 165
+  offsets: 14776-14941
+  span_text: Such Advertising shall be determined by Licensee in its sole discretion and Licensee shall
+    be entitled to retain all revenues resulting from the sale of Advertising.
+  context_before: ' parties. The Reports and all information contained in the Reports shall be considered
+    Confidential Information of Licensee, and all right, title and interest in and to such Reports and
+    information shall be owned by Licensee.   9. Advertising.   The parties acknowledge and agree that
+    Licensee''s services may contain advertising, promotions and/or sponsorship material (collectively,
+    "Advertising"). '
+  context_after: '   10. Consideration.   No royalty or fees of any kind shall be owed by Licensee under
+    this Agreement. The consideration for the licenses granted by Licensor to Licensee under this Agreement
+    is the issuance of the IP Common Shares as defined in the Securities Purchase Agreement, dated as
+    of November 23, 2015, by and among the Licensee and the Licensor (the "Share Consideration").   11.
+    Use of Lice'
+  siblings:
+  - span_index: 0
+    offsets: 7212-7410
+    n_chars: 198
+    gap_chars: 7366
+    text: For content listed in Schedule A6 of Schedule A, Licensor will only grant Licensee certain profit
+      participation rights, for certain durations, as detailed and set forth in Schedule A6 of Schedule
+      A.
+  - span_index: 2
+    offsets: 15044-15323
+    n_chars: 279
+    gap_chars: 103
+    text: The consideration for the licenses granted by Licensor to Licensee under this Agreement is the
+      issuance of the IP Common Shares as defined in the Securities Purchase Agreement, dated as of November
+      23, 2015, by and among the Licensee and the Licensor (the "Share Consideration").
+  overlaps: []
+  duplicate_counterparts:
+  - contract_id: IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement
+    split: ft_train
+    doc_containment: 0.745
+    twin_label: not_annotated
+    offsets: 20427-20592
+    twin_span_offsets: null
+    passage: Such Advertising shall be determined by Licensee in its sole discretion and Licensee shall
+      be entitled to retain all revenues resulting from the sale of Advertising.
+  n_contracts_with_passage: 1
+  has_counterpart: 'yes'
+  sample:
+    seed: 20260815
+    sampler_version: gold-audit-sampler-v3
+    stratum: duplicate_census
+    draw: duplicate_census
+    context_chars: 400
+    duplicate_min_match_chars: 60
   review:
     decision: null
     reviewer: null

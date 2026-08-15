@@ -37,6 +37,36 @@ checker sketch, for Tyler to curate into the locked scored set.
    labels in the train split and read off the implicit convention.
    Model-assisted, under the protocol below.
 
+## Pilot scope (2026-08-15)
+
+The full set is **not** derived in one pass. The pipeline runs end-to-end on
+**five categories** first, targeting ~5–8 curated principles:
+
+- **Minimum Commitment, Volume Restriction, Revenue/Profit Sharing** — the
+  Savelka confusable trio, where the boundary is a convention rather than a
+  lexical cue.
+- **Agreement Date, Governing Law** — structural, chosen so the pilot exercises
+  principle *types* the trio cannot: Agreement Date is where absence rulings
+  live (CUAD marks a contract gold-absent when the signing date is literally
+  blank — "signed on , in Hong Kong"), Governing Law forces a choice-of-law vs
+  venue/jurisdiction disambiguation.
+
+The pilot answers what would otherwise only surface at scale: what fraction of
+model proposals survive curation, whether checker sketches are actually
+implementable or whether half the set dies in WS3, whether the guidelines
+contain the edge-case material the design assumes, and how long curation takes
+per principle. The WS3 three-contract labeling-cost pilot runs alongside, since
+labeling cost may argue for a smaller final set — much cheaper to learn at 6
+principles than at 22.
+
+Pilot artifacts live under `principles/pilot/`; the curated full set is written
+later to `principles/locked-YYYY-MM-DD.yaml`.
+
+**Human curation is a gate, not a source.** Every candidate from every source
+passes through Tyler's accept / edit / reject / defer with a required
+rationale. `authored` remains a valid provenance if he writes principles
+neither source produced, but the default path is curation over proposals.
+
 ## Model-assisted proposal protocol
 
 This is a methods-section artifact. Every number and name here gets reported.

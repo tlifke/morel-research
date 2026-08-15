@@ -516,6 +516,8 @@ document.addEventListener("keydown",(ev)=>{
   if(inField)return;
   const nav={j:()=>select(S.sel+1),k:()=>select(S.sel-1),u:nextUnreviewed,
     i:()=>$("rationale").focus(),"/":()=>$("fText").focus()};
+  const clash=schema().decisions.filter(d=>d.hotkey in nav).map(d=>d.name);
+  if(clash.length)console.warn("decision hotkey clashes with navigation:",clash);
   schema().decisions.forEach(d=>{if(d.hotkey&&!(d.hotkey in nav))nav[d.hotkey]=()=>setDecision(d.name);});
   const fn=nav[ev.key];
   if(fn){ev.preventDefault();fn();}

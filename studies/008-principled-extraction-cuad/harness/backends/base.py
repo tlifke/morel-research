@@ -27,6 +27,7 @@ class SamplingResult:
     n_completion_tokens: Optional[int]
     latency_ms: int
     finish_reason: Optional[str] = None
+    request_params: Optional[dict[str, Any]] = None
 
 
 class Backend(ABC):
@@ -34,7 +35,8 @@ class Backend(ABC):
     context_limit: int
     structured_output: StructuredOutputMechanism
     token_count_method: TokenCountMethod = "heuristic"
-    supports_seed: bool = True
+    accepts_seed_param: bool = True
+    seed_honored: bool = True
     tokenizer_id: Optional[str] = None
     notes: dict[str, Any] = field(default_factory=dict)
 
@@ -72,10 +74,15 @@ class Backend(ABC):
         ...
 
     def describe(self) -> dict[str, Any]:
-        return {
+        described = {
             "model": self.model_id,
             "context_limit": self.context_limit,
             "structured_output": self.structured_output,
             "token_count_method": self.token_count_method,
             "tokenizer_id": self.tokenizer_id,
+            "seed_honored": self.seed_honored,
         }
+        separate_reasoning = getattr(self, "separate_reasoning", None)
+        if separate_reasoning is not None:
+            described["separate_reasoning"] = separate_reasoning
+        return described

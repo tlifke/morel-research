@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 BASE_URL = "https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1"
+ANTHROPIC_URL = "https://tinker.thinkingmachines.dev/services/tinker-prod/anthropic/api/v1/messages"
 USER_AGENT = "curl/8.7.1"
 
 MODELS = ["Qwen/Qwen3.5-4B", "Qwen/Qwen3.5-9B", "thinkingmachines/Inkling-Small"]
@@ -117,29 +118,63 @@ IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective
 """
 
 CUAD_SYSTEM = (
-    "You are a contract analyst. You answer with a single JSON object and nothing else."
+    "You are a careful analyst. You read a document and produce a single JSON "
+    "object that answers the task exactly as specified. You never add commentary "
+    "outside the JSON object."
 )
+
+CUAD_TARGETS = {
+    "governing_law": "the state/country whose law governs the contract",
+    "expiration_date": "the date on which the contract's initial term expires",
+    "renewal_term": "the length of any renewal term",
+    "notice_period_to_terminate_renewal": "the notice period required to avoid renewal",
+    "exclusivity": "an exclusive dealing or exclusive appointment obligation",
+    "non_compete": "a restriction on competing with the counterparty",
+    "change_of_control": "a right triggered by a change of control of a party",
+    "anti_assignment": "a restriction on assigning the contract",
+    "cap_on_liability": "a cap or limitation on a party's aggregate liability",
+    "insurance": "an obligation to maintain insurance",
+    "audit_rights": "a right to audit the counterparty's books or records",
+    "most_favored_nation": "a most-favored-nation or best-pricing obligation",
+}
 
 
 def cuad_prompt(invite_prose: bool) -> str:
-    cats = "\n".join(f"- {c}" for c in CUAD_CATEGORIES)
-    tail = (
-        "Explain your reasoning in prose first, then give the JSON inside a "
-        "```json markdown code block."
-        if invite_prose
-        else "Return only the JSON object."
-    )
-    return (
-        f"CONTRACT:\n{CUAD_CONTRACT}\n\n"
-        f"For EACH of the following 12 categories, decide whether the contract "
-        f"contains a clause of that type.\n{cats}\n\n"
-        f"Return a JSON object with keys 'extractions' and 'absent'. Every "
-        f"category present in the contract goes in 'extractions' with the verbatim "
-        f"span(s); every category not present goes in 'absent'. Each object also "
-        f"carries 'principles_cited' (a list of strings, may be empty). "
-        f"Each of the 12 categories must appear exactly once across the two lists.\n\n"
-        f"{tail}"
-    )
+    lines = [
+        "TASK DEFINITION",
+        "Read the contract and decide, for each target category, whether the "
+        "contract contains a clause of that type.",
+        "",
+        "Decision kinds: extraction, absence",
+        "",
+        "Targets (you must make exactly one decision per target):",
+    ]
+    for t, d in CUAD_TARGETS.items():
+        lines.append(f"- {t}: {d}")
+    lines += [
+        "",
+        "The `principles_cited` field must be left as an empty list for every "
+        "decision. Do not populate it.",
+        "",
+        "OUTPUT FORMAT",
+        "Reply with one JSON object and nothing else. It must validate against "
+        "this JSON Schema:",
+        json.dumps(CUAD_SCHEMA, indent=2, sort_keys=True),
+        "",
+        "DOCUMENT",
+        "Title: Distribution Agreement",
+        "Id: probe_0001",
+        "---",
+        CUAD_CONTRACT,
+        "---",
+    ]
+    if invite_prose:
+        lines += [
+            "",
+            "Explain your reasoning in prose first, then give the JSON inside a "
+            "```json markdown code block.",
+        ]
+    return "\n".join(lines)
 
 
 def post(payload: dict[str, Any], timeout: int = 600) -> dict[str, Any]:
@@ -192,6 +227,79 @@ def get(path: str) -> dict[str, Any]:
         return {"http_status": exc.code, "error_body": exc.read().decode()[:4000]}
     except Exception as exc:
         return {"http_status": None, "transport_error": repr(exc)[:500]}
+
+
+def post_anthropic(payload: dict[str, Any], timeout: int = 600) -> dict[str, Any]:
+    key = os.environ.get("TINKER_API_KEY")
+    if not key:
+        raise SystemExit("TINKER_API_KEY is not set")
+    req = urllib.request.Request(
+        ANTHROPIC_URL,
+        data=json.dumps(payload).encode(),
+        headers={
+            "x-api-key": key,
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json",
+            "User-Agent": USER_AGENT,
+        },
+    )
+    t0 = time.time()
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return {
+                "http_status": resp.status,
+                "latency_ms": int((time.time() - t0) * 1000),
+                "body": json.loads(resp.read().decode()),
+            }
+    except urllib.error.HTTPError as exc:
+        return {"http_status": exc.code, "error_body": exc.read().decode()[:4000]}
+    except Exception as exc:
+        return {"http_status": None, "transport_error": repr(exc)[:800]}
+
+
+def phase_anthropic(args) -> dict[str, Any]:
+    trials = []
+    for model in args.models:
+        for tc_name, tc in (
+            ("forced_named_tool", {"type": "tool", "name": "report"}),
+            ("any_tool", {"type": "any"}),
+        ):
+            for i in range(args.n):
+                payload = {
+                    "model": model,
+                    "max_tokens": args.max_tokens,
+                    "messages": [{"role": "user", "content": ADVERSARIAL_PROMPT}],
+                    "tools": [
+                        {
+                            "name": "report",
+                            "description": "Report the structured answer.",
+                            "input_schema": SMALL_SCHEMA,
+                        }
+                    ],
+                    "tool_choice": tc,
+                }
+                resp = post_anthropic(payload)
+                body = resp.get("body") or {}
+                blocks = body.get("content") or []
+                tool_use = [b for b in blocks if b.get("type") == "tool_use"]
+                text = "".join(b.get("text") or "" for b in blocks if b.get("type") == "text")
+                trials.append(
+                    {
+                        "model": model,
+                        "variant": tc_name,
+                        "i": i,
+                        "request": payload,
+                        "http_status": resp.get("http_status"),
+                        "stop_reason": body.get("stop_reason"),
+                        "block_types": [b.get("type") for b in blocks],
+                        "emitted_tool_use": bool(tool_use),
+                        "tool_input": tool_use[0].get("input") if tool_use else None,
+                        "tool_input_valid": small_schema_check(tool_use[0].get("input"))[0] if tool_use else False,
+                        "text": text,
+                        "error_body": resp.get("error_body"),
+                    }
+                )
+    return {"trials": trials}
 
 
 def variants(schema: dict[str, Any]) -> list[tuple[str, str, dict[str, Any]]]:
@@ -542,7 +650,7 @@ def phase_rates(args) -> dict[str, Any]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--phase", required=True, choices=["config", "stress", "rates"])
+    ap.add_argument("--phase", required=True, choices=["config", "stress", "rates", "anthropic"])
     ap.add_argument("--models", nargs="*", default=MODELS)
     ap.add_argument("--variants", nargs="*", default=["json_object"])
     ap.add_argument("--n", type=int, default=10)
@@ -556,8 +664,10 @@ def main() -> int:
         data = phase_config(args)
     elif args.phase == "stress":
         data = phase_stress(args)
-    else:
+    elif args.phase == "rates":
         data = phase_rates(args)
+    else:
+        data = phase_anthropic(args)
 
     data["meta"] = {
         "phase": args.phase,

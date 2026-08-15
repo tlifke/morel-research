@@ -1,0 +1,357 @@
+# PILOT candidate principle set — guidelines-derived arm. AWAITING CURATION (G2).
+# Nothing in this file is locked. Every `review` block is empty for Tyler.
+#
+# SOURCE DOCUMENT
+#   "Contract Understanding Atticus Dataset (CUAD) (Commercial Contracts)
+#   Labeling Handbook", The Atticus Project, as of 2021-09-09.
+#   PDF internal title: "... Labeling Handbook (Public Version)(personal use)".
+#   95 pages. Obtained 2026-08-15 by purchase from
+#   https://www.atticusprojectai.org/labeling-handbook/ (emailed as PDF).
+#   Local copy: studies/008-principled-extraction-cuad/assets/CUAD Labeling Handbook.pdf
+#   Secondary source, used only where noted: the CUAD v1 Datasheet
+#   (CC BY 4.0, shipped with the dataset release).
+#
+# LICENSE WARNING — READ BEFORE ANY OF THIS REACHES A PROMPT
+#   The Handbook is NOT under the CC BY 4.0 release that covers CUAD itself
+#   (D-8). It carries "(c) 2021 by The Atticus Project" on every page, is
+#   distributed for personal use, grants no redistribution or derivative-works
+#   license, and forbids representing The Atticus Project as endorsing your use.
+#   Consequently:
+#     - every `statement`, `trigger_guidance` and `evidence` field below is a
+#       PARAPHRASE. No Handbook prose is reproduced verbatim.
+#     - the only literal tokens carried over are data markers ("<omitted>") and
+#       category names, which are not expressive prose.
+#     - the Handbook PDF in assets/ should probably be gitignored. Tyler's call.
+#   The CUAD Datasheet and the Atticus Labels list ARE CC BY 4.0 and may be
+#   quoted verbatim with attribution.
+#
+# SCOPE — five-category pilot only:
+#   Minimum Commitment, Volume Restriction, Revenue/Profit Sharing,
+#   Agreement Date, Governing Law.
+#
+# COVERAGE GAP, REPORTABLE
+#   The Handbook has no section for Minimum Commitment and none for Volume
+#   Restriction. Its Chapter 2 covers 34 of the 41 Atticus Labels; those two
+#   (and Price Restriction, Uncapped Liability, Warranty Duration,
+#   Affiliate License-Licensee, Unlimited/All-You-Can-Eat License) are absent.
+#   Two thirds of the Savelka confusable trio therefore have NO
+#   guideline-derived category-specific principle available. They are governed
+#   here only by the globally-scoped records (g01-g03). Any trio disambiguation
+#   must come from the data-mined arm or from a `savelka_confusion` record.
+#
+# `provenance: atticus_guidelines` is used for every record so the file loads
+# against the documented enum. Derivation was Claude Opus 5 reading the
+# Handbook; no contrastive pairs, no gold annotations, and no CUAD training
+# data were consulted, so this arm stays independent of the data-mined arm.
+
+- id: g01
+  statement: >-
+    Each extracted span is one complete sentence, period to period, and where
+    the responsive text is a numbered subsection it includes the lead-in clause
+    needed to make that subsection read as a complete sentence.
+  trigger_guidance: >-
+    Whenever choosing span boundaries for any category whose decision is
+    yes/no-shaped (all three of the confusable trio); does not govern the
+    date and party categories, which the Handbook exempts.
+  type: constraint
+  scope: []
+  provenance: atticus_guidelines
+  evidence:
+    - "Handbook ch.1, 'Label one sentence at a time' (p.4) — sentence defined
+       as period-to-period; worked example 19.3 / 19.3.1 shows a subsection
+       with its own terminal period is not a sentence on its own"
+    - "CUAD Datasheet II-F — annotators select full sentences for yes/no
+       categories, instructed 'from period to period' (CC BY 4.0, quotable)"
+  checker_sketch: >-
+    Applicability: decision is an extraction, target is a yes/no-answer
+    category (i.e. not Agreement Date / Effective Date / Expiration Date /
+    Parties / Document Name / Governing Law-answer categories), and gold has at
+    least one span. Compliance: locate each predicted span in the contract by
+    exact-then-normalised match (the matcher already built for verbatim
+    fidelity); a span passes if its start offset is preceded only by
+    whitespace, a terminal punctuation mark, or a section-number token, and its
+    end offset lands on terminal punctuation or a semicolon. Spans that cannot
+    be located fail this check and are also already counted as not-found by the
+    verbatim metric — report the overlap so the two are not double-read.
+    Feasible with offsets we already compute. The section-number allowance is
+    the fuzzy part.
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: g02
+  statement: >-
+    When the responsive material is not contiguous in the contract — a lead-in
+    plus one of several subsections, a clause plus the definition it needs, or
+    two clauses that must be read together — the span concatenates only the
+    responsive fragments, in document order, separated by the marker
+    "<omitted>", and drops the intervening non-responsive text.
+  trigger_guidance: >-
+    Consider whenever the responsive text sits inside an enumerated list, or
+    depends on a defined term or on a date stated elsewhere in the contract.
+  type: procedure
+  scope: []
+  provenance: atticus_guidelines
+  evidence:
+    - "Handbook ch.1, subsection rule (p.5) — worked example labels 14.2 and
+       14.2.10 with the marker between them, dropping 14.2.1-14.2.9"
+    - "Handbook ch.1, definitions rule (p.6) — a needed definition is appended
+       after the marker; self-evident defined terms are not labelled"
+    - "CUAD Datasheet II-F — same convention, described as manual deletion of
+       the non-responsive portion (CC BY 4.0, quotable)"
+  checker_sketch: >-
+    Applicability: the gold span set for this decision contains at least one
+    span containing the literal marker "<omitted>". Compliance: the predicted
+    span set for that decision contains at least one span with the marker, AND
+    no predicted span is a contiguous substring of the contract that spans both
+    fragments (which would be the "just take the whole block" failure). Both
+    halves are pure string work over data we already hold. Cheap and
+    unambiguous. Caveat: the marker must appear in the prompt's task
+    definition or no model will ever emit it, which makes this principle a
+    partial test of instruction-following rather than of legal judgement.
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: g03
+  statement: >-
+    A sentence responsive to more than one category is extracted under every
+    category it is responsive to; assigning it to one category does not remove
+    it from the others.
+  trigger_guidance: >-
+    Consider when a single passage does two jobs at once — e.g. a purchase
+    obligation that also fixes a percentage payment, or a payment schedule that
+    also sets a volume threshold.
+  type: procedure
+  scope: []
+  provenance: atticus_guidelines
+  evidence:
+    - "Handbook ch.1, 'If one sentence is responsive to multiple labels' (p.5)
+       — label it under each"
+    - "CUAD Datasheet II-D — categories are independent except within a Group,
+       where the same text context may serve two or more categories
+       (CC BY 4.0, quotable)"
+  checker_sketch: >-
+    Applicability: after normalisation, the same gold span text appears under
+    two or more in-scope targets for this instance; the principle is applicable
+    to each of those decisions. Compliance: the predicted span sets for those
+    targets each contain a span whose normalised token overlap with the shared
+    gold passage exceeds a fixed threshold (use the same soft-match already in
+    Level B, threshold recorded as a parameter). Fully programmatic. Rare by
+    construction, which is a feature — it is one of the deliberately rare
+    principles H4 needs.
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: g04
+  statement: >-
+    Governing Law covers only a clause designating the substantive law that
+    governs the contract as a whole; venue, forum, jurisdiction-consent and
+    arbitration clauses are not responsive, and neither is a law that governs
+    only one section of the contract.
+  trigger_guidance: >-
+    Consider whenever a dispute-resolution or miscellaneous section is being
+    read — these clauses frequently sit in the same paragraph as the true
+    governing-law sentence, or replace it entirely.
+  type: disambiguation
+  scope: ["Governing Law"]
+  provenance: atticus_guidelines
+  evidence:
+    - "Handbook, Governing Law, IS-NOT list (p.12) — venue and arbitration
+       clauses excluded, with four worked counter-examples (submission to
+       exclusive jurisdiction, inconvenient-forum waiver, People's Court
+       jurisdiction, consent to Denver courts)"
+    - "Handbook, Governing Law, IS-NOT list (p.12) — law governing the
+       interpretation of a single section is excluded; CUAD treats the label as
+       whole-contract only"
+    - "Handbook, Governing Law, IS list (p.12) — a cross-reference to another
+       agreement's governing-law provision IS responsive (span only, no answer)"
+  checker_sketch: >-
+    Applicability: the contract contains at least one sentence matching a venue
+    pattern (exclusive jurisdiction | submits? to the jurisdiction | venue |
+    inconvenient forum | arbitration | courts located in | courts situated in)
+    — computed from instance text alone, no gold needed. Compliance: no
+    predicted Governing Law span overlaps such a sentence unless that same
+    sentence also matches the governing-law pattern (govern | construed |
+    interpreted, near "law"). Sentence segmentation on contract text is the
+    only moving part and it is already needed for g01. High confidence: this is
+    the single most explicitly documented rule for any pilot category, and it
+    is exactly the confusion the study predicted.
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: g05
+  statement: >-
+    A payment obligation is Revenue/Profit Sharing only when the amount varies
+    with the counterparty's revenue, profit, sales, margin or units sold; fixed
+    amounts, milestone payments, fixed-amount tiered schedules, cost-based or
+    reimbursement payments are not, however they are labelled in the contract.
+  trigger_guidance: >-
+    Consider whenever a payment, royalty, commission or fee clause is a
+    candidate — the word "royalty" is not evidence either way, the arithmetic
+    is.
+  type: disambiguation
+  scope: ["Revenue/Profit Sharing"]
+  provenance: atticus_guidelines
+  evidence:
+    - "Handbook, Revenue/Profit Sharing, IS list (pp.87-88) — amount must be a
+       percentage of the other party's revenue/profit rather than a fixed sum;
+       percentage-of-gross-revenue tier table given as responsive; per-unit fees
+       responsive because the total fluctuates with units sold; equity/warrant
+       consideration responsive by a stated CUAD-specific extension"
+    - "Handbook, Revenue/Profit Sharing, IS-NOT list (pp.88-89) — fixed-amount
+       milestone and fixed-amount tier schedules, bare references to royalty or
+       commission, cost/reimbursement-based payments, spend caps, and a
+       percentage applied to a fixed amount are all excluded"
+  checker_sketch: >-
+    Applicability: the contract contains at least one sentence matching a
+    payment pattern (royalty | commission | revenue | profit | margin | fee)
+    together with either a percentage token or a currency amount — instance
+    only. Compliance: every predicted Revenue/Profit Sharing span either (a)
+    contains a percentage token adjacent to a revenue/profit/sales/margin term,
+    or (b) matches a per-unit pattern (per unit | for each ... sold | based on
+    the number of), or (c) matches an equity pattern (shares | warrant |
+    equity interest); a span containing only a fixed currency amount with no
+    (a)/(b)/(c) signal fails. Honest limitation: this is a lexical proxy for an
+    arithmetic property. It will misjudge the Handbook's own hardest negative —
+    a percentage applied to a fixed amount — because that string contains a
+    percentage token. Expect a small, one-directional false-pass rate; measure
+    it on a hand-scored sample of ~20 spans before this is locked, and if it
+    exceeds ~15% either narrow the rule to the percentage-of-revenue case or
+    move this principle to hand labelling.
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: g06
+  statement: >-
+    A clause must show on its own that a revenue or profit share exists to be
+    responsive; machinery that merely administers one — reporting obligations,
+    report timing, objection and audit process, dispute resolution — is not
+    Revenue/Profit Sharing.
+  trigger_guidance: >-
+    Consider when a candidate sentence is about a revenue share but describes
+    process rather than entitlement, or when the sentence only makes sense given
+    a percentage stated elsewhere.
+  type: constraint
+  scope: ["Revenue/Profit Sharing"]
+  provenance: atticus_guidelines
+  evidence:
+    - "Handbook, Revenue/Profit Sharing, IS-NOT list (p.89) — standalone-basis
+       rule, with administration, dispute resolution, reporting obligations,
+       report preparation time and audit/objection process listed as
+       non-responsive because they recur in contracts with no revenue share"
+    - "Handbook, Revenue/Profit Sharing, IS list (p.88) — the converse: a clause
+       stating that one party's compensation is based on the other's revenue IS
+       responsive even when the percentage lives in a different clause"
+    - "CUAD Datasheet III-B — the dataset labels only clauses that are
+       responsive on a standalone basis (CC BY 4.0, quotable)"
+  checker_sketch: >-
+    Applicability: the contract contains a sentence matching an administration
+    pattern (report | statement of account | within N days of the end of each |
+    audit | object | dispute) in the same sentence as a
+    revenue/profit/royalty term — instance only. Compliance: no predicted
+    Revenue/Profit Sharing span is such a sentence when it lacks the g05
+    entitlement signals (percentage-of-revenue, per-unit, equity). Programmatic
+    but a proxy; it shares g05's lexical weakness and the two should be audited
+    on the same hand-scored sample. Distinct from g05 in the error it catches:
+    g05 catches wrong-arithmetic, g06 catches right-topic-wrong-function, and
+    the H4 confusion matrix can tell them apart only if they are separate ids.
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: g07
+  statement: >-
+    Exactly one Agreement Date is extracted per contract and the span is the
+    date text alone, excluding the surrounding execution wording and excluding
+    any date appearing in a header, a footer, or a recital.
+  trigger_guidance: >-
+    Consider once the introductory paragraph has been read; the competing
+    candidates are the recital dates, the running-header date, and the two
+    signature-page dates.
+  type: constraint
+  scope: ["Agreement Date"]
+  provenance: atticus_guidelines
+  evidence:
+    - "Handbook, Agreement Date, IS list (p.7) — search order is introductory
+       paragraph, then cover page, then the later of the signature-page dates,
+       with an explicit instruction not to label both signature dates"
+    - "Handbook, Agreement Date, IS-NOT list (p.8) — the execution wording
+       (dated / as of / entered into) is excluded from the span, as are dates in
+       headers, footers, recitals and preliminary statements"
+  checker_sketch: >-
+    Applicability: the Agreement Date decision, whenever gold marks the category
+    present. Compliance, three conjunctive tests, all programmatic: (1) the
+    predicted span list has length 1; (2) the span text does not contain
+    dated / as of / entered into / made this; (3) the span's located character
+    offset does not fall inside a line matching a page-furniture pattern (page
+    number, confidential-treatment legend, SEC exhibit header) nor inside a
+    sentence beginning with WHEREAS or within a recitals block. Test (3) leans
+    on the same furniture patterns D-15 already forces us to characterise, so
+    it costs nothing extra. Note the interaction with D-15: gold spans that
+    were split around embedded furniture may make test (3) fire on a span that
+    matches gold, so report test (3) separately from (1) and (2) rather than
+    collapsing to one boolean.
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: g08
+  statement: >-
+    A partially redacted or blank agreement date is still an Agreement Date
+    extraction, recorded with the unknown components bracketed rather than ruled
+    absent; absence is claimed only when no agreement date appears in the
+    introductory paragraph, on the cover page, or on the signature page.
+  trigger_guidance: >-
+    Consider when the date position exists but the value is missing — blanks,
+    underscores, asterisks, an empty day slot, or a date phrase interrupted by a
+    redaction marker.
+  type: absence
+  scope: ["Agreement Date"]
+  provenance: atticus_guidelines
+  evidence:
+    - "Handbook, Agreement Date, IS list (p.7) — a redacted date takes the
+       bracketed answer format rather than no answer, which presupposes the span
+       is still labelled"
+    - "CUAD Datasheet II-F — redactions appear as asterisks, underscores or
+       blanks and the answers reflect them, with a worked example turning a
+       blank day into a bracketed component (CC BY 4.0, quotable)"
+  checker_sketch: >-
+    Applicability: the contract's first ~3000 characters, or its signature
+    block, contain a date-shaped construction with a missing component —
+    regexes for `this ___ day of`, `\b(19|20)\d\d\b` adjacent to `_{2,}` or
+    `\*{2,}` or `\[\s*\]`, and a bare comma or blank sitting where a date should
+    follow an execution verb. Instance-only, no gold needed. Compliance: the
+    Agreement Date decision is an Extraction rather than an AbsenceClaim.
+    Trivially computable from the decision row.
+    LOUD FLAG FOR TYLER: this principle may disagree with gold. The study plan
+    assumes CUAD marks such contracts gold-absent for Agreement Date (the
+    "signed on , in Hong Kong" case). The Handbook prescribes the opposite. If
+    both are true, then following the documented rule costs answer accuracy,
+    and compliance and correctness point in opposite directions on exactly these
+    instances. That is a real and interesting measurement — it is the
+    documentation-versus-practice divergence the two-arm design exists to find —
+    but it must be a decision Tyler makes knowingly, not a silent scoring
+    conflict. Check the sign of the disagreement on dev before locking.
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null

@@ -15,8 +15,9 @@ STUDY_SCRIPTS = STUDY_DIR / "scripts"
 sys.path.insert(0, str(STUDY_SCRIPTS))
 
 from cuad_dataset import CuadDataset
+from duplicates import MIN_MATCH_CHARS, Corpus
 
-SAMPLER_VERSION = "gold-audit-sampler-v1"
+SAMPLER_VERSION = "gold-audit-sampler-v3"
 DEFAULT_SPLITS = ("dev", "holdout")
 
 
@@ -78,7 +79,13 @@ def collect_population(dataset: CuadDataset, splits: tuple[str, ...]) -> list[di
 
 
 def build_record(
-    dataset: CuadDataset, item: dict, width: int, seed: int, stratum: str
+    dataset: CuadDataset,
+    item: dict,
+    width: int,
+    seed: int,
+    stratum: str,
+    corpus: Corpus | None = None,
+    draw: str = "random",
 ) -> dict:
     instance = dataset.get_instance(item["contract_id"])
     text = instance.text
@@ -114,6 +121,12 @@ def build_record(
                     }
                 )
 
+    counterparts, n_with_passage = ([], 0)
+    if corpus is not None:
+        counterparts, n_with_passage = corpus.find_counterparts(
+            item["contract_id"], item["category"], text[start:end]
+        )
+
     return {
         "id": f"{item['split']}/{item['contract_id']}/{item['category']}/{item['span_index']}",
         "contract_id": item["contract_id"],
@@ -131,11 +144,16 @@ def build_record(
         "context_after": after,
         "siblings": siblings,
         "overlaps": overlaps,
+        "duplicate_counterparts": counterparts,
+        "n_contracts_with_passage": n_with_passage,
+        "has_counterpart": "yes" if counterparts else "no",
         "sample": {
             "seed": seed,
             "sampler_version": SAMPLER_VERSION,
             "stratum": stratum,
+            "draw": draw,
             "context_chars": width,
+            "duplicate_min_match_chars": MIN_MATCH_CHARS,
         },
         "review": {
             "decision": None,
@@ -153,6 +171,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--splits", default=",".join(DEFAULT_SPLITS))
     parser.add_argument("--context", type=int, default=700)
     parser.add_argument("--out", default=str(APP_DIR / "audits" / "gold_audit_sample.yaml"))
+    parser.add_argument("--no-duplicates", action="store_true")
+    parser.add_argument("--no-duplicate-census", action="store_true")
     args = parser.parse_args(argv)
 
     splits = tuple(s.strip() for s in args.splits.split(",") if s.strip())
@@ -180,10 +200,34 @@ def main(argv: list[str] | None = None) -> int:
             drawn.extend(rng.sample(pool, take))
     drawn.sort(key=lambda r: (r["category"], r["split"], r["contract_id"], r["span_index"]))
 
+    corpus = None if args.no_duplicates else Corpus(dataset)
     records = [
-        build_record(dataset, item, args.context, args.seed, item["category"])
+        build_record(dataset, item, args.context, args.seed, item["category"], corpus)
         for item in drawn
     ]
+
+    census: list[dict] = []
+    if corpus is not None and not args.no_duplicate_census:
+        seen = {r["id"] for r in records}
+        for item in population:
+            instance = dataset.get_instance(item["contract_id"])
+            span_text = instance.text[item["start"]:item["end"]]
+            counterparts, _ = corpus.find_counterparts(
+                item["contract_id"], item["category"], span_text
+            )
+            if not any(
+                c["twin_label"] in ("marked_absent", "not_annotated")
+                for c in counterparts
+            ):
+                continue
+            record = build_record(
+                dataset, item, args.context, args.seed, "duplicate_census",
+                corpus, draw="duplicate_census",
+            )
+            if record["id"] in seen:
+                continue
+            census.append(record)
+        records.extend(census)
 
     split_files = {
         split: hashlib.sha256(
@@ -206,6 +250,37 @@ def main(argv: list[str] | None = None) -> int:
             "categories": list(categories),
             "allocation": {c: alloc[c] for c in categories},
             "population_by_category": {c: available[c] for c in categories},
+            "duplicate_search": {
+                "enabled": not args.no_duplicates,
+                "scope": "all 510 CUAD contracts, including ft_train",
+                "method": (
+                    "exact whitespace-normalized passage match of the gold span in "
+                    "another contract; counterparts ranked by document containment "
+                    "over 8-gram sketches; a passage shorter than "
+                    f"{MIN_MATCH_CHARS} normalized characters is not searched"
+                ),
+                "min_match_chars": MIN_MATCH_CHARS,
+                "n_records_with_counterpart": sum(
+                    1 for r in records if r["duplicate_counterparts"]
+                ),
+                "n_records_searched": sum(
+                    1 for r in records
+                    if len(" ".join(r["span_text"].split())) >= MIN_MATCH_CHARS
+                ),
+            },
+            "draws": {
+                "random": len(records) - len(census),
+                "duplicate_census": len(census),
+                "census_definition": (
+                    "every gold span in the sampled splits whose passage appears "
+                    "verbatim in another contract where the same category is "
+                    "not_annotated or marked_absent. This is an exhaustive census of "
+                    "candidates for inconsistent_across_duplicates, NOT a random "
+                    "draw: label disagreement is ~0.3% of spans, so a random sample "
+                    "would contain none. Census records must be reported separately "
+                    "and must never enter the random sample's defect rate."
+                ),
+            },
             "attribution": (
                 "Gold spans from the Contract Understanding Atticus Dataset (CUAD) v1, "
                 "The Atticus Project, licensed CC BY 4.0."

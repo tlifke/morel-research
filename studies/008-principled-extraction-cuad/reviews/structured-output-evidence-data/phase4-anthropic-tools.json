@@ -1,0 +1,1265 @@
+{
+  "trials": [
+    {
+      "model": "Qwen/Qwen3.5-4B",
+      "variant": "forced_named_tool",
+      "i": 0,
+      "request": {
+        "model": "Qwen/Qwen3.5-4B",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "tool",
+          "name": "report"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "end_turn",
+      "block_types": [
+        "thinking",
+        "text"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "Based on the contract summary provided, I can determine that this is a Distribution Agreement signed in 2019 between Acme Corp and Globex Inc. Since the document explicitly states it is \"still in force\" as of now, the status should be marked as active rather than expired or unknown. The year 2019 is clearly referenced in the contract details.\n\n```json\n{\n  \"title\": \"Distribution Agreement\",\n  \"status\": \"active\",\n  \"parties\": [\"Acme Corp\", \"Globex Inc\"],\n  \"year\": 2019\n}\n```\n\nCaveat: This report assumes the contract terms and validity period have not been reviewed or modified since its original signing date of 2019.",
+      "error_body": null
+    },
+    {
+      "model": "Qwen/Qwen3.5-4B",
+      "variant": "forced_named_tool",
+      "i": 1,
+      "request": {
+        "model": "Qwen/Qwen3.5-4B",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "tool",
+          "name": "report"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "end_turn",
+      "block_types": [
+        "thinking",
+        "text"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "Based on the provided text, the document title is explicitly identified as the Distribution Agreement, and the parties involved are listed as Acme Corp and Globex Inc. The signing year is clearly stated as 2019, and the phrase \"still in force\" designates the current status of the contract as active.\n\n```json\n{\n  \"title\": \"Distribution Agreement\",\n  \"status\": \"active\",\n  \"parties\": [\n    \"Acme Corp\",\n    \"Globex Inc\"\n  ],\n  \"year\": 2019\n}\n```\n\nNote that this classification relies solely on the summary provided and assumes the phrase \"still in force\" remains accurate.",
+      "error_body": null
+    },
+    {
+      "model": "Qwen/Qwen3.5-4B",
+      "variant": "forced_named_tool",
+      "i": 2,
+      "request": {
+        "model": "Qwen/Qwen3.5-4B",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "tool",
+          "name": "report"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "max_tokens",
+      "block_types": [
+        "thinking"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "",
+      "error_body": null
+    },
+    {
+      "model": "Qwen/Qwen3.5-4B",
+      "variant": "any_tool",
+      "i": 0,
+      "request": {
+        "model": "Qwen/Qwen3.5-4B",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "any"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "end_turn",
+      "block_types": [
+        "thinking",
+        "text"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "<tool_call>\n<function=report>\n<parameter=title>\nDistribution Agreement\n</parameter>\n<parameter=status>\nactive\n</parameter>\n<parameter=parties>\n[\"Acme Corp\", \"Globex Inc\"]\n</parameter>\n<parameter=year>\n2019\n</parameter>\n</function>\n</tool_call>",
+      "error_body": null
+    },
+    {
+      "model": "Qwen/Qwen3.5-4B",
+      "variant": "any_tool",
+      "i": 1,
+      "request": {
+        "model": "Qwen/Qwen3.5-4B",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "any"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "max_tokens",
+      "block_types": [
+        "thinking"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "",
+      "error_body": null
+    },
+    {
+      "model": "Qwen/Qwen3.5-4B",
+      "variant": "any_tool",
+      "i": 2,
+      "request": {
+        "model": "Qwen/Qwen3.5-4B",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "any"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "max_tokens",
+      "block_types": [
+        "thinking"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "",
+      "error_body": null
+    },
+    {
+      "model": "Qwen/Qwen3.5-9B",
+      "variant": "forced_named_tool",
+      "i": 0,
+      "request": {
+        "model": "Qwen/Qwen3.5-9B",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "tool",
+          "name": "report"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "end_turn",
+      "block_types": [
+        "thinking",
+        "text"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "Based on the contract summary provided, I can identify the key information: the title is \"Distribution Agreement,\" the year is 2019 when it was signed, the parties involved are \"Acme Corp\" and \"Globex Inc,\" and since the agreement states it \"is still in force,\" the status is clearly \"active.\"\n\n```json\n{\n  \"title\": \"Distribution Agreement\",\n  \"status\": \"active\",\n  \"parties\": [\"Acme Corp\", \"Globex Inc\"],\n  \"year\": 2019\n}\n```\n\nThis caveat: The provided summary does not include any potential automatic renewal clauses or termination conditions that could affect the status beyond the stated timeframe.",
+      "error_body": null
+    },
+    {
+      "model": "Qwen/Qwen3.5-9B",
+      "variant": "forced_named_tool",
+      "i": 1,
+      "request": {
+        "model": "Qwen/Qwen3.5-9B",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "tool",
+          "name": "report"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "end_turn",
+      "block_types": [
+        "thinking",
+        "text"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "Based on the provided contract summary, I can determine all required elements: the title is clearly stated as the \"Distribution Agreement,\" the status is \"active\" since it explicitly says \"still in force,\" the parties are named as \"Acme Corp\" and \"Globex Inc,\" and the year is specified as 2019 when it was signed.\n\n```json\n{\n  \"title\": \"Distribution Agreement between Acme Corp and Globex Inc\",\n  \"status\": \"active\",\n  \"parties\": [\"Acme Corp\", \"Globex Inc\"],\n  \"year\": 2019\n}\n```\n\nCaveat: This is based solely on summarized information that may not reflect the complete or current terms of the agreement.",
+      "error_body": null
+    },
+    {
+      "model": "Qwen/Qwen3.5-9B",
+      "variant": "forced_named_tool",
+      "i": 2,
+      "request": {
+        "model": "Qwen/Qwen3.5-9B",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "tool",
+          "name": "report"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "end_turn",
+      "block_types": [
+        "thinking",
+        "text"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "Based on the contract summary provided, I can identify the title as \"Distribution Agreement,\" the status as \"active\" since the agreement is described as \"still in force,\" the parties as \"Acme Corp\" and \"Globex Inc,\" and the year as 2019 when the agreement was originally signed.\n\n```json\n{\n  \"title\": \"Distribution Agreement\",\n  \"status\": \"active\",\n  \"parties\": [\"Acme Corp\", \"Globex Inc\"],\n  \"year\": 2019\n}\n```\n\nThis summary may not include amendments, renewals, or other changes to the original agreement since its signing.",
+      "error_body": null
+    },
+    {
+      "model": "Qwen/Qwen3.5-9B",
+      "variant": "any_tool",
+      "i": 0,
+      "request": {
+        "model": "Qwen/Qwen3.5-9B",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "any"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "max_tokens",
+      "block_types": [
+        "thinking"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "",
+      "error_body": null
+    },
+    {
+      "model": "Qwen/Qwen3.5-9B",
+      "variant": "any_tool",
+      "i": 1,
+      "request": {
+        "model": "Qwen/Qwen3.5-9B",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "any"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "end_turn",
+      "block_types": [
+        "thinking",
+        "text"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "The title of the contract is derived directly from the provided summary, with \"Distribution Agreement\" identifying the document type. The status is \"active\" since it is explicitly stated as still in force post-signing. The parties are Acme Corp and Globex Inc as named signatories, and the year 2019 aligns with the signing timestamp provided.\n\n```json\n{\n  \"title\": \"Distribution Agreement\",\n  \"status\": \"active\",\n  \"parties\": [\"Acme Corp\", \"Globex Inc\"],\n  \"year\": 2019\n}\n```\n\nThis report assumes no undisclosed amendments or legal complexities affecting the contract's validity beyond the summarized information.",
+      "error_body": null
+    },
+    {
+      "model": "Qwen/Qwen3.5-9B",
+      "variant": "any_tool",
+      "i": 2,
+      "request": {
+        "model": "Qwen/Qwen3.5-9B",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "any"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "max_tokens",
+      "block_types": [
+        "thinking"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "",
+      "error_body": null
+    },
+    {
+      "model": "thinkingmachines/Inkling-Small",
+      "variant": "forced_named_tool",
+      "i": 0,
+      "request": {
+        "model": "thinkingmachines/Inkling-Small",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "tool",
+          "name": "report"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "tool_use",
+      "block_types": [
+        "thinking",
+        "text",
+        "tool_use"
+      ],
+      "emitted_tool_use": true,
+      "tool_input": {
+        "parties": [
+          "Acme Corp",
+          "Globex Inc"
+        ],
+        "status": "active",
+        "title": "Distribution Agreement",
+        "year": 2019
+      },
+      "tool_input_valid": true,
+      "text": "The summary explicitly names the agreement as the Distribution Agreement, lists Acme Corp and Globex Inc as the parties, states it was signed in 2019, and notes that it is still in force, which corresponds to an active status.\n\n```json\n{\n  \"title\": \"Distribution Agreement\",\n  \"status\": \"active\",\n  \"parties\": [\"Acme Corp\", \"Globex Inc\"],\n  \"year\": 2019\n}\n```\n\nThis extraction relies solely on the provided summary and does not independently verify current contractual standing.",
+      "error_body": null
+    },
+    {
+      "model": "thinkingmachines/Inkling-Small",
+      "variant": "forced_named_tool",
+      "i": 1,
+      "request": {
+        "model": "thinkingmachines/Inkling-Small",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "tool",
+          "name": "report"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "end_turn",
+      "block_types": [
+        "thinking",
+        "text"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "The summary explicitly names the Distribution Agreement between Acme Corp and Globex Inc, dates it to 2019, and states it is still in force, which maps directly to an active status with those parties and year.\n\n```json\n{\n  \"title\": \"Distribution Agreement\",\n  \"status\": \"active\",\n  \"parties\": [\n    \"Acme Corp\",\n    \"Globex Inc\"\n  ],\n  \"year\": 2019\n}\n```\n\nThis report relies solely on the provided summary and does not verify the agreement\u2019s actual legal status or current parties.",
+      "error_body": null
+    },
+    {
+      "model": "thinkingmachines/Inkling-Small",
+      "variant": "forced_named_tool",
+      "i": 2,
+      "request": {
+        "model": "thinkingmachines/Inkling-Small",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "tool",
+          "name": "report"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "max_tokens",
+      "block_types": [
+        "text"
+      ],
+      "emitted_tool_use": false,
+      "tool_input": null,
+      "tool_input_valid": false,
+      "text": "The user asks to report structured info from a contract summary. Need to explain reasoning briefly in prose, then provide JSON via report tool? The instructions say: \"First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat.\" But also system says use report tool. The user explicitly wants prose, then JSON code block, then caveat. I can do prose, then use report tool? The report tool outputs structured answer. But user wants JSON inside markdown code block. Usually I should follow user formatting. However system says \"Report the structured answer.\" with report tool. I need to decide. Often best to provide prose, then call report tool which outputs JSON? But report tool doesn't take JSON; it takes fields. The output of report is likely a structured report. But user explicitly wants a JSON markdown block. I can include both: explain, then use report tool, and also present JSON? Actually the report tool is meant to be used to report final answer. But the user wants specific format. I will provide reasoning prose, then call report tool with the fields, and then add caveat. But the report tool output might not be inside a json markdown block. Alternatively, I can just output text with prose, then a json block manually, and a caveat, without using report tool. But the system instruction says \"Report the structured answer.\" using report. I think I should use the report tool to satisfy system, and also include the JSON block in my response? The tool result will be inserted. Maybe I can write prose, then call report, and the report result will be the JSON-like output. But user wants it inside ```json. I can wrap the tool call? No, I cannot control tool output formatting directly, but I can present the JSON manually and also call report. Actually maybe the best is: write prose, then present the JSON block manually (fulfilling user), then call report tool with same info (fulfilling system), then caveat. But that might be redundant. Let's see: The system says \"Report the structured answer.\" It might evaluate whether I used the tool. So I must use report. I will provide prose first. Then I will call report. Then after tool result, I will provide the JSON block? No, the tool result is likely the answer. But to be safe, I can include the JSON block in my text before or after tool? The instructions say \"then present the answer as a JSON object inside a ```json markdown code block\". So I will write prose, then manually include the JSON block, then use report tool? That seems odd because I'd be reporting twice. Another approach: Use report tool, and in the reasoning I can say \"The structured answer is...\" but the tool output is separate. Actually I can just do: prose paragraph, then call report, and assume the report outputs structured data. But user wants JSON markdown. I can ask? No. I will provide prose, then manually put JSON block, then call report with the fields, and end with caveat. Actually the report tool is likely for the final structured extraction; the user also wants it. Redundancy is okay. But I can also put the JSON block as part of my response, and the report tool call can be separate; the system might just check that I used it. Let's do: Prose reasoning. Then JSON block. Then report call. Then caveat sentence. Wait order: user wants prose, then JSON, then caveat. If I put report after caveat, it breaks. I can put report right after prose, before JSON? No. Let's do: Prose. Then report call (which will produce structured output). Then I can say \"In JSON form:\" and put the block? That might be okay. Actually I can incorporate the report tool result as the answer and then wrap it? No.\n\nBetter: I will provide the prose explanation. Then I will call the report tool. The tool will generate the structured answer. Then I will add a sentence saying \"Caveat: ...\" But the user wants the answer as JSON inside markdown. The tool result might be formatted as JSON already? Not sure. To guarantee compliance, I will manually include the JSON block in my response, and also call the report tool. Let's sequence:\n1. Prose paragraph.\n2. JSON block.\n3. Call report tool.\n4. Caveat sentence.\n\nBut calling report after JSON might be okay. Actually I can call tool anywhere. Let's do prose, then JSON block, then tool call, then caveat. Wait if tool call is after JSON, the response might end with tool result, and caveat after? I can put caveat after tool. But user wants caveat at finish. So: prose, JSON block, caveat? No, tool call might interrupt.\n\nActually I can write:\n[Prose]\n\n```json\n{\"title\":\"Distribution Agreement\",\"status\":\"active\",\"parties\":[\"Acme Corp\",\"Globex Inc\"],\"year\":2019}\n```\n\nCaveat: ...\n\nThen call report tool? But if I call tool after everything, it's fine. The system might process tool call and append result. That could place the structured report at the very end, after caveat. That might violate \"finish with a one-sentence caveat\" because tool result comes after? The final text output order is what I write; tool results are inserted at point of call? Usually yes, at the point where I include the tool call block? Actually as model, I generate text and then tool calls; the system executes them and may append results. The order in final message might be my text then tool results at end. To ensure caveat is truly last, I should put caveat after tool call? Not possible because tool result inserted at call site or end. Usually the result is inserted in place of the function call block in the message sequence. So if I put tool call at the end, the result will be at the end, after caveat if caveat is before? Actually if I write: \"Caveat: ... <tool_call>\", then tool result appears after caveat? The final message order is the assistant's message content, which includes the text and then the tool call; after execution, the tool result is added as a separate message or appended? In this interface, the function result is provided back to me in the next turn? Actually no: I call function, then the system returns result in the same context, and I then generate final response incorporating it? Wait the flow is: I generate reasoning and maybe function call. Then system executes and gives result. Then I generate final answer? But here I am producing the response; if I include a function call, the assistant message ends with function call, and then the user/system provides result, and then I need to generate another assistant message? Actually in this setup, I think I can include function call in my response, and the system will handle it, but I might not get to add more text after without another turn. However the instructions say I should use tool and also provide prose and JSON. Maybe the best is to provide everything in text and use report tool at the same time; the tool result will be part",
+      "error_body": null
+    },
+    {
+      "model": "thinkingmachines/Inkling-Small",
+      "variant": "any_tool",
+      "i": 0,
+      "request": {
+        "model": "thinkingmachines/Inkling-Small",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "any"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "tool_use",
+      "block_types": [
+        "thinking",
+        "text",
+        "tool_use"
+      ],
+      "emitted_tool_use": true,
+      "tool_input": {
+        "parties": [
+          "Acme Corp",
+          "Globex Inc"
+        ],
+        "status": "active",
+        "title": "Distribution Agreement",
+        "year": 2019
+      },
+      "tool_input_valid": true,
+      "text": "The summary explicitly describes a Distribution Agreement executed by Acme Corp and Globex Inc in 2019 and notes that it remains in force, which directly supports classifying its status as active.",
+      "error_body": null
+    },
+    {
+      "model": "thinkingmachines/Inkling-Small",
+      "variant": "any_tool",
+      "i": 1,
+      "request": {
+        "model": "thinkingmachines/Inkling-Small",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "any"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "tool_use",
+      "block_types": [
+        "thinking",
+        "text",
+        "tool_use"
+      ],
+      "emitted_tool_use": true,
+      "tool_input": {
+        "parties": [
+          "Acme Corp",
+          "Globex Inc"
+        ],
+        "status": "active",
+        "title": "Distribution Agreement",
+        "year": 2019
+      },
+      "tool_input_valid": true,
+      "text": "The summary identifies the agreement as a Distribution Agreement between Acme Corp and Globex Inc, executed in 2019, and explicitly states it remains in force, so the status is active.\n\n```json\n{\n  \"title\": \"Distribution Agreement\",\n  \"status\": \"active\",\n  \"parties\": [\"Acme Corp\", \"Globex Inc\"],\n  \"year\": 2019\n}\n```\n\nThis report is based only on the brief summary provided and assumes no undisclosed modifications or terminations.",
+      "error_body": null
+    },
+    {
+      "model": "thinkingmachines/Inkling-Small",
+      "variant": "any_tool",
+      "i": 2,
+      "request": {
+        "model": "thinkingmachines/Inkling-Small",
+        "max_tokens": 1500,
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat."
+          }
+        ],
+        "tools": [
+          {
+            "name": "report",
+            "description": "Report the structured answer.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "expired",
+                    "unknown"
+                  ]
+                },
+                "parties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "year": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "title",
+                "status",
+                "parties",
+                "year"
+              ],
+              "additionalProperties": false
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "any"
+        }
+      },
+      "http_status": 200,
+      "stop_reason": "tool_use",
+      "block_types": [
+        "thinking",
+        "text",
+        "tool_use"
+      ],
+      "emitted_tool_use": true,
+      "tool_input": {
+        "parties": [
+          "Acme Corp",
+          "Globex Inc"
+        ],
+        "status": "active",
+        "title": "Distribution Agreement",
+        "year": 2019
+      },
+      "tool_input_valid": true,
+      "text": "The summary explicitly identifies the contract as the Distribution Agreement between Acme Corp and Globex Inc, signed in 2019, and notes it remains in force, so the status is active.\n\n```json\n{\n  \"title\": \"Distribution Agreement\",\n  \"status\": \"active\",\n  \"parties\": [\n    \"Acme Corp\",\n    \"Globex Inc\"\n  ],\n  \"year\": 2019\n}\n```\n\nCaveat: This report relies solely on the provided summary and does not reflect any amendments, terminations, or geographic limitations that may apply.",
+      "error_body": null
+    }
+  ],
+  "meta": {
+    "phase": "anthropic",
+    "base_url": "https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1",
+    "models": [
+      "Qwen/Qwen3.5-4B",
+      "Qwen/Qwen3.5-9B",
+      "thinkingmachines/Inkling-Small"
+    ],
+    "variants": [
+      "json_object"
+    ],
+    "n": 3,
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "timestamp": "2026-08-15T12:54:16-0500"
+  }
+}

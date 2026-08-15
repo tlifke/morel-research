@@ -1,0 +1,26 @@
+[
+  {
+    "model": "ALL THREE MODELS — the endpoint",
+    "tag": "GENUINELY UNENFORCED",
+    "cls": "bad",
+    "text": "Not a bug on our side. No configuration of the Tinker OAI endpoint constrains the decode. <code>response_format</code> (both <code>json_object</code> and <code>json_schema</code>, with and without <code>strict</code>/<code>name</code>), vLLM <code>guided_json</code>, <code>guided_decoding_backend</code>, <code>structured_outputs</code>, <code>nvext</code> and <code>extra_body</code> nesting are all accepted with HTTP 200 and all produce output statistically indistinguishable from sending no parameter at all (the <code>none</code> control matches every mechanism, in both Part 2 and Part 3). Two invalid controls are also accepted, proving the field is never parsed. The native SDK has no such surface either. <b>Do not send these parameters expecting effect.</b>"
+  },
+  {
+    "model": "Qwen/Qwen3.5-4B",
+    "tag": "unenforced, but conforms well when prompted with the schema",
+    "cls": "mid",
+    "text": "20/20 strictly-parseable JSON and 19/20 schema-valid + coverage-valid under the study's real prompt on a short contract. Under an adversarial prompt that invites prose, 8&ndash;10/10 fenced and 0/10 strictly parseable &mdash; identical to the no-parameter control. Conformance is a property of the <i>prompt</i>, not of any server-side enforcement. Its distinctive failure is reasoning overflow: with a fence-inviting prompt it returned empty <code>content</code> in 1&ndash;4 of 10 samples per mechanism."
+  },
+  {
+    "model": "Qwen/Qwen3.5-9B",
+    "tag": "unenforced, but conforms well when prompted with the schema",
+    "cls": "mid",
+    "text": "20/20 strictly-parseable, schema-valid and coverage-valid under the study's real prompt on a short contract. Under the adversarial prompt, 9&ndash;10/10 fenced and 0/10 strictly parseable, again matching the control exactly. Never emitted a tool call under any <code>tool_choice</code>, on either the OpenAI- or the Anthropic-compatible endpoint."
+  },
+  {
+    "model": "thinkingmachines/Inkling-Small",
+    "tag": "unenforced — the previous \"json_object honored\" note is WRONG",
+    "cls": "bad",
+    "text": "20/20 strictly-parseable, schema-valid and coverage-valid under the study's real prompt &mdash; the best of the three &mdash; but that is voluntary compliance, not enforcement. Under the adversarial prompt it emitted a markdown fence on <b>10/10</b> samples with <code>response_format: {\"type\": \"json_object\"}</code> set, identical to the control. The <code>structured_output: \"json_object\"</code> entry in <code>TINKER_MODEL_FACTS</code> and the matching claim in <code>plans/component-contracts.md</code> are falsified and must be corrected to <code>prompt_only</code>. It is the only model that emits tool calls at all (17/20 under a forced named tool), but even then <code>tool_choice</code> is not honoured &mdash; it declines 3 times in 20."
+  }
+]

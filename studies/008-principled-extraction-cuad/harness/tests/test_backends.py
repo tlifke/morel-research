@@ -6,7 +6,7 @@ import pytest
 
 from harness.backends.base import Backend, BackendError, BackendUnavailable
 from harness.backends.ollama_backend import OllamaBackend
-from harness.backends.tinker_backend import TinkerBackend
+from harness.backends.tinker_backend import TINKER_MODEL_FACTS, TinkerBackend
 
 MODEL_MAX = 32768
 
@@ -24,6 +24,18 @@ class _Handler(BaseHTTPRequestHandler):
             body = {
                 "model_info": {"qwen3.5.context_length": self.behavior.get("model_max", MODEL_MAX)},
                 "parameters": self.behavior.get("parameters", "num_ctx 8192\nstop \"<|im_end|>\""),
+            }
+        elif self.path.endswith("/chat/completions"):
+            body = {
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {"content": '{"ok": true}', "reasoning_content": "hm"},
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 4},
+                "echo_payload": payload,
             }
         elif self.path == "/api/chat":
             body = {
@@ -126,7 +138,7 @@ def test_tinker_requires_a_key(monkeypatch):
 def test_tinker_declares_prompt_plus_parse_structured_output(monkeypatch):
     monkeypatch.setenv("TINKER_API_KEY", "dummy")
     backend = TinkerBackend()
-    assert backend.structured_output == "json_object"
+    assert backend.structured_output == "prompt_only"
     assert backend.advertised_context_limit == 262144
     assert backend.context_limit == 262144 - backend.safety_margin
     assert backend.describe()["model"] == "thinkingmachines/Inkling-Small"
@@ -137,7 +149,7 @@ def test_tinker_declares_prompt_plus_parse_structured_output(monkeypatch):
     [
         ("Qwen/Qwen3.5-4B", 65536, "prompt_only"),
         ("Qwen/Qwen3.5-9B", 65536, "prompt_only"),
-        ("thinkingmachines/Inkling-Small", 262144, "json_object"),
+        ("thinkingmachines/Inkling-Small", 262144, "prompt_only"),
     ],
 )
 def test_measured_context_and_structured_output_are_declared_per_model(
@@ -228,3 +240,72 @@ def test_exact_token_counting_is_used_when_a_tokenizer_is_present(monkeypatch):
     backend._tokenizer = StubTokenizer()
     backend.token_count_method = "exact"
     assert backend.count_tokens("a b c d e") == 5
+
+
+def test_no_tinker_model_claims_enforced_structured_output(monkeypatch):
+    monkeypatch.setenv("TINKER_API_KEY", "dummy")
+    for model in TINKER_MODEL_FACTS:
+        backend = TinkerBackend(model=model)
+        assert backend.structured_output == "prompt_only"
+        assert "NOT enforced" in backend.notes["structured_output_enforcement"]
+
+
+def test_response_format_is_never_sent(monkeypatch, server):
+    host, handler = server
+    monkeypatch.setenv("TINKER_API_KEY", "dummy")
+    backend = TinkerBackend(model="Qwen/Qwen3.5-4B", base_url=host + "/oai")
+    schema = {"type": "object", "properties": {"ok": {"type": "boolean"}}}
+    result = backend.sample(
+        messages=[{"role": "user", "content": "hi"}],
+        json_schema=schema,
+        temperature=0.3,
+        seed=7,
+        max_tokens=16,
+    )
+    sent = result.raw["echo_payload"]
+    assert "response_format" not in sent
+    assert "guided_json" not in sent
+    assert "structured_outputs" not in sent
+    assert result.request_params is not None
+    assert "response_format" not in result.request_params
+
+
+def test_separate_reasoning_is_sent_explicitly(monkeypatch, server):
+    host, handler = server
+    monkeypatch.setenv("TINKER_API_KEY", "dummy")
+    backend = TinkerBackend(model="Qwen/Qwen3.5-4B", base_url=host + "/oai")
+    result = backend.sample(
+        messages=[{"role": "user", "content": "hi"}],
+        json_schema=None,
+        temperature=0.0,
+        seed=0,
+        max_tokens=8,
+    )
+    sent = result.raw["echo_payload"]
+    assert "separate_reasoning" in sent
+    assert sent["separate_reasoning"] is True
+    assert result.request_params["separate_reasoning"] is True
+    assert backend.describe()["separate_reasoning"] is True
+
+
+def test_separate_reasoning_is_not_left_to_the_server_default(monkeypatch):
+    monkeypatch.setenv("TINKER_API_KEY", "dummy")
+    backend = TinkerBackend(model="Qwen/Qwen3.5-4B", separate_reasoning=False)
+    assert backend.separate_reasoning is False
+    assert backend.notes["separate_reasoning"] is False
+    assert "flipped from" in backend.notes["separate_reasoning_note"]
+
+
+def test_tinker_declares_that_seeds_are_not_honored(monkeypatch):
+    monkeypatch.setenv("TINKER_API_KEY", "dummy")
+    backend = TinkerBackend(model="Qwen/Qwen3.5-9B")
+    assert backend.seed_honored is False
+    assert backend.describe()["seed_honored"] is False
+    assert "repetition LABEL" in backend.notes["seed_note"]
+
+
+def test_ollama_reports_seeds_as_honored(server):
+    host, handler = server
+    backend = OllamaBackend(model="qwen3.5:9b", num_ctx=8192, host=host)
+    assert backend.seed_honored is True
+    assert backend.describe()["seed_honored"] is True

@@ -221,3 +221,40 @@ def test_trace_carries_enough_to_reanalyse_without_rerunning(env, instance, tmp_
     assert trace.backend["model"] == backend.model_id
     assert trace.condition == "C3"
     assert trace.n_contract_tokens == instance.n_tokens
+
+
+def test_attempt_trace_records_the_request_params_actually_sent(env, instance, tmp_path):
+    class ParamEchoBackend(FakeBackend):
+        def sample(self, messages, json_schema, temperature, seed, max_tokens):
+            result = super().sample(messages, json_schema, temperature, seed, max_tokens)
+            result.request_params = {
+                "model": self.model_id,
+                "temperature": temperature,
+                "seed": seed,
+                "separate_reasoning": True,
+            }
+            return result
+
+    backend = ParamEchoBackend([json.dumps(PAYLOAD)], context_limit=100000)
+    result = _run(env, backend, instance, _config(tmp_path))
+    params = result.trace.attempts[0].request_params
+    assert params["separate_reasoning"] is True
+    assert params["seed"] == 0
+    assert "response_format" not in params
+
+
+def test_trial_row_and_trace_carry_the_backend_contract(env, instance, tmp_path):
+    backend = FakeBackend([json.dumps(PAYLOAD)], context_limit=100000)
+    result = _run(env, backend, instance, _config(tmp_path))
+    assert result.trial.backend_params["structured_output"] == backend.structured_output
+    assert result.trial.seed_honored is backend.seed_honored
+    assert result.trace.backend["structured_output"] == backend.structured_output
+
+
+def test_seed_is_documented_as_a_repetition_label_not_a_reproducibility_handle():
+    from harness.runner import TrialKey
+
+    doc = TrialKey.__doc__
+    assert "REPETITION LABEL" in doc
+    assert "not a reproducibility handle" in doc
+    assert "trace store" in doc

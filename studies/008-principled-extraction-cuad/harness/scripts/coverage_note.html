@@ -62,6 +62,24 @@ arm (which does have constrained decode) returns, and it would come at a cost: t
 makes the field-absent <code>principles_cited</code> variant harder to strip cleanly, and it
 changes the prompt, so it is not a free swap mid-study.</p>
 
+<h3>How often is coverage actually violated?</h3>
+<p>Measured in Part&nbsp;3, independently of JSON and schema validity. On the short synthetic
+contract, under the study's real prompt, coverage held on <b>19/20, 20/20 and 20/20</b> samples
+for the 4B, 9B and inkling-small respectively; among samples that were <i>schema</i>-valid,
+coverage was violated <b>zero</b> times. So on an easy instance the invariant is not the binding
+constraint. Two things stop this from being reassuring:</p>
+<ul>
+<li>The earlier probe run &mdash; same models, same settings, but a prompt that described the
+output in prose instead of embedding the schema &mdash; produced coverage failures on 13/20
+(9B) and 5/20 (inkling) samples, always <i>missing</i> categories, never duplicated. The
+failure mode is silent under-enumeration: the model reports the categories it found and stops.
+That is precisely the failure that gets worse as documents get longer and the category list
+gets further from the answer.</li>
+<li>Coverage is the one failure class that repair cannot be counted on to fix cheaply, because
+the fix requires re-reading the document for the categories that were skipped, not reformatting
+what was already produced.</li>
+</ul>
+
 <h3>Eliminable vs irreducible</h3>
 <div class="scroll"><table>
 <tr><th>failure mode</th><th>eliminable by correct configuration?</th><th>on Tinker today</th></tr>
@@ -100,16 +118,27 @@ changes the prompt, so it is not a free swap mid-study.</p>
 
 <h2>What this means for the study</h2>
 <ul>
-<li>The line in <code>plans/component-contracts.md</code> that says
-<code>json_object</code> is &ldquo;honored&rdquo; for inkling-small is <b>wrong</b> and should be
-corrected: it is not honored for any model. <code>structured_output</code> should read
-<code>prompt_only</code> for all three Tinker arms, inkling included.</li>
-<li>Because no arm on Tinker gets constrained decode, the P0 field-absent leakage measurement is
-clean across all three arms &mdash; that conclusion in the contracts doc survives, and now rests
-on measurement of all three models rather than an inference about two.</li>
+<li>The line in <code>plans/component-contracts.md</code> saying <code>json_object</code> is
+&ldquo;honored&rdquo; for inkling-small is <b>falsified</b>. <code>structured_output</code> must
+read <code>prompt_only</code> for all three Tinker arms, inkling included.</li>
+<li>The doc's stronger claim &mdash; &ldquo;<code>json_schema</code> is unenforced everywhere and
+on the 4B it burns the whole budget on reasoning and returns empty content&rdquo; &mdash; is half
+right. Unenforced: confirmed. Empty content on the 4B: real, but it is a
+<i>prompt-dependent</i> effect (1&ndash;4/10 with a fence-inviting prompt, <b>0/20</b> with the
+study's real schema-embedding prompt), not a property of the model. Attributing it to
+<code>json_schema</code> was a mis-attribution.</li>
+<li>Because no arm on Tinker gets constrained decode, P0's field-absent leakage measurement is
+clean across all three arms &mdash; that conclusion survives, and now rests on measurement of all
+three models rather than inference about two.</li>
 <li>Parse-and-repair is not a fallback here, it is the mechanism. Repair-rate differences between
-models are therefore a first-class result, not harness noise, and the first-attempt/final
-double-scoring already specified is the right treatment.</li>
-<li>Sending <code>response_format</code> at all is harmless but misleading: it makes the trial rows
-look like they requested enforcement. Either drop it or record it as declaratively inert.</li>
+models are a first-class result, and the first-attempt/final double-scoring already specified is
+the right treatment. But note the measured repair demand on an easy instance is <i>near zero</i>
+for all three models &mdash; the &ldquo;inkling 0 repairs, both Qwen arms routinely 1&ndash;2&rdquo;
+asymmetry recorded in the contracts doc is not reproduced here and should be re-measured on real
+CUAD instances before it is relied on.</li>
+<li>Sending <code>response_format</code> at all is harmless but misleading: it makes trial rows
+look as though enforcement was requested. Drop it, or record it explicitly as inert.</li>
+<li>The single largest open risk is length. Every conformance number on this page comes from a
+~350-word document. Re-run the Part&nbsp;3 measurement on real CUAD instances stratified by
+length bucket before treating any of these rates as the study's.</li>
 </ul>

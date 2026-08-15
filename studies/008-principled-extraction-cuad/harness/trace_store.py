@@ -15,6 +15,7 @@ class AttemptTrace(BaseModel):
     attempt_idx: int
     prompt_sent: list[dict[str, str]]
     prompt_sent_sha256: str
+    request_params: Optional[dict[str, Any]] = None
     raw_response_body: Optional[dict[str, Any]] = None
     response_text: str = ""
     response_sha256: Optional[str] = None

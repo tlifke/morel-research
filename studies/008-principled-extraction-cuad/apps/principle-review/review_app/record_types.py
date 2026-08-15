@@ -136,6 +136,10 @@ GOLD_AUDIT = RecordType(
                  "decisive content is redacted; the call rests on clause structure"),
         Decision("cross_category_overlap", "o", "info",
                  "byte-identical or strictly nested against another category's span"),
+        Decision("inconsistent_across_duplicates", "t", "alt",
+                 "this span is fine in isolation; a near-identical passage in another "
+                 "contract carries the opposite label. Judge the counterpart table, "
+                 "not this span"),
         Decision("defer", "d", "neutral", "cannot call it without more context"),
     ),
     pending_decisions=("defer",),
@@ -152,12 +156,23 @@ GOLD_AUDIT = RecordType(
         Field("n_chars", "Span chars", "text", slot="meta"),
         Field("span_index", "Span", "text", slot="meta"),
         Field("n_spans_in_category", "Of", "text", slot="meta"),
+        Field("has_counterpart", "Counterpart", "badge", slot="meta"),
+        Field("n_contracts_with_passage", "Passage seen in N others", "text", slot="meta"),
         Field("siblings", "Sibling gold spans, same category", "rows", slot="body",
               config={"columns": ["span_index", "offsets", "n_chars", "text"]},
               hint="Artifact-split shows up here: two spans that are one thought."),
         Field("overlaps", "Other categories overlapping this span", "rows", slot="body",
               config={"columns": ["category", "relation", "offsets", "text"]},
               hint="Byte-identical or nested spans under a different category."),
+        Field("duplicate_counterparts",
+              "Same passage in other contracts, and how it is labeled there",
+              "rows", slot="body",
+              config={"columns": ["contract_id", "split", "twin_label",
+                                  "doc_containment", "offsets", "passage"]},
+              hint="twin_label is that contract's label for THIS category. "
+                   "'marked_absent' or 'not_annotated' against an identical passage "
+                   "is the inconsistent_across_duplicates case. A high "
+                   "n_contracts_with_passage means boilerplate, not a near-twin."),
         Field("title", "Contract title", "longtext", slot="body"),
         Field("sample", "Sampling provenance", "kv", slot="body",
               hint="Seed and stratum this record was drawn under."),
@@ -165,7 +180,7 @@ GOLD_AUDIT = RecordType(
     facets=(
         Facet("category", "Category"),
         Facet("split", "Split"),
-        Facet("sample.stratum", "Stratum"),
+        Facet("has_counterpart", "Has counterpart"),
     ),
     key_order=(
         "id",
@@ -183,6 +198,9 @@ GOLD_AUDIT = RecordType(
         "context_after",
         "siblings",
         "overlaps",
+        "duplicate_counterparts",
+        "n_contracts_with_passage",
+        "has_counterpart",
         "sample",
         "review",
     ),

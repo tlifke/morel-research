@@ -162,9 +162,43 @@ The span is shown in place, highlighted inside its surrounding contract text
 (`--context` chars each side, default 700) — a span cannot be judged without
 what sits around it. Decisions are the defect taxonomy: `clean`,
 `mislabeled`, `labeled_by_neighbourhood`, `artifact_split`, `boundary_jitter`,
-`redaction_dependent`, `cross_category_overlap`, plus `defer`. Rationale is
+`redaction_dependent`, `cross_category_overlap`,
+`inconsistent_across_duplicates`, plus `defer`. Rationale is
 required as always. Nothing is editable: gold is not corrected, only
 characterized.
+
+**Near-duplicate inconsistency.** CUAD contains near-twin contracts — an
+agreement and its amendment, two filings of substantially the same document —
+where an identical clause is annotated in one and left unannotated in the
+other. The span is fine; the corpus disagrees with itself, usually in the
+*absence* labels. To make that adjudicable, the sampler searches all 510 CUAD
+contracts (including ft_train, since a twin can live anywhere) for the gold
+span's passage, whitespace-normalized and exact, and attaches every contract
+where it recurs together with that contract's label for the same category:
+`annotated`, `not_annotated`, `marked_absent`, or `category_not_in_subset`.
+Counterparts are ranked by document containment over 8-gram sketches, and
+`n_contracts_with_passage` is surfaced so common boilerplate is obvious rather
+than mistaken for a twin. Passages under 60 normalized characters are not
+searched — short spans match by chance.
+
+Document-level twin detection alone does **not** work: the NETGEAR
+distributor-agreement / amendment pair that motivated this class has a document
+containment of 0.095, well below any sane twin threshold, yet the
+governing-law passage is byte-identical and the amendment marks the category
+absent. Passage-first, document-similarity-as-context is the design that finds
+it.
+
+**The census stratum.** Measured over the whole dev+holdout population: 48 of
+1288 gold spans (3.7%) have an exact-passage counterpart, and only **4** of
+those show label disagreement — about 0.3% of spans. A random sample of 120
+would be expected to contain 0.4 of them, so this class is invisible to random
+sampling. The sampler therefore also emits an exhaustive **census** of every
+span whose passage recurs under an opposite label, tagged
+`sample.draw: duplicate_census` (disable with `--no-duplicate-census`). The
+census is a targeted enumeration of suspected defects, not a draw: the
+aggregator counts it in its own section and excludes it from every rate, since
+pooling it would bias the noise floor upward. Random-draw records are tagged
+`sample.draw: random` and are the only input to the headline figures.
 
 **Aggregate.**
 
@@ -177,7 +211,16 @@ overall / per-category / per-split defect rates, per-defect-type counts and
 shares, sample size, seeds, sampler versions, reviewers, and an explicit
 statement of the denominator — `defect_rate` = spans decided anything other
 than `clean`, over spans with a non-pending decision; unreviewed and deferred
-spans are excluded from both numerator and denominator. The artifact
+spans are excluded from both numerator and denominator, and only
+`sample.draw: random` records are counted at all.
+
+Three classes — `redaction_dependent`, `cross_category_overlap`, and
+`inconsistent_across_duplicates` — sit on the boundary between "gold is wrong"
+and "gold is hard or self-inconsistent", and Tyler has **not** ruled on whether
+they count as defects. The report gives both `defect_rate` (includes them) and
+`defect_rate_excluding_unruled` (removes all three), and the ruling lives in
+exactly two module-level constants, `CLEAN` and `UNRULED`; nothing else in the
+aggregator branches on decision identity. The artifact
 deliberately does **not** compute a span-F1 ceiling: turning a defect rate
 into a ceiling is an analysis step, and the aggregator says so in its own
 `note` field.

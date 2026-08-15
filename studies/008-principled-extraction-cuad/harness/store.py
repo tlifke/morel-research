@@ -24,6 +24,8 @@ class TrialRow(BaseModel):
     harness_git_sha: Optional[str] = None
     temperature: float
     max_output_tokens: Optional[int] = None
+    backend_params: dict[str, Any] = Field(default_factory=dict)
+    seed_honored: Optional[bool] = None
     correctness_thresholds: dict[str, Any] = Field(default_factory=dict)
     response_sha256: Optional[str] = None
     n_prompt_tokens: Optional[int] = None

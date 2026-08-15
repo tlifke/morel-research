@@ -158,7 +158,7 @@ documentation; an unmeasured model is *refused*, never guessed):
 
 | model | advertised ctx | usable limit | structured output |
 |---|---|---|---|
-| inkling-small | 262,144 | 261,632 | `json_object` honored |
+| inkling-small | 262,144 | 261,632 | **`prompt_only`** |
 | Qwen/Qwen3.5-4B | 65,536 | 65,024 | **`prompt_only`** |
 | Qwen/Qwen3.5-9B | 65,536 | 64,512 | **`prompt_only`** |
 
@@ -168,12 +168,42 @@ tokens** — below the advertised 65,536 — with an opaque error, so there is a
 band that passes the documented check and then dies. Last confirmed acceptance
 was 65,357.
 
-**No arm currently on Tinker gets constrained decode.** All three are
-prompt-plus-parse; `json_schema` is unenforced everywhere and on the 4B it
-burns the whole budget on reasoning and returns empty content. Consequence:
-field-absent leakage is measurable on **all** current arms, so P0 is clean
-today — but the moment ollama returns, its constrained decode makes
-field-absent leakage structurally zero there and non-comparable.
+**No arm on Tinker gets constrained decode — established by evidence, not
+inference** (`reviews/structured-output-evidence.html`). The endpoint accepts
+and silently drops every structured-output parameter: 14 request shapes all
+returned HTTP 200, *including deliberately invalid controls* that any server
+parsing the field would reject, while an unknown `model` does 400 and
+`temperature` is honored — so the body is parsed and these keys are dropped.
+Corroborated by the docs (the OAI page documents only `model`, `messages`,
+`prompt`, `max_tokens`, `temperature`, `top_p`, `separate_reasoning`,
+`reasoning_effort`; native `SamplingParams` has six fields and no grammar or
+logit-bias surface) and by Thinking Machines' own cookbook proxy, which lists
+`response_format` in `_UNSUPPORTED_OPENAI_KEYS` and 400s it by design.
+Nothing constrains: `guided_json`, `guided_decoding_backend` (xgrammar,
+outlines), `structured_outputs`, `nvext`, `extra_body` nesting, and
+`json_schema` with or without `strict`/`name` all match the no-parameter
+control exactly.
+
+An undocumented Anthropic-compatible endpoint (`/anthropic/api/v1/messages`,
+`x-api-key` auth) accepts `tools` + `input_schema` + `tool_choice`, but does
+not enforce either — forced `tool_choice` is ignored — and is **strictly worse
+than plain prompting** on the real task across all three models. Not adopted.
+
+**But conformance is not the problem it looked like.** With the schema
+serialised into the prompt as `prompts.py` actually does it, all three models
+returned **20/20 strict JSON and 19–20/20 schema+coverage valid**. The earlier
+"models can't conform" reading came from a *prose-described* schema and was
+largely a prompt artifact. Caveat, and it is a real one: those rates are from
+one ~350-word synthetic contract, one condition, n=20 — floor-case numbers, not
+the study's numbers, since real instances run 8k–82k tokens.
+
+Consequence for P0: field-absent leakage is measurable on **all** current arms,
+so P0 is clean today — but the moment ollama returns, its constrained decode
+makes field-absent leakage structurally zero there and non-comparable.
+
+**`separate_reasoning` must be set explicitly.** It defaults to `true` and that
+default *flipped* from `false` in June 2026. A future flip would silently move
+reasoning text back into `content` and corrupt every parse in the study.
 
 The 9B's error text names an `--allow-auto-truncate` server flag. Silent
 truncation is one flag away from being enabled upstream, which is the single

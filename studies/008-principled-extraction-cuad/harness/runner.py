@@ -67,6 +67,16 @@ def harness_git_sha() -> Optional[str]:
 
 @dataclass(frozen=True)
 class TrialKey:
+    """Identifies one trial cell.
+
+    `seed` is a REPETITION LABEL, not a reproducibility handle. Backends differ
+    in whether they honour it and Tinker measurably does not: identical payloads
+    at the same seed produce different outputs. Repetitions still give the
+    sampling variation the CIs need, but an individual trial cannot be re-run to
+    the same result. The trace store is therefore the only record of what a
+    trial actually sampled, and re-running never reconstructs it.
+    """
+
     contract_id: str
     condition: str
     model: str
@@ -140,6 +150,7 @@ def _attempt_trace(
         attempt_idx=idx,
         prompt_sent=messages,
         prompt_sent_sha256=sha256_messages(messages),
+        request_params=result.request_params if result else None,
         raw_response_body=raw,
         response_text=result.text if result else "",
         response_sha256=sha256_text(result.text) if result else None,
@@ -268,6 +279,8 @@ def run_trial(
         "temperature": config.temperature,
         "max_output_tokens": config.max_output_tokens,
         "correctness_thresholds": config.thresholds.to_dict(),
+        "backend_params": backend.describe(),
+        "seed_honored": backend.seed_honored,
         "n_contract_tokens": instance.n_tokens,
         "length_bucket": metrics.length_bucket(instance.n_tokens),
         "split": instance.split,

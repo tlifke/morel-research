@@ -144,6 +144,7 @@ class OllamaBackend(Backend):
         return SamplingResult(
             text=text,
             raw=data,
+            request_params={k: v for k, v in payload.items() if k != "messages"},
             n_prompt_tokens=n_prompt,
             n_completion_tokens=n_completion,
             latency_ms=latency_ms,

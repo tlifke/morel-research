@@ -1,0 +1,176 @@
+version: mining_v1
+created: 2026-08-15
+status: reported_method_parameters
+
+note: >
+  Parameters for the deterministic contrastive-pair miner
+  (scripts/mine_contrastive_pairs.py). Everything here is part of the reported
+  method for investigation 002. The miner takes no other tunable input; changing
+  any value below is a new mining version, not an edit.
+
+split:
+  name: ft_train
+  n_contracts: 368
+  rationale: >
+    FT-train only. Dev is reserved for P0 and Phase-1 iteration and must stay
+    clean; holdout is sealed until G4. No dev or holdout contract is read by the
+    miner or reaches any mined pair.
+
+pilot_categories:
+  - Minimum Commitment
+  - Volume Restriction
+  - Revenue/Profit Sharing
+  - Agreement Date
+  - Governing Law
+category_note: >
+  Five-category pilot. The first three are the Savelka (2023) confusable trio;
+  the last two are structural categories included so the mining method is
+  exercised outside the trio.
+
+seed: 20260815
+determinism: >
+  The miner is a pure function of (split files, instances.jsonl, CUADv1.json,
+  this config). The seed is used only for batching surfaced pairs into proposer
+  batches; pair discovery, ranking and id assignment are fully ordered and do
+  not consult the RNG.
+
+normalization:
+  note: >
+    Applied only for similarity computation. Gold span text and offsets are
+    persisted verbatim; nothing here touches scoring or the manifest.
+  steps:
+    - unicode NFKC
+    - lowercase
+    - collapse all whitespace runs to a single space
+    - runs of digits -> <num>
+    - runs of 3+ asterisks (confidential-treatment redactions) -> <redacted>
+    - token pattern "[a-z]+|<num>|<redacted>"
+
+features:
+  ngrams: [1, 2]
+  weighting: idf, binary presence (a term counts once per unit regardless of
+    frequency)
+  idf: ln(N_units / df) + 1, computed over the union of all comparison units
+    (gold spans and candidate chunks) in one pass
+  vocabulary_min_df: 2
+  vocabulary_max_df_fraction: 0.25
+  vocabulary_note: >
+    Terms appearing in more than 25% of units are dropped as legal boilerplate;
+    hapax terms are dropped because a single shared rare token cannot support a
+    convention.
+
+similarity:
+  metric: idf_weighted_jaccard
+  definition: >
+    J(a, b) = sum(idf(t) for t in A & B) / sum(idf(t) for t in A | B), over the
+    binary term sets A, B of the two units. Symmetric, in [0, 1], and penalizes
+    length mismatch, which matters because gold spans range from 16 characters
+    (Agreement Date) to 1,100 (clause categories).
+  min_terms_per_unit: 8
+  min_terms_note: >
+    A unit with fewer than 8 in-vocabulary terms is dropped from both sides. Set
+    after inspection: at 4, bare Agreement Date spans ("30th day of April")
+    cleared the floor on the strength of "day of" alone and matched any clause
+    containing a date. Under this floor, no bare Agreement Date span survives
+    cross-label mining at all - the category's identity is positional, not
+    lexical, and this metric cannot see position.
+
+context_expansion:
+  min_span_chars: 120
+  window_chars: 120
+  apply_to: [present_absent]
+  note: >
+    Gold spans shorter than min_span_chars are compared as span-plus-context
+    (window_chars of contract text on each side, clipped to the document). It is
+    what makes Agreement Date mineable at all: the 16-character date carries no
+    distinguishing terms and the surrounding preamble is precisely the signal.
+    Pairs record both the verbatim span (`text`) and the compared string
+    (`match_text`), with `context_expanded: true` when they differ.
+  apply_to_note: >
+    Applied to present-vs-absent mining only, decided after inspecting a first
+    pass. Cross-label mining asks "do these two *annotated* passages look
+    alike"; expanding one of them into its neighbourhood answers a different
+    question, and empirically it manufactured Agreement-Date-vs-Governing-Law
+    pairs whose only shared material was the preamble around the date. In
+    cross-label mining a span too short to clear min_terms_per_unit is simply
+    dropped, which is why Agreement Date contributes no cross-label pairs.
+
+chunking:
+  note: >
+    Candidate passages for present-vs-absent mining, cut from contracts where
+    the queried category is is_impossible.
+  split_on: blank lines, then on sentence-final punctuation followed by 2+
+    spaces (CUAD uses double spaces where line breaks belong)
+  target_chars: [150, 700]
+  min_chars: 120
+  merge_below: 120
+
+pair_kinds:
+  cross_label:
+    description: >
+      Two gold spans from the pilot categories with different gold categories
+      and high surface similarity. The implicit convention is whatever
+      distinguishes them.
+    threshold: 0.15
+    threshold_note: >
+      Chosen by inspecting the score distribution over all 2,640 above-floor
+      candidate pairs: the median is 0.062 and the 99th percentile 0.173, so the
+      distribution has a long thin tail and a dense junk body. Manual reading of
+      the 0.10-0.18 band found it dominated by incidental shared legal
+      boilerplate; 0.15 is placed at the elbow.
+    exclude_same_contract_overlapping: true
+    exclude_note: >
+      Two spans in the same contract whose character ranges overlap are a
+      deliberate multi-label annotation, not a disagreement, and are excluded.
+      Same-contract disjoint pairs are kept and flagged `same_contract: true`.
+    max_pairs_per_category_pair: 40
+    max_pairs_per_unit: 3
+    max_pairs_total: 200
+  present_absent:
+    description: >
+      A gold span of category C matched against a passage in a contract where C
+      is annotated is_impossible. Either the passage is evidence the annotators
+      declined to mark, or the convention draws the category's boundary tighter
+      than surface language does.
+    threshold: 0.20
+    threshold_note: >
+      Higher than the cross-label threshold because the candidate pool is every
+      passage of every negative contract rather than a curated set of gold
+      spans, so the false-match rate at a given score is higher. Below 0.20 the
+      surfaced matches were counterparts/execution boilerplate rather than
+      category-relevant language.
+    top_k_per_query: 1
+    max_pairs_per_category: 30
+    max_pairs_per_unit: 3
+    max_pairs_total: 150
+
+degree_cap:
+  note: >
+    max_pairs_per_unit bounds how many surfaced pairs any single span or chunk
+    may appear in. Without it one promiscuous unit dominates a category pair: a
+    Revenue/Profit Sharing span containing "by the fifteenth (15th) day of"
+    alone accounted for 33 of 56 cross-label pairs in the first pass, all
+    matched against Agreement Date spans. Capping degree buys diversity of
+    evidence, which is what the multi-pair support requirement on proposals
+    actually needs.
+
+ordering:
+  note: >
+    Pair ids are assigned after a total ordering, so they are stable across
+    re-runs. Sort key, in order: kind, category pair (alphabetical), descending
+    similarity rounded to 6 dp, left contract_id, left start, right contract_id,
+    right start.
+
+batching:
+  batch_size: 25
+  id_format: cm-NNN
+  note: >
+    Surfaced pairs are grouped into proposer batches. Batches are formed within
+    a pair kind and category group so a single call sees a coherent contrast;
+    the seed shuffles pair order inside a group before slicing, so batch
+    composition is reproducible but not ordered by similarity rank (which would
+    put all the strongest pairs in batch 1 and bias the proposer).
+
+outputs:
+  pairs: principles/pilot/mined_pairs.jsonl
+  summary: principles/pilot/mining_summary.json

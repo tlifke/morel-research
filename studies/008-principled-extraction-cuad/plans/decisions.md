@@ -56,8 +56,26 @@ Format:
 > paraphrase fallback is dropped. In exchange, attribution to The Atticus
 > Project is a standing obligation on every derivative in git (manifest, prompt
 > templates, principle statements) and the one-pager cites the CUAD paper.
-> Open sub-question: confirm the annotation-guidelines PDF falls under the same
-> release rather than a separate license.
+> **Sub-question resolved 2026-08-15, unfavourably.** The *CUAD Labeling
+> Handbook* is **not** CC BY 4.0. It carries `© 2021 by The Atticus Project` on
+> all 95 pages, is sold for personal use, grants no redistribution or
+> derivative-works license, and its access terms forbid implying Atticus
+> endorsement. It is also no longer free — it moved behind a paywall between
+> the 2025 and 2026 site rebuilds, and the Wayback captures never included the
+> client-rendered body.
+> Consequences, all binding:
+> - The Handbook PDF is **gitignored** (`assets/*.pdf`, `literature/*.pdf`) and
+>   must never enter this public repo.
+> - **No Handbook prose is reproduced verbatim anywhere** — not in principle
+>   statements, not in prompts, not in the writeup. Paraphrase only. The
+>   paraphrase fallback that D-8 dropped for CUAD text is **required** for
+>   Handbook-derived text.
+> - Two secondary sources *are* CC BY 4.0 and quotable, and should be preferred
+>   wherever they cover the same ground: the **CUAD v1 Datasheet** (§II-F,
+>   §III-B carry real annotation conventions) and the archived Atticus Labels
+>   page.
+> - Reproducibility note for the writeup: a reader cannot obtain this source
+>   for free. Say so, and lean on the Datasheet where possible.
 
 ---
 
@@ -160,6 +178,24 @@ Format:
 > constant added to all arms, not a confound between them. It does mean no arm
 > can reach F1 = 1.0, and the writeup must say so rather than let a reader read
 > the ceiling as model failure.
+>
+> **Partially reframed 2026-08-15.** The CUAD Datasheet documents that
+> annotators *deliberately* left confidential legends, footers and page numbers
+> inside labelled sentences. So a share of what inspection read as gold
+> corruption is **documented convention**, and the true noise floor is smaller
+> than the raw defect count suggests. The split-around-furniture cases still
+> stand as genuine hazards. The audit must separate "violates the documented
+> convention" from "follows a convention we find awkward" — otherwise the
+> published ceiling overstates the corruption.
+>
+> **New defect class, found by contrastive mining 2026-08-15**:
+> **near-duplicate documents with inconsistent gold.** CUAD contains near-twin
+> contracts (an agreement and its amendment; two filings of substantially the
+> same contract) where an identical clause is annotated in one and left
+> unannotated in the other — observed on NETGEAR, AIG and Excite pairs, and on a
+> blank signing date. This is a defect in **absence labels specifically**, the
+> decision type this study cares most about, and it is invisible to any
+> single-document inspection.
 
 ## Pending
 

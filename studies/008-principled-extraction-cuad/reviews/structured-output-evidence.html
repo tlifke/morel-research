@@ -1,0 +1,915 @@
+<title>Tinker Structured Output Evidence</title><style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin:0; background:#faf9f7; color:#16150f;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  font-size:16px; line-height:1.55; }
+.wrap { max-width:1040px; margin:0 auto; padding:32px 20px 100px; }
+h1 { font-size:29px; line-height:1.2; margin:0 0 6px; }
+h2 { font-size:21px; margin:46px 0 10px; padding-top:14px; border-top:1px solid #ddd9d0; }
+h3 { font-size:16px; margin:26px 0 8px; }
+.sub { color:#5f5a4e; margin:0 0 22px; font-size:14px; }
+.verdict { background:#fff; border:2px solid #8c2f1d; border-radius:8px; padding:18px 20px; margin:18px 0 10px; }
+.verdict h2 { border:0; margin:0 0 10px; padding:0; font-size:20px; color:#8c2f1d; }
+.vline { padding:9px 0; border-top:1px solid #eee9df; }
+.vline:first-of-type { border-top:0; }
+.model { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; font-weight:700; }
+.tag { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px; font-weight:700; white-space:nowrap; margin-left:8px; }
+.tag.bad { background:#f7dcd6; color:#7d2717; }
+.tag.ok { background:#d9ecd9; color:#1e5a24; }
+.tag.mid { background:#f6ecd2; color:#6a5010; }
+table { border-collapse:collapse; width:100%; font-size:13.5px; background:#fff; }
+th,td { border:1px solid #ddd9d0; padding:6px 9px; text-align:left; vertical-align:top; }
+th { background:#f0ede6; font-weight:600; }
+td.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ci { color:#6d685c; font-size:11px; }
+.scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:10px 0 6px; }
+pre { background:#1e1d1a; color:#e8e5dc; padding:12px 14px; border-radius:6px; overflow-x:auto;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; line-height:1.45;
+  white-space:pre; margin:6px 0; }
+pre.light { background:#fff; color:#16150f; border:1px solid #ddd9d0; white-space:pre-wrap; word-break:break-word; }
+.trunc { color:#c4761f; font-weight:700; }
+.pair { display:grid; grid-template-columns:1fr; gap:8px; margin:12px 0 22px; }
+.lab { font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#6d685c; margin-bottom:2px; }
+.note { background:#fff; border-left:4px solid #b9b3a4; padding:11px 15px; margin:14px 0; }
+.note.warn { border-left-color:#8c2f1d; }
+.note.good { border-left-color:#2f6b34; }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:#efece4; padding:1px 4px; border-radius:3px; }
+pre code { background:none; padding:0; }
+ul { padding-left:22px; } li { margin:5px 0; }
+.meta { font-size:13px; color:#5f5a4e; }
+</style><div class='wrap'><h1>Is structured output actually enforced on the Tinker OAI endpoint?</h1><p class='sub'>Study 008 &middot; endpoint <code>https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1</code> &middot; all payloads below are live responses captured 2026-08-15T12:23:12-0500 &middot; reproduce with <code>harness/scripts/probe_structured_output.py</code></p><div class='verdict'><h2>Verdict</h2><div class='vline'><span class='model'>ALL THREE MODELS — the endpoint</span><span class='tag bad'>GENUINELY UNENFORCED</span><br>Not a bug on our side. No configuration of the Tinker OAI endpoint constrains the decode. <code>response_format</code> (both <code>json_object</code> and <code>json_schema</code>, with and without <code>strict</code>/<code>name</code>), vLLM <code>guided_json</code>, <code>guided_decoding_backend</code>, <code>structured_outputs</code>, <code>nvext</code> and <code>extra_body</code> nesting are all accepted with HTTP 200 and all produce output statistically indistinguishable from sending no parameter at all (the <code>none</code> control matches every mechanism, in both Part 2 and Part 3). Two invalid controls are also accepted, proving the field is never parsed. The native SDK has no such surface either. <b>Do not send these parameters expecting effect.</b></div><div class='vline'><span class='model'>Qwen/Qwen3.5-4B</span><span class='tag mid'>unenforced, but conforms well when prompted with the schema</span><br>20/20 strictly-parseable JSON and 19/20 schema-valid + coverage-valid under the study's real prompt on a short contract. Under an adversarial prompt that invites prose, 8&ndash;10/10 fenced and 0/10 strictly parseable &mdash; identical to the no-parameter control. Conformance is a property of the <i>prompt</i>, not of any server-side enforcement. Its distinctive failure is reasoning overflow: with a fence-inviting prompt it returned empty <code>content</code> in 1&ndash;4 of 10 samples per mechanism.</div><div class='vline'><span class='model'>Qwen/Qwen3.5-9B</span><span class='tag mid'>unenforced, but conforms well when prompted with the schema</span><br>20/20 strictly-parseable, schema-valid and coverage-valid under the study's real prompt on a short contract. Under the adversarial prompt, 9&ndash;10/10 fenced and 0/10 strictly parseable, again matching the control exactly. Never emitted a tool call under any <code>tool_choice</code>, on either the OpenAI- or the Anthropic-compatible endpoint.</div><div class='vline'><span class='model'>thinkingmachines/Inkling-Small</span><span class='tag bad'>unenforced — the previous &quot;json_object honored&quot; note is WRONG</span><br>20/20 strictly-parseable, schema-valid and coverage-valid under the study's real prompt &mdash; the best of the three &mdash; but that is voluntary compliance, not enforcement. Under the adversarial prompt it emitted a markdown fence on <b>10/10</b> samples with <code>response_format: {"type": "json_object"}</code> set, identical to the control. The <code>structured_output: "json_object"</code> entry in <code>TINKER_MODEL_FACTS</code> and the matching claim in <code>plans/component-contracts.md</code> are falsified and must be corrected to <code>prompt_only</code>. It is the only model that emits tool calls at all (17/20 under a forced named tool), but even then <code>tool_choice</code> is not honoured &mdash; it declines 3 times in 20.</div></div><div class="note warn"><b>Answering the framing question directly: this is NOT a
+misconfiguration.</b> Fourteen distinct request shapes &mdash; every OpenAI and vLLM
+structured-output knob we could name &mdash; were sent live to the endpoint. All fourteen
+returned HTTP&nbsp;200, <i>including two deliberately invalid controls that any server parsing
+<code>response_format</code> would have rejected with a 400</i>. The endpoint does validate
+<code>model</code> (400 on an unknown one) and does honour <code>temperature</code>, so requests
+are genuinely parsed &mdash; the structured-output parameters specifically are dropped before
+reaching anything that could act on them. Three independent lines of evidence agree, below:
+live probes, the published docs, and Thinking Machines' own cookbook proxy, which rejects
+<code>response_format</code> with a clean 400 rather than pretending to honour it.</div><div class="note good"><b>And the finding that changes the stakes.</b> &ldquo;Not
+enforced&rdquo; turned out <i>not</i> to mean &ldquo;models cannot conform.&rdquo; Under the
+study's real prompt &mdash; which embeds the JSON Schema verbatim &mdash; all three models
+produced strictly parseable JSON on 20/20 samples and schema-valid, coverage-valid output on
+19&ndash;20/20. The catastrophic-looking rates in the earlier assessment came from prompts that
+either omitted the schema or actively invited prose. Both effects are shown separately below so
+you can see which is which. <b>Read the limitation in Part&nbsp;3 before quoting these rates:</b>
+they are measured on one short synthetic contract, not on real CUAD documents.</div><h2>Part 1 &mdash; what the endpoint accepts</h2><p>Each row is one live request carrying a small 4-field schema (one enum, one array)
+and a prompt that <i>explicitly asks</i> for prose plus a markdown code fence. A working
+constrained decode cannot emit a fence, so <b>fence = yes</b> directly falsifies enforcement.
+&ldquo;strict JSON&rdquo; means <code>json.loads</code> succeeds on the entire response with no
+repair. &ldquo;schema-valid&rdquo; is checked <i>after</i> lenient brace extraction, i.e. it is
+the generous reading and says nothing about enforcement.</p><div class='scroll'><table><tr><th>variant</th><th>what was sent</th><th>HTTP</th><th>fence emitted</th><th>strict JSON</th><th>schema-valid<br>(after repair)</th></tr><tr><td><code>json_schema_current</code></td><td>response_format json_schema, name + schema (what tinker_backend would send if it sent json_schema)</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>3/3</td></tr><tr><td><code>json_schema_strict</code></td><td>response_format json_schema with strict:true and name</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>2/3</td></tr><tr><td><code>json_schema_no_name</code></td><td>response_format json_schema with strict:true, no name</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>2/3</td></tr><tr><td><code>json_object</code></td><td>response_format json_object (what tinker_backend sends today)</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>2/3</td></tr><tr><td><code>guided_json</code></td><td>vLLM guided decoding: top-level guided_json</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>2/3</td></tr><tr><td><code>guided_json_backend</code></td><td>vLLM guided decoding: guided_json + guided_decoding_backend=xgrammar</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>1/3</td></tr><tr><td><code>guided_json_outlines</code></td><td>vLLM guided decoding: guided_json + guided_decoding_backend=outlines</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>2/3</td></tr><tr><td><code>structured_outputs</code></td><td>vLLM &gt;=0.10 structured_outputs {json: schema}</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>2/3</td></tr><tr><td><code>extra_body_nested</code></td><td>guided_json nested under extra_body (wrong for raw HTTP; tests param tolerance)</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>3/3</td></tr><tr><td><code>nvext_guided_json</code></td><td>NIM-style nvext.guided_json</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>3/3</td></tr><tr><td><code>bogus_param</code></td><td>control: an obviously unknown parameter</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>3/3</td></tr><tr><td><code>bogus_response_format_type</code></td><td>control: response_format with an invalid type value</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>3/3</td></tr><tr><td><code>json_schema_missing_body</code></td><td>control: response_format type json_schema with no json_schema key</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>3/3</td></tr><tr><td><code>none</code></td><td>control: no structured-output parameter at all</td><td class='num'>200</td><td class='num'>3/3</td><td class='num'>0/3</td><td class='num'>3/3</td></tr></table></div><p class='meta'>Fractions are over the three models (Qwen/Qwen3.5-4B, Qwen/Qwen3.5-9B, thinkingmachines/Inkling-Small), one sample each. <code>tools_*</code> rows are analysed on the tool-call arguments when a tool call was emitted, otherwise on <code>content</code>.</p><h3>The two controls that settle it</h3>
+<div class="pair">
+  <div><div class="lab">bogus_response_format_type — Qwen/Qwen3.5-9B &mdash; request body</div>
+  <pre>{
+  &quot;model&quot;: &quot;Qwen/Qwen3.5-9B&quot;,
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat.&quot;
+    }
+  ],
+  &quot;temperature&quot;: 0.7,
+  &quot;max_tokens&quot;: 3000,
+  &quot;seed&quot;: 0,
+  &quot;response_format&quot;: {
+    &quot;type&quot;: &quot;not_a_real_format&quot;
+  }
+}</pre></div>
+  <div><div class="lab">response &mdash; message.content, verbatim</div>
+  <pre class="light">Based on the provided text, the document is identified as a &quot;Distribution Agreement&quot; involving the entities &quot;Acme Corp&quot; and &quot;Globex Inc&quot;. The phrase &quot;still in force&quot; indicates that the contract is currently active, and the signing year is explicitly stated as 2019.
+
+```json
+{
+  &quot;title&quot;: &quot;Distribution Agreement&quot;,
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;parties&quot;: [
+    &quot;Acme Corp&quot;,
+    &quot;Globex Inc&quot;
+  ],
+  &quot;year&quot;: 2019
+}
+```
+
+This information is extracted solely from the provided summary and should not be considered legal advice.</pre></div>
+</div>
+<div class="pair">
+  <div><div class="lab">json_schema_missing_body — Qwen/Qwen3.5-9B &mdash; request body</div>
+  <pre>{
+  &quot;model&quot;: &quot;Qwen/Qwen3.5-9B&quot;,
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat.&quot;
+    }
+  ],
+  &quot;temperature&quot;: 0.7,
+  &quot;max_tokens&quot;: 3000,
+  &quot;seed&quot;: 0,
+  &quot;response_format&quot;: {
+    &quot;type&quot;: &quot;json_schema&quot;
+  }
+}</pre></div>
+  <div><div class="lab">response &mdash; message.content, verbatim</div>
+  <pre class="light">Based on the provided text, the document is identified as a &quot;Distribution Agreement&quot; involving the entities &quot;Acme Corp&quot; and &quot;Globex Inc&quot;. The phrase &quot;still in force&quot; indicates that the contract is currently active, and the signing year is explicitly stated as 2019.
+
+```json
+{
+  &quot;title&quot;: &quot;Distribution Agreement&quot;,
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;parties&quot;: [
+    &quot;Acme Corp&quot;,
+    &quot;Globex Inc&quot;
+  ],
+  &quot;year&quot;: 2019
+}
+```
+
+This information is extracted solely from the provided summary and should not be considered legal advice.</pre></div>
+</div><div class="note">A server that parsed <code>response_format</code> would reject
+<code>{"type": "not_a_real_format"}</code> and would reject <code>{"type": "json_schema"}</code>
+sent with no <code>json_schema</code> body. Both are accepted with HTTP 200 and a normal
+completion. Since an unknown <code>model</code> <i>does</i> produce a 400
+(<code>{"detail":"Sampling is not supported for not/a-real-model."}</code>), the request body is
+being parsed; <code>response_format</code> is simply not part of what it parses.</div><h3>The mechanisms we wanted to work</h3>
+<div class="pair">
+  <div><div class="lab">json_schema_strict — Qwen/Qwen3.5-4B &mdash; request body</div>
+  <pre>{
+  &quot;model&quot;: &quot;Qwen/Qwen3.5-4B&quot;,
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat.&quot;
+    }
+  ],
+  &quot;temperature&quot;: 0.7,
+  &quot;max_tokens&quot;: 3000,
+  &quot;seed&quot;: 0,
+  &quot;response_format&quot;: {
+    &quot;type&quot;: &quot;json_schema&quot;,
+    &quot;json_schema&quot;: {
+      &quot;name&quot;: &quot;answer&quot;,
+      &quot;strict&quot;: true,
+      &quot;schema&quot;: {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+          &quot;title&quot;: {
+            &quot;type&quot;: &quot;string&quot;
+          },
+          &quot;status&quot;: {
+            &quot;type&quot;: &quot;string&quot;,
+            &quot;enum&quot;: [
+              &quot;active&quot;,
+              &quot;expired&quot;,
+              &quot;unknown&quot;
+            ]
+          },
+          &quot;parties&quot;: {
+            &quot;type&quot;: &quot;array&quot;,
+            &quot;items&quot;: {
+              &quot;type&quot;: &quot;string&quot;
+            }
+          },
+          &quot;year&quot;: {
+            &quot;type&quot;: &quot;integer&quot;
+          }
+        },
+        &quot;required&quot;: [
+          &quot;title&quot;,
+          &quot;status&quot;,
+          &quot;parties&quot;,
+          &quot;year&quot;
+        ],
+        &quot;additionalProperties&quot;: false
+      }
+    }
+  }
+}</pre></div>
+  <div><div class="lab">response &mdash; message.content, verbatim</div>
+  <pre class="light">Based on the provided text, the contract title is explicitly identified as the &quot;Distribution Agreement,&quot; while the parties involved are clearly stated as Acme Corp and Globex Inc. The signing year is directly mentioned as 2019, and the status is determined to be &quot;active&quot; because the summary explicitly notes that the agreement is &quot;still in force.&quot;
+
+```json
+{
+  &quot;title&quot;: &quot;Distribution Agreement&quot;,
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;parties&quot;: [
+    &quot;Acme Corp&quot;,
+    &quot;Globex Inc&quot;
+  ],
+  &quot;year&quot;: 2019
+}
+```
+
+This summary is based solely on the provided text and does not verify the current legal standing of the contract.</pre></div>
+</div>
+<div class="pair">
+  <div><div class="lab">guided_json — Qwen/Qwen3.5-4B &mdash; request body</div>
+  <pre>{
+  &quot;model&quot;: &quot;Qwen/Qwen3.5-4B&quot;,
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat.&quot;
+    }
+  ],
+  &quot;temperature&quot;: 0.7,
+  &quot;max_tokens&quot;: 3000,
+  &quot;seed&quot;: 0,
+  &quot;guided_json&quot;: {
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;properties&quot;: {
+      &quot;title&quot;: {
+        &quot;type&quot;: &quot;string&quot;
+      },
+      &quot;status&quot;: {
+        &quot;type&quot;: &quot;string&quot;,
+        &quot;enum&quot;: [
+          &quot;active&quot;,
+          &quot;expired&quot;,
+          &quot;unknown&quot;
+        ]
+      },
+      &quot;parties&quot;: {
+        &quot;type&quot;: &quot;array&quot;,
+        &quot;items&quot;: {
+          &quot;type&quot;: &quot;string&quot;
+        }
+      },
+      &quot;year&quot;: {
+        &quot;type&quot;: &quot;integer&quot;
+      }
+    },
+    &quot;required&quot;: [
+      &quot;title&quot;,
+      &quot;status&quot;,
+      &quot;parties&quot;,
+      &quot;year&quot;
+    ],
+    &quot;additionalProperties&quot;: false
+  }
+}</pre></div>
+  <div><div class="lab">response &mdash; message.content, verbatim</div>
+  <pre class="light">Based on the provided text, the contract title is explicitly identified as the Distribution Agreement. The parties involved are clearly named as Acme Corp and Globex Inc within the same sentence. The year of signing is stated directly as 2019, and the status is determined to be active because the summary specifies the agreement is &quot;still in force.&quot;
+
+```json
+{
+  &quot;title&quot;: &quot;Distribution Agreement&quot;,
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;parties&quot;: [
+    &quot;Acme Corp&quot;,
+    &quot;Globex Inc&quot;
+  ],
+  &quot;year&quot;: &quot;2019&quot;
+}
+```
+
+This conclusion relies solely on the provided summary text and assumes no subsequent termination date exists outside of this context.</pre></div>
+</div>
+<div class="pair">
+  <div><div class="lab">structured_outputs — Qwen/Qwen3.5-4B &mdash; request body</div>
+  <pre>{
+  &quot;model&quot;: &quot;Qwen/Qwen3.5-4B&quot;,
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat.&quot;
+    }
+  ],
+  &quot;temperature&quot;: 0.7,
+  &quot;max_tokens&quot;: 3000,
+  &quot;seed&quot;: 0,
+  &quot;structured_outputs&quot;: {
+    &quot;json&quot;: {
+      &quot;type&quot;: &quot;object&quot;,
+      &quot;properties&quot;: {
+        &quot;title&quot;: {
+          &quot;type&quot;: &quot;string&quot;
+        },
+        &quot;status&quot;: {
+          &quot;type&quot;: &quot;string&quot;,
+          &quot;enum&quot;: [
+            &quot;active&quot;,
+            &quot;expired&quot;,
+            &quot;unknown&quot;
+          ]
+        },
+        &quot;parties&quot;: {
+          &quot;type&quot;: &quot;array&quot;,
+          &quot;items&quot;: {
+            &quot;type&quot;: &quot;string&quot;
+          }
+        },
+        &quot;year&quot;: {
+          &quot;type&quot;: &quot;integer&quot;
+        }
+      },
+      &quot;required&quot;: [
+        &quot;title&quot;,
+        &quot;status&quot;,
+        &quot;parties&quot;,
+        &quot;year&quot;
+      ],
+      &quot;additionalProperties&quot;: false
+    }
+  }
+}</pre></div>
+  <div><div class="lab">response &mdash; message.content, verbatim</div>
+  <pre class="light">Based on the provided text, the contract title is explicitly identified as the &quot;Distribution Agreement,&quot; while the parties involved are clearly stated as Acme Corp and Globex Inc. The signing year is directly mentioned as 2019, and the status is determined to be &quot;active&quot; because the summary explicitly notes that the agreement is &quot;still in force.&quot;
+
+```json
+{
+  &quot;title&quot;: &quot;Distribution Agreement&quot;,
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;parties&quot;: [
+    &quot;Acme Corp&quot;,
+    &quot;Globex Inc&quot;
+  ],
+  &quot;year&quot;: 2019
+}
+```
+
+This summary is based solely on the provided text and does not verify the current legal standing of the contract.</pre></div>
+</div>
+<div class="pair">
+  <div><div class="lab">json_object — Qwen/Qwen3.5-4B &mdash; request body</div>
+  <pre>{
+  &quot;model&quot;: &quot;Qwen/Qwen3.5-4B&quot;,
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat.&quot;
+    }
+  ],
+  &quot;temperature&quot;: 0.7,
+  &quot;max_tokens&quot;: 3000,
+  &quot;seed&quot;: 0,
+  &quot;response_format&quot;: {
+    &quot;type&quot;: &quot;json_object&quot;
+  }
+}</pre></div>
+  <div><div class="lab">response &mdash; message.content, verbatim</div>
+  <pre class="light">Based on the provided text, the contract title is explicitly identified as the &quot;Distribution Agreement,&quot; while the parties involved are clearly stated as Acme Corp and Globex Inc. The signing year is directly mentioned as 2019, and the status is determined to be &quot;active&quot; because the summary explicitly notes that the agreement is &quot;still in force.&quot;
+
+```json
+{
+  &quot;title&quot;: &quot;Distribution Agreement&quot;,
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;parties&quot;: [
+    &quot;Acme Corp&quot;,
+    &quot;Globex Inc&quot;
+  ],
+  &quot;year&quot;: 2019
+}
+```
+
+This summary is based solely on the provided text and does not verify the current legal standing of the contract.</pre></div>
+</div><h3>Endpoint introspection</h3><div class='lab'>GET /models &rarr; HTTP 200</div><pre>{&quot;object&quot;:&quot;list&quot;,&quot;data&quot;:[{&quot;id&quot;:&quot;tinker://627b97d5-eaee-5bb6-8d4a-cb8b5dea22cc:train:0/sampler_weights/tutorial-sampler&quot;,&quot;object&quot;:&quot;model&quot;,&quot;created&quot;:1786218718,&quot;owned_by&quot;:&quot;tml:organization_user:7a738b9d-e48b-4c0b-9c96-6b064c02d334&quot;,&quot;base_model&quot;:&quot;Qwen/Qwen3.5-4B&quot;}]}</pre><div class='lab'>GET / &rarr; HTTP 404</div><pre>{&quot;detail&quot;:&quot;Not Found&quot;}</pre><div class='lab'>GET /chat/completions &rarr; HTTP 405</div><pre>{&quot;detail&quot;:&quot;Method Not Allowed&quot;}</pre><p>No <code>/openapi.json</code>, no <code>/docs</code>, no <code>/responses</code>.
+<code>/models</code> lists only the caller's own fine-tuned sampler weights, not the base models
+&mdash; so the base model ids the study uses are not discoverable from the endpoint, and there is
+no served capability document to consult. The 400 wording on an unknown model is not vLLM's; this
+is a bespoke shim in front of Tinker's sampler, which is the most likely reason vLLM's
+<code>guided_json</code> does nothing.</p><h3>What the documentation says</h3><p>Independently checked against the published docs and source (fetched
+2026-08-15). Relay these as claims to spot-check, not as things I ran:</p>
+<ul>
+<li><a href="https://tinker-docs.thinkingmachines.ai/tinker/compatible-apis/openai/">The
+OpenAI-compatibility page</a> documents only <code>model</code>, <code>messages</code>,
+<code>prompt</code>, <code>max_tokens</code>, <code>temperature</code>, <code>top_p</code>,
+<code>separate_reasoning</code> and <code>reasoning_effort</code>. It never mentions
+<code>response_format</code>, <code>json_schema</code>, <code>json_object</code>,
+<code>guided_json</code>, <code>logit_bias</code>, or any grammar feature &mdash; and it never
+states how unknown parameters are handled. Our probe answers that omission: silently ignored.</li>
+<li>The native SDK's <code>SamplingParams</code> has exactly six fields:
+<code>max_tokens, seed, stop, temperature, top_k, top_p</code>. There is no structured-output,
+grammar, guided-decoding, logit-bias, or logit-processor surface anywhere in the SDK. So the
+capability does not exist one layer down either &mdash; the shim is not hiding it.</li>
+<li>Thinking Machines' own cookbook ships a self-hosted OpenAI-compatible proxy whose
+<code>_UNSUPPORTED_OPENAI_KEYS</code> includes <code>response_format</code>, with a test asserting
+it returns HTTP 400, and a README line: &ldquo;Anything else that changes semantics is rejected
+with a clean 400 rather than silently ignored.&rdquo; Their own stack has nothing to implement
+<code>response_format</code> with. The hosted shim differs only in being less honest about it.</li>
+<li><code>separate_reasoning</code> defaults to <code>true</code> (changed from <code>false</code>
+in June 2026), which is why <code>reasoning_content</code> arrives split out of
+<code>content</code> without us asking. Worth setting explicitly in the backend so a future
+default flip cannot silently move reasoning text back into <code>content</code>.</li>
+<li>No recipe in the cookbook does enforced structured output. Their mechanism is: render the
+schema into the prompt, sample free text, parse afterwards, and report a
+<code>MALFORMED</code> termination on failure. That is exactly what this harness already does.</li>
+</ul><h2>Part 1b &mdash; function calling, the one surface that is not nothing</h2><p>Tinker also serves an Anthropic-compatible endpoint at
+<code>/anthropic/api/v1/messages</code> (undocumented on the OAI page; found by probing) which
+accepts <code>tools</code> with an <code>input_schema</code> and a <code>tool_choice</code>. This
+is the closest thing to a schema-shaped surface Tinker offers, so it was tested rather than
+assumed. <b>It is not enforcement either:</b> <code>tool_choice</code> forcing is not honoured
+&mdash; both Qwen models simply ignore the tools and answer in prose &mdash; and the one model
+that does emit tool calls emits them only some of the time.</p><div class='scroll'><table><tr><th>model</th><th>tool_choice</th><th>n</th><th>emitted a tool_use block</th><th>tool input schema-valid</th><th>stop_reason values</th></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>any_tool</code></td><td class='num'>3</td><td class='num'>0/3</td><td class='num'>0/3</td><td>end_turn, max_tokens</td></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>forced_named_tool</code></td><td class='num'>3</td><td class='num'>0/3</td><td class='num'>0/3</td><td>end_turn, max_tokens</td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>any_tool</code></td><td class='num'>3</td><td class='num'>0/3</td><td class='num'>0/3</td><td>end_turn, max_tokens</td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>forced_named_tool</code></td><td class='num'>3</td><td class='num'>0/3</td><td class='num'>0/3</td><td>end_turn</td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>any_tool</code></td><td class='num'>3</td><td class='num'>3/3</td><td class='num'>3/3</td><td>tool_use</td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>forced_named_tool</code></td><td class='num'>3</td><td class='num'>1/3</td><td class='num'>1/3</td><td>end_turn, max_tokens, tool_use</td></tr></table></div>
+<div class="pair">
+  <div><div class="lab">Anthropic endpoint, tool_choice pinned to a named tool — Qwen/Qwen3.5-9B &mdash; request body</div>
+  <pre>{
+  &quot;model&quot;: &quot;Qwen/Qwen3.5-9B&quot;,
+  &quot;max_tokens&quot;: 1500,
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;Here is a contract summary: The Distribution Agreement between Acme Corp and Globex Inc was signed in 2019 and is still in force.\n\nReport the title, status (active/expired/unknown), parties and year. First explain your reasoning in a short paragraph of prose, then present the answer as a JSON object inside a ```json markdown code block, and finish with a one-sentence caveat.&quot;
+    }
+  ],
+  &quot;tools&quot;: [
+    {
+      &quot;name&quot;: &quot;report&quot;,
+      &quot;description&quot;: &quot;Report the structured answer.&quot;,
+      &quot;input_schema&quot;: {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+          &quot;title&quot;: {
+            &quot;type&quot;: &quot;string&quot;
+          },
+          &quot;status&quot;: {
+            &quot;type&quot;: &quot;string&quot;,
+            &quot;enum&quot;: [
+              &quot;active&quot;,
+              &quot;expired&quot;,
+              &quot;unknown&quot;
+            ]
+          },
+          &quot;parties&quot;: {
+            &quot;type&quot;: &quot;array&quot;,
+            &quot;items&quot;: {
+              &quot;type&quot;: &quot;string&quot;
+            }
+          },
+          &quot;year&quot;: {
+            &quot;type&quot;: &quot;integer&quot;
+          }
+        },
+        &quot;required&quot;: [
+          &quot;title&quot;,
+          &quot;status&quot;,
+          &quot;parties&quot;,
+          &quot;year&quot;
+        ],
+        &quot;additionalProperties&quot;: false
+      }
+    }
+  ],
+  &quot;tool_choice&quot;: {
+    &quot;type&quot;: &quot;tool&quot;,
+    &quot;name&quot;: &quot;report&quot;
+  }
+}</pre></div>
+  <div><div class="lab">response &mdash; message.content, verbatim</div>
+  <pre class="light">stop_reason=end_turn  blocks=[&#x27;thinking&#x27;, &#x27;text&#x27;]
+emitted_tool_use=False
+
+Based on the contract summary provided, I can identify the key information: the title is &quot;Distribution Agreement,&quot; the year is 2019 when it was signed, the parties involved are &quot;Acme Corp&quot; and &quot;Globex Inc,&quot; and since the agreement states it &quot;is still in force,&quot; the status is clearly &quot;active.&quot;
+
+```json
+{
+  &quot;title&quot;: &quot;Distribution Agreement&quot;,
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;parties&quot;: [&quot;Acme Corp&quot;, &quot;Globex Inc&quot;],
+  &quot;year&quot;: 2019
+}
+```
+
+This caveat: The provided summary does not include any potential automatic renewal clauses or termination conditions that could affect the status beyond the stated timeframe.</pre></div>
+</div><div class="note">A forced named tool that the model is free to decline is a request,
+not a constraint. Part&nbsp;3 measures what using it costs: on this task it is <b>strictly worse
+than plain prompting on all three models</b>, because the tool framing pulls the Qwen models into
+conversational prose. Do not adopt it.</div><h2>Part 2 &mdash; does anything constrain, or merely nudge?</h2><p>Every mechanism that could plausibly constrain, run 10 times per
+model at <b>temperature 1.0</b> against the fence-inviting prompt. A real constrained decode shows
+0% fences and 100% strict JSON. The <code>none</code> row is the control: <b>every mechanism
+matches the control exactly</b>, which is the cleanest possible statement that the parameter does
+nothing.</p><div class='scroll'><table><tr><th>model</th><th>mechanism</th><th>n</th><th>fence emitted</th><th>strict JSON</th><th>schema-valid (lenient)</th></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>guided_json</code></td><td class='num'>10</td><td class='num'>80% <span class='ci'>8/10, CI 49–94</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>60% <span class='ci'>6/10, CI 31–83</span></td></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>json_object</code></td><td class='num'>10</td><td class='num'>90% <span class='ci'>9/10, CI 60–98</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>70% <span class='ci'>7/10, CI 40–89</span></td></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>json_schema_strict</code></td><td class='num'>10</td><td class='num'>80% <span class='ci'>8/10, CI 49–94</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>50% <span class='ci'>5/10, CI 24–76</span></td></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>none</code></td><td class='num'>10</td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>90% <span class='ci'>9/10, CI 60–98</span></td></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>structured_outputs</code></td><td class='num'>10</td><td class='num'>70% <span class='ci'>7/10, CI 40–89</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>70% <span class='ci'>7/10, CI 40–89</span></td></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>tools_forced</code></td><td class='num'>10</td><td class='num'>30% <span class='ci'>3/10, CI 11–60</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>30% <span class='ci'>3/10, CI 11–60</span></td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>guided_json</code></td><td class='num'>10</td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>60% <span class='ci'>6/10, CI 31–83</span></td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>json_object</code></td><td class='num'>10</td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>40% <span class='ci'>4/10, CI 17–69</span></td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>json_schema_strict</code></td><td class='num'>10</td><td class='num'>90% <span class='ci'>9/10, CI 60–98</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>50% <span class='ci'>5/10, CI 24–76</span></td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>none</code></td><td class='num'>10</td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>40% <span class='ci'>4/10, CI 17–69</span></td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>structured_outputs</code></td><td class='num'>10</td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>50% <span class='ci'>5/10, CI 24–76</span></td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>tools_forced</code></td><td class='num'>10</td><td class='num'>80% <span class='ci'>8/10, CI 49–94</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>80% <span class='ci'>8/10, CI 49–94</span></td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>guided_json</code></td><td class='num'>10</td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>json_object</code></td><td class='num'>10</td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>json_schema_strict</code></td><td class='num'>10</td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>none</code></td><td class='num'>10</td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>structured_outputs</code></td><td class='num'>10</td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td><td class='num'>0% <span class='ci'>0/10, CI 0–28</span></td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>tools_forced</code></td><td class='num'>10</td><td class='num'>50% <span class='ci'>5/10, CI 24–76</span></td><td class='num'>50% <span class='ci'>5/10, CI 24–76</span></td><td class='num'>100% <span class='ci'>10/10, CI 72–100</span></td></tr></table></div><h3>A fence, emitted while <code>response_format</code> asked for JSON</h3><div class='lab'>Qwen/Qwen3.5-4B &middot; <code>json_schema_strict</code> &middot; temperature 1.0 &middot; sample 0</div><pre class='light'>Based on the text provided, the contract title is identified as &quot;Distribution Agreement&quot; as stated in the subject line. The parties involved are explicitly listed as &quot;Acme Corp&quot; and &quot;Globex Inc&quot; within the agreement description. The signing year is extracted as 2019 from the phrase &quot;signed in 2019,&quot; and the status is determined to be active because the text qualifies the contract as &quot;still in force.&quot;
+
+```json
+{
+  &quot;title&quot;: &quot;Distribution Agreement&quot;,
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;parties&quot;: [&quot;Acme Corp&quot;, &quot;Globex Inc&quot;],
+  &quot;year&quot;: 2019
+}
+```
+
+This report is accurate solely based on the provided summary text without external verification of the contract&#x27;s actual terms or current legal validity.</pre><div class='lab'>Qwen/Qwen3.5-4B &middot; <code>json_schema_strict</code> &middot; temperature 1.0 &middot; sample 1</div><pre class='light'>Based on the provided text, the document title is explicitly identified as the &quot;Distribution Agreement&quot; and the signatories are listed as Acme Corp and Globex Inc. The year of execution is stated as 2019, and the phrase &quot;is still in force&quot; confirms the current status of the contract as active.
+
+```json
+{
+  &quot;title&quot;: &quot;Distribution Agreement&quot;,
+  &quot;status&quot;: &quot;active&quot;,
+  &quot;parties&quot;: [
+    &quot;Acme Corp&quot;,
+    &quot;Globex Inc&quot;
+  ],
+  &quot;year&quot;: 2019
+}
+```
+
+Please note that this summary relies solely on the provided text and may differ from any subsequent amendments or terminations not yet reflected in the text.</pre><h2>Part 3 &mdash; measured rates at the study's real settings</h2><p>CUAD-shaped output (12 categories, <code>extractions</code> + <code>absent</code>,
+each decision carrying <code>principles_cited</code>) at the study's actual sampling settings:
+<b>temperature 0.7</b>, <code>max_tokens</code> 16384,
+<b>n=20</b> per cell. Critically, the prompt here <b>mirrors
+<code>harness/prompts.py</code></b> &mdash; same system block, same
+&ldquo;OUTPUT FORMAT / must validate against this JSON Schema&rdquo; header with the schema
+serialised into the prompt, same document block. That is what makes these the study's rates
+rather than a probe's.</p><div class='scroll'><table><tr><th>model</th><th>mechanism</th><th>n</th><th>valid JSON<br>(no repair)</th><th>valid JSON<br>(brace repair)</th><th>schema-valid</th><th>coverage-valid</th><th>schema &amp; coverage</th></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>json_object</code></td><td class='num'>20</td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>95% <span class='ci'>19/20, CI 76–99</span></td><td class='num'>95% <span class='ci'>19/20, CI 76–99</span></td><td class='num'>95% <span class='ci'>19/20, CI 76–99</span></td></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>none</code></td><td class='num'>20</td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>95% <span class='ci'>19/20, CI 76–99</span></td><td class='num'>95% <span class='ci'>19/20, CI 76–99</span></td><td class='num'>95% <span class='ci'>19/20, CI 76–99</span></td></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>tools_forced</code></td><td class='num'>20</td><td class='num'>0% <span class='ci'>0/20, CI 0–16</span></td><td class='num'>0% <span class='ci'>0/20, CI 0–16</span></td><td class='num'>0% <span class='ci'>0/20, CI 0–16</span></td><td class='num'>0% <span class='ci'>0/20, CI 0–16</span></td><td class='num'>0% <span class='ci'>0/20, CI 0–16</span></td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>json_object</code></td><td class='num'>20</td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>none</code></td><td class='num'>20</td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>tools_forced</code></td><td class='num'>20</td><td class='num'>45% <span class='ci'>9/20, CI 26–66</span></td><td class='num'>60% <span class='ci'>12/20, CI 39–78</span></td><td class='num'>60% <span class='ci'>12/20, CI 39–78</span></td><td class='num'>60% <span class='ci'>12/20, CI 39–78</span></td><td class='num'>60% <span class='ci'>12/20, CI 39–78</span></td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>json_object</code></td><td class='num'>20</td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>none</code></td><td class='num'>20</td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td><td class='num'>100% <span class='ci'>20/20, CI 84–100</span></td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>tools_forced</code></td><td class='num'>20</td><td class='num'>85% <span class='ci'>17/20, CI 64–95</span></td><td class='num'>85% <span class='ci'>17/20, CI 64–95</span></td><td class='num'>85% <span class='ci'>17/20, CI 64–95</span></td><td class='num'>85% <span class='ci'>17/20, CI 64–95</span></td><td class='num'>85% <span class='ci'>17/20, CI 64–95</span></td></tr></table></div><div class="note warn"><b>Limitations you must read before quoting these numbers.</b>
+<ul>
+<li>One document. It is a short synthetic distribution agreement (~350 words), not a real CUAD
+contract. Real instances run 8k&ndash;82k tokens. Conformance under length is
+<b>not measured here</b> and is exactly where these models are most likely to degrade &mdash;
+truncation, dropped categories, and reasoning overflow all scale with input length.</li>
+<li>One prompt, one condition. No principle block (C2/C3) is present, so the longer, more
+demanding prompts are untested.</li>
+<li>n=20 per cell. A 20/20 result has a 95% CI of roughly 84&ndash;100%; it cannot distinguish a
+truly perfect model from one that fails 1 time in 25.</li>
+<li><code>json_object</code> and <code>none</code> produce statistically identical rows. That is
+the point of including <code>none</code> &mdash; it is the third independent confirmation that
+<code>response_format</code> is inert, this time under the realistic prompt.</li>
+</ul></div><h3>Failure modes, counted</h3><div class='scroll'><table><tr><th>model</th><th>mechanism</th><th>n</th><th>markdown fence</th><th>prose before JSON</th><th>empty content</th><th>finish_reason=length</th><th>emitted tool call</th></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>json_object</code></td><td class='num'>20</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>none</code></td><td class='num'>20</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td></tr><tr><td><code>Qwen/Qwen3.5-4B</code></td><td><code>tools_forced</code></td><td class='num'>20</td><td class='num'>0</td><td class='num'>20</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>json_object</code></td><td class='num'>20</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>none</code></td><td class='num'>20</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td></tr><tr><td><code>Qwen/Qwen3.5-9B</code></td><td><code>tools_forced</code></td><td class='num'>20</td><td class='num'>3</td><td class='num'>11</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>json_object</code></td><td class='num'>20</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>none</code></td><td class='num'>20</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td></tr><tr><td><code>thinkingmachines/Inkling-Small</code></td><td><code>tools_forced</code></td><td class='num'>20</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0</td><td class='num'>0</td><td class='num'>17</td></tr></table></div><h3>Verbatim samples &mdash; one clean pass and every distinct failure</h3><div class='lab'>PASS &middot; Qwen/Qwen3.5-4B &middot; <code>json_object</code> &middot; sample 0</div><pre class='light'>{
+  &quot;extractions&quot;: [
+    {
+      &quot;category&quot;: &quot;governing_law&quot;,
+      &quot;spans&quot;: [
+        &quot;State of New York&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;renewal_term&quot;,
+      &quot;spans&quot;: [
+        &quot;one (1) year terms&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;notice_period_to_terminate_renewal&quot;,
+      &quot;spans&quot;: [
+        &quot;ninety (90) days&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;exclusivity&quot;,
+      &quot;spans&quot;: [
+        &quot;sole and exclusive distributor&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;anti_assignment&quot;,
+      &quot;spans&quot;: [
+        &quot;Neither party may assign this Agreement&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;cap_on_liability&quot;,
+      &quot;spans&quot;: [
+        &quot;aggregate liability under this Agreement exceed the total fees paid by Distributor to Supplier in the twelve (12) months preceding the claim&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;insurance&quot;,
+      &quot;spans&quot;: [
+        &quot;commercial general liability insurance&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    }
+  ],
+  &quot;absent&quot;: [
+    {
+      &quot;category&quot;: &quot;expiration_date&quot;,
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;non_compete&quot;,
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;change_of_control&quot;,
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;audit_rights&quot;,
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;most_favored_nation&quot;,
+      &quot;principles_cited&quot;: []
+    }
+  ]
+}</pre><div class='lab'>FAIL &middot; Qwen/Qwen3.5-4B &middot; <code>json_object</code> &middot; sample 3 &middot; finish_reason=stop &middot; completion_tokens=3795 &middot; <b>schema invalid — spans empty or not a list</b></div><pre class='light'>{
+  &quot;extractions&quot;: [
+    {
+      &quot;category&quot;: &quot;governing_law&quot;,
+      &quot;spans&quot;: [
+        &quot;State of New York&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;expiration_date&quot;,
+      &quot;spans&quot;: [],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;renewal_term&quot;,
+      &quot;spans&quot;: [
+        &quot;one (1) year&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;notice_period_to_terminate_renewal&quot;,
+      &quot;spans&quot;: [
+        &quot;ninety (90) days&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;exclusivity&quot;,
+      &quot;spans&quot;: [
+        &quot;sole and exclusive distributor&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;non_compete&quot;,
+      &quot;spans&quot;: [],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;change_of_control&quot;,
+      &quot;spans&quot;: [],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;anti_assignment&quot;,
+      &quot;spans&quot;: [
+        &quot;Neither party may assign this Agreement&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;cap_on_liability&quot;,
+      &quot;spans&quot;: [
+        &quot;aggregate liability under this Agreement exceed the total fees paid by Distributor to Supplier in the twelve (12) months preceding the claim&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;i<span class="trunc">
+
+[TRUNCATED BY THE RENDERER: 762 more characters, 2062 total]</span></pre><div class='lab'>FAIL &middot; Qwen/Qwen3.5-4B &middot; <code>tools_forced</code> &middot; sample 0 &middot; finish_reason=stop &middot; completion_tokens=1153 &middot; <b>not strict JSON without repair</b></div><pre class='light'>&lt;tool_call&gt;
+&lt;function=report&gt;
+&lt;parameter=extractions&gt;
+[{&quot;category&quot;: &quot;governing_law&quot;, &quot;principles_cited&quot;: [], &quot;spans&quot;: [&quot;6. GOVERNING LAW. This Agreement shall be governed by and construed in accordance with the laws of the State of New York, without regard to its conflict of laws principles.&quot;]}, {&quot;category&quot;: &quot;expiration_date&quot;, &quot;principles_cited&quot;: [], &quot;spans&quot;: [&quot;The initial term of this Agreement shall be three (3) years from the Effective Date&quot;]}, {&quot;category&quot;: &quot;renewal_term&quot;, &quot;principles_cited&quot;: [], &quot;spans&quot;: [&quot;shall automatically renew for successive one (1) year terms&quot;]}, {&quot;category&quot;: &quot;notice_period_to_terminate_renewal&quot;, &quot;principles_cited&quot;: [], &quot;spans&quot;: [&quot;unless either party gives written notice of non-renewal at least ninety (90) days prior to the end of the then-current term&quot;]}, {&quot;category&quot;: &quot;exclusivity&quot;, &quot;principles_cited&quot;: [], &quot;spans&quot;: [&quot;Supplier hereby appoints Distributor as its sole and exclusive distributor of the Products in the Territory during the Term.&quot;]}, {&quot;category&quot;: &quot;anti_assignment&quot;, &quot;principles_cited&quot;: [], &quot;spans&quot;: [&quot;Neither party may assign this Agreement, in whole or in part, without the prior written consent of the other party, which consent shall not be unreasonably withheld.&quot;]}, {&quot;category&quot;: &quot;cap_on_liability&quot;, &quot;principles_cited&quot;: [], &quot;spans&quot;: [&quot;In no eve<span class="trunc">
+
+[TRUNCATED BY THE RENDERER: 654 more characters, 1954 total]</span></pre><div class='lab'>FAIL &middot; Qwen/Qwen3.5-4B &middot; <code>none</code> &middot; sample 14 &middot; finish_reason=stop &middot; completion_tokens=1644 &middot; <b>schema invalid — spans empty or not a list</b></div><pre class='light'>{
+  &quot;extractions&quot;: [
+    {
+      &quot;category&quot;: &quot;governing_law&quot;,
+      &quot;spans&quot;: [
+        &quot;This Agreement shall be governed by and construed in accordance with the laws of the State of New York, without regard to its conflict of laws principles.&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;expiration_date&quot;,
+      &quot;spans&quot;: [],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;renewal_term&quot;,
+      &quot;spans&quot;: [
+        &quot;shall automatically renew for successive one (1) year terms&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;notice_period_to_terminate_renewal&quot;,
+      &quot;spans&quot;: [
+        &quot;unless either party gives written notice of non-renewal at least ninety (90) days prior to the end of the then-current term&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;exclusivity&quot;,
+      &quot;spans&quot;: [
+        &quot;Supplier hereby appoints Distributor as its sole and exclusive distributor of the Products in the Territory during the Term.&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;anti_assignment&quot;,
+      &quot;spans&quot;: [
+        &quot;Neither party may assign this Agreement, in whole or in part, without the prior written consent of the other party, which consent shall not be unreasonably withheld.&quot;
+      ],
+  <span class="trunc">
+
+[TRUNCATED BY THE RENDERER: 972 more characters, 2272 total]</span></pre><div class='lab'>FAIL &middot; Qwen/Qwen3.5-9B &middot; <code>tools_forced</code> &middot; sample 0 &middot; finish_reason=stop &middot; completion_tokens=1193 &middot; <b>not strict JSON without repair</b></div><pre class='light'>&lt;tool_call&gt;
+&lt;function=report&gt;
+&lt;parameter=extractions&gt;
+[{&quot;category&quot;: &quot;governing_law&quot;, &quot;spans&quot;: [&quot;laws of the State of New York&quot;], &quot;principles_cited&quot;: []}, {&quot;category&quot;: &quot;expiration_date&quot;, &quot;spans&quot;: [&quot;three (3) years from the Effective Date&quot;], &quot;principles_cited&quot;: []}, {&quot;category&quot;: &quot;renewal_term&quot;, &quot;spans&quot;: [&quot;successive one (1) year terms&quot;], &quot;principles_cited&quot;: []}, {&quot;category&quot;: &quot;notice_period_to_terminate_renewal&quot;, &quot;spans&quot;: [&quot;ninety (90) days prior to the end of the then-current term&quot;], &quot;principles_cited&quot;: []}, {&quot;category&quot;: &quot;exclusivity&quot;, &quot;spans&quot;: [&quot;sole and exclusive distributor&quot;], &quot;principles_cited&quot;: []}, {&quot;category&quot;: &quot;anti_assignment&quot;, &quot;spans&quot;: [&quot;Neither party may assign this Agreement, in whole or in part, without the prior written consent of the other party&quot;], &quot;principles_cited&quot;: []}, {&quot;category&quot;: &quot;cap_on_liability&quot;, &quot;spans&quot;: [&quot;aggregate liability under this Agreement exceed the total fees paid by Distributor to Supplier in the twelve (12) months preceding the claim&quot;], &quot;principles_cited&quot;: []}, {&quot;category&quot;: &quot;insurance&quot;, &quot;spans&quot;: [&quot;Distributor shall maintain commercial general liability insurance with limits of not less than $2,000,000 per occurrence&quot;], &quot;principles_cited&quot;: []}]
+&lt;/parameter&gt;
+&lt;parameter=absent&gt;
+[{&quot;category&quot;: &quot;non_compete&quot;, &quot;principles_cited&quot;: []}, {&quot;category&quot;: &quot;chang<span class="trunc">
+
+[TRUNCATED BY THE RENDERER: 192 more characters, 1492 total]</span></pre><div class='lab'>FAIL &middot; Qwen/Qwen3.5-9B &middot; <code>tools_forced</code> &middot; sample 5 &middot; finish_reason=stop &middot; completion_tokens=1362 &middot; <b>markdown fence</b></div><pre class='light'>```json
+{
+  &quot;extractions&quot;: [
+    {
+      &quot;category&quot;: &quot;governing_law&quot;,
+      &quot;spans&quot;: [
+        &quot;This Agreement shall be governed by and construed in accordance with the laws of the State of New York&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;expiration_date&quot;,
+      &quot;spans&quot;: [
+        &quot;three (3) years from the Effective Date&quot;,
+        &quot;Effective Date&quot;,
+        &quot;March 3, 2019&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;renewal_term&quot;,
+      &quot;spans&quot;: [
+        &quot;successive one (1) year terms&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;notice_period_to_terminate_renewal&quot;,
+      &quot;spans&quot;: [
+        &quot;written notice of non-renewal at least ninety (90) days prior to the end of the then-current term&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;exclusivity&quot;,
+      &quot;spans&quot;: [
+        &quot;Supplier hereby appoints Distributor as its sole and exclusive distributor of the Products in the Territory during the Term&quot;
+      ],
+      &quot;principles_cited&quot;: []
+    },
+    {
+      &quot;category&quot;: &quot;anti_assignment&quot;,
+      &quot;spans&quot;: [
+        &quot;Neither party may assign this Agreement, in whole or in part, without the prior written consent of the other party, which consent shall not be unreasonably withheld&quot;
+     <span class="trunc">
+
+[TRUNCATED BY THE RENDERER: 901 more characters, 2201 total]</span></pre><div class='lab'>FAIL &middot; thinkingmachines/Inkling-Small &middot; <code>tools_forced</code> &middot; sample 4 &middot; finish_reason=stop &middot; completion_tokens=1289 &middot; <b>not strict JSON without repair</b></div><pre class='light'>We need parse document and decide per target.
+
+Targets:
+- governing_law: present. Span: &quot;This Agreement shall be governed by and construed in accordance with the laws of the State of New York, without regard to its conflict of laws principles.&quot;
+- expiration_date: initial term is three years from Effective Date March 3, 2019, so expiration March 3, 2022? The clause says initial term shall be three (3) years from Effective Date. That is an expiration date of the initial term. Should extract span maybe &quot;The initial term of this Agreement shall be three (3) years from the Effective Date&quot;. But expiration_date category: the date on which the contract&#x27;s initial term expires. The document does not explicitly state the calendar date, but derives from Effective Date. Usually we extract if mentioned explicitly? It says &quot;three (3) years from the Effective Date&quot;. Could be considered expiration date info. But the target is &quot;the date on which the contract&#x27;s initial term expires&quot;. Since no explicit calendar date given, maybe absent? Let&#x27;s think: The instructions: decide whether contract contains a clause of that type. For expiration_date, likely they want explicit expiration date or term length that defines it? Usually extraction if span mentions expiration. Here it gives term length, not a spec<span class="trunc">
+
+[TRUNCATED BY THE RENDERER: 4710 more characters, 6010 total]</span></pre><h2>Part 4 &mdash; the coverage invariant, separately</h2>
+
+<p>The study's invariant is: <b>the union of <code>extractions</code> and <code>absent</code>
+covers each of the 12 target categories exactly once</b>. The claim under test is that even
+a perfect schema-constrained decode could not enforce this. That claim is
+<b>confirmed for the output shape we currently use, and refutable by changing the shape</b> —
+both halves matter.</p>
+
+<h3>Confirmed: not expressible over two arrays</h3>
+<p>JSON Schema (2020-12, and every dialect a decode backend implements) has no operator that
+relates the contents of one array to the contents of a sibling array. Specifically:</p>
+<ul>
+<li><code>uniqueItems</code> is scoped to a single array and compares <i>whole items</i>, not a
+projected field. It cannot say &ldquo;no two items share a <code>category</code>&rdquo;, and it
+certainly cannot span <code>extractions</code> and <code>absent</code>.</li>
+<li><code>minItems</code>/<code>maxItems</code> constrain each array's length independently.
+There is no way to constrain the <i>sum</i> of two array lengths to 12.</li>
+<li><code>enum</code> on <code>category</code> restricts the vocabulary — the only part of the
+invariant a schema does capture. It gives &ldquo;every category named is one of the 12&rdquo;;
+it gives nothing about <i>at least once</i> or <i>at most once</i>.</li>
+<li>There is no <code>$data</code> reference, no cardinality quantifier, and no cross-branch
+counting construct in the standard. (<code>$data</code> is an Ajv extension, not JSON Schema,
+and no constrained-decode grammar compiler supports it.)</li>
+</ul>
+<p>The one loophole is brute enumeration: a <code>oneOf</code> listing every legal ordered
+partition of 12 distinct categories into two sequences. That is
+2<sup>12</sup>&nbsp;&times;&nbsp;<i>k</i>!(12&minus;<i>k</i>)! summed over <i>k</i>, i.e.
+<b>&asymp;2&nbsp;&times;&nbsp;10<sup>12</sup></b> branches. It is not a schema anyone can
+compile into a decoding grammar. Treat the invariant as inexpressible in this shape.</p>
+
+<h3>Refuted, in the useful direction: reshape and it becomes structural</h3>
+<p>The invariant is a property of the <i>shape</i>, not of JSON Schema's power. Replace the two
+lists with one object keyed by category:</p>
+<pre>{
+  "type": "object",
+  "properties": {
+    "governing_law":   {"$ref": "#/$defs/decision"},
+    "expiration_date": {"$ref": "#/$defs/decision"},
+    ... all 12 ...
+  },
+  "required": [ ...all 12 category ids... ],
+  "additionalProperties": false,
+  "$defs": {
+    "decision": {"oneOf": [
+      {"properties": {"present": {"const": true},  "spans": {"type":"array","minItems":1},
+                      "principles_cited": {"type":"array"}},
+       "required": ["present","spans","principles_cited"], "additionalProperties": false},
+      {"properties": {"present": {"const": false}, "principles_cited": {"type":"array"}},
+       "required": ["present","principles_cited"], "additionalProperties": false}
+    ]}
+  }
+}</pre>
+<p>Here <code>required</code> gives <i>at least once</i>, <code>additionalProperties: false</code>
+gives <i>no strangers</i>, and object-key uniqueness gives <i>at most once</i> for free. Coverage
+becomes an ordinary structural constraint that any grammar-based decoder enforces. So the honest
+statement is not &ldquo;JSON Schema cannot express coverage&rdquo; but <b>&ldquo;coverage is not
+expressible over a two-list shape, and is trivially expressible over a per-category-key
+shape&rdquo;</b>.</p>
+<p class="meta">This is a real design option for the study, not a rhetorical point &mdash; but it
+buys nothing on Tinker, where no schema is enforced at all. It would matter the moment the ollama
+arm (which does have constrained decode) returns, and it would come at a cost: the per-key shape
+makes the field-absent <code>principles_cited</code> variant harder to strip cleanly, and it
+changes the prompt, so it is not a free swap mid-study.</p>
+
+<h3>How often is coverage actually violated?</h3>
+<p>Measured in Part&nbsp;3, independently of JSON and schema validity. On the short synthetic
+contract, under the study's real prompt, coverage held on <b>19/20, 20/20 and 20/20</b> samples
+for the 4B, 9B and inkling-small respectively; among samples that were <i>schema</i>-valid,
+coverage was violated <b>zero</b> times. So on an easy instance the invariant is not the binding
+constraint. Two things stop this from being reassuring:</p>
+<ul>
+<li>The earlier probe run &mdash; same models, same settings, but a prompt that described the
+output in prose instead of embedding the schema &mdash; produced coverage failures on 13/20
+(9B) and 5/20 (inkling) samples, always <i>missing</i> categories, never duplicated. The
+failure mode is silent under-enumeration: the model reports the categories it found and stops.
+That is precisely the failure that gets worse as documents get longer and the category list
+gets further from the answer.</li>
+<li>Coverage is the one failure class that repair cannot be counted on to fix cheaply, because
+the fix requires re-reading the document for the categories that were skipped, not reformatting
+what was already produced.</li>
+</ul>
+
+<h3>Eliminable vs irreducible</h3>
+<div class="scroll"><table>
+<tr><th>failure mode</th><th>eliminable by correct configuration?</th><th>on Tinker today</th></tr>
+<tr><td>markdown fence around the JSON</td>
+    <td>Yes &mdash; under a real constrained decode a fence is untypeable</td>
+    <td><b>No mechanism available.</b> Handled by the parser's fence strip / brace extraction.</td></tr>
+<tr><td>prose preamble or trailing caveat</td>
+    <td>Yes &mdash; same reason</td>
+    <td><b>No mechanism available.</b> Handled by brace extraction.</td></tr>
+<tr><td>wrong key set, missing required field, extra field</td>
+    <td>Yes</td>
+    <td><b>No mechanism available.</b> Scored as <code>schema_validation</code>, repaired.</td></tr>
+<tr><td><code>category</code> outside the 12-value enum</td>
+    <td>Yes</td>
+    <td><b>No mechanism available.</b></td></tr>
+<tr><td>wrong scalar type (e.g. <code>"2019"</code> for an integer field)</td>
+    <td>Yes</td>
+    <td><b>No mechanism available.</b> Observed on both Qwen arms in Part&nbsp;1.</td></tr>
+<tr><td><b>coverage</b>: a category missing, duplicated, or in both lists</td>
+    <td><b>No</b>, in the current two-list shape. Yes, if the output is reshaped to per-category keys.</td>
+    <td>Irreducible today. Must be repaired or scored as failure &mdash; the <code>coverage</code>
+        repair stage in the runner is load-bearing, not defensive.</td></tr>
+<tr><td>truncation (<code>finish_reason: "length"</code>)</td>
+    <td><b>No.</b> A grammar constrains <i>which</i> tokens, never <i>how many</i>. Constrained
+        decode makes truncation <i>worse</i>, because an unterminated grammar state is still an
+        unparseable string.</td>
+    <td>Irreducible. Budget it and report it.</td></tr>
+<tr><td>empty content with the whole budget spent on reasoning</td>
+    <td><b>No.</b> Reasoning tokens are emitted on a separate channel that the response grammar
+        does not govern.</td>
+    <td>Irreducible. Observed on the 4B.</td></tr>
+<tr><td>semantically wrong extractions / hallucinated spans</td>
+    <td><b>No.</b> Out of scope for any schema.</td>
+    <td>Irreducible &mdash; and it is the actual object of study.</td></tr>
+</table></div>
+
+<h2>What this means for the study</h2>
+<ul>
+<li>The line in <code>plans/component-contracts.md</code> saying <code>json_object</code> is
+&ldquo;honored&rdquo; for inkling-small is <b>falsified</b>. <code>structured_output</code> must
+read <code>prompt_only</code> for all three Tinker arms, inkling included.</li>
+<li>The doc's stronger claim &mdash; &ldquo;<code>json_schema</code> is unenforced everywhere and
+on the 4B it burns the whole budget on reasoning and returns empty content&rdquo; &mdash; is half
+right. Unenforced: confirmed. Empty content on the 4B: real, but it is a
+<i>prompt-dependent</i> effect (1&ndash;4/10 with a fence-inviting prompt, <b>0/20</b> with the
+study's real schema-embedding prompt), not a property of the model. Attributing it to
+<code>json_schema</code> was a mis-attribution.</li>
+<li>Because no arm on Tinker gets constrained decode, P0's field-absent leakage measurement is
+clean across all three arms &mdash; that conclusion survives, and now rests on measurement of all
+three models rather than inference about two.</li>
+<li>Parse-and-repair is not a fallback here, it is the mechanism. Repair-rate differences between
+models are a first-class result, and the first-attempt/final double-scoring already specified is
+the right treatment. But note the measured repair demand on an easy instance is <i>near zero</i>
+for all three models &mdash; the &ldquo;inkling 0 repairs, both Qwen arms routinely 1&ndash;2&rdquo;
+asymmetry recorded in the contracts doc is not reproduced here and should be re-measured on real
+CUAD instances before it is relied on.</li>
+<li>Sending <code>response_format</code> at all is harmless but misleading: it makes trial rows
+look as though enforcement was requested. Drop it, or record it explicitly as inert.</li>
+<li>The single largest open risk is length. Every conformance number on this page comes from a
+~350-word document. Re-run the Part&nbsp;3 measurement on real CUAD instances stratified by
+length bucket before treating any of these rates as the study's.</li>
+</ul>
+</div>
