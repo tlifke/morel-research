@@ -58,16 +58,30 @@ exclusions:
     profile are all unchanged; only the ft_train pool shrinks.
   contract_ids:
     - id: "WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT - Intellectual Property Rights                 Confidentiality and Non-Use Obligations Agreement"
-      reason: contains a holdout contract verbatim (containment 1.000)
+      reason: >-
+        contained verbatim WITHIN a holdout contract (containment 1.000): this
+        excluded entry is the 7,042-char IP/confidentiality annex, a substring
+        of the 32,371-char holdout filing WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT
+        AGREEMENT; it ends at exhibit marker A-2 and carries no signing date
       twin_split: holdout
     - id: "IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement"
-      reason: re-filing of a holdout contract (containment 0.946, gold agrees on all 12)
+      reason: >-
+        re-filing of a holdout contract (containment 0.946, gold agrees on all
+        12): this excluded 10-K entry is 40,866 chars against the 35,189-char
+        holdout 8-K entry; neither is a substring of the other
       twin_split: holdout
     - id: "ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT"
-      reason: byte-identical to a dev contract
+      reason: >-
+        byte-identical to a dev contract (containment 1.000): both entries are
+        12,020 chars and each is a substring of the other; the dev twin is
+        ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
       twin_split: dev
     - id: "ARMSTRONGFLOORING,INC_01_07_2019-EX-10.2-INTELLECTUAL PROPERTY AGREEMENT"
-      reason: re-filing of a dev contract (containment 0.975)
+      reason: >-
+        re-filing of a dev contract (containment 0.975): this excluded entry is
+        69,759 chars against the 56,858-char dev entry
+        ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual
+        Property Agreement; neither is a substring of the other
       twin_split: dev
 
 contamination_guard:

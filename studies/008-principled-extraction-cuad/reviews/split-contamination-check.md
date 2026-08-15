@@ -49,20 +49,39 @@ contracts sharing boilerplate, not the same document. Nothing sits between
 **2 flagged pairs. Both are real.** Split-pair maximum: containment **1.000**,
 Jaccard 0.780.
 
+> **Correction, 2026-08-15.** The first version of this section had pair 1's
+> direction backwards — it described the holdout contract as sitting inside a
+> longer ft_train compound exhibit, and swapped the two length columns. It is
+> the other way round, verified against character counts and a substring test
+> (below). The table and prose here are corrected; the verdict, the similarity
+> figures and the recommendation are unchanged, because cross-split duplication
+> is disqualifying in either direction. Root cause: the pair rows in
+> `split-contamination-check.json` are keyed `a`/`b` by title sort order, not by
+> split, and were transcribed positionally as (holdout, ft_train). The JSON
+> itself was correct throughout — it carries `split_a` / `split_b` — so the
+> error was in this document only, never in the data or the exclusion logic.
+
 | # | holdout contract | ft_train contract | containment | Jaccard | verbatim substring | holdout chars / tokens | ft_train chars / tokens | gold on the 12 subset categories |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT` | `WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT - Intellectual Property Rights Confidentiality and Non-Use Obligations Agreement` | **1.000** | 0.214 | **yes** | 7,042 / 1,298 | 32,371 / 6,173 | **DISAGREE on 9 of 12** — Agreement Date, Governing Law, Expiration Date, Anti-Assignment, License Grant, Exclusivity, Revenue/Profit Sharing, Minimum Commitment, Volume Restriction |
+| 1 | `WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT` | `WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT - Intellectual Property Rights Confidentiality and Non-Use Obligations Agreement` | **1.000** | 0.214 | **yes** | 32,371 / 6,173 | 7,042 / 1,298 | **DISAGREE on 9 of 12** — Agreement Date, Governing Law, Expiration Date, Anti-Assignment, License Grant, Exclusivity, Revenue/Profit Sharing, Minimum Commitment, Volume Restriction |
 | 2 | `IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement` | `IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement` | 0.946 | 0.780 | no | 35,189 / 7,652 | 40,866 / 8,787 | agree on all 12 |
 
-**Pair 1 is the serious one.** The entire holdout contract appears verbatim
-inside the ft_train document — the ft_train entry is a compound SEC exhibit that
-bundles the same endorsement agreement together with an IP/confidentiality
-agreement. Fine-tuning on ft_train would train on 100% of that holdout
-instance's text. The low Jaccard (0.214) is exactly why a Jaccard-only scan
-would have missed it: the ft_train document is 4.6× longer. The 9-of-12 gold
-disagreement is not a contradiction — the two entries annotate different
-documents (a single agreement vs a bundle), so this pair leaks *text* while
-teaching *different labels*, which is the worst of both.
+**Pair 1 is the serious one.** The **ft_train** entry is the shorter document —
+7,042 chars against the holdout contract's 32,371 — and it appears **verbatim
+inside** the holdout filing. It is the IP-rights / confidentiality **annex**
+extracted as its own CUAD entry: it ends at exhibit marker `A-2` and carries no
+signing date, which is also why its gold has Agreement Date absent. The holdout
+entry is the complete filing, annex included.
+
+The contamination is the same either way — 100% of that ft_train document's text
+sits inside a holdout contract, so fine-tuning on it trains directly on holdout
+material. What the direction changes is the *share* of the holdout instance
+exposed: roughly 22% of it (7,042 of 32,371 chars), not all of it. The low
+Jaccard (0.214) is still exactly why a Jaccard-only scan would have missed this:
+the two documents differ 4.6× in length, and only containment surfaces it. The
+9-of-12 gold disagreement follows from the two entries annotating different
+documents — an annex vs the whole filing — so the pair leaks *text* while
+teaching *different labels*.
 
 **Pair 2** is the same content licence filed twice, once in a 2015 8-K and once
 in a 2016 10-K. Not byte-identical (the two filings differ in boilerplate and
@@ -147,7 +166,7 @@ a pool with 368 contracts and no size commitment.**
 
 | drop from ft_train | reason |
 |---|---|
-| `WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT - Intellectual Property Rights Confidentiality and Non-Use Obligations Agreement` | contains a holdout contract verbatim |
+| `WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT - Intellectual Property Rights Confidentiality and Non-Use Obligations Agreement` | contained verbatim within a holdout contract (this entry is the 7,042-char annex; the holdout filing is 32,371 chars) |
 | `IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement` | 0.946 containment with a holdout contract, gold agrees |
 | `ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT` | byte-identical to a dev contract |
 | `ARMSTRONGFLOORING,INC_01_07_2019-EX-10.2-INTELLECTUAL PROPERTY AGREEMENT` | 0.975 containment with a dev contract |
