@@ -316,6 +316,29 @@ Format:
 > if **a model can pass its checker and still be wrong, and fail it while being
 > right.** Screening is mechanical — populate the 2×2 of {passes, fails} ×
 > {right, wrong} over dev; a structurally empty off-diagonal disqualifies.
+> **Refinement (2026-08-15), important and easy to get wrong.** A checker is
+> *supposed* to read gold — `gold_applicability` is defined as
+> `(instance, gold_annotations) -> bool`. Using gold is not the defect. The
+> defect is **gating applicability on the answer of the very decision being
+> scored**: if a principle applies only where gold is present, or only where
+> `is_impossible`, compliance cannot vary independently of correctness and the
+> mediation coefficient is unidentifiable. A checker may read gold for *other*
+> categories, or read the instance text, and remain separable.
+>
+> **The 2×2 that is computable before any model runs is a different one.**
+> {passes, fails} × {right, wrong} needs model outputs. Pre-model the screening
+> table is **{applicable, not applicable} × {gold present, gold absent}**, which
+> answers the prior question — could compliance *ever* be separable here. A
+> structurally empty cell there disqualifies on its own; the full table is
+> checked after the first real run.
+>
+> **Measured systematically over the 23-record round-2 queue: 13 of 23 fail
+> separability, 1 partial, 1 vacuous, 8 clean.** Ten are gold-presence-gated
+> (three showing phi = +1.00, the arithmetic signature of the gate rather than
+> evidence of anything), two gold-absence-gated. The earlier "6 of 16" was
+> spotted by inspection; this is the same defect counted properly, and it is
+> the most common failure mode in the pilot by a wide margin.
+>
 > Found by adversarial review in **6 of 16** pilot checkers: two gate
 > applicability on `gold.is_impossible` (the checker asks the answer), four
 > define compliance as emitting the gold answer. All six read as sound prose.
