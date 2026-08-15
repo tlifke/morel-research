@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+from harness import metrics
 from harness.backends.base import BackendError
 from harness.backends.fake_backend import FakeBackend
 from harness.envs.fake_env import FakeEnvironment
@@ -56,7 +57,7 @@ def config(tmp_path):
         max_output_tokens=256,
         max_repair_attempts=2,
         principle_set_version="fake-v1",
-        raw_response_dir=tmp_path / "responses",
+        trace_root=tmp_path / "traces",
     )
 
 
@@ -85,7 +86,8 @@ def test_ok_trial_scores_and_emits_one_row_per_decision(env, dev, config):
     backend = FakeBackend([json.dumps(PERFECT)], context_limit=100000)
     result = _run(env, backend, dev["FAKE_0001"], config)
     assert result.trial.outcome == "ok"
-    assert result.trial.answer["span_f1_macro"] == 1.0
+    assert result.trial.answer["level_a"]["micro"]["counts"] == {"TP": 4, "FP": 0, "FN": 0, "TN": 0}
+    assert result.trial.answer["level_b"]["span_f1"] == 1.0
     assert len(result.decisions) == 4
     assert result.trial.compliance["pass_rate"] == 1.0
     assert result.trial.citation["precision"] == 1.0
@@ -114,7 +116,9 @@ def test_absence_is_an_explicit_row_for_every_non_extracted_category(env, dev, c
     kinds = [d.decision_kind for d in result.decisions]
     assert kinds.count("absence") == 3
     assert {d.decision_idx for d in result.decisions} == {0, 1, 2, 3}
-    assert result.trial.answer["absence_accuracy"] == 1.0
+    micro = result.trial.answer["level_a"]["micro"]
+    assert micro["counts"] == {"TP": 1, "FP": 0, "FN": 0, "TN": 3}
+    assert micro["absent_class_recall"] == 1.0
 
 
 def test_infeasible_at_length_triggers_without_an_api_call(env, dev, config):
@@ -434,3 +438,169 @@ def test_missing_one_of_two_gold_spans_costs_score_but_not_the_decision(env, dev
     assert 0.0 < gl.answer_score["span_f1"] < 1.0
     assert gl.decision_kind == "extraction"
     assert len(result.decisions) == 4
+
+
+def test_repair_stages_are_recorded_even_when_the_trial_recovers(env, dev, config):
+    bad_coverage = _coverage_payload(
+        [{"category": "Governing Law", "spans": [ONE_SPAN_GL], "principles_cited": []}], []
+    )
+    good = _coverage_payload(
+        [{"category": "Governing Law", "spans": [ONE_SPAN_GL], "principles_cited": []}],
+        [
+            {"category": "Agreement Date", "principles_cited": []},
+            {"category": "Minimum Commitment", "principles_cited": []},
+            {"category": "Volume Restriction", "principles_cited": []},
+        ],
+    )
+    backend = FakeBackend(["not json", bad_coverage, good], context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0002"], config)
+    assert result.trial.outcome == "ok"
+    assert result.trial.repair_stages == ["json_decode", "coverage"]
+    assert result.trial.n_repair_attempts == 2
+
+
+def test_truncated_completion_is_distinguished_from_a_formatting_defect(env, dev, config):
+    class TruncatingBackend(FakeBackend):
+        def sample(self, messages, json_schema, temperature, seed, max_tokens):
+            result = super().sample(messages, json_schema, temperature, seed, max_tokens)
+            result.finish_reason = "length"
+            result.raw = {**result.raw, "n_reasoning_chars": 14998}
+            return result
+
+    backend = TruncatingBackend([""] * 5, context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0001"], config)
+    assert result.trial.outcome == "parse_failure"
+    assert result.trial.failure_detail["completion_truncated"] is True
+    assert result.trial.failure_detail["finish_reason"] == "length"
+    assert result.trial.failure_detail["n_reasoning_chars"] == 14998
+
+
+def test_first_attempt_and_final_are_identical_when_no_repair_was_needed(env, dev, config):
+    backend = FakeBackend([json.dumps(PERFECT)], context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0001"], config)
+    assert result.trial.n_repair_attempts == 0
+    first = result.trial.first_attempt
+    assert first["parsed"] is True
+    assert first["answer"] == result.trial.answer
+    assert first["citation"] == result.trial.citation
+    assert first["compliance"] == result.trial.compliance
+
+
+def test_first_attempt_and_final_diverge_on_a_repaired_trial(env, dev, config):
+    good = _coverage_payload(
+        [{"category": "Governing Law", "spans": [ONE_SPAN_GL], "principles_cited": ["p01"]}],
+        [
+            {"category": "Agreement Date", "principles_cited": ["p02"]},
+            {"category": "Minimum Commitment", "principles_cited": ["p02"]},
+            {"category": "Volume Restriction", "principles_cited": ["p02"]},
+        ],
+    )
+    backend = FakeBackend(["not json", good], context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0002"], config)
+    assert result.trial.outcome == "ok"
+    assert result.trial.n_repair_attempts == 1
+    assert result.trial.answer is not None
+    first = result.trial.first_attempt
+    assert first["parsed"] is False
+    assert first["failure_stage"] == "json_decode"
+    assert first["answer"] is None
+    assert first != {"parsed": True}
+
+
+def test_first_attempt_records_the_unassisted_defect_class(env, dev, config):
+    bad_coverage = _coverage_payload(
+        [{"category": "Governing Law", "spans": [ONE_SPAN_GL], "principles_cited": []}], []
+    )
+    good = _coverage_payload(
+        [{"category": "Governing Law", "spans": [ONE_SPAN_GL], "principles_cited": []}],
+        [
+            {"category": "Agreement Date", "principles_cited": []},
+            {"category": "Minimum Commitment", "principles_cited": []},
+            {"category": "Volume Restriction", "principles_cited": []},
+        ],
+    )
+    backend = FakeBackend([bad_coverage, good], context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0002"], config, condition="C1")
+    assert result.trial.first_attempt["failure_stage"] == "coverage"
+
+
+def test_first_attempt_aggregate_excludes_trials_that_needed_help(env, dev, config):
+    unassisted = FakeBackend([json.dumps(PERFECT)], context_limit=100000)
+    assisted = FakeBackend(["not json", json.dumps(PERFECT)], context_limit=100000)
+    rows = [
+        _run(env, unassisted, dev["FAKE_0001"], config).trial.model_dump(),
+        _run(env, assisted, dev["FAKE_0001"], config).trial.model_dump(),
+    ]
+    final = metrics.summarize_trials(rows, "final")
+    first = metrics.summarize_trials(rows, "first_attempt")
+    assert final["n_scored"] == 2
+    assert first["n_scored"] == 1
+    assert first["scope"] == "first_attempt"
+    assert approx_equal(final["any_repair_rate"], 0.5)
+
+
+def approx_equal(a, b, tol=1e-9):
+    return abs(a - b) < tol
+
+
+def test_generous_output_budget_is_the_default_and_is_recorded(env, dev):
+    from harness.runner import DEFAULT_MAX_OUTPUT_TOKENS
+
+    default_config = RunConfig(run_id="budget")
+    assert default_config.max_output_tokens == DEFAULT_MAX_OUTPUT_TOKENS
+    assert DEFAULT_MAX_OUTPUT_TOKENS >= 8192
+    backend = FakeBackend([json.dumps(PERFECT)], context_limit=10**9)
+    result = _run(env, backend, dev["FAKE_0001"], default_config)
+    assert result.trial.max_output_tokens == DEFAULT_MAX_OUTPUT_TOKENS
+    assert backend.calls[0]["max_tokens"] == DEFAULT_MAX_OUTPUT_TOKENS
+
+
+def test_correctness_thresholds_are_recorded_on_the_trial(env, dev, config):
+    backend = FakeBackend([json.dumps(PERFECT)], context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0001"], config)
+    assert result.trial.correctness_thresholds["headline_span_f1_correct"] == 0.5
+    assert result.trial.correctness_thresholds["span_f1_is_swept"] is True
+    assert result.trial.correctness_thresholds["sweep_span_f1_thresholds"][0] == 0.1
+    assert result.trial.correctness_thresholds["citation_requires_exact_set"] is True
+
+
+def test_decision_rows_carry_the_crosstab_cell_in_c3(env, dev, config):
+    backend = FakeBackend([json.dumps(PERFECT)], context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0001"], config)
+    for row in result.decisions:
+        assert row.citation_x_correctness is not None
+        assert set(row.citation_x_correctness) == {
+            "cell", "span_f1", "citation_correct", "answer_correct_at_headline",
+        }
+    sweep = result.trial.citation["x_answer_correctness_sweep"]
+    assert sum(sweep["headline"]["counts"].values()) == 4
+
+
+def test_sweep_recomputed_from_decisions_matches_the_trial_row(env, dev, config):
+    backend = FakeBackend([json.dumps(PERFECT)], context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0001"], config)
+    stored_rows = [d.model_dump() for d in result.decisions]
+    recomputed = metrics.citation_correctness_sweep(stored_rows, config.thresholds)
+    assert recomputed == result.trial.citation["x_answer_correctness_sweep"]
+
+
+def test_decision_rows_keep_the_raw_ingredients_of_the_sweep(env, dev, config):
+    backend = FakeBackend([json.dumps(PERFECT)], context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0001"], config)
+    for row in result.decisions:
+        assert row.answer_score["cell"] in ("TP", "FP", "FN", "TN")
+        assert "span_f1" in row.answer_score
+        assert row.citation_eval is not None
+        assert set(row.citation_eval) >= {"tp", "fp", "fn"}
+
+
+def test_three_way_verbatim_reaches_the_trial_row(env, dev, config):
+    payload = json.loads(json.dumps(PERFECT))
+    payload["extractions"][1]["spans"] = ["This Agreement was signed in March of 2019."]
+    backend = FakeBackend([json.dumps(payload)], context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0001"], config)
+    level_b = result.trial.answer["level_b"]
+    assert level_b["verbatim_exact_rate"] is not None
+    assert level_b["verbatim_not_found_rate"] > 0.0
+    assert level_b["n_not_found_spans"] == 1
+    assert level_b["verbatim_cosmetic_gap"] == level_b["verbatim_normalized_only_rate"]

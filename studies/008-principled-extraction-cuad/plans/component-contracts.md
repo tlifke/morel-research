@@ -149,11 +149,53 @@ tested **separately** — they exercise different failure modes:
 
 **Model axis, as of 2026-08-15.** All three open-model arms run through the
 Tinker backend for now: **Qwen/Qwen3.5-4B**, **Qwen/Qwen3.5-9B**, and
-**inkling-small** (the P0 pilot and Phase-2 training target). The two Qwen
-models are also available on the desktop GPU once it is back, so the same
-model ids move to the ollama backend without changing the model axis — which
-is the point of the backend abstraction, and incidentally gives a clean
-same-model / two-substrate comparison if we ever want one.
+**inkling-small** (the P0 pilot and Phase-2 training target). Model ids are
+canonical and substrate-neutral (`model_registry.py`), resolving to a served
+name per substrate, so the axis does not move when these ids migrate to ollama.
+
+**Measured model facts** (bisected against each endpoint's own error text, not
+documentation; an unmeasured model is *refused*, never guessed):
+
+| model | advertised ctx | usable limit | structured output |
+|---|---|---|---|
+| inkling-small | 262,144 | 261,632 | `json_object` honored |
+| Qwen/Qwen3.5-4B | 65,536 | 65,024 | **`prompt_only`** |
+| Qwen/Qwen3.5-9B | 65,536 | 64,512 | **`prompt_only`** |
+
+`context_limit = advertised − safety_margin` is the runner-facing number.
+The margin is not cosmetic: the **9B fails *inside the server* at 65,530
+tokens** — below the advertised 65,536 — with an opaque error, so there is a
+band that passes the documented check and then dies. Last confirmed acceptance
+was 65,357.
+
+**No arm currently on Tinker gets constrained decode.** All three are
+prompt-plus-parse; `json_schema` is unenforced everywhere and on the 4B it
+burns the whole budget on reasoning and returns empty content. Consequence:
+field-absent leakage is measurable on **all** current arms, so P0 is clean
+today — but the moment ollama returns, its constrained decode makes
+field-absent leakage structurally zero there and non-comparable.
+
+The 9B's error text names an `--allow-auto-truncate` server flag. Silent
+truncation is one flag away from being enabled upstream, which is the single
+failure this study cannot tolerate. The truncation guard
+(`prompt_eval_count` below 80% of estimate → raise) is not optional.
+
+**Feasibility against the real manifest** (510 instances, longest 82,345
+tokens, ~1.5k prompt overhead + 4k output reserve): 5/510 infeasible for the
+4B, 6/510 for the 9B. On the **holdout, exactly 1 contract** (64,640 tokens) is
+infeasible for both Qwen arms; **dev has zero**. So the open arms do produce
+real `infeasible_at_length` trials, but H5's refusal story on the headline
+split rests on a single contract, and dev cannot rehearse that path at all —
+a direct, now-quantified consequence of D-13 (dev max 41,703 vs holdout
+64,640).
+
+**Reference tokenizer: verified, not assumed.** Qwen3.5 has a much larger vocab
+(248,077 vs Qwen3-8B's 151,669), but on contract-shaped text the two produce
+**identical** token counts (0.00% delta across legalese, OCR furniture, dates,
+currency, boilerplate). The reference tokenizer stays `Qwen/Qwen3-8B` per D-12,
+no caveat needed. Corollary: pass an explicit tokenizer id on real runs — the
+4-chars/token fallback over-estimates CUAD by ~18%, which near a 65k boundary
+could wrongly refuse a contract that fits.
 
 A third backend (the frontier API arm) is expected but not yet chosen. The
 interface is the deliverable; two working implementations are the test that it
@@ -171,8 +213,22 @@ testable now.
 ## Trial runner
 
 - Trial key: `(instance, condition, model, seed, schema_variant)`.
-- Structured-output parsing with a **bounded** repair policy: log parse
-  failures as a trial outcome, do not silently retry beyond N.
+- **Repair policy.** "Repair" = when a sampled output fails to parse or
+  validate, the runner sends it back to the model with a targeted message
+  naming the defect, and re-samples. Three defect classes draw on one shared,
+  **bounded** budget (`max_repair_attempts`), distinguished by
+  `failure_detail.stage`:
+  `json_decode` (not valid JSON — fence-wrapping, truncation),
+  `schema_validation` (valid JSON, wrong shape),
+  `coverage` (valid shape, but targets missing or duplicated — D-14).
+  Exhausting the budget ends the trial as `parse_failure`.
+  Repair is **assistance**, and models need different amounts of it
+  (inkling-small: 0 across every trial; both Qwen arms: routinely 1–2), so an
+  equal budget is not equal help. This is resolved by scoring every metric
+  twice, first-attempt and final — see the Metrics module — not by tuning the
+  budget. The budget is identical across C1/C2/C3 so it can never manufacture a
+  condition effect, and `repair_stages` on the trial row records what was
+  actually repaired.
 - Trial outcomes: `ok | parse_failure | infeasible_at_length | api_error`.
 - `trial_id` = sha1 of the trial key and deliberately excludes `run_id`, so the
   store's uniqueness invariant makes runs resumable (`skip_existing`). A
@@ -183,29 +239,204 @@ testable now.
 - Context policy: feed the full contract. If it exceeds the model's context,
   record `infeasible_at_length`. Never truncate, never chunk.
 - Sampling default: temp ~0.7, ≥3 seeds per instance.
+- **Output budget is deliberately generous, not tight** (decided 2026-08-15).
+  Reasoning verbosity differs sharply across models (4B ≈ 2,159 reasoning chars
+  on a trivial prompt, 9B ≈ 870, inkling-small ≈ 195), so a tight
+  `max_output_tokens` would handicap the smallest model specifically and
+  contaminate H3 — a small model's apparent failure would partly be our budget.
+  Set it high enough that truncation is rare, record the value, and treat any
+  `completion_truncated` trial as a reportable outcome rather than a silent
+  score. Do not tune it per model.
 
 ## Metrics module
 
-- **Answer** — token-level span F1 (Jaccard-style, per the LLM-era CUAD
-  literature) + exact category match + absence accuracy. Reported per-category
-  and length-stratified.
-- **Compliance** — checker pass-rate over applicable principles. Measured in
-  **all** conditions (C1/C2/C3); it is the mediation variable.
-- **Citation (C3 only)** — per-decision precision / recall / F1 of cited ids
-  against the scope-relevant slice of gold applicability, plus a confusion
-  matrix over principle ids (feeds H4).
+Three levels, deliberately never collapsed into one number. Each answers a
+different question and the informative one changes with the category's base
+rate.
+
+### Level A — the presence/absence call
+
+*When the agent says a category is present or absent, how often is it right,
+and what kinds of error is it vulnerable to?*
+
+Per `(contract, category)` the call is binary. **Store the raw 2×2 counts**
+(TP / FP / FN / TN) per category — every rate derives from them, and storing
+counts rather than rates means any aggregation can be recomputed later without
+re-running trials.
+
+Derived and reported:
+
+- **presence-class** P / R / F1 — of claimed clauses, how many exist; of
+  existing clauses, how many were found
+- **absent-class** P / R / F1 — `absent_class_recall` = TN/(TN+FP),
+  `absent_class_precision` = TN/(TN+FN)
+- **`decision_kind_accuracy`** = (TP+TN)/total, explicitly labelled as
+  base-rate-dominated and never a headline number
+- **false-present vs false-absent reported separately.** F1 collapses them, but
+  hallucinating a liability cap and missing one are different errors, and
+  principles plausibly move them in *opposite* directions — an absence-ruling
+  principle should cut false-present while possibly raising false-absent.
+- **trivial baselines printed alongside, per category**: always-absent and
+  always-present. Non-negotiable. Source Code Escrow has 1 positive in 102
+  holdout contracts and Most Favored Nation has 3, so always-absent scores 99%
+  and 97% there; without the baseline a reader cannot tell signal from base rate.
+
+Both classes are reported because the informative one **flips with base rate**:
+for rare categories only the presence class carries information; for common
+categories (Agreement Date, 93/102 present) always-present already scores 91%,
+so only the *absent* class does. Macro-average the two classes **separately**,
+never together, and report micro alongside.
+
+The naming here is deliberate: the term "absence accuracy" is retired, because
+it could mean overall accuracy, absent-class recall, or absent-class precision.
+
+### Level B — span quality, conditional on agreement
+
+*When a category is present in gold and the agent agrees, how close is its span
+set to the gold span set?*
+
+Defined **only on the TP cell**. FP contributes no span score (nothing to
+compare against) and FN likewise, so any corpus-level span score must be
+reported **with its TP denominator** — otherwise a model that finds three
+clauses perfectly and misses nine looks excellent.
+
+- **token-level soft P / R / F1**: each prediction scored against its best gold
+  match, each gold against its best prediction, harmonic mean. Aggregated
+  *within* a decision over the span sets (D-14).
+- **exact-match rate** as the stricter, interpretable companion — "37% of spans
+  were verbatim-exact" reads where an F1 of 0.85 does not.
+- **verbatim fidelity — three-way, both matchers reported.**
+  `Extraction.spans` carries text, not offsets, so nothing otherwise stops a
+  paraphrased or normalised span earning partial token-F1 credit. Each span is
+  classified:
+  1. **exact** — a literal substring of the contract
+  2. **normalised-only** — not a literal substring, but a substring after
+     normalisation on both sides: whitespace runs collapsed, NFKC unicode
+     folding, curly quotes/dashes folded to ASCII, hyphen-linebreak rejoined.
+     Normalisation does **not** strip embedded OCR/SEC page furniture — that
+     would be a scoring decision in disguise (D-15).
+  3. **not found** — present under neither matcher
+  Report all three rates. The exact matcher stays primary and is deliberately
+  strict: after D-15 it will mark a model non-verbatim for emitting the clean
+  legal sentence while omitting embedded page furniture, and that is the
+  behaviour we want measured rather than smoothed away.
+  The **gap between exact and normalised quantifies how much apparent
+  non-verbatim output is merely cosmetic**, and the **not-found rate is the one
+  that means invented contract language** — a categorically different, and in a
+  legal-extraction framing more serious, failure than picking the wrong clause.
+  Never fold any of this into token-F1.
+- **span position** — the located character offset of each verified span,
+  giving depth-into-document. This is a sharper H5 instrument than contract
+  length alone: it separates "long contracts are harder" from "the model stops
+  reading after N tokens."
+- **multi-span recovery** — predicted vs gold span counts per decision, so
+  "found the clause, missed its two cross-references" is visible.
+
+### Level C — citation quality (C3)
+
+*When the agent makes a decision, do its cited principles match the gold
+applicable set?*
+
+- per-decision **P / R / F1** against the **scope-relevant slice** of gold
+  applicability, with explicit tp/fp/fn lists retained
+- **per-principle marginal P / R / F1** — which principles are cited well and
+  which are systematically confused. This *is* H4 and it is what makes the
+  principle set maintainable.
+- **confusion matrix** over principle ids, built by pairing fp against fn within
+  a decision ("cited p03 where p11 applied")
+- **F1, not recall**, so cite-everything cannot win
+- **citation cross-tabulated by answer correctness, swept over the correctness
+  threshold** — not a single 2×2. "Answer correct" depends on a span-F1
+  threshold, so the cross-tab is computed at **t = 0.1 … 1.0 in 0.1 steps** and
+  reported as a curve: each of the four cells as a function of t. Deterministic,
+  cheap (it re-buckets stored per-decision scores; no re-running), and it
+  removes the single most arbitrary constant in the metrics. The right threshold
+  is use-case dependent — how much span overlap counts as "got it" differs
+  between a reviewer triaging clauses and one extracting them verbatim — so we
+  report the dependence instead of picking for the reader. A single headline
+  threshold may still be named in the writeup, but it must be visibly one point
+  on a published curve.
+  The 2×2 at each t is
+  {answer right, answer wrong} × {citation right, citation wrong}.
+  **Right-answer-wrong-reason is the phenomenon this study exists to detect**
+  and it is invisible in marginal citation F1. If citation helps by forcing
+  deliberation, the right-answer cell should be enriched for correct citations.
+  The wrong-answer-with-confident-citations cell is a **principle-refinement
+  signal**: it localises which rule the model believed it was following when it
+  erred. Secondary to the core question, but cheap and worth keeping.
+
+### Compliance (all conditions)
+
+Checker pass-rate over applicable principles, measured in **C1, C2 and C3**.
+It is the **mediation variable**, not a robustness check. `pass_rate` is
+principle-level (a principle passes iff it passed everywhere it applied);
+`pass_rate_micro` over principle × decision pairs is reported alongside.
+
+### Trial-outcome rates are metrics
+
+Parse-failure, coverage-repair, and `infeasible_at_length` rates — per
+condition, per model, per length bucket. If C3's richer prompt raises parse
+failures, that is a real cost of the citation requirement and it appears
+nowhere else.
+
+### Scoring is reported twice: first-attempt and final
+
+Every scoreable metric is computed both on the **first sampled output** and on
+the **post-repair final output**. First-attempt is the unassisted number and is
+the fair cross-model comparison; final is the assisted one. Reporting both
+dissolves the repair-parity problem rather than arguing about it, and costs
+nothing because both outputs are already stored.
+
+### Aggregation and stratification
+
+Length stratification is a property of this module, not of individual analyses
+— every primary metric emerges bucketed (≤4k / 4k–8k / 8k–16k / >16k tokens).
+Macro-over-categories and micro-over-decisions are both reported; macro is
+never taken across the two Level-A classes.
 
 Causal chain to report: principles → compliance → success; citation
 requirement → Δcompliance beyond provision → Δsuccess.
 
-Length stratification is a property of the metrics module, not of individual
-analyses — every primary metric comes out bucketed.
+### Not computed, and why
+
+CUAD's own benchmark metrics are AUPR and Precision@80%Recall, which assume a
+retrieval-ranking setup. This is generative extraction with no candidate
+ranking, so they are not computable here. That is a **second** reason our
+numbers are not leaderboard-comparable, on top of contamination.
+
+## Trace store — tier 1
+
+**Every experiment must be re-analysable without re-running it.** That is a
+first-class requirement, not a debugging convenience: reasoning content,
+repair sequences, and the exact prompt sent are all things we will want to
+mine after the fact, and re-sampling at temp 0.7 cannot reproduce them.
+
+Per trial, and per **attempt** within a trial (attempt 0 = first sample, then
+one per repair), persist:
+
+- the **exact assembled prompt as sent** — not the template plus arguments, the
+  final string. Template version alone does not survive a template edit.
+- the **raw response body**, verbatim, before any parsing
+- **`reasoning_content`** where the backend separates it (Tinker does). This is
+  the artifact the dropped output-budget constraint exists to preserve; the
+  reasoning traces are expected to be independently interesting.
+- `finish_reason`, `completion_truncated`, token usage, latency
+- the parse outcome for that attempt and, on failure, the repair message sent
+
+Layout: `data/traces/<run_id>/<trial_id>.json`, joined to `trials.jsonl` by
+`trial_id` and verified by `response_sha256`. Append-only; never rewritten by a
+re-run, which goes to a fresh `run_id`.
+
+**Git policy.** Traces are bulk and stay gitignored, but "not in git" must not
+mean "not durable" — they are the reason a re-run is unnecessary. Keep them on
+disk, compressed per run, and treat deleting a run's traces as discarding the
+experiment. The scored records in git remain the auditable summary; the traces
+are the raw material behind them.
 
 ## Results store
 
-Two append-only JSONL files per run, both in git. Raw model responses stay
-local (see the study's Repository policy); `response_sha256` is the join key
-back to them.
+Two append-only JSONL files per run, both in git; `response_sha256` joins them
+to the trace store above.
 
 **Why two levels.** Trial-level rows answer "did this trial run, and how well
 did it do overall" (H1, H5, parse failures, feasibility). Decision-level rows
@@ -239,7 +470,14 @@ them into the trial row would destroy them.
   // --- outcome ---
   "outcome": "ok" | "parse_failure" | "infeasible_at_length" | "api_error",
   "n_repair_attempts": 0,                 // bounded; see repair policy
-  "failure_detail": null,                 // parse error / context-limit numbers
+  "repair_stages": [],                    // e.g. ["json_decode","coverage"] —
+                                          // a count alone cannot distinguish a
+                                          // JSON problem from a coverage one
+  "failure_detail": null,                 // parse/context numbers, plus
+                                          // finish_reason, completion_truncated,
+                                          // n_reasoning_chars — so a blown
+                                          // reasoning budget is never misread
+                                          // as a formatting failure
 
   // --- instance context (denormalized so analysis needs no join) ---
   "n_contract_tokens": 6412,
@@ -247,11 +485,17 @@ them into the trial row would destroy them.
   "split": "dev" | "holdout",
 
   // --- trial-level scores (null when outcome != "ok") ---
-  "answer": {
-    "span_f1_macro": 0.61,                // mean over the ~12 categories
-    "absence_accuracy": 0.83,
-    "per_category": {"Governing Law": {"span_f1": 0.9, "kind": "extraction"}}
+  // NOTE: this sketch is illustrative. The Metrics module section above is
+  // authoritative; regenerate this block from a real row rather than trusting
+  // the field names here.
+  "answer": {                             // FINAL (post-repair) scores
+    "level_a": {"per_category": {"Governing Law": {"tp": 1, "fp": 0,
+                                                   "fn": 0, "tn": 0}}},
+    "level_b": {"soft_f1": 0.61, "exact_match_rate": 0.37,
+                "verbatim_rate": 1.0, "n_tp": 9}
   },
+  "first_attempt": { /* same shapes, plus parsed + failure_stage */ },
+  "correctness_thresholds": {"answer_span_f1": 0.5, "citation": "exact_set"},
   "compliance": {                         // ALL conditions, incl. C1
     "n_applicable": 7, "n_passed": 5, "pass_rate": 0.714,
     "per_principle": {"p03": true, "p11": false}
@@ -281,7 +525,8 @@ them into the trial row would destroy them.
   "decision_kind": "extraction" | "absence",
   "target": "Agreement Date",             // category id; null in target-less envs
 
-  "predicted": {"text": "signed on , in Hong Kong"},  // null for absence
+  "predicted": {"spans": ["signed on , in Hong Kong"],  // null for absence
+                "verbatim": [true], "char_offsets": [4127]},
   "gold": {"spans": [], "is_impossible": true},
 
   "answer_score": {"span_f1": 1.0, "correct_kind": true},

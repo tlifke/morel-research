@@ -23,13 +23,17 @@ class TrialRow(BaseModel):
     principle_set_version: str
     harness_git_sha: Optional[str] = None
     temperature: float
+    max_output_tokens: Optional[int] = None
+    correctness_thresholds: dict[str, Any] = Field(default_factory=dict)
     response_sha256: Optional[str] = None
     n_prompt_tokens: Optional[int] = None
     n_completion_tokens: Optional[int] = None
     latency_ms: Optional[int] = None
+    completion_truncated: bool = False
 
     outcome: str
     n_repair_attempts: int = 0
+    repair_stages: list[str] = Field(default_factory=list)
     failure_detail: Optional[dict[str, Any]] = None
 
     n_contract_tokens: int
@@ -40,6 +44,7 @@ class TrialRow(BaseModel):
     compliance: Optional[dict[str, Any]] = None
     citation: Optional[dict[str, Any]] = None
     leakage: dict[str, Any] = Field(default_factory=dict)
+    first_attempt: Optional[dict[str, Any]] = None
 
 
 class DecisionRow(BaseModel):
@@ -56,6 +61,7 @@ class DecisionRow(BaseModel):
     principles_cited: list[str] = Field(default_factory=list)
     gold_applicable: list[str] = Field(default_factory=list)
     citation_eval: Optional[dict[str, Any]] = None
+    citation_x_correctness: Optional[dict[str, Any]] = None
     compliance_eval: Optional[dict[str, Any]] = None
 
 

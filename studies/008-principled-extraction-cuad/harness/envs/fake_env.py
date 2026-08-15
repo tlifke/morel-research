@@ -226,63 +226,74 @@ class FakeEnvironment(Environment):
     def score_decision(
         self, instance: Instance, decision: DecisionRecord
     ) -> dict[str, Any]:
-        if decision.target is None or decision.target not in instance.gold.targets:
-            return {"span_f1": None, "correct_kind": False}
-        gold = instance.gold.targets[decision.target]
-        if decision.kind == "extraction":
-            predicted_spans = (decision.predicted or {}).get("spans", [])
-            return {
-                "span_f1": metrics.decision_span_f1(
-                    predicted_spans, [s.text for s in gold.spans]
-                ),
-                "correct_kind": not gold.is_impossible,
-            }
-        if decision.kind == "absence":
-            return {"span_f1": None, "correct_kind": gold.is_impossible}
-        return {"span_f1": None, "correct_kind": False}
+        gold = instance.gold.targets.get(decision.target) if decision.target else None
+        if gold is None:
+            return {"cell": None, "correct_kind": False, "span_f1": None}
+        gold_present = not gold.is_impossible
+        predicted_present = decision.kind == "extraction"
+        cell = metrics.confusion_cell(predicted_present, gold_present)
+        score: dict[str, Any] = {
+            "cell": cell,
+            "correct_kind": cell in ("TP", "TN"),
+            "span_f1": None,
+        }
+        if predicted_present:
+            spans = (decision.predicted or {}).get("spans", [])
+            report = metrics.span_report(
+                spans, [g.text for g in gold.spans], instance.text
+            )
+            if cell == "TP":
+                score.update(report)
+            else:
+                score.update(
+                    {
+                        "span_f1": None,
+                        "soft": None,
+                        "exact_match_rate": None,
+                        "verbatim_fidelity": report["verbatim_fidelity"],
+                        "multi_span_recovery": report["multi_span_recovery"],
+                        "span_positions": report["span_positions"],
+                    }
+                )
+        return score
 
     def score_answer(self, instance: Instance, output: BaseModel) -> AnswerScore:
         assert isinstance(output, TaskOutput)
         extracted = {item.category: list(item.spans) for item in output.extractions}
         absent = {item.category for item in output.absent}
 
+        per_category_counts: dict[str, dict[str, int]] = {}
+        per_category_cells: dict[str, str] = {}
         per_category: dict[str, dict[str, Any]] = {}
-        span_scores: list[float] = []
-        absence_hits: list[bool] = []
-        kind_hits: list[bool] = []
 
         for target in TARGETS:
             gold = instance.gold.targets.get(target)
             if gold is None:
                 continue
-            if gold.is_impossible:
-                correct = target in absent
-                absence_hits.append(correct)
-                kind_hits.append(correct)
-                per_category[target] = {
-                    "span_f1": None,
-                    "kind": "absence",
-                    "correct": correct,
-                }
-            else:
-                preds = extracted.get(target, [])
-                score = metrics.decision_span_f1(preds, [s.text for s in gold.spans])
-                span_scores.append(score)
-                kind_hits.append(target in extracted)
-                per_category[target] = {"span_f1": score, "kind": "extraction"}
+            gold_present = not gold.is_impossible
+            predicted_present = target in extracted
+            cell = metrics.confusion_cell(predicted_present, gold_present)
+            per_category_cells[target] = cell
+            counts = metrics.empty_counts()
+            counts[cell] = 1
+            per_category_counts[target] = counts
+            entry: dict[str, Any] = {
+                "cell": cell,
+                "gold_present": gold_present,
+                "predicted_present": predicted_present,
+                "kind": "extraction" if predicted_present else "absence",
+                "declared_absent": target in absent,
+            }
+            if cell == "TP":
+                entry["span_f1"] = metrics.decision_span_f1(
+                    extracted[target], [g.text for g in gold.spans]
+                )
+            per_category[target] = entry
 
-        return AnswerScore(
-            span_f1_macro=sum(span_scores) / len(span_scores) if span_scores else 0.0,
-            absence_accuracy=(
-                sum(1 for h in absence_hits if h) / len(absence_hits)
-                if absence_hits
-                else 1.0
-            ),
-            category_match_accuracy=(
-                sum(1 for h in kind_hits if h) / len(kind_hits) if kind_hits else 0.0
-            ),
-            per_category=per_category,
-        )
+        level_a = metrics.aggregate_level_a(per_category_counts)
+        level_a["per_category_cells"] = per_category_cells
+
+        return AnswerScore(level_a=level_a, level_b={}, per_category=per_category)
 
     def compliance_checkers(self) -> dict[str, ComplianceChecker]:
         return {

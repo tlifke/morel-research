@@ -131,62 +131,72 @@ def test_leakage_text_scan_ignores_the_citation_field():
     assert metrics.scan_text_fields_for_principle_refs(payload) == 2
 
 
+def _ok_row(span_f1, presence_f1, bucket="0-4k", **extra):
+    return {
+        "condition": "C1",
+        "model": "m",
+        "schema_variant": "field_present",
+        "length_bucket": bucket,
+        "outcome": "ok",
+        "answer": {
+            "level_a": {
+                "macro_presence_class": {"f1": presence_f1},
+                "macro_absent_class": {"f1": 1.0},
+                "micro": {"absent_class_recall": 1.0, "decision_kind_accuracy": 1.0},
+            },
+            "level_b": {"span_f1": span_f1, "exact_match_rate": 1.0, "verbatim_fidelity_rate": 1.0},
+        },
+        "compliance": {"pass_rate": 1.0},
+        "citation": None,
+        **extra,
+    }
+
+
 def test_summarize_trials_only_scores_ok_rows_and_reports_outcome_rates():
     rows = [
-        {
-            "outcome": "ok",
-            "answer": {"span_f1_macro": 0.6, "absence_accuracy": 1.0, "category_match_accuracy": 1.0},
-            "compliance": {"pass_rate": 0.5},
-            "citation": None,
-        },
-        {
-            "outcome": "ok",
-            "answer": {"span_f1_macro": 0.8, "absence_accuracy": 0.0, "category_match_accuracy": 0.5},
-            "compliance": {"pass_rate": 1.0},
-            "citation": None,
-        },
-        {"outcome": "parse_failure", "answer": None, "compliance": None, "citation": None},
+        _ok_row(0.6, 0.5),
+        _ok_row(0.8, 0.9),
+        {"outcome": "parse_failure", "answer": None, "compliance": None, "citation": None,
+         "repair_stages": ["coverage"]},
         {"outcome": "infeasible_at_length", "answer": None, "compliance": None, "citation": None},
     ]
     summary = metrics.summarize_trials(rows)
     assert summary["n_trials"] == 4
     assert approx(summary["parse_failure_rate"], 0.25)
     assert approx(summary["infeasible_rate"], 0.25)
-    assert summary["span_f1_macro"]["n"] == 2
-    assert approx(summary["span_f1_macro"]["mean"], 0.7)
+    assert approx(summary["coverage_repair_rate"], 0.25)
+    assert summary["span_f1"]["n"] == 2
+    assert approx(summary["span_f1"]["mean"], 0.7)
+    assert approx(summary["presence_f1_macro"]["mean"], 0.7)
     assert summary["citation_f1"]["n"] == 0
 
 
-def test_every_primary_metric_comes_out_bucketed():
+def test_outcome_rates_are_first_class_metrics():
     rows = [
-        {
-            "condition": "C1",
-            "model": "m",
-            "schema_variant": "field_present",
-            "length_bucket": "0-4k",
-            "outcome": "ok",
-            "answer": {"span_f1_macro": 1.0, "absence_accuracy": 1.0, "category_match_accuracy": 1.0},
-            "compliance": {"pass_rate": 1.0},
-            "citation": None,
-        },
-        {
-            "condition": "C1",
-            "model": "m",
-            "schema_variant": "field_present",
-            "length_bucket": ">16k",
-            "outcome": "ok",
-            "answer": {"span_f1_macro": 0.0, "absence_accuracy": 0.0, "category_match_accuracy": 0.0},
-            "compliance": {"pass_rate": 0.0},
-            "citation": None,
-        },
+        {"outcome": "ok", "repair_stages": ["coverage"], "n_repair_attempts": 1},
+        {"outcome": "ok", "repair_stages": [], "n_repair_attempts": 0, "completion_truncated": True},
+        {"outcome": "parse_failure", "repair_stages": ["json_decode", "json_decode"], "n_repair_attempts": 2},
+        {"outcome": "infeasible_at_length"},
     ]
+    rates = metrics.outcome_rates(rows)
+    assert approx(rates["coverage_repair_rate"], 0.25)
+    assert approx(rates["any_repair_rate"], 0.5)
+    assert approx(rates["completion_truncated_rate"], 0.25)
+    assert approx(rates["parse_failure_rate"], 0.25)
+    assert approx(rates["infeasible_rate"], 0.25)
+
+
+def test_every_primary_metric_comes_out_bucketed():
+    rows = [_ok_row(1.0, 1.0, "0-4k"), _ok_row(0.0, 0.0, ">16k")]
     summary = metrics.stratified_summary(rows)
     group = summary["groups"][0]
     assert set(group["by_length_bucket"]) == {"0-4k", ">16k"}
     for bucket in group["by_length_bucket"].values():
-        for name in ("span_f1_macro", "absence_accuracy", "compliance_pass_rate", "citation_f1"):
-            assert name in bucket
-    assert approx(group["overall"]["span_f1_macro"]["mean"], 0.5)
+        for name in ("span_f1", "presence_f1_macro", "absent_f1_macro",
+                     "compliance_pass_rate", "citation_f1"):
+            assert name in bucket["final"]
+        assert "first_attempt" in bucket
+    assert approx(group["overall"]["final"]["span_f1"]["mean"], 0.5)
 
 
 def test_mean_normal_approx_ci95_shape_and_naming():

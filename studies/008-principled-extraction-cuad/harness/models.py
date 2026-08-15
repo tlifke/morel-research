@@ -117,7 +117,6 @@ class DecisionRecord(BaseModel):
 
 
 class AnswerScore(BaseModel):
-    span_f1_macro: float
-    absence_accuracy: float
-    category_match_accuracy: float
+    level_a: dict[str, Any] = Field(default_factory=dict)
+    level_b: dict[str, Any] = Field(default_factory=dict)
     per_category: dict[str, dict[str, Any]] = Field(default_factory=dict)

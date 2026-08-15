@@ -1,0 +1,115 @@
+<h2>Part 4 &mdash; the coverage invariant, separately</h2>
+
+<p>The study's invariant is: <b>the union of <code>extractions</code> and <code>absent</code>
+covers each of the 12 target categories exactly once</b>. The claim under test is that even
+a perfect schema-constrained decode could not enforce this. That claim is
+<b>confirmed for the output shape we currently use, and refutable by changing the shape</b> —
+both halves matter.</p>
+
+<h3>Confirmed: not expressible over two arrays</h3>
+<p>JSON Schema (2020-12, and every dialect a decode backend implements) has no operator that
+relates the contents of one array to the contents of a sibling array. Specifically:</p>
+<ul>
+<li><code>uniqueItems</code> is scoped to a single array and compares <i>whole items</i>, not a
+projected field. It cannot say &ldquo;no two items share a <code>category</code>&rdquo;, and it
+certainly cannot span <code>extractions</code> and <code>absent</code>.</li>
+<li><code>minItems</code>/<code>maxItems</code> constrain each array's length independently.
+There is no way to constrain the <i>sum</i> of two array lengths to 12.</li>
+<li><code>enum</code> on <code>category</code> restricts the vocabulary — the only part of the
+invariant a schema does capture. It gives &ldquo;every category named is one of the 12&rdquo;;
+it gives nothing about <i>at least once</i> or <i>at most once</i>.</li>
+<li>There is no <code>$data</code> reference, no cardinality quantifier, and no cross-branch
+counting construct in the standard. (<code>$data</code> is an Ajv extension, not JSON Schema,
+and no constrained-decode grammar compiler supports it.)</li>
+</ul>
+<p>The one loophole is brute enumeration: a <code>oneOf</code> listing every legal ordered
+partition of 12 distinct categories into two sequences. That is
+2<sup>12</sup>&nbsp;&times;&nbsp;<i>k</i>!(12&minus;<i>k</i>)! summed over <i>k</i>, i.e.
+<b>&asymp;2&nbsp;&times;&nbsp;10<sup>12</sup></b> branches. It is not a schema anyone can
+compile into a decoding grammar. Treat the invariant as inexpressible in this shape.</p>
+
+<h3>Refuted, in the useful direction: reshape and it becomes structural</h3>
+<p>The invariant is a property of the <i>shape</i>, not of JSON Schema's power. Replace the two
+lists with one object keyed by category:</p>
+<pre>{
+  "type": "object",
+  "properties": {
+    "governing_law":   {"$ref": "#/$defs/decision"},
+    "expiration_date": {"$ref": "#/$defs/decision"},
+    ... all 12 ...
+  },
+  "required": [ ...all 12 category ids... ],
+  "additionalProperties": false,
+  "$defs": {
+    "decision": {"oneOf": [
+      {"properties": {"present": {"const": true},  "spans": {"type":"array","minItems":1},
+                      "principles_cited": {"type":"array"}},
+       "required": ["present","spans","principles_cited"], "additionalProperties": false},
+      {"properties": {"present": {"const": false}, "principles_cited": {"type":"array"}},
+       "required": ["present","principles_cited"], "additionalProperties": false}
+    ]}
+  }
+}</pre>
+<p>Here <code>required</code> gives <i>at least once</i>, <code>additionalProperties: false</code>
+gives <i>no strangers</i>, and object-key uniqueness gives <i>at most once</i> for free. Coverage
+becomes an ordinary structural constraint that any grammar-based decoder enforces. So the honest
+statement is not &ldquo;JSON Schema cannot express coverage&rdquo; but <b>&ldquo;coverage is not
+expressible over a two-list shape, and is trivially expressible over a per-category-key
+shape&rdquo;</b>.</p>
+<p class="meta">This is a real design option for the study, not a rhetorical point &mdash; but it
+buys nothing on Tinker, where no schema is enforced at all. It would matter the moment the ollama
+arm (which does have constrained decode) returns, and it would come at a cost: the per-key shape
+makes the field-absent <code>principles_cited</code> variant harder to strip cleanly, and it
+changes the prompt, so it is not a free swap mid-study.</p>
+
+<h3>Eliminable vs irreducible</h3>
+<div class="scroll"><table>
+<tr><th>failure mode</th><th>eliminable by correct configuration?</th><th>on Tinker today</th></tr>
+<tr><td>markdown fence around the JSON</td>
+    <td>Yes &mdash; under a real constrained decode a fence is untypeable</td>
+    <td><b>No mechanism available.</b> Handled by the parser's fence strip / brace extraction.</td></tr>
+<tr><td>prose preamble or trailing caveat</td>
+    <td>Yes &mdash; same reason</td>
+    <td><b>No mechanism available.</b> Handled by brace extraction.</td></tr>
+<tr><td>wrong key set, missing required field, extra field</td>
+    <td>Yes</td>
+    <td><b>No mechanism available.</b> Scored as <code>schema_validation</code>, repaired.</td></tr>
+<tr><td><code>category</code> outside the 12-value enum</td>
+    <td>Yes</td>
+    <td><b>No mechanism available.</b></td></tr>
+<tr><td>wrong scalar type (e.g. <code>"2019"</code> for an integer field)</td>
+    <td>Yes</td>
+    <td><b>No mechanism available.</b> Observed on both Qwen arms in Part&nbsp;1.</td></tr>
+<tr><td><b>coverage</b>: a category missing, duplicated, or in both lists</td>
+    <td><b>No</b>, in the current two-list shape. Yes, if the output is reshaped to per-category keys.</td>
+    <td>Irreducible today. Must be repaired or scored as failure &mdash; the <code>coverage</code>
+        repair stage in the runner is load-bearing, not defensive.</td></tr>
+<tr><td>truncation (<code>finish_reason: "length"</code>)</td>
+    <td><b>No.</b> A grammar constrains <i>which</i> tokens, never <i>how many</i>. Constrained
+        decode makes truncation <i>worse</i>, because an unterminated grammar state is still an
+        unparseable string.</td>
+    <td>Irreducible. Budget it and report it.</td></tr>
+<tr><td>empty content with the whole budget spent on reasoning</td>
+    <td><b>No.</b> Reasoning tokens are emitted on a separate channel that the response grammar
+        does not govern.</td>
+    <td>Irreducible. Observed on the 4B.</td></tr>
+<tr><td>semantically wrong extractions / hallucinated spans</td>
+    <td><b>No.</b> Out of scope for any schema.</td>
+    <td>Irreducible &mdash; and it is the actual object of study.</td></tr>
+</table></div>
+
+<h2>What this means for the study</h2>
+<ul>
+<li>The line in <code>plans/component-contracts.md</code> that says
+<code>json_object</code> is &ldquo;honored&rdquo; for inkling-small is <b>wrong</b> and should be
+corrected: it is not honored for any model. <code>structured_output</code> should read
+<code>prompt_only</code> for all three Tinker arms, inkling included.</li>
+<li>Because no arm on Tinker gets constrained decode, the P0 field-absent leakage measurement is
+clean across all three arms &mdash; that conclusion in the contracts doc survives, and now rests
+on measurement of all three models rather than an inference about two.</li>
+<li>Parse-and-repair is not a fallback here, it is the mechanism. Repair-rate differences between
+models are therefore a first-class result, not harness noise, and the first-attempt/final
+double-scoring already specified is the right treatment.</li>
+<li>Sending <code>response_format</code> at all is harmless but misleading: it makes the trial rows
+look like they requested enforcement. Either drop it or record it as declaratively inert.</li>
+</ul>

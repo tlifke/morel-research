@@ -200,22 +200,99 @@ This is the section a reader would reuse in another domain. Give it room.
   span-level extraction breaks presence/absence symmetry.
 - **[locked]** `decision_idx` = the target's position in the task definition,
   stable across trials, models, conditions and seeds.
-- **[locked]** Answer score: token-level span F1 (Jaccard-style, per LLM-era
-  CUAD literature), aggregating **within** a decision via soft precision (each
-  prediction's best gold match) and soft recall (each gold's best prediction
-  match), harmonic mean. Plus absence accuracy and category-match accuracy.
-  Reported per-category and length-stratified.
-- **[locked]** Compliance: pass-rate over applicable principles, measured in
-  **all** conditions including C1. Say plainly that this is the **mediation
-  variable**, not a robustness check. Principle-level `pass_rate` (a principle
-  passes iff it passed everywhere it applied) with `pass_rate_micro` over
-  principle × decision pairs reported alongside.
-- **[locked]** Citation (C3 only): per-decision P/R/F1 against the
-  **scope-relevant slice** of gold applicability — not the instance-wide set,
-  which would penalise any model that doesn't cite globally-scoped principles
-  on every decision. Explicit tp/fp/fn lists retained per decision; the H4
-  confusion matrix is built by pairing fp against fn within a decision.
+Present the metrics as **three levels that are never collapsed into one
+number**, in Tyler's framing:
+
+**Level A — the presence/absence call.** *When the agent says a category is
+present or absent, how often is it right, and what kinds of error is it
+vulnerable to?*
+
+- **[locked]** Raw 2×2 counts (TP/FP/FN/TN) stored per category; every rate
+  derives from them, so aggregations recompute without re-running trials.
+- **[locked]** Presence-class **and** absent-class P/R/F1, reported separately
+  and macro-averaged separately, never together. The term "absence accuracy" is
+  **retired** as ambiguous between overall accuracy, absent-class recall, and
+  absent-class precision; the fields are now `absent_class_recall` and
+  `absent_class_precision`. `decision_kind_accuracy` = (TP+TN)/total ships with
+  a note that it is base-rate-dominated and never a headline.
+- **[locked]** False-present and false-absent reported separately, not only via
+  F1 — principles plausibly move them in opposite directions, and an
+  absence-ruling principle should cut false-present while possibly raising
+  false-absent.
+- **[locked]** **Trivial baselines per category** (always-absent,
+  always-present), printed alongside. Required, not optional: Source Code
+  Escrow has 1 positive in 102 holdout contracts, so always-absent scores 99%
+  there. **[human]** The reason both classes are reported is worth a sentence —
+  the informative class *flips with base rate*: for rare categories only the
+  presence class carries information; for common categories (Agreement Date,
+  93/102) always-present already scores 91%, so only the absent class does.
+
+**Level B — span quality, conditional on agreement.** *When a category is
+present in gold and the agent agrees, how close is its span set to the gold
+span set?*
+
+- **[locked]** Defined **only on the TP cell**, and any corpus-level span score
+  is reported **with its TP denominator** — otherwise a model that finds three
+  clauses perfectly and misses nine looks excellent.
+- **[locked]** Token-level soft P/R/F1 (each prediction against its best gold
+  match, each gold against its best prediction, harmonic mean), aggregated
+  *within* a decision per D-14. Plus **exact-match rate** as the stricter,
+  interpretable companion.
+- **[locked]** **Verbatim fidelity, three-way, both matchers reported**:
+  *exact* (literal substring), *normalised-only* (matches after whitespace
+  collapse, NFKC, quote/dash folding, hyphen-linebreak rejoin — but **not**
+  after stripping OCR page furniture, which would be a scoring decision in
+  disguise), and *not found*. **[human]** The framing carries the result: the
+  exact-vs-normalised **gap measures how much apparent non-verbatim output is
+  merely cosmetic**, and the **not-found rate is the one that means invented
+  contract language** — a categorically different and, in legal extraction,
+  more serious failure than picking the wrong clause.
+- **[locked]** Span position (located character offset → depth into document),
+  giving a sharper H5 instrument than contract length alone: it separates "long
+  contracts are harder" from "the model stops reading after N tokens."
+- **[locked]** Multi-span recovery — predicted vs gold span counts per decision.
+
+**Level C — citation quality (C3).** *When the agent makes a decision, do its
+cited principles match the gold applicable set?*
+
+- **[locked]** Per-decision P/R/F1 against the **scope-relevant slice** of gold
+  applicability — not the instance-wide set, which would penalise any model
+  that doesn't cite globally-scoped principles on every decision. Explicit
+  tp/fp/fn lists retained.
 - **[locked]** F1 not recall, to block a cite-everything strategy.
+- **[locked]** Per-principle marginal P/R/F1 — which principles are cited well
+  and which are systematically confused. This *is* H4, and it is what makes the
+  principle set maintainable.
+- **[locked]** Confusion matrix over principle ids, from pairing fp against fn
+  within a decision.
+- **[locked]** **Citation × answer-correctness, swept over the threshold.**
+  "Answer correct" depends on a span-F1 cutoff, so rather than fix one, the
+  2×2 is computed at t = 0.1 … 1.0 in 0.1 steps and reported as a **curve**.
+  Deterministic, recomputed from stored per-decision scores, no re-running.
+  **[human]** Say why: the right overlap threshold is genuinely use-case
+  dependent — triage tolerates loose overlap, database extraction does not — so
+  we report the dependence rather than choosing for the reader. A headline
+  threshold may be named in prose but must be a visibly marked point on the
+  published curve.
+  **[human]** **Right-answer-wrong-reason is the phenomenon this study exists
+  to detect**, and it is invisible in marginal citation F1. The
+  wrong-answer-with-confident-citations cell is a principle-refinement signal:
+  it localises which rule the model believed it was following when it erred.
+
+**Compliance (all conditions).**
+
+- **[locked]** Checker pass-rate over applicable principles, measured in C1,
+  C2 **and** C3. Say plainly this is the **mediation variable**, not a
+  robustness check. `pass_rate` is principle-level (a principle passes iff it
+  passed everywhere it applied), with `pass_rate_micro` over principle ×
+  decision pairs alongside.
+
+**Trial-outcome rates are metrics.**
+
+- **[locked]** Parse-failure, coverage-repair, `infeasible_at_length`, and
+  completion-truncated rates, per condition / model / length bucket. If C3's
+  richer prompt raises parse failures, that is a real cost of the citation
+  requirement and appears nowhere else.
 - **[locked]** Length stratification is a property of the metrics module — every
   primary metric emerges bucketed. Buckets: ≤4k / 4k–8k / 8k–16k / >16k tokens.
 - **[locked]** The causal chain to report: principles → compliance → success;
@@ -227,27 +304,90 @@ This is the section a reader would reuse in another domain. Give it room.
 ## §7 Execution
 
 - **[locked]** Model axis (2026-08-15): `Qwen/Qwen3.5-4B`, `Qwen/Qwen3.5-9B`,
-  and `inkling-small`, all via Tinker for now. The two Qwen models are the same
-  ids that will be served on the desktop GPU when it returns, so the model axis
-  survives the substrate change.
-- **[locked]** inkling-small context window = **262,144 tokens**, measured by
-  bisection against the endpoint's own error message (150k accepted, 300k
-  rejected), not from documentation. Consequence: **no CUAD contract is
-  infeasible on this arm** (longest is 82,345 tokens), so H5's story here is
-  degradation, not refusal.
-- **[locked]** inkling-small structured output is **prompt-plus-parse**
-  (`json_schema` silently ignored, `json_object` honored), which the backend
-  declares so repair accounting is honest.
+  and `inkling-small`, all via Tinker for now. Model ids are canonical and
+  substrate-neutral, resolving to a served name per substrate, so the axis does
+  not move when these ids migrate to the desktop GPU.
+- **[locked]** **Context windows were measured, not read from documentation** —
+  bisected against each endpoint's own error text. inkling-small 262,144;
+  both Qwen arms 65,536. An unmeasured model is refused by the backend rather
+  than guessed.
+- **[locked]** The runner uses `context_limit = advertised − safety_margin`.
+  **[human]** Worth reporting: the 9B fails *inside the server* at 65,530 —
+  **below its own advertised limit** — with an opaque error, so a band exists
+  that passes the documented check and then dies. Its error text also names an
+  `--allow-auto-truncate` server flag, meaning silent truncation is one
+  upstream config change away. Since every `infeasible_at_length` determination
+  and the whole H5 length story depend on truncation never happening quietly,
+  the truncation guard (prompt-token count below 80% of estimate → raise) is
+  documented as load-bearing, not defensive.
+- **[locked]** Feasibility against the real manifest (510 instances, longest
+  82,345 tokens; ~1.5k prompt overhead + output reserve): **5/510 infeasible
+  for the 4B, 6/510 for the 9B, 0/510 for inkling-small.** On the **holdout,
+  exactly 1 contract** is infeasible for both Qwen arms; **dev has zero.**
+  **[human]** Two consequences to state: H5's refusal story on the headline
+  split rests on a single contract, so the length result is mostly degradation
+  rather than refusal; and dev cannot rehearse the infeasibility path at all —
+  a direct, now-quantified cost of D-13 (dev max 41,703 vs holdout 64,640).
+- **[locked]** **Reference tokenizer verified, not assumed.** Qwen3.5's vocab is
+  63% larger than Qwen3-8B's (248,077 vs 151,669), but on contract-shaped text
+  the two produce **identical** token counts (0.00% delta across legalese, OCR
+  furniture, dates, currency, boilerplate). The reference tokenizer stays
+  `Qwen/Qwen3-8B` per D-12 and no caveat is needed — but record that this was
+  checked rather than assumed.
 - **[locked]** **Two token counts, deliberately distinct.** `length_bucket`
   uses a single fixed reference tokenizer so stratification is comparable
   across models; **feasibility** is decided per backend, with that backend's
   tokenizer and limit, against the **assembled prompt** — meaning C2/C3 can be
   infeasible where C1 is feasible, which is itself a result.
-- **[locked]** Repair policy is bounded and shared: JSON failures, schema
-  failures, and **coverage** failures all draw from the same
-  `max_repair_attempts` budget, with `failure_detail.stage` distinguishing
-  them. The budget is identical across C1/C2/C3, so assistance is symmetric and
-  cannot manufacture a condition effect.
+- **[locked]** **Define repair explicitly** — it is a methods commitment, not an
+  implementation detail. When a sampled output fails to parse or validate, the
+  runner returns it to the model with a message naming the defect and
+  re-samples. Three defect classes share one bounded budget, distinguished by
+  `failure_detail.stage`: `json_decode` (not valid JSON), `schema_validation`
+  (valid JSON, wrong shape), `coverage` (valid shape, targets missing or
+  duplicated). Exhausting the budget ends the trial as `parse_failure`.
+  The budget is identical across C1/C2/C3, so assistance is symmetric and
+  cannot manufacture a condition effect. `repair_stages` records what actually
+  fired.
+- **[locked]** **Coverage failures are irreducible, and the reason belongs in
+  the paper.** "The union of extractions and absent covers each of the 12
+  targets exactly once" is a cross-field cardinality constraint that **JSON
+  Schema cannot express** — so even a perfect constrained decode permits 11
+  extractions with an empty absent list, or a category appearing in both. This
+  splits the taxonomy: `json_decode` and `schema_validation` are eliminable by
+  correct decoding configuration; `coverage` is not, and measures whether a
+  model tracks a 12-way partition over a long document.
+- **[locked]** **Scoring is reported twice**: first-attempt (attempt 0,
+  unassisted) and final (post-repair). Repair is assistance and models need
+  different amounts of it, so equal budgets are not equal help; reporting both
+  dissolves the parity problem rather than arguing about it.
+  **[human]** State the survivorship caveat plainly. A repair only occurs when
+  attempt 0 failed, so `first_attempt == final` whenever no repair happened and
+  `first_attempt.parsed` is false whenever one did. "First-attempt score"
+  therefore means "score on the subset that needed no help." The honest headline
+  is a **pair** — first-attempt parse rate, and first-attempt scores on that
+  surviving subset — never the mean alone. `n_scored` is emitted beside every
+  scope so denominators stay visible.
+- **[locked]** **Output budget is deliberately generous, not tuned per model**
+  (16,384 tokens; recorded). Reasoning verbosity differs sharply — on a trivial
+  prompt the 4B emits ~2,159 reasoning chars, the 9B ~870, inkling-small ~195 —
+  so a tight budget handicaps the smallest model specifically and would
+  contaminate H3, making a small model's apparent failure partly our own
+  configuration. **[human]** Worth reporting as a caught error, not a silent
+  setting: at a 4,000-token budget the 4B produced a `parse_failure` that
+  **disappeared entirely** at 16,384 (4/4 ok, zero repairs). Per-model tuning
+  was rejected — it would bake a per-model correction into the H3 comparison.
+- **[locked]** **Structured-output conformance is a measured outcome.**
+  **[pending: evidence probe]** Whether the Tinker endpoint enforces
+  `response_format` at all is under independent verification, with raw payloads,
+  at `reviews/structured-output-evidence.html`. Two branches, and the writeup
+  differs by which holds: if output is genuinely unconstrained, per-model
+  valid-JSON and schema-valid rates become a **reported result with CIs**; if
+  we were misconfigured (the live hypothesis is vLLM-style `guided_json` rather
+  than OpenAI `response_format`), the backend is fixed and only coverage
+  remains instrumented. Note the substrate asymmetry either way: ollama's
+  `format` genuinely constrains, so the two substrates will not be comparable
+  on conformance or on field-absent leakage.
 - **[locked]** Trial outcomes `ok | parse_failure | infeasible_at_length |
   api_error` are **reported, not dropped**. Decision rows are written for
   non-`ok` trials with null scores. This is the paragraph that makes H5
@@ -258,6 +398,19 @@ This is the section a reader would reuse in another domain. Give it room.
   + `decisions.jsonl` (one row per decision), append-only, with provenance
   stamps (run id, prompt template version, principle set version, harness git
   sha, temperature, response hash). D-10.
+- **[locked]** **Trace store — every experiment is re-analysable without
+  re-running it.** Per trial *and per attempt within a trial*: the exact
+  assembled prompt **as sent** (not template-plus-arguments — a template edit
+  would otherwise orphan old traces), the verbatim raw response before parsing,
+  `reasoning_content` where the backend separates it, finish reason, truncation
+  flag, usage, latency, and the repair message sent on each failure. Non-`ok`
+  trials leave traces too, so a refusal can be audited without re-running.
+  Compressed per trial, append-only, re-runs go to a fresh `run_id`.
+  **[human]** State this as a methods commitment: re-sampling at temperature
+  0.7 cannot reproduce a trace, so deleting a run's traces means discarding the
+  experiment. The reasoning traces are also expected to be independently
+  interesting — they are the artifact the relaxed output budget exists to
+  preserve (observed range so far: 5,871–20,634 characters on a single trial).
 - **[locked]** `trial_id` excludes `run_id`, making runs resumable; a
   deliberate re-run goes to a fresh store.
 - **[pending]** Sampling parameters as actually run: temperature (~0.7 planned),
@@ -298,6 +451,20 @@ This is the section a reader would reuse in another domain. Give it room.
 - **[locked]** Leakage detection is regex-based over free-text fields and will
   not catch a model that paraphrases a rule without naming it. **[human]** state
   this as a floor on the measured leakage rate, not a bound.
+- **[locked]** **Exact verbatim matching is deliberately strict and will read
+  as harsh** on contracts with embedded OCR/SEC page furniture: a model emitting
+  the clean legal sentence is marked non-verbatim for omitting the scanning
+  artifact. That is the behaviour we want measured rather than smoothed away,
+  which is why the normalised matcher is reported *alongside* rather than
+  instead. **[human]** the pairing is the defence — a reader who thinks the
+  exact matcher too strict can read the normalised rate.
+- **[locked]** The first-attempt/final split is determined entirely by whether
+  repair occurred, so first-attempt scores are conditioned on the
+  no-help subset (see §7). Report the pair, never the mean alone.
+- **[pending: evidence probe]** If structured output proves genuinely
+  unconstrained on Tinker, conformance rates are a limitation *and* a result,
+  and the substrate asymmetry with ollama's constrained decode must be stated
+  wherever conformance or field-absent leakage is compared.
 - **[locked]** Field-absent leakage is **structurally zero** under constrained
   decode and possible under prompt-plus-parse, so leakage rates are not
   comparable across backends and P0's measurement is only meaningful on a
@@ -317,6 +484,12 @@ This is the section a reader would reuse in another domain. Give it room.
 - **[locked]** The workstream dependency diagram (exists: `overview.html`).
 - **[locked]** The measurement chain: principles → compliance → success, with
   compliance as the mediation node (exists: `overview.html`).
+- **[locked]** **The citation × answer-correctness threshold sweep**
+  (t = 0.1 … 1.0), four cells as a function of t. Plotly, Morel branding,
+  source script + PNG checked in, figure data kept separate from rendering
+  code. This is the natural home for the right-answer-wrong-reason series.
+- **[pending: gold audit]** Defect rate by type and category, as the span-F1
+  ceiling.
 - **[human]** One figure carries the message in the one-pager, per repo
   convention — that one is a *results* figure, not a methods figure.
 

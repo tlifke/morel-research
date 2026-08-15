@@ -163,6 +163,24 @@ Format:
 
 ## Pending
 
+- **Cross-model assistance parity** — raised 2026-08-15 by the backend
+  measurements, unresolved. Two findings make "same settings for every model"
+  *not* the same as "equal assistance":
+  1. **Reasoning verbosity differs sharply.** On a trivial prompt the 4B emits
+     2,159 reasoning chars, the 9B 870, inkling-small 195. A fixed
+     `max_output_tokens` therefore handicaps the 4B specifically — and its one
+     smoke-test failure was exactly this: `finish_reason: length` after ~15k
+     chars of reasoning with empty content. **This directly threatens H3**, the
+     small-model-leverage claim: some of a small model's apparent failure would
+     be our budget, not its capability.
+  2. **Repair need differs systematically.** inkling-small needed 0 repairs
+     across every trial; both Qwen arms routinely needed 1–2. Repair *is*
+     assistance, so an equal repair budget is not equal help.
+  Options to weigh: a fixed generous budget reported as a parameter; a
+  per-model budget calibrated to reasoning verbosity; reporting results at
+  multiple budgets; or treating budget-exhaustion as its own outcome class
+  excluded from answer scoring. Tyler's call — it changes what H3 can claim.
+
 - **G3 schema decision** (from inv 004 / pilot P0) — field-present everywhere
   vs field-absent for C1/C2 vs field-present with post-hoc filtering. Decision
   rule is written down in inv 004's `investigation.md` **before** the pilot

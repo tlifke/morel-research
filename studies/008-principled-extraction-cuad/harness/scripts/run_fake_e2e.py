@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from harness import metrics
 from harness.backends.base import Backend, BackendUnavailable
 from harness.envs.fake_env import FakeEnvironment
-from harness.runner import RunConfig, new_run_id, run_grid
+from harness.runner import DEFAULT_MAX_OUTPUT_TOKENS, RunConfig, new_run_id, run_grid
 from harness.store import ResultsStore
 
 
@@ -63,7 +63,7 @@ def main() -> int:
     parser.add_argument("--variants", default="field_present,field_absent")
     parser.add_argument("--seeds", default="0")
     parser.add_argument("--split", default="dev")
-    parser.add_argument("--max-output-tokens", type=int, default=1024)
+    parser.add_argument("--max-output-tokens", type=int, default=DEFAULT_MAX_OUTPUT_TOKENS)
     parser.add_argument("--max-instances", type=int, default=0)
     parser.add_argument("--tokenizer-id", default=None)
     args = parser.parse_args()
@@ -84,7 +84,7 @@ def main() -> int:
         temperature=0.7,
         max_output_tokens=args.max_output_tokens,
         principle_set_version=env.principle_set().version,
-        raw_response_dir=out / "responses",
+        trace_root=out / "traces",
     )
 
     instances = env.load_instances(args.split)
@@ -104,8 +104,20 @@ def main() -> int:
     )
 
     rows = [r.trial.model_dump() for r in results]
-    print(json.dumps({"backend": backend.describe(), "n_trials": len(rows)}, indent=2))
+    print(
+        json.dumps(
+            {
+                "backend": backend.describe(),
+                "n_trials": len(rows),
+                "run_id": config.run_id,
+                "max_output_tokens": config.max_output_tokens,
+                "trace_dir": str(out / "traces" / config.run_id),
+            },
+            indent=2,
+        )
+    )
     print(json.dumps(metrics.stratified_summary(rows), indent=2, default=str))
+    print(json.dumps(metrics.corpus_level_a(rows, "final"), indent=2, default=str))
     return 0
 
 

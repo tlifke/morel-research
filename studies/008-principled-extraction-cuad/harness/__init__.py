@@ -18,6 +18,23 @@ from .prompts import CONDITIONS, PROMPT_TEMPLATE_VERSION, PromptBundle, build_pr
 from .output_schema import json_schema_for, schema_has_citation_field
 from .runner import RunConfig, TrialKey, TrialResult, new_run_id, run_grid, run_trial
 from .store import DecisionRow, ResultsStore, TrialRow
+from .trace_store import (
+    AttemptTrace,
+    TraceReader,
+    TraceStore,
+    TrialTrace,
+    latest_run_id,
+    load_run,
+    load_trace,
+)
+from .metrics import (
+    HEADLINE_SPAN_F1_THRESHOLD,
+    SWEEP_SPAN_F1_THRESHOLDS,
+    CorrectnessThresholds,
+    citation_correctness_sweep,
+    headline_from_sweep,
+    normalize_for_matching,
+)
 
 __all__ = [
     "AbsenceClaim",
@@ -43,7 +60,20 @@ __all__ = [
     "TaskDefinition",
     "TaskOutput",
     "TrialKey",
+    "AttemptTrace",
+    "CorrectnessThresholds",
+    "HEADLINE_SPAN_F1_THRESHOLD",
+    "SWEEP_SPAN_F1_THRESHOLDS",
+    "citation_correctness_sweep",
+    "headline_from_sweep",
+    "normalize_for_matching",
+    "TraceReader",
+    "TraceStore",
     "TrialResult",
+    "TrialTrace",
+    "latest_run_id",
+    "load_run",
+    "load_trace",
     "TrialRow",
     "build_prompt",
     "json_schema_for",
