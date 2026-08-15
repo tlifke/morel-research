@@ -161,6 +161,9 @@ table.tbl td{padding:3px 8px 3px 0; border-bottom:1px solid var(--line); vertica
 .dist .fill{height:100%; background:var(--info)}
 .dist .val{color:var(--fg); text-align:right; font-variant-numeric:tabular-nums}
 .fp-note{font-size:12px; color:var(--dim); margin-top:9px; line-height:1.5; white-space:pre-wrap}
+.fp-more{font-size:12px; border:1px solid var(--line); border-radius:3px; margin-bottom:4px; background:var(--bg)}
+.fp-more>summary{cursor:pointer; padding:3px 8px; color:var(--dim)}
+.fp-more>.body{max-height:220px; overflow:auto; padding:4px 10px 8px; font-size:11.5px; color:var(--dim)}
 .card .body{font-size:13px; line-height:1.5; white-space:pre-wrap}
 .card .hint{color:var(--faint); font-size:11px; margin-top:5px}
 .chips{display:flex; flex-wrap:wrap; gap:5px}
@@ -464,6 +467,14 @@ function renderDistribution(d){
   return html;
 }
 
+function statusTone(status){
+  const s=String(status).toLowerCase();
+  if(/unimplement|error|infeasible/.test(s))return "t-bad";
+  if(/degenerate|tautolog|fail/.test(s))return "t-warn";
+  if(/discriminat/.test(s))return "t-ok";
+  return "t-neutral";
+}
+
 function renderFootprint(f,val,r){
   const idxName=(f.config&&f.config.index)||"footprint";
   const doc=sidecar(idxName);
@@ -520,7 +531,7 @@ function renderFootprint(f,val,r){
   const known=new Set(["status","note","applicability","distribution","discrimination","examples"]);
   const extra=Object.keys(fp).filter(k=>!known.has(k));
   return `<div class="fp"><div class="fp-head"><h3>empirical footprint</h3>
-    ${status!=="ok"?`<span class="pill t-bad">${esc(status)}</span>`:""}
+    ${status!=="ok"?`<span class="pill ${statusTone(status)}">${esc(status)}</span>`:""}
     <span class="prov">${esc(prov)}</span><span style="flex:1"></span>${helpBtn}</div>${helpBox}`+
     (stats.length?`<div class="fp-stats">${stats.join("")}</div>`
       :`<div class="fp-note">footprint present but carries no measurements.</div>`)+
@@ -530,8 +541,9 @@ function renderFootprint(f,val,r){
         renderRows({config:{columns:[...new Set(fp.examples.flatMap(o=>Object.keys(o||{})))]}},fp.examples)+
         "</div>" : "")+
     (fp.note?`<div class="fp-note">${esc(fp.note)}</div>`:"")+
-    (extra.length?`<div class="fp-sec"><h4>other keys</h4><div class="body" style="font-size:12px">${
-      esc(JSON.stringify(Object.fromEntries(extra.map(k=>[k,fp[k]])),null,1))}</div></div>`:"")+
+    (extra.length?`<div class="fp-sec"><h4>further measurements</h4>`+
+      extra.map(k=>`<details class="fp-more"><summary>${esc(k)}</summary><div class="body">${
+        esc(JSON.stringify(fp[k],null,1))}</div></details>`).join("")+"</div>":"")+
     "</div>";
 }
 

@@ -76,9 +76,10 @@ VERDICTS = {
         "on gold-present contracts; a narrow but real subcase.",
     ),
     "d01": (
-        "degenerate-and-contradictory",
+        "degenerate",
         "70% of Agreement Date decisions, but applicability is defined by gold "
-        "already having the clipped shape, and the rule contradicts g01.",
+        "already having the clipped shape, so the checker restates the answer. "
+        "The apparent clash with g01 is not real: g01 exempts the date categories.",
     ),
     "d02": (
         "discriminating-but-rare",

@@ -243,6 +243,33 @@ of the method and pre-empting it is stronger than defending it later.
    spans are now shown inline. A distinct "I don't understand this" decision is
    separated from defer, since they are diagnostically different.
 
+**Three decouplings measured in the pilot — each one undercuts a heuristic a
+reader would otherwise assume, and together they are the case for the
+round-2 instrumentation.** All from running checkers over the dev split
+(40 contracts × 12 categories = 480 decisions) plus independent adversarial
+review.
+
+1. **Provenance did not predict quality.** Of 8 guideline-derived principles,
+   one is unimplementable and two are tautological; of 8 data-mined, one is
+   refuted, one fires once in 480 decisions, one fires on nearly everything.
+   **The two best footprints are one from each arm.** The curator's acceptance
+   rate, by contrast, *was* source-dependent — 7/8 guidelines against 4/8
+   mined. **[human]** Confidence tracked source authority; quality did not.
+   This is the sharpest single justification for replacing source-based
+   judgement with measurement.
+2. **Evidence strength did not predict measurement value.** `d05` had the
+   strongest derivation evidence in the set (8 mined pairs, 4 contracts,
+   near-verbatim minimal pairs) and has among the worst footprints — it fires
+   on **100% of contracts over 4k tokens**, so it cannot discriminate.
+3. **Statement truth did not predict checker usability.** Adversarial review
+   could not break 5 of 16 *statements*, but only 2 of those had checkers it
+   also could not break. A principle can be true and unmeasurable.
+
+**[human]** Two independent instruments — the applicability footprints and the
+adversarial critique — converged on the same disqualifications (`g02`
+unimplementable, `d07` and `d06` dead, the tautology family). Convergence of
+methods built for different purposes is worth reporting as corroboration.
+
 **[human]** The five deferred records are the highest-information output of
 round 1 and should not be presented as a backlog that was cleared. In
 particular the `d01`-vs-`g01` contradiction is a disagreement *between our two

@@ -21,11 +21,15 @@ FOOTPRINT_NAMES = (
 )
 
 
+SUBDIRS = (".", "checkers", "footprints")
+
+
 def discover(directory: Path, names: tuple[str, ...]) -> Path | None:
-    for name in names:
-        candidate = directory / name
-        if candidate.exists():
-            return candidate
+    for sub in SUBDIRS:
+        for name in names:
+            candidate = directory / sub / name
+            if candidate.exists():
+                return candidate.resolve()
     return None
 
 
