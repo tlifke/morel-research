@@ -157,6 +157,7 @@ GOLD_AUDIT = RecordType(
         Field("span_index", "Span", "text", slot="meta"),
         Field("n_spans_in_category", "Of", "text", slot="meta"),
         Field("has_counterpart", "Counterpart", "badge", slot="meta"),
+        Field("detected_by", "Detected by", "badge", slot="meta"),
         Field("n_contracts_with_passage", "Passage seen in N others", "text", slot="meta"),
         Field("siblings", "Sibling gold spans, same category", "rows", slot="body",
               config={"columns": ["span_index", "offsets", "n_chars", "text"]},
@@ -167,12 +168,16 @@ GOLD_AUDIT = RecordType(
         Field("duplicate_counterparts",
               "Same passage in other contracts, and how it is labeled there",
               "rows", slot="body",
-              config={"columns": ["contract_id", "split", "twin_label",
-                                  "doc_containment", "offsets", "passage"]},
+              config={"columns": ["contract_id", "split", "twin_label", "detector",
+                                  "similarity", "doc_containment", "offsets",
+                                  "passage"]},
               hint="twin_label is that contract's label for THIS category. "
                    "'marked_absent' or 'not_annotated' against an identical passage "
                    "is the inconsistent_across_duplicates case. A high "
-                   "n_contracts_with_passage means boilerplate, not a near-twin."),
+                   "n_contracts_with_passage means boilerplate, not a near-twin. "
+                   "detector=exact_normalized is byte-identical text; "
+                   "fuzzy_idf_jaccard is a similarity match, so read its passage "
+                   "before trusting it."),
         Field("title", "Contract title", "longtext", slot="body"),
         Field("sample", "Sampling provenance", "kv", slot="body",
               hint="Seed and stratum this record was drawn under."),
@@ -180,7 +185,7 @@ GOLD_AUDIT = RecordType(
     facets=(
         Facet("category", "Category"),
         Facet("split", "Split"),
-        Facet("has_counterpart", "Has counterpart"),
+        Facet("detected_by", "Detected by"),
     ),
     key_order=(
         "id",
@@ -201,6 +206,7 @@ GOLD_AUDIT = RecordType(
         "duplicate_counterparts",
         "n_contracts_with_passage",
         "has_counterpart",
+        "detected_by",
         "sample",
         "review",
     ),

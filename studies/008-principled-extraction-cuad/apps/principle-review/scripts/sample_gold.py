@@ -16,8 +16,11 @@ sys.path.insert(0, str(STUDY_SCRIPTS))
 
 from cuad_dataset import CuadDataset
 from duplicates import MIN_MATCH_CHARS, Corpus
+from fuzzy_twins import FuzzyTwins, load_config
 
-SAMPLER_VERSION = "gold-audit-sampler-v3"
+FUZZY_MIN_CONTAINMENT = 0.15
+
+SAMPLER_VERSION = "gold-audit-sampler-v4"
 DEFAULT_SPLITS = ("dev", "holdout")
 
 
@@ -86,6 +89,7 @@ def build_record(
     stratum: str,
     corpus: Corpus | None = None,
     draw: str = "random",
+    fuzzy: list[dict] | None = None,
 ) -> dict:
     instance = dataset.get_instance(item["contract_id"])
     text = instance.text
@@ -126,6 +130,11 @@ def build_record(
         counterparts, n_with_passage = corpus.find_counterparts(
             item["contract_id"], item["category"], text[start:end]
         )
+    seen_pairs = {(c["contract_id"], c["offsets"]) for c in counterparts}
+    for hit in fuzzy or []:
+        if (hit["contract_id"], hit["offsets"]) not in seen_pairs:
+            counterparts.append(hit)
+    detectors = sorted({c["detector"] for c in counterparts})
 
     return {
         "id": f"{item['split']}/{item['contract_id']}/{item['category']}/{item['span_index']}",
@@ -147,6 +156,7 @@ def build_record(
         "duplicate_counterparts": counterparts,
         "n_contracts_with_passage": n_with_passage,
         "has_counterpart": "yes" if counterparts else "no",
+        "detected_by": ", ".join(detectors) if detectors else "none",
         "sample": {
             "seed": seed,
             "sampler_version": SAMPLER_VERSION,
@@ -173,6 +183,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", default=str(APP_DIR / "audits" / "gold_audit_sample.yaml"))
     parser.add_argument("--no-duplicates", action="store_true")
     parser.add_argument("--no-duplicate-census", action="store_true")
+    parser.add_argument("--no-fuzzy", action="store_true")
+    parser.add_argument("--fuzzy-min-containment", type=float,
+                        default=FUZZY_MIN_CONTAINMENT)
     args = parser.parse_args(argv)
 
     splits = tuple(s.strip() for s in args.splits.split(",") if s.strip())
@@ -201,28 +214,84 @@ def main(argv: list[str] | None = None) -> int:
     drawn.sort(key=lambda r: (r["category"], r["split"], r["contract_id"], r["span_index"]))
 
     corpus = None if args.no_duplicates else Corpus(dataset)
+
+    fuzzy_hits: dict[tuple, list[dict]] = {}
+    fuzzy_raw: dict[tuple, list[dict]] = {}
+    fuzzy_meta: dict = {"enabled": False}
+    if corpus is not None and not args.no_fuzzy:
+        mining = load_config()
+        detector = FuzzyTwins(dataset, categories, mining)
+        fuzzy_raw = detector.run(population, dataset._text, corpus, 0.0)
+        fuzzy_hits = detector.run(
+            population, dataset._text, corpus, args.fuzzy_min_containment
+        )
+        fuzzy_meta = {
+            "enabled": True,
+            "implementation": (
+                "scripts/mine_contrastive_pairs.py (Space, jaccard_block, terms, "
+                "chunk_text), imported, not reimplemented"
+            ),
+            "mining_config_version": mining["version"],
+            "metric": mining["similarity"]["metric"],
+            "similarity_threshold": detector.threshold,
+            "min_terms_per_unit": detector.min_terms,
+            "top_k_per_query": detector.top_k,
+            "context_expansion": detector.ctx,
+            "min_doc_containment": args.fuzzy_min_containment,
+            "gate_rationale": (
+                "the miner's present_absent threshold answers 'does a passage "
+                "resembling category C exist where C is absent', which is a broader "
+                "question than 'is there a near-duplicate document with the opposite "
+                "label'. Ungated it returns mostly unrelated contracts sharing legal "
+                "boilerplate. The document-containment floor restricts it to genuine "
+                "near-twins; see detector_comparison for what the gate discards"
+            ),
+        }
+
+    def hits_for(item, table):
+        return table.get(
+            (item["contract_id"], item["category"], item["span_index"]), []
+        )
+
     records = [
-        build_record(dataset, item, args.context, args.seed, item["category"], corpus)
+        build_record(
+            dataset, item, args.context, args.seed, item["category"], corpus,
+            fuzzy=hits_for(item, fuzzy_hits),
+        )
         for item in drawn
     ]
 
+    def disagrees(counterparts):
+        return any(
+            c["twin_label"] in ("marked_absent", "not_annotated")
+            for c in counterparts
+        )
+
     census: list[dict] = []
+    exact_keys: set = set()
+    fuzzy_keys: set = set()
+    fuzzy_raw_keys: set = set()
     if corpus is not None and not args.no_duplicate_census:
         seen = {r["id"] for r in records}
         for item in population:
+            key = (item["contract_id"], item["category"], item["span_index"])
             instance = dataset.get_instance(item["contract_id"])
             span_text = instance.text[item["start"]:item["end"]]
-            counterparts, _ = corpus.find_counterparts(
+            exact, _ = corpus.find_counterparts(
                 item["contract_id"], item["category"], span_text
             )
-            if not any(
-                c["twin_label"] in ("marked_absent", "not_annotated")
-                for c in counterparts
-            ):
+            fuzzy = hits_for(item, fuzzy_hits)
+            if disagrees(exact):
+                exact_keys.add(key)
+            if disagrees(fuzzy):
+                fuzzy_keys.add(key)
+            if disagrees(hits_for(item, fuzzy_raw)):
+                fuzzy_raw_keys.add(key)
+            if key not in exact_keys and key not in fuzzy_keys:
                 continue
             record = build_record(
                 dataset, item, args.context, args.seed, "duplicate_census",
-                corpus, draw="duplicate_census",
+                corpus, draw="duplicate_census", fuzzy=fuzzy,
             )
             if record["id"] in seen:
                 continue
@@ -266,6 +335,24 @@ def main(argv: list[str] | None = None) -> int:
                 "n_records_searched": sum(
                     1 for r in records
                     if len(" ".join(r["span_text"].split())) >= MIN_MATCH_CHARS
+                ),
+            },
+            "fuzzy_detector": fuzzy_meta,
+            "detector_comparison": {
+                "unit": "one gold span with at least one disagreeing counterpart",
+                "exact_normalized": len(exact_keys),
+                "fuzzy_idf_jaccard": len(fuzzy_keys),
+                "fuzzy_idf_jaccard_ungated": len(fuzzy_raw_keys),
+                "both": len(exact_keys & fuzzy_keys),
+                "exact_only": len(exact_keys - fuzzy_keys),
+                "fuzzy_only": len(fuzzy_keys - exact_keys),
+                "union": len(exact_keys | fuzzy_keys),
+                "discarded_by_containment_gate": len(fuzzy_raw_keys - fuzzy_keys),
+                "note": (
+                    "counts are over the whole population of the sampled splits, not "
+                    "over the random draw. exact_only and fuzzy_only are both "
+                    "non-empty: the detectors have different failure modes and "
+                    "neither subsumes the other"
                 ),
             },
             "draws": {

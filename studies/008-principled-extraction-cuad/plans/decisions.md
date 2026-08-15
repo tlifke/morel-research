@@ -197,11 +197,83 @@ Format:
 > decision type this study cares most about, and it is invisible to any
 > single-document inspection.
 
+> **D-16 — Run without repair; record reasoning rather than constrain it**
+> (2026-08-15, resolving the cross-model assistance-parity question)
+> `max_repair_attempts = 0`. A parse, schema, or coverage failure is
+> **terminal**. The machinery stays built and tested so re-enabling is a config
+> change, not a rewrite.
+> Why. The structured-output probe showed the repair need was largely a *prompt
+> artifact*: with the schema serialised into the prompt as the harness already
+> does it, all three models returned 20/20 strict JSON and 19–20/20
+> schema+coverage valid. Repair was buying little while costing comparability,
+> since models needed it in unequal amounts and repair is assistance.
+> Two consequences, both improvements:
+> 1. The **score-twice design collapses** — with no repair, attempt 0 is the
+>    final attempt, so there is no assisted variant and therefore no
+>    survivorship caveat at all. The `first_attempt` block stays emitted so the
+>    schema survives repair returning, but it is not a second measurement.
+> 2. **The parse-failure rate, broken down by stage** (`json_decode` /
+>    `schema_validation` / `coverage`), *becomes* the clean unassisted
+>    conformance result — per condition, per model, per length bucket. This is
+>    the measurement Tyler asked for when he pushed back on the conformance
+>    question, and removing repair is what makes it uncontaminated.
+> On the other half of parity: output budget stays **generous and unconstrained,
+> not tuned per model**. Native reasoning verbosity is recorded, not clipped —
+> the traces are expected to be independently interesting.
+
+> **D-17 — Gold defect classes are counted both ways** (2026-08-15)
+> Three classes sit on the boundary between "gold is wrong" and "gold is
+> inconsistent / the task is just hard": `redaction_dependent`,
+> `cross_category_overlap`, and `inconsistent_across_duplicates`. Rather than
+> rule now, every audit report carries **both** `defect_rate` (inclusive) and
+> `defect_rate_excluding_unruled`, plus the per-class breakdown. The published
+> span-F1 ceiling is stated as a range with the classification made explicit,
+> so a reader can recompute under their own reading.
+
+> **D-18 — The duplicate census runs by default, with multiple detectors**
+> (2026-08-15)
+> Near-duplicate gold inconsistency is enumerated exhaustively rather than
+> sampled (prevalence ~0.3%: a random n=120 draw would contain ~0.4 cases).
+> The census is tagged and **excluded from every rate** — it is a targeted
+> enumeration of suspected defects, not a draw, and pooling it would bias the
+> noise floor upward. More than one matcher is run (exact-normalised, plus the
+> contrastive miner's idf-weighted Jaccard) with per-detector counts reported
+> side by side, on the principle that the detectors should be compared and the
+> unhelpful ones dropped later rather than chosen blind now. Exact-only
+> prevalence is a **lower bound**.
+
+> **D-19 — The blank-signing-date assumption is falsified; documented rule and
+> gold agree** (2026-08-15, `reviews/agreement-date-check.md`)
+> The plan assumed CUAD marks a contract gold-absent for Agreement Date when
+> the signing date is literally blank. Measured over dev + ft_train (408
+> contracts, holdout untouched): **30 of 377 positives (8%) have a blank or
+> redacted date as their gold span**, and **zero** gold-absent contracts have a
+> clean date-shaped blank belonging to the agreement. Gold follows the
+> Handbook.
+> **There is no compliance-vs-correctness inversion on the absence principle** —
+> following the documented rule is also how to be right. That was the risk
+> worth checking, and it did not materialise.
+> The line CUAD actually draws is **not** intro-vs-signature-block (3 labelled
+> blanks sit at relative position ≈0.99): it is *whether a date-shaped
+> construct exists*. A month, a year stub, or a `day of` phrase with components
+> blanked gets labelled; a bare `Date:` / `Dated:` slot gets ruled absent —
+> consistent across 4+ independent contracts, so a convention rather than noise.
+> Consequences: keep g08, drop its warning flag, and tighten its applicability
+> to require a date-shaped construct (otherwise it fires on bare `Date:` slots
+> and *manufactures* a false inversion). Drop position from its trigger.
+> Keep g07 but report its "exactly one span" test separately — it genuinely
+> disagrees with gold on **6/377 positives (~1.6%)** where CUAD labelled both
+> an intro date and an exhibit's partial date. That is a real, small inversion
+> and must be reported rather than smoothed.
+> Also surfaced: two byte-identical documents filed twice under different names
+> carry opposite Agreement Date labels (SINA/Leju; PfHospitality Franchise
+> Agreement 1 vs 3) — ready-made instances for D-15 and the near-duplicate
+> defect class.
+
 ## Pending
 
-- **Cross-model assistance parity** — raised 2026-08-15 by the backend
-  measurements, unresolved. Two findings make "same settings for every model"
-  *not* the same as "equal assistance":
+- ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing
+  kept below for the writeup's benefit, since the reasoning matters:
   1. **Reasoning verbosity differs sharply.** On a trivial prompt the 4B emits
      2,159 reasoning chars, the 9B 870, inkling-small 195. A fixed
      `max_output_tokens` therefore handicaps the 4B specifically — and its one

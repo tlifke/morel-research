@@ -14,7 +14,7 @@ sys.path.insert(0, str(APP_DIR))
 
 from review_app import record_types, yaml_io
 
-AGGREGATOR_VERSION = "gold-audit-aggregator-v3"
+AGGREGATOR_VERSION = "gold-audit-aggregator-v4"
 CLEAN = "clean"
 UNRULED = (
     "redaction_dependent",
@@ -64,6 +64,7 @@ def main(argv: list[str] | None = None) -> int:
 
     overall = Counter()
     census = Counter()
+    census_by_detector: dict[str, Counter] = defaultdict(Counter)
     unreviewed = 0
     census_total = 0
     by_category: dict[str, Counter] = defaultdict(Counter)
@@ -79,8 +80,12 @@ def main(argv: list[str] | None = None) -> int:
             reviewers.add(reviewer)
         if draw != "random":
             census_total += 1
+            detected = record.get("detected_by") or "none"
             if decision:
                 census[decision] += 1
+                census_by_detector[detected][decision] += 1
+            else:
+                census_by_detector[detected]["__unreviewed"] += 1
             continue
         if not decision:
             unreviewed += 1
@@ -146,6 +151,17 @@ def main(argv: list[str] | None = None) -> int:
             "n_records": census_total,
             "n_reviewed": sum(census.values()),
             "decisions": dict(sorted(census.items())),
+            "by_detector": {
+                detector: dict(sorted(counts.items()))
+                for detector, counts in sorted(census_by_detector.items())
+            },
+            "detector_note": (
+                "detected_by names which matcher surfaced the record. "
+                "exact_normalized is byte-identical passage text; fuzzy_idf_jaccard "
+                "is the study's contrastive-pair miner reused as a second detector "
+                "and is gated by document containment. Confirmation rates per "
+                "detector are how we decide which matcher earns its place"
+            ),
             "is_a_rate": False,
             "definition": (
                 "exhaustive enumeration of spans whose passage appears verbatim in "

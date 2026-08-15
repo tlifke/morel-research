@@ -604,3 +604,110 @@ def test_three_way_verbatim_reaches_the_trial_row(env, dev, config):
     assert level_b["verbatim_not_found_rate"] > 0.0
     assert level_b["n_not_found_spans"] == 1
     assert level_b["verbatim_cosmetic_gap"] == level_b["verbatim_normalized_only_rate"]
+
+
+def test_repair_is_disabled_by_default():
+    from harness.runner import DEFAULT_MAX_REPAIR_ATTEMPTS, REPAIR_DISABLED_NOTE
+
+    assert DEFAULT_MAX_REPAIR_ATTEMPTS == 0
+    assert RunConfig(run_id="x").max_repair_attempts == 0
+    assert "deliberately DISABLED" in REPAIR_DISABLED_NOTE
+    assert "prompt artifact" in REPAIR_DISABLED_NOTE
+    assert "Re-enabling is a config change" in REPAIR_DISABLED_NOTE
+
+
+def test_a_nonconforming_output_is_terminal_by_default(env, dev):
+    config = RunConfig(run_id="no-repair", max_output_tokens=256)
+    backend = FakeBackend(["not json"] * 5, context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0001"], config)
+    assert result.trial.outcome == "parse_failure"
+    assert result.trial.n_repair_attempts == 0
+    assert result.trial.repair_stages == ["json_decode"]
+    assert len(backend.calls) == 1
+
+
+def test_coverage_failure_is_terminal_by_default(env, dev):
+    config = RunConfig(run_id="no-repair", max_output_tokens=256)
+    bad = _coverage_payload(
+        [{"category": "Governing Law", "spans": [ONE_SPAN_GL], "principles_cited": []}], []
+    )
+    backend = FakeBackend([bad] * 5, context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0002"], config)
+    assert result.trial.outcome == "parse_failure"
+    assert result.trial.failure_detail["stage"] == "coverage"
+    assert len(backend.calls) == 1
+
+
+def test_repair_machinery_still_works_when_re_enabled(env, dev):
+    config = RunConfig(run_id="repair-on", max_output_tokens=256, max_repair_attempts=2)
+    backend = FakeBackend(["not json", json.dumps(PERFECT)], context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0001"], config)
+    assert result.trial.outcome == "ok"
+    assert result.trial.n_repair_attempts == 1
+    assert len(backend.calls) == 2
+    assert result.trial.max_repair_attempts == 2
+
+
+def test_first_attempt_equals_final_when_repair_is_off(env, dev):
+    config = RunConfig(run_id="no-repair", max_output_tokens=256)
+    backend = FakeBackend([json.dumps(PERFECT)], context_limit=100000)
+    result = _run(env, backend, dev["FAKE_0001"], config)
+    assert result.trial.first_attempt["parsed"] is True
+    assert result.trial.first_attempt["answer"] == result.trial.answer
+    assert result.trial.first_attempt["citation"] == result.trial.citation
+
+
+def test_summaries_flag_that_the_two_scopes_are_not_independent(env, dev):
+    config = RunConfig(run_id="no-repair", max_output_tokens=256)
+    rows = [
+        _run(env, FakeBackend([json.dumps(PERFECT)], context_limit=100000),
+             dev["FAKE_0001"], config).trial.model_dump(),
+        _run(env, FakeBackend(["not json"], context_limit=100000),
+             dev["FAKE_0002"], config).trial.model_dump(),
+    ]
+    assert metrics.repair_is_enabled(rows) is False
+    final = metrics.summarize_trials(rows, "final")
+    first = metrics.summarize_trials(rows, "first_attempt")
+    assert final["scopes_are_independent"] is False
+    assert final["n_scored"] == first["n_scored"] == 1
+    assert "not independent measurements" in metrics.summarize_trials.__doc__
+
+
+def test_parse_failure_stage_breakdown_is_the_conformance_result(env, dev):
+    config = RunConfig(run_id="conf", max_output_tokens=256)
+    bad_coverage = _coverage_payload(
+        [{"category": "Governing Law", "spans": [ONE_SPAN_GL], "principles_cited": []}], []
+    )
+    rows = [
+        _run(env, FakeBackend([json.dumps(PERFECT)], context_limit=100000),
+             dev["FAKE_0001"], config).trial.model_dump(),
+        _run(env, FakeBackend(["not json"], context_limit=100000),
+             dev["FAKE_0001"], config, condition="C1").trial.model_dump(),
+        _run(env, FakeBackend([bad_coverage], context_limit=100000),
+             dev["FAKE_0002"], config).trial.model_dump(),
+        _run(env, FakeBackend([json.dumps(PERFECT)], context_limit=32),
+             dev["FAKE_0001"], config, condition="C2").trial.model_dump(),
+    ]
+    conformance = metrics.outcome_rates(rows)["conformance"]
+    assert conformance["n_attempted"] == 3
+    assert conformance["n_conformant"] == 1
+    assert approx_equal(conformance["conformance_rate"], 1 / 3)
+    assert conformance["parse_failure_by_stage"]["json_decode"] == 1
+    assert conformance["parse_failure_by_stage"]["coverage"] == 1
+    assert conformance["parse_failure_by_stage"]["schema_validation"] == 0
+
+
+def test_conformance_breakdown_is_reachable_per_bucket_and_condition(env, dev):
+    config = RunConfig(run_id="conf2", max_output_tokens=256)
+    rows = [
+        _run(env, FakeBackend(["not json"], context_limit=100000),
+             dev["FAKE_0001"], config).trial.model_dump(),
+        _run(env, FakeBackend(["not json"], context_limit=100000),
+             dev["FAKE_0002"], config).trial.model_dump(),
+    ]
+    summary = metrics.stratified_summary(rows)
+    group = summary["groups"][0]
+    assert group["overall"]["scopes_are_independent"] is False
+    for bucket in group["by_length_bucket"].values():
+        breakdown = bucket["final"]["conformance"]["parse_failure_by_stage"]
+        assert breakdown["json_decode"] == 1

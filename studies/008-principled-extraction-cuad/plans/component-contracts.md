@@ -500,9 +500,15 @@ them into the trial row would destroy them.
   // --- outcome ---
   "outcome": "ok" | "parse_failure" | "infeasible_at_length" | "api_error",
   "n_repair_attempts": 0,                 // bounded; see repair policy
-  "repair_stages": [],                    // e.g. ["json_decode","coverage"] —
-                                          // a count alone cannot distinguish a
-                                          // JSON problem from a coverage one
+  "repair_stages": [],                    // e.g. ["json_decode","coverage"].
+                                          // Records the DEFECT stages observed,
+                                          // whether or not a repair followed —
+                                          // under D-16 the budget is 0, so a
+                                          // defect is terminal and no repair is
+                                          // attempted. Name is kept for store
+                                          // compatibility; read it as defects.
+                                          // A count alone cannot distinguish a
+                                          // JSON problem from a coverage one.
   "failure_detail": null,                 // parse/context numbers, plus
                                           // finish_reason, completion_truncated,
                                           // n_reasoning_chars — so a blown

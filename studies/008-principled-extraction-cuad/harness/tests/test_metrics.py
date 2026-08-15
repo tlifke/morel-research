@@ -164,7 +164,7 @@ def test_summarize_trials_only_scores_ok_rows_and_reports_outcome_rates():
     assert summary["n_trials"] == 4
     assert approx(summary["parse_failure_rate"], 0.25)
     assert approx(summary["infeasible_rate"], 0.25)
-    assert approx(summary["coverage_repair_rate"], 0.25)
+    assert approx(summary["coverage_defect_rate"], 0.25)
     assert summary["span_f1"]["n"] == 2
     assert approx(summary["span_f1"]["mean"], 0.7)
     assert approx(summary["presence_f1_macro"]["mean"], 0.7)
@@ -179,7 +179,7 @@ def test_outcome_rates_are_first_class_metrics():
         {"outcome": "infeasible_at_length"},
     ]
     rates = metrics.outcome_rates(rows)
-    assert approx(rates["coverage_repair_rate"], 0.25)
+    assert approx(rates["coverage_defect_rate"], 0.25)
     assert approx(rates["any_repair_rate"], 0.5)
     assert approx(rates["completion_truncated_rate"], 0.25)
     assert approx(rates["parse_failure_rate"], 0.25)
@@ -208,3 +208,15 @@ def test_mean_normal_approx_ci95_shape_and_naming():
     assert out["ci95_normal_approx"][0] < 0.5 < out["ci95_normal_approx"][1]
     assert not math.isnan(out["ci95_normal_approx"][0])
     assert "NOT a bootstrap" in metrics.mean_normal_approx_ci95.__doc__
+
+
+def test_coverage_defect_rate_counts_unrepaired_defects_too():
+    rows = [
+        {"outcome": "parse_failure", "repair_stages": ["coverage"], "n_repair_attempts": 0,
+         "max_repair_attempts": 0, "failure_detail": {"stage": "coverage"}},
+        {"outcome": "ok", "repair_stages": [], "n_repair_attempts": 0, "max_repair_attempts": 0},
+    ]
+    rates = metrics.outcome_rates(rows)
+    assert approx(rates["coverage_defect_rate"], 0.5)
+    assert rates["any_repair_rate"] == 0.0
+    assert rates["conformance"]["parse_failure_by_stage"]["coverage"] == 1

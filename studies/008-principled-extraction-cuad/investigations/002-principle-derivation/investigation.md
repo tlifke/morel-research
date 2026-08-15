@@ -47,9 +47,15 @@ The full set is **not** derived in one pass. The pipeline runs end-to-end on
   lexical cue.
 - **Agreement Date, Governing Law** — structural, chosen so the pilot exercises
   principle *types* the trio cannot: Agreement Date is where absence rulings
-  live (CUAD marks a contract gold-absent when the signing date is literally
-  blank — "signed on , in Hong Kong"), Governing Law forces a choice-of-law vs
-  venue/jurisdiction disambiguation.
+  live, Governing Law forces a choice-of-law vs venue/jurisdiction
+  disambiguation.
+  **Correction (2026-08-15):** the pilot was scoped believing CUAD marks a
+  contract gold-absent when the signing date is literally blank. **That was
+  wrong** — see `reviews/agreement-date-check.md` and D-19. Gold follows the
+  Handbook: a blanked date-shaped construct is *labelled*, with the blank as
+  the span. Agreement Date remains a good pilot choice, but the absence-ruling
+  principle it yields is about **what counts as a date-shaped construct**, not
+  about blankness implying absence.
 
 The pilot answers what would otherwise only surface at scale: what fraction of
 model proposals survive curation, whether checker sketches are actually

@@ -708,31 +708,92 @@ def _dig(row: dict[str, Any], path: tuple[str, ...]) -> Optional[float]:
     return node
 
 
+PARSE_FAILURE_STAGES = ("json_decode", "schema_validation", "coverage")
+
+
 def outcome_rates(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """Trial-outcome rates, including the conformance breakdown.
+
+    With repair disabled a nonconforming output simply fails, so the
+    parse-failure rate broken down by stage IS the conformance result: it is an
+    unassisted measurement of whether the model can emit the required object at
+    all, per condition, model and length bucket.
+    """
     n = len(rows)
     outcomes = Counter(r.get("outcome") for r in rows)
-    n_coverage_repair = sum(
+    n_coverage_defect = sum(
         1 for r in rows if "coverage" in (r.get("repair_stages") or [])
     )
     n_any_repair = sum(1 for r in rows if (r.get("n_repair_attempts") or 0) > 0)
     n_truncated = sum(1 for r in rows if r.get("completion_truncated"))
+
+    stage_counts = {stage: 0 for stage in PARSE_FAILURE_STAGES}
+    n_other_stage = 0
+    for row in rows:
+        if row.get("outcome") != "parse_failure":
+            continue
+        stage = (row.get("failure_detail") or {}).get("stage")
+        if stage in stage_counts:
+            stage_counts[stage] += 1
+        else:
+            n_other_stage += 1
+    if n_other_stage:
+        stage_counts["other"] = n_other_stage
+    n_attempted = sum(
+        1 for r in rows if r.get("outcome") in ("ok", "parse_failure")
+    )
+
     return {
+        "conformance": {
+            "n_attempted": n_attempted,
+            "n_conformant": outcomes.get("ok", 0),
+            "conformance_rate": (outcomes.get("ok", 0) / n_attempted)
+            if n_attempted
+            else None,
+            "parse_failure_by_stage": stage_counts,
+            "parse_failure_rate_by_stage": {
+                stage: (count / n_attempted) if n_attempted else None
+                for stage, count in stage_counts.items()
+            },
+            "denominator": "trials that reached the model (ok + parse_failure)",
+        },
         "n_trials": n,
         "outcomes": dict(outcomes),
         "parse_failure_rate": outcomes.get("parse_failure", 0) / n if n else None,
         "infeasible_rate": outcomes.get("infeasible_at_length", 0) / n if n else None,
         "api_error_rate": outcomes.get("api_error", 0) / n if n else None,
-        "coverage_repair_rate": n_coverage_repair / n if n else None,
+        "coverage_defect_rate": n_coverage_defect / n if n else None,
         "any_repair_rate": n_any_repair / n if n else None,
         "completion_truncated_rate": n_truncated / n if n else None,
     }
 
 
+def repair_is_enabled(rows: Sequence[dict[str, Any]]) -> bool:
+    return any((r.get("max_repair_attempts") or 0) > 0 for r in rows)
+
+
 def summarize_trials(
     rows: Sequence[dict[str, Any]], scope: str = "final"
 ) -> dict[str, Any]:
+    """Aggregate trial rows at one scoring scope.
+
+    `scope="first_attempt"` scores the unassisted output, `scope="final"` the
+    post-repair one. **With repair disabled (the default) these are the same
+    measurement**, because attempt 0 is the only attempt; `scopes_are_independent`
+    reports which regime the rows came from; when it is False the two blocks are
+    not independent measurements and must not be reported as if they were.
+
+    Repair-off is the cleaner regime, not merely the simpler one. When repair is
+    on, first-attempt scores carry a survivorship complication: only trials whose
+    first sample parsed are scoreable, so the first-attempt mean describes the
+    subset that needed no help. With repair off there is no assisted variant to
+    survive into, so the parse/schema/coverage failure rate in `conformance` is a
+    clean unassisted conformance measurement and the score means are taken over
+    exactly the trials that conformed.
+    """
     block: dict[str, Any] = dict(outcome_rates(rows))
     block["scope"] = scope
+    block["scopes_are_independent"] = repair_is_enabled(rows)
     if scope == "first_attempt":
         scored = [r.get("first_attempt") or {} for r in rows]
         scored = [r for r in scored if r.get("parsed")]
@@ -764,6 +825,7 @@ def stratified_summary(
                 by_bucket[bucket] = {
                     "final": summarize_trials(bucket_rows, "final"),
                     "first_attempt": summarize_trials(bucket_rows, "first_attempt"),
+                    "scopes_are_independent": repair_is_enabled(bucket_rows),
                 }
         out["groups"].append(
             {
@@ -771,6 +833,7 @@ def stratified_summary(
                 "overall": {
                     "final": summarize_trials(grouped, "final"),
                     "first_attempt": summarize_trials(grouped, "first_attempt"),
+                    "scopes_are_independent": repair_is_enabled(grouped),
                 },
                 "by_length_bucket": by_bucket,
             }

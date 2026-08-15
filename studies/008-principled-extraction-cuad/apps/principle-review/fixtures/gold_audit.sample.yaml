@@ -1,13 +1,13 @@
 # SAMPLE / FIXTURE DATA for the gold_audit record type.
 # Real CUAD gold spans drawn by scripts/sample_gold.py (seed 20260815, n=6,
 # context 400) purely so the app and its tests have something to run against.
-# Includes the duplicate census records, which are an exhaustive enumeration
-# and NOT part of the random draw. This is NOT the audit sample.
+# Includes the duplicate census, which is an exhaustive two-detector
+# enumeration and NOT part of the random draw. This is NOT the audit sample.
 # Gold spans from CUAD v1, The Atticus Project, CC BY 4.0.
 sampling:
-  sampler_version: gold-audit-sampler-v3
+  sampler_version: gold-audit-sampler-v4
   seed: 20260815
-  drawn_at: '2026-08-15T18:03:58+00:00'
+  drawn_at: '2026-08-15T18:27:32+00:00'
   splits:
   - dev
   - holdout
@@ -16,7 +16,7 @@ sampling:
     holdout: 8a6b7e0614c1b790
   context_chars: 400
   requested_n: 6
-  drawn_n: 10
+  drawn_n: 12
   population_n: 1288
   categories:
   - Agreement Date
@@ -64,11 +64,59 @@ sampling:
       ranked by document containment over 8-gram sketches; a passage shorter than 60 normalized characters
       is not searched
     min_match_chars: 60
-    n_records_with_counterpart: 4
-    n_records_searched: 9
+    n_records_with_counterpart: 6
+    n_records_searched: 10
+  fuzzy_detector:
+    enabled: true
+    implementation: scripts/mine_contrastive_pairs.py (Space, jaccard_block, terms, chunk_text), imported,
+      not reimplemented
+    mining_config_version: mining_v1
+    metric: idf_weighted_jaccard
+    similarity_threshold: 0.2
+    min_terms_per_unit: 8
+    top_k_per_query: 1
+    context_expansion:
+      min_span_chars: 120
+      window_chars: 120
+      apply_to:
+      - present_absent
+      note: 'Gold spans shorter than min_span_chars are compared as span-plus-context (window_chars of
+        contract text on each side, clipped to the document). It is what makes Agreement Date mineable
+        at all: the 16-character date carries no distinguishing terms and the surrounding preamble is
+        precisely the signal. Pairs record both the verbatim span (`text`) and the compared string (`match_text`),
+        with `context_expanded: true` when they differ.
+
+        '
+      apply_to_note: 'Applied to present-vs-absent mining only, decided after inspecting a first pass.
+        Cross-label mining asks "do these two *annotated* passages look alike"; expanding one of them
+        into its neighbourhood answers a different question, and empirically it manufactured Agreement-Date-vs-Governing-Law
+        pairs whose only shared material was the preamble around the date. In cross-label mining a span
+        too short to clear min_terms_per_unit is simply dropped, which is why Agreement Date contributes
+        no cross-label pairs.
+
+        '
+    min_doc_containment: 0.15
+    gate_rationale: the miner's present_absent threshold answers 'does a passage resembling category C
+      exist where C is absent', which is a broader question than 'is there a near-duplicate document with
+      the opposite label'. Ungated it returns mostly unrelated contracts sharing legal boilerplate. The
+      document-containment floor restricts it to genuine near-twins; see detector_comparison for what
+      the gate discards
+  detector_comparison:
+    unit: one gold span with at least one disagreeing counterpart
+    exact_normalized: 4
+    fuzzy_idf_jaccard: 3
+    fuzzy_idf_jaccard_ungated: 22
+    both: 1
+    exact_only: 3
+    fuzzy_only: 2
+    union: 6
+    discarded_by_containment_gate: 19
+    note: 'counts are over the whole population of the sampled splits, not over the random draw. exact_only
+      and fuzzy_only are both non-empty: the detectors have different failure modes and neither subsumes
+      the other'
   draws:
     random: 6
-    duplicate_census: 4
+    duplicate_census: 6
     census_definition: 'every gold span in the sampled splits whose passage appears verbatim in another
       contract where the same category is not_annotated or marked_absent. This is an exhaustive census
       of candidates for inconsistent_across_duplicates, NOT a random draw: label disagreement is ~0.3%
@@ -100,9 +148,10 @@ records:
   duplicate_counterparts: []
   n_contracts_with_passage: 0
   has_counterpart: 'no'
+  detected_by: none
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v3
+    sampler_version: gold-audit-sampler-v4
     stratum: Agreement Date
     draw: random
     context_chars: 400
@@ -151,9 +200,10 @@ records:
   duplicate_counterparts: []
   n_contracts_with_passage: 0
   has_counterpart: 'no'
+  detected_by: none
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v3
+    sampler_version: gold-audit-sampler-v4
     stratum: Anti-Assignment
     draw: random
     context_chars: 400
@@ -241,9 +291,10 @@ records:
   duplicate_counterparts: []
   n_contracts_with_passage: 0
   has_counterpart: 'no'
+  detected_by: none
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v3
+    sampler_version: gold-audit-sampler-v4
     stratum: Cap On Liability
     draw: random
     context_chars: 400
@@ -336,9 +387,10 @@ records:
   duplicate_counterparts: []
   n_contracts_with_passage: 0
   has_counterpart: 'no'
+  detected_by: none
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v3
+    sampler_version: gold-audit-sampler-v4
     stratum: Exclusivity
     draw: random
     context_chars: 400
@@ -393,9 +445,10 @@ records:
   duplicate_counterparts: []
   n_contracts_with_passage: 0
   has_counterpart: 'no'
+  detected_by: none
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v3
+    sampler_version: gold-audit-sampler-v4
     stratum: Expiration Date
     draw: random
     context_chars: 400
@@ -446,9 +499,10 @@ records:
   duplicate_counterparts: []
   n_contracts_with_passage: 0
   has_counterpart: 'no'
+  detected_by: none
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v3
+    sampler_version: gold-audit-sampler-v4
     stratum: Governing Law
     draw: random
     context_chars: 400
@@ -498,6 +552,8 @@ records:
   duplicate_counterparts:
   - contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT
     split: ft_train
+    detector: exact_normalized
+    similarity: 1.0
     doc_containment: 1.0
     twin_label: marked_absent
     offsets: 8854-9244
@@ -506,11 +562,92 @@ records:
       compensation or without compensation) engage in or provide consulting services, or enter into any
       agreement either written or oral, that would present a material conflict with any of the provisions
       of this Agreement, or would preclude Consultant from complying with the terms and conditions hereof.
+  - contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT
+    split: ft_train
+    detector: fuzzy_idf_jaccard
+    similarity: 0.3738
+    doc_containment: 1.0
+    twin_label: marked_absent
+    offsets: 8850-9860
+    context_expanded: false
+    passage: (d) During the term of this Agreement, Consultant will not, directly or indirectly (whether
+      for compensation or without compensation) engage in or provide consulting services, or enter into
+      any agreement either written or oral, that would present a material conflict with any of the provisions
+      of this Agreement, or would preclude Consultant from complying with the terms and conditions hereof.
+      If during the term of this Agreement any situation or circumstance arises that might reasonably
+      be expected to present a conflict of interest, or if Consultant might be unable to render Services
+      or otherwise participate in such work without risk of breaching an obligation of confidentiality
+      to another party, Consultant will promptly advise the Company's General Counsel of the situation
+      and Company and Consultant shall, in good faith, attempt to resolve any such conflicts(s). If requested
+      by the Company's General Counsel, Consultant will recuse herself from providing Services for the
+      duration of the conflict.
   n_contracts_with_passage: 1
   has_counterpart: 'yes'
+  detected_by: exact_normalized, fuzzy_idf_jaccard
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v3
+    sampler_version: gold-audit-sampler-v4
+    stratum: duplicate_census
+    draw: duplicate_census
+    context_chars: 400
+    duplicate_min_match_chars: 60
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: dev/PharmagenInc_20120803_8-KA_EX-10.1_7693204_EX-10.1_Endorsement Agreement/Exclusivity/0
+  contract_id: PharmagenInc_20120803_8-KA_EX-10.1_7693204_EX-10.1_Endorsement Agreement
+  title: PharmagenInc_20120803_8-KA_EX-10.1_7693204_EX-10.1_Endorsement Agreement
+  split: dev
+  category: Exclusivity
+  span_index: 0
+  n_spans_in_category: 1
+  start: 5355
+  end: 5538
+  n_chars: 183
+  offsets: 5355-5538
+  span_text: Celebrity represents and warrants that during the Term and in the Territory, Celebrity will
+    not endorse or  make any appearances or advertisements on behalf of any other multivitamin.
+  context_before: ' ground transportation, hotel accommodations, and meals for Celebrity; and    B. First-class
+    airfare, ground transportation and hotel accommodations for one (1) representative.    7. Union Dues
+    and Fees. Company represents that the services hereunder shall not be subject to SAG, AFTRA or any  other
+    entertainment guild contract.      2
+
+
+    Source: PHARMAGEN, INC., 8-K/A, 8/3/2012
+
+
+
+
+
+
+    8. Exclusivity. '
+  context_after: '    9. Review, Approval, and Ownership of Advertising. All HDS'' uses of Celebrity Attributes
+    in connection with the  Commercial and/or press releases shall be subject to the prior written approval
+    of Celebrity via his agent, CSE. Said  written approval must be given within five (5) business days
+    of CSE''s receipt or said usage shall be deemed  unapproved. Any such usage featuring Celebrity in
+    the C'
+  siblings: []
+  overlaps: []
+  duplicate_counterparts:
+  - contract_id: EcoScienceSolutionsInc_20171117_8-K_EX-10.1_10956472_EX-10.1_Endorsement Agreement
+    split: ft_train
+    detector: fuzzy_idf_jaccard
+    similarity: 0.4464
+    doc_containment: 0.4075
+    twin_label: marked_absent
+    offsets: 5358-5596
+    context_expanded: false
+    passage: 8. Exclusivity. Talent represents and warrants that during the Term and in the Territories,
+      Talent will not endorse or make any appearances or advertisements on behalf of any other product
+      which is directly competitive to ESSI's products.
+  n_contracts_with_passage: 0
+  has_counterpart: 'yes'
+  detected_by: fuzzy_idf_jaccard
+  sample:
+    seed: 20260815
+    sampler_version: gold-audit-sampler-v4
     stratum: duplicate_census
     draw: duplicate_census
     context_chars: 400
@@ -604,16 +741,19 @@ records:
   duplicate_counterparts:
   - contract_id: PfHospitalityGroupInc_20150923_10-12G_EX-10.1_9266710_EX-10.1_Franchise Agreement1
     split: ft_train
-    doc_containment: 0.022
+    detector: exact_normalized
+    similarity: 1.0
+    doc_containment: 0.04
     twin_label: not_annotated
     offsets: 57059-57131
     twin_span_offsets: null
     passage: written approval for the Operating Principal to hold a smaller interest.
   n_contracts_with_passage: 1
   has_counterpart: 'yes'
+  detected_by: exact_normalized
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v3
+    sampler_version: gold-audit-sampler-v4
     stratum: duplicate_census
     draw: duplicate_census
     context_chars: 400
@@ -656,7 +796,9 @@ records:
   duplicate_counterparts:
   - contract_id: IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement
     split: ft_train
-    doc_containment: 0.745
+    detector: exact_normalized
+    similarity: 1.0
+    doc_containment: 0.7575
     twin_label: not_annotated
     offsets: 33266-33409
     twin_span_offsets: null
@@ -664,9 +806,10 @@ records:
       York, without reference to its choice of law rules.
   n_contracts_with_passage: 1
   has_counterpart: 'yes'
+  detected_by: exact_normalized
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v3
+    sampler_version: gold-audit-sampler-v4
     stratum: duplicate_census
     draw: duplicate_census
     context_chars: 400
@@ -719,7 +862,9 @@ records:
   duplicate_counterparts:
   - contract_id: IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement
     split: ft_train
-    doc_containment: 0.745
+    detector: exact_normalized
+    similarity: 1.0
+    doc_containment: 0.7575
     twin_label: not_annotated
     offsets: 20427-20592
     twin_span_offsets: null
@@ -727,9 +872,62 @@ records:
       be entitled to retain all revenues resulting from the sale of Advertising.
   n_contracts_with_passage: 1
   has_counterpart: 'yes'
+  detected_by: exact_normalized
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v3
+    sampler_version: gold-audit-sampler-v4
+    stratum: duplicate_census
+    draw: duplicate_census
+    context_chars: 400
+    duplicate_min_match_chars: 60
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: holdout/WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT/Agreement Date/0
+  contract_id: WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT
+  title: WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT
+  split: holdout
+  category: Agreement Date
+  span_index: 0
+  n_spans_in_category: 1
+  start: 302
+  end: 327
+  n_chars: 25
+  offsets: 302-327
+  span_text: 13th day of October, 1999
+  context_before: "1\n\n                                  EXHIBIT 10.13\n\n                          \
+    \                                        EXECUTION COPY\n\n                              ENDORSEMENT\
+    \ AGREEMENT                               ---------------------\n\n         This Endorsement Agreement\
+    \ (\"Agreement\") is made this "
+  context_after: " by and between SQUARE TWO GOLF INC., a New Jersey corporation (the \"Company\"), and\
+    \ KATHY WHITWORTH, an individual, with an address at 302 La Mancha Court, Santa Fe, New Mexico, 87501\
+    \ (the \"Professional\").\n\n                                    RECITALS                        \
+    \             --------\n\n         WHEREAS, the Company manufactures and sells women's golf clubs\
+    \ and other golf equipment;\n\n   "
+  siblings: []
+  overlaps: []
+  duplicate_counterparts:
+  - contract_id: WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT - Intellectual Property
+      Rights                 Confidentiality and Non-Use Obligations Agreement
+    split: ft_train
+    detector: fuzzy_idf_jaccard
+    similarity: 0.307
+    doc_containment: 0.2075
+    twin_label: marked_absent
+    offsets: 1468-1846
+    context_expanded: true
+    passage: '     This Agreement by and between SQUARE TWO GOLF INC., a New Jersey corporation (the "Company")
+      and KATHY WHITWORTH, an individual residing at 302 La Mancha Court, Santa Fe, New Mexico 87501 (the
+      "Recipient"), is part of the Endorsement Agreement of the parties. In consideration of and as an
+      inducement for the Company entering into said Endorsement Agreement with Recipient:'
+  n_contracts_with_passage: 0
+  has_counterpart: 'yes'
+  detected_by: fuzzy_idf_jaccard
+  sample:
+    seed: 20260815
+    sampler_version: gold-audit-sampler-v4
     stratum: duplicate_census
     draw: duplicate_census
     context_chars: 400

@@ -71,7 +71,7 @@ def _run(env, backend, instance, config, condition="C3"):
 
 def test_trace_records_one_attempt_per_sample(env, instance, tmp_path):
     backend = FakeBackend(["garbage", json.dumps(PAYLOAD)], context_limit=100000)
-    result = _run(env, backend, instance, _config(tmp_path))
+    result = _run(env, backend, instance, _config(tmp_path, max_repair_attempts=2))
     assert result.trial.outcome == "ok"
     assert [a.attempt_idx for a in result.trace.attempts] == [0, 1]
     assert result.trace.attempts[0].parse_outcome == "failed"
@@ -89,7 +89,7 @@ def test_trace_stores_the_exact_assembled_prompt_as_sent(env, instance, tmp_path
 
 def test_repair_turns_carry_the_growing_prompt_and_the_repair_message(env, instance, tmp_path):
     backend = FakeBackend(["garbage", json.dumps(PAYLOAD)], context_limit=100000)
-    result = _run(env, backend, instance, _config(tmp_path))
+    result = _run(env, backend, instance, _config(tmp_path, max_repair_attempts=2))
     first, second = result.trace.attempts
     assert first.repair_message_sent is not None
     assert "could not be parsed" in first.repair_message_sent

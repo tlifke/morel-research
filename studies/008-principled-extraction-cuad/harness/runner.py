@@ -30,6 +30,21 @@ from .trace_store import (
 
 DEFAULT_MAX_OUTPUT_TOKENS = 16384
 
+DEFAULT_MAX_REPAIR_ATTEMPTS = 0
+
+REPAIR_DISABLED_NOTE = """Repair is deliberately DISABLED (decided 2026-08-15).
+
+The structured-output probe showed the repair need was largely a
+prompt artifact: with the schema serialised into the prompt as prompts.py,
+all three models returned 20/20 strict JSON and 19-20/20 schema+coverage valid.
+Repair bought little and cost comparability, since models needed it in unequal
+amounts. With the budget at 0 a parse, schema, or coverage failure is terminal
+and the trial ends as `parse_failure` with its stage recorded.
+
+The repair machinery is intact and tested. Re-enabling is a config change
+(`RunConfig(max_repair_attempts=N)`), not a rewrite.
+"""
+
 REPAIR_INSTRUCTION = (
     "Your previous reply could not be parsed as the required JSON object.\n"
     "Error: {error}\n"
@@ -99,10 +114,12 @@ class TrialKey:
 
 @dataclass
 class RunConfig:
+    """Run-level settings. See REPAIR_DISABLED_NOTE for why repair defaults off."""
+
     run_id: str
     temperature: float = 0.7
     max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS
-    max_repair_attempts: int = 2
+    max_repair_attempts: int = DEFAULT_MAX_REPAIR_ATTEMPTS
     principle_set_version: str = "unset"
     prompt_template_version: str = PROMPT_TEMPLATE_VERSION
     harness_git_sha: Optional[str] = field(default_factory=harness_git_sha)
@@ -279,6 +296,7 @@ def run_trial(
         "temperature": config.temperature,
         "max_output_tokens": config.max_output_tokens,
         "correctness_thresholds": config.thresholds.to_dict(),
+        "max_repair_attempts": config.max_repair_attempts,
         "backend_params": backend.describe(),
         "seed_honored": backend.seed_honored,
         "n_contract_tokens": instance.n_tokens,

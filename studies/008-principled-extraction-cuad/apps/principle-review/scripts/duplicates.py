@@ -6,6 +6,7 @@ from functools import lru_cache
 WHITESPACE = re.compile(r"\s+")
 MIN_MATCH_CHARS = 60
 MAX_COUNTERPARTS = 4
+DETECTOR = "exact_normalized"
 SKETCH_K = 400
 SHINGLE = 8
 
@@ -120,7 +121,9 @@ class Corpus:
                 {
                     "contract_id": other,
                     "split": self._split_of(other),
-                    "doc_containment": round(self.containment(contract_id, other), 3),
+                    "detector": DETECTOR,
+                    "similarity": 1.0,
+                    "doc_containment": round(self.containment(contract_id, other), 4),
                     "twin_label": label,
                     "offsets": f"{start}-{end}",
                     "twin_span_offsets": twin_spans[0]["offsets"] if twin_spans else None,

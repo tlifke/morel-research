@@ -36,7 +36,7 @@ def test_fixture_matches_declared_schema():
         for key in ("id", "contract_id", "split", "category", "span_text",
                     "context_before", "context_after", "start", "end",
                     "duplicate_counterparts", "has_counterpart",
-                    "n_contracts_with_passage"):
+                    "n_contracts_with_passage", "detected_by"):
             assert key in record
         assert record["split"] in ("dev", "holdout")
         assert record["span_text"]
@@ -315,3 +315,88 @@ def test_unruled_classes_are_reported_separately(tmp_path):
         "redaction_dependent", "cross_category_overlap",
         "inconsistent_across_duplicates",
     }
+
+
+DETECTORS = {"exact_normalized", "fuzzy_idf_jaccard"}
+
+
+def test_counterparts_carry_detector_provenance():
+    records = yaml_io.load_records(FIXTURE)
+    census = [
+        r for r in records
+        if record_types.dotted(r, "sample.draw") == "duplicate_census"
+    ]
+    assert census
+    for record in census:
+        counterparts = record["duplicate_counterparts"]
+        assert counterparts
+        detectors = set()
+        for counterpart in counterparts:
+            assert counterpart["detector"] in DETECTORS
+            assert 0.0 < counterpart["similarity"] <= 1.0
+            assert counterpart["doc_containment"] is not None
+            detectors.add(counterpart["detector"])
+        assert set(record["detected_by"].split(", ")) == detectors
+        if counterpart["detector"] == "exact_normalized":
+            assert counterpart["similarity"] == 1.0
+
+    found = {d for r in census for d in r["detected_by"].split(", ")}
+    assert found == DETECTORS, f"fixture should exercise both detectors, got {found}"
+
+
+def test_fuzzy_only_records_exist_and_are_gated():
+    records = yaml_io.load_records(FIXTURE)
+    fuzzy_only = [
+        r for r in records if r["detected_by"] == "fuzzy_idf_jaccard"
+    ]
+    assert fuzzy_only, "fuzzy detector should contribute cases exact cannot find"
+    for record in fuzzy_only:
+        for counterpart in record["duplicate_counterparts"]:
+            assert counterpart["doc_containment"] >= 0.15
+            assert counterpart["twin_label"] in ("marked_absent", "not_annotated")
+
+
+def test_two_detector_census_stays_out_of_the_headline_rate(tmp_path):
+    service = make_service(tmp_path)
+    rows = service.store.records(service.config.queue_id)
+    random_ids = [
+        r["record_id"] for r in rows
+        if record_types.dotted(r["source"], "sample.draw") == "random"
+    ]
+    census_rows = [
+        r for r in rows
+        if record_types.dotted(r["source"], "sample.draw") == "duplicate_census"
+    ]
+    assert random_ids and census_rows
+    detectors = {r["source"]["detected_by"] for r in census_rows}
+    assert len(detectors) > 1
+
+    for record_id in random_ids:
+        service.save_review({
+            "record_id": record_id, "decision": "clean", "rationale": "fine"
+        })
+    for row in census_rows:
+        service.save_review({
+            "record_id": row["record_id"],
+            "decision": "inconsistent_across_duplicates",
+            "rationale": "twin disagrees",
+        })
+    service.export()
+
+    out = tmp_path / "nf3.yaml"
+    subprocess.run(
+        [sys.executable, str(SCRIPTS / "aggregate_audit.py"),
+         str(tmp_path / "audited.yaml"), "--out", str(out)],
+        capture_output=True, text=True, cwd=str(APP_DIR), check=True,
+    )
+    report = yaml.safe_load(out.read_text())
+
+    assert report["overall"]["defect_rate"] == 0.0
+    assert report["denominator"]["n_sampled"] == len(random_ids)
+    assert report["duplicate_census"]["n_records"] == len(census_rows)
+    by_detector = report["duplicate_census"]["by_detector"]
+    assert set(by_detector) == detectors
+    assert sum(
+        sum(counts.values()) for counts in by_detector.values()
+    ) == len(census_rows)
+    assert "inconsistent_across_duplicates" not in report["overall"]["decisions"]
