@@ -259,3 +259,20 @@ Analysis scripts were scratch-only and are not checked in (constraint: no datase
 `principles/`). All numbers come from `scripts/cuad_dataset.py` over `dev` + `ft_train`; the Minimum
 Commitment classification in Claim 2 is a hand labelling of all 336 spans and is the only non-mechanical
 number in this report.
+
+---
+
+## Correction — 2026-08-15, after the split-contamination fix (INV1-D7)
+
+Evidence item 7 under d07 cites `ARMSTRONGFLOORING,INC_01_07_2019-EX-10.2…` at
+`[51376:51423]`. That contract has since been **excluded from ft_train** as a
+cross-split duplicate of its dev twin (`ArmstrongFlooringInc_20190107_8-K_EX-10.2…`,
+containment 0.975). The twin almost certainly carries the same passage, but the
+two documents differ in length by ~13k characters so **the offsets do not
+transfer** — treat that one citation as unverified pending re-location.
+
+The d07 verdict does not rest on it: the refutation is carried by the 204
+furniture-split adjacent pairs against 25 furniture-swallowing spans, none of
+which involve an excluded contract. Counts elsewhere in this report that ranged
+over dev + ft_train are computed over the pre-exclusion 408; the four removals
+do not affect any stated verdict.

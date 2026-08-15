@@ -187,3 +187,19 @@ near-duplicate-inconsistency cases for the noise-floor estimate.
   my hand judgement over the head-4000/tail-8000 window of each; a date-shaped blank buried in
   the middle of a long contract would have been missed by the sweep.
 - The Handbook is paraphrased throughout; nothing is quoted.
+
+---
+
+## Correction — 2026-08-15, after the split-contamination fix (INV1-D7)
+
+Four contracts were excluded from ft_train to remove cross-split content
+duplication. The denominators in this report shift accordingly:
+
+- scope: dev + ft_train **408 → 404** contracts
+- Agreement Date positives: **377 → 374**
+
+**No finding changes.** None of the four excluded contracts is cited as a case
+here, and the three with a positive Agreement Date carry ordinary dates
+("June 1, 2020", "December 31, 2018", "December 21, 2015") rather than the
+blank-signing-frame construct. The headline count of 30 blank-construct
+contracts is unaffected, as is the g07 disagreement rate.

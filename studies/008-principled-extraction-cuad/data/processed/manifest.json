@@ -1,8 +1,42 @@
 {
   "attribution": "Derived from the Contract Understanding Atticus Dataset (CUAD) v1, The Atticus Project, licensed CC BY 4.0.",
-  "built_at": "2026-08-15T16:30:54+00:00",
+  "built_at": "2026-08-15T18:48:18+00:00",
   "category_subset_version": "provisional-2026-08-15",
+  "contamination_guard": {
+    "max_cross_split_containment": 0.7365,
+    "max_cross_split_jaccard": 0.0635,
+    "shingle_n": 5,
+    "thresholds": {
+      "containment": 0.8,
+      "jaccard": 0.6
+    }
+  },
   "dataset_config_version": "frozen-2026-08-15",
+  "exclusions": {
+    "applied_after_dev_sampling": true,
+    "contracts": [
+      {
+        "contract_id": "ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT",
+        "reason": "byte-identical to a dev contract",
+        "twin_split": "dev"
+      },
+      {
+        "contract_id": "ARMSTRONGFLOORING,INC_01_07_2019-EX-10.2-INTELLECTUAL PROPERTY AGREEMENT",
+        "reason": "re-filing of a dev contract (containment 0.975)",
+        "twin_split": "dev"
+      },
+      {
+        "contract_id": "IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement",
+        "reason": "re-filing of a holdout contract (containment 0.946, gold agrees on all 12)",
+        "twin_split": "holdout"
+      },
+      {
+        "contract_id": "WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT - Intellectual Property Rights                 Confidentiality and Non-Use Obligations Agreement",
+        "reason": "contains a holdout contract verbatim (containment 1.000)",
+        "twin_split": "holdout"
+      }
+    ]
+  },
   "length_distribution": [
     {
       "chars_per_token": 4.722,
@@ -31,17 +65,30 @@
       "split": "holdout"
     },
     {
-      "chars_per_token": 4.736,
+      "chars_per_token": 4.741,
       "max_tokens": 82345,
       "median_chars": 36820,
       "median_tokens": 7580,
       "min_tokens": 244,
-      "n": 368,
-      "n_gt_16k_tokens": 77,
-      "n_le_16k_tokens": 291,
-      "n_le_4k_tokens": 104,
-      "n_le_8k_tokens": 191,
+      "n": 364,
+      "n_gt_16k_tokens": 76,
+      "n_le_16k_tokens": 288,
+      "n_le_4k_tokens": 102,
+      "n_le_8k_tokens": 189,
       "split": "ft_train"
+    },
+    {
+      "chars_per_token": 4.056,
+      "max_tokens": 19499,
+      "median_chars": 26443,
+      "median_tokens": 5589,
+      "min_tokens": 1298,
+      "n": 4,
+      "n_gt_16k_tokens": 1,
+      "n_le_16k_tokens": 3,
+      "n_le_4k_tokens": 2,
+      "n_le_8k_tokens": 2,
+      "split": "excluded"
     },
     {
       "chars_per_token": 4.729,
@@ -128,7 +175,8 @@
     "seed": 20260815,
     "sizes": {
       "dev": 40,
-      "ft_train": 368,
+      "excluded": 4,
+      "ft_train": 364,
       "holdout": 102
     }
   },

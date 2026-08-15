@@ -104,7 +104,8 @@ Uncapped Liability is the strongest single addition.
 
 **INV1-D5 — split construction.** Seed **20260815**. Holdout = the 102 official test
 contracts. Dev = 40 contracts drawn from the 408 official-train contracts.
-FT-train = the remaining 368. Disjointness and the 510-way union are asserted in
+FT-train = the remaining 368, less the INV1-D7 exclusions (364). Disjointness
+and the 510-way union are asserted in
 `build_dataset.py`; splits are written to `data/processed/splits/*.txt` and read
 back by id, never recomputed.
 
@@ -132,12 +133,45 @@ bucket rather than across the whole dev set. Two cells draw zero contracts —
 balance is approximate by construction. Length buckets are token-based
 (≤4k / 4k–8k / 8k–16k / >16k).
 
+**INV1-D7 — four contracts dropped from ft_train for content-duplication with
+holdout and dev; a content-based guard now enforces it.** Approved by Tyler at
+G1 and executed. Evidence, similarity figures and the alternatives considered
+are in `reviews/split-contamination-check.md` — not restated here.
+
+Implementation detail:
+
+- The four ids live in `scripts/config/dataset.yaml` under `exclusions`, each
+  with a reason and the split its twin sits in. Data, not code.
+- Exclusions are applied **after** dev sampling, so the seed, the sampling
+  procedure, dev's membership and the D-13 length profile are all bit-identical
+  to the pre-fix build. Only the ft_train pool shrinks: 368 → 364. Asserted in
+  code that no exclusion targets holdout or dev.
+- The dropped contracts are **not** deleted from `instances.jsonl`. They keep a
+  row with `split: "excluded"` plus `exclusion_reason` and
+  `exclusion_twin_split`, and get their own `splits/excluded.txt`. The corpus
+  stays auditable at 510 and code that scans all contracts still sees them.
+  `"excluded"` was added to the loader's `SPLITS`.
+- The standing guard is `assert_no_cross_split_duplicates` in
+  `build_dataset.py`, run over the final assignment: normalized content hashes
+  for exact matches, then 5-gram shingle containment/Jaccard for near matches,
+  thresholds from `dataset.yaml` (`contamination_guard`). It runs **in addition
+  to** the `contract_id` disjointness assertion — that assertion is not wrong,
+  it is just blind to identical content filed under two titles, which is the
+  whole lesson here. Failure messages name both contracts, both splits and the
+  containment, so a future failure is diagnosable without re-running the scan.
+  Verified by reverting the exclusions in a scratch run: the exact-hash path
+  fires on ADURO and the containment path names the other three with their
+  figures.
+- Guard cost is ~5s on the full corpus. Post-fix headroom: the worst remaining
+  cross-split pair is containment 0.737 against a 0.80 threshold.
+
 ## Results
 
 Built from `data.zip` sha256 `f8161d18…b999a` (see `data/processed/manifest.json`
 for the full source-file digests).
 
-**Split sizes.** holdout 102 · dev 40 · ft_train 368 · total 510, disjoint.
+**Split sizes.** holdout 102 · dev 40 · ft_train 364 · excluded 4 · total 510.
+Disjoint by `contract_id` and, post-INV1-D7, by content.
 
 **Length distribution** (`data/processed/stats/length_distribution.csv`):
 
@@ -145,7 +179,8 @@ for the full source-file digests).
 |---|---|---|---|---|---|---|---|---|
 | holdout | 102 | 25,657 | 5,440 | 37 | 66 | 83 | 19 | 64,640 |
 | dev | 40 | 28,237 | 6,424 | 15 | 26 | 33 | 7 | 41,703 |
-| ft_train | 368 | 36,820 | 7,580 | 104 | 191 | 291 | 77 | 82,345 |
+| ft_train | 364 | 36,820 | 7,580 | 102 | 189 | 288 | 76 | 82,345 |
+| excluded | 4 | 26,443 | 5,589 | 2 | 2 | 3 | 1 | 19,499 |
 | all | 510 | 33,143 | 6,852 | 156 | 283 | 407 | 103 | 82,345 |
 
 **Dev-to-holdout length-profile match** (D-13; from
@@ -187,20 +222,24 @@ carried forward; the reference token figures should be retired.
 
 **Category subset** (positive contracts, out of the split size):
 
-| category | all/510 | dev/40 | holdout/102 | ft_train/368 |
+| category | all/510 | dev/40 | holdout/102 | ft_train/364 |
 |---|---|---|---|---|
-| Agreement Date | 470 | 38 | 93 | 339 |
-| Governing Law | 437 | 32 | 83 | 322 |
-| Expiration Date | 413 | 33 | 78 | 302 |
-| Anti-Assignment | 374 | 24 | 72 | 278 |
-| Cap On Liability | 275 | 21 | 44 | 210 |
-| License Grant | 255 | 16 | 50 | 189 |
+| Agreement Date | 470 | 38 | 93 | 336 |
+| Governing Law | 437 | 32 | 83 | 319 |
+| Expiration Date | 413 | 33 | 78 | 299 |
+| Anti-Assignment | 374 | 24 | 72 | 276 |
+| Cap On Liability | 275 | 21 | 44 | 209 |
+| License Grant | 255 | 16 | 50 | 187 |
 | Exclusivity | 180 | 13 | 33 | 134 |
-| Revenue/Profit Sharing | 166 | 13 | 35 | 118 |
-| Minimum Commitment | 165 | 12 | 32 | 121 |
+| Revenue/Profit Sharing | 166 | 13 | 35 | 117 |
+| Minimum Commitment | 165 | 12 | 32 | 120 |
 | Volume Restriction | 82 | 4 | 17 | 61 |
 | Most Favored Nation | 28 | 4 | 3 | 21 |
 | Source Code Escrow | 13 | 1 | 1 | 11 |
+
+The `all/510` column still counts the 4 excluded contracts, so the four split
+columns no longer sum to it. That is deliberate — `all` describes the CUAD
+corpus, the split columns describe what the study uses.
 
 **Artifacts.** `scripts/rebuild.sh` is the single rebuild command; a second run
 reproduces every output file byte-identically (manifest differs only in
@@ -230,23 +269,19 @@ Assumptions and open calls from the WS1 build, for review at G1:
   pool; FT-train is the pool of record for Phase 2. The ≤4k bucket in particular
   draws 15 of 119 available short contracts, so its effective diversity is
   narrower than 15 independent draws from official-train would suggest.
-- **Splits are disjoint by `contract_id` but NOT by content — the splits are not
-  safe as built.** CUAD files the same contract more than once under different
-  titles, which defeats the `contract_id` disjointness assertion in
-  `build_dataset.py`. An exhaustive all-pairs near-duplicate scan over all 510
-  contracts (`scripts/scan_split_contamination.py`, full report in
-  `reviews/split-contamination-check.md`) found **2 ft_train × holdout pairs**,
-  one of which is a *verbatim substring* — a holdout contract appears in full
-  inside an ft_train compound filing (containment 1.000, Jaccard 0.214). As
-  built, Phase 2 fine-tuning would train on the sealed evaluation set. Also 2
-  dev × ft_train pairs (including the only byte-identical pair in the corpus)
-  and 5 ft_train-internal clusters. dev × holdout, holdout × holdout and
-  dev × dev are clean. Proposed minimal fix — drop 4 contracts from ft_train
-  (368 → 364), leaving holdout, dev, the seed and the D-13 length profile
-  untouched — is written up in the review but **not executed**; splits are
-  frozen pending G1 and this is Tyler's call. Recommended follow-on regardless:
-  a content-hash + containment assertion in `build_dataset.py`, since
-  title-based disjointness cannot catch this class of error.
+- **Residual cross-split overlap sits at containment 0.737**, below the 0.80
+  threshold and therefore not excluded:
+  `AzulSa_20170303_F-1A_EX-10.3_9943903_EX-10.3_Maintenance Agreement1`
+  (ft_train, 233k chars) and `…Maintenance Agreement2` (dev, 17k chars) are two
+  CUAD entries carved from the same SEC exhibit, and 74% of the shorter one's
+  5-grams appear in the longer. It is the closest thing to a survivor and the
+  reason the guard's headroom is 0.06 rather than 0.15. Judged acceptable
+  because dev is not trained on; it would matter more if the pair straddled
+  ft_train and holdout.
+- **ft_train-internal duplicates are untouched.** Five near-duplicate clusters
+  remain inside ft_train (see the review). They double-weight the same contract
+  during fine-tuning, which is a Phase 2 data-loader question, not a split-safety
+  one. Deliberately not bundled into INV1-D7.
 - **Byte-identical contracts carry disagreeing gold labels.** The ADURO pair is
   byte-identical at 12,020 chars yet labeled differently on Anti-Assignment and
   Exclusivity; the WOMENSGOLF and NETGEAR near-twins likewise. This is a direct

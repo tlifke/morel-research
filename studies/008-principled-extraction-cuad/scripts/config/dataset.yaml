@@ -45,8 +45,44 @@ splits:
       changes the subset. Sampling within a (bucket, tercile) cell is uniform
       without replacement under the seed above.
   ft_train:
-    source: official train minus dev
+    source: official train minus dev minus exclusions
     note: Reserved for Phase 2. Not read by Phase 1.
+
+exclusions:
+  note: >
+    Contracts removed from ft_train because their CONTENT duplicates a contract
+    in holdout or dev under a different title, which title-based disjointness
+    cannot catch. Evidence and the containment figures are in
+    reviews/split-contamination-check.md. Applied AFTER dev sampling, so the
+    seed, the sampling procedure, the dev membership and the D-13 length
+    profile are all unchanged; only the ft_train pool shrinks.
+  contract_ids:
+    - id: "WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT - Intellectual Property Rights                 Confidentiality and Non-Use Obligations Agreement"
+      reason: contains a holdout contract verbatim (containment 1.000)
+      twin_split: holdout
+    - id: "IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement"
+      reason: re-filing of a holdout contract (containment 0.946, gold agrees on all 12)
+      twin_split: holdout
+    - id: "ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT"
+      reason: byte-identical to a dev contract
+      twin_split: dev
+    - id: "ARMSTRONGFLOORING,INC_01_07_2019-EX-10.2-INTELLECTUAL PROPERTY AGREEMENT"
+      reason: re-filing of a dev contract (containment 0.975)
+      twin_split: dev
+
+contamination_guard:
+  shingle_n: 5
+  jaccard_threshold: 0.60
+  containment_threshold: 0.80
+  scope: cross_split
+  note: >
+    Post-split assertion over the final dev/holdout/ft_train assignment. Fails
+    the build if any CROSS-SPLIT pair exceeds either threshold. Thresholds are
+    calibrated in reviews/split-contamination-check.md: the highest legitimate
+    cross-split pair in CUAD sits at containment 0.529, and nothing in the
+    corpus falls between 0.53 and 0.83 on either metric. This runs alongside
+    the title-based disjointness assertion, not instead of it — they catch
+    different failures.
 
 length_buckets:
   unit: tokens

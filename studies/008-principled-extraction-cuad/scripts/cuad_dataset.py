@@ -8,7 +8,7 @@ STUDY = Path(__file__).resolve().parent.parent
 PROCESSED = STUDY / "data" / "processed"
 RAW = STUDY / "data" / "raw"
 
-SPLITS = ("dev", "holdout", "ft_train")
+SPLITS = ("dev", "holdout", "ft_train", "excluded")
 
 
 class GoldSpan(BaseModel):

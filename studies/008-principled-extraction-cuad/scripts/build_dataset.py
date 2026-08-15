@@ -3,12 +3,21 @@ import hashlib
 import json
 import random
 import statistics
+import sys
+import unicodedata
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
+from itertools import combinations
 from pathlib import Path
 
+import numpy as np
 import yaml
+from scipy.sparse import csr_matrix
 from transformers import AutoTokenizer
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from mine_contrastive_pairs import WS_RE, terms
 
 STUDY = Path(__file__).resolve().parent.parent
 RAW = STUDY / "data" / "raw"
@@ -116,6 +125,75 @@ def stratified_sample(pool_by_bucket, bucket_targets, seed):
     return sorted(picked), allocation
 
 
+def assert_no_cross_split_duplicates(texts, split_of, cfg):
+    ids = sorted(split_of)
+    norm_hash = {}
+    for cid in ids:
+        norm = WS_RE.sub(" ", unicodedata.normalize("NFKC", texts[cid])).strip()
+        norm_hash[cid] = hashlib.sha256(norm.encode("utf-8")).hexdigest()
+    by_hash = defaultdict(list)
+    for cid in ids:
+        by_hash[norm_hash[cid]].append(cid)
+    for group in by_hash.values():
+        splits = {split_of[c] for c in group}
+        if len(group) > 1 and len(splits) > 1:
+            raise AssertionError(
+                "cross-split identical content: "
+                + " | ".join(f"{c} [{split_of[c]}]" for c in sorted(group))
+            )
+
+    vocab = {}
+    indptr = [0]
+    indices = []
+    for cid in ids:
+        row = {vocab.setdefault(sh, len(vocab)) for sh in terms(texts[cid], [cfg["shingle_n"]])}
+        indices.extend(sorted(row))
+        indptr.append(len(indices))
+    matrix = csr_matrix(
+        (np.ones(len(indices), dtype=np.float32), np.array(indices), np.array(indptr)),
+        shape=(len(ids), len(vocab)),
+    )
+    sizes = np.asarray(matrix.sum(axis=1)).ravel()
+    inter = (matrix @ matrix.T).toarray()
+
+    worst = None
+    violations = []
+    for i, j in combinations(range(len(ids)), 2):
+        if split_of[ids[i]] == split_of[ids[j]]:
+            continue
+        overlap = inter[i, j]
+        if overlap == 0:
+            continue
+        union = sizes[i] + sizes[j] - overlap
+        jac = float(overlap / union) if union else 0.0
+        cont = float(overlap / min(sizes[i], sizes[j])) if min(sizes[i], sizes[j]) else 0.0
+        if worst is None or cont > worst[0]:
+            worst = (cont, jac, ids[i], ids[j])
+        if jac >= cfg["jaccard_threshold"] or cont >= cfg["containment_threshold"]:
+            violations.append((cont, jac, ids[i], ids[j]))
+    if violations:
+        violations.sort(reverse=True)
+        lines = [
+            f"  containment={c:.3f} jaccard={j:.3f}  {a} [{split_of[a]}]  <->  {b} [{split_of[b]}]"
+            for c, j, a, b in violations
+        ]
+        raise AssertionError(
+            f"{len(violations)} cross-split near-duplicate pair(s) exceed the contamination "
+            f"thresholds (jaccard>={cfg['jaccard_threshold']} or "
+            f"containment>={cfg['containment_threshold']}). Splits are disjoint by contract_id "
+            "but not by content; see reviews/split-contamination-check.md.\n" + "\n".join(lines)
+        )
+    return {
+        "max_cross_split_containment": round(worst[0], 4) if worst else 0.0,
+        "max_cross_split_jaccard": round(worst[1], 4) if worst else 0.0,
+        "thresholds": {
+            "jaccard": cfg["jaccard_threshold"],
+            "containment": cfg["containment_threshold"],
+        },
+        "shingle_n": cfg["shingle_n"],
+    }
+
+
 def main():
     dataset_cfg = yaml.safe_load(open(CONFIG / "dataset.yaml"))
     subset_cfg = yaml.safe_load(open(CONFIG / "category_subset.yaml"))
@@ -187,14 +265,22 @@ def main():
 
     seed = dataset_cfg["splits"]["seed"]
     dev, alloc = stratified_sample(pool_by_bucket, bucket_targets, seed)
-    ft_train = sorted(set(train_pool) - set(dev))
+
+    exclusions = {e["id"]: e for e in dataset_cfg["exclusions"]["contract_ids"]}
+    unknown = [cid for cid in exclusions if cid not in full]
+    assert not unknown, unknown
+    assert not (set(exclusions) & set(holdout)), "exclusion targets holdout"
+    assert not (set(exclusions) & set(dev)), "exclusion targets dev"
+    excluded = sorted(exclusions)
+    ft_train = sorted(set(train_pool) - set(dev) - set(exclusions))
 
     assert len(holdout) == dataset_cfg["splits"]["holdout"]["n"]
     assert len(dev) == dataset_cfg["splits"]["dev"]["n"]
     assert not (set(holdout) & set(dev))
     assert not (set(holdout) & set(ft_train))
     assert not (set(dev) & set(ft_train))
-    assert set(holdout) | set(dev) | set(ft_train) == set(full)
+    assert set(holdout) | set(dev) | set(ft_train) | set(excluded) == set(full)
+    assert len(holdout) + len(dev) + len(ft_train) + len(excluded) == len(full)
 
     split_of = {}
     for cid in holdout:
@@ -203,6 +289,14 @@ def main():
         split_of[cid] = "dev"
     for cid in ft_train:
         split_of[cid] = "ft_train"
+    for cid in excluded:
+        split_of[cid] = "excluded"
+
+    guard = assert_no_cross_split_duplicates(
+        {cid: full[cid]["context"] for cid in split_of if split_of[cid] != "excluded"},
+        {cid: s for cid, s in split_of.items() if s != "excluded"},
+        dataset_cfg["contamination_guard"],
+    )
 
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "stats").mkdir(exist_ok=True)
@@ -212,9 +306,12 @@ def main():
         for cid in sorted(instances):
             row = dict(instances[cid])
             row["split"] = split_of[cid]
+            if cid in exclusions:
+                row["exclusion_reason"] = exclusions[cid]["reason"]
+                row["exclusion_twin_split"] = exclusions[cid]["twin_split"]
             fh.write(json.dumps(row, sort_keys=True) + "\n")
 
-    for name, members in (("dev", dev), ("holdout", holdout), ("ft_train", ft_train)):
+    for name, members in (("dev", dev), ("holdout", holdout), ("ft_train", ft_train), ("excluded", excluded)):
         (OUT / "splits" / f"{name}.txt").write_text("\n".join(members) + "\n")
 
     with open(OUT / "categories.json", "w") as fh:
@@ -239,7 +336,7 @@ def main():
         )
 
     length_rows = []
-    for split, members in (("dev", dev), ("holdout", holdout), ("ft_train", ft_train), ("all", sorted(full))):
+    for split, members in (("dev", dev), ("holdout", holdout), ("ft_train", ft_train), ("excluded", excluded), ("all", sorted(full))):
         toks = sorted(instances[c]["n_tokens"] for c in members)
         chars = sorted(instances[c]["n_chars"] for c in members)
         length_rows.append(
@@ -263,7 +360,7 @@ def main():
         writer.writerows(length_rows)
 
     bucket_rows = []
-    for split, members in (("dev", dev), ("holdout", holdout), ("ft_train", ft_train), ("all", sorted(full))):
+    for split, members in (("dev", dev), ("holdout", holdout), ("ft_train", ft_train), ("excluded", excluded), ("all", sorted(full))):
         counts = Counter(instances[c]["length_bucket"] for c in members)
         bucket_rows.append({"split": split, **{lab: counts.get(lab, 0) for lab in labels}})
     with open(OUT / "stats" / "length_buckets.csv", "w", newline="") as fh:
@@ -274,7 +371,7 @@ def main():
     cat_rows = []
     for cat in categories:
         row = {"category": cat, "in_subset": cat in subset}
-        for split, members in (("dev", dev), ("holdout", holdout), ("ft_train", ft_train), ("all", sorted(full))):
+        for split, members in (("dev", dev), ("holdout", holdout), ("ft_train", ft_train), ("excluded", excluded), ("all", sorted(full))):
             pos = sum(1 for c in members if not instances[c]["gold"][cat]["is_impossible"])
             spans = sum(len(instances[c]["gold"][cat]["spans"]) for c in members)
             row[f"n_positive_{split}"] = pos
@@ -342,10 +439,23 @@ def main():
         "splits": {
             "seed": seed,
             "dev_stratification": "length_bucket primary matched to holdout; positive_count_tercile secondary within bucket (D-13)",
-            "sizes": {"dev": len(dev), "holdout": len(holdout), "ft_train": len(ft_train)},
+            "sizes": {
+                "dev": len(dev),
+                "holdout": len(holdout),
+                "ft_train": len(ft_train),
+                "excluded": len(excluded),
+            },
             "dev_length_profile_match": length_profile_match,
             "dev_bucket_shortfall": bucket_shortfall,
         },
+        "exclusions": {
+            "applied_after_dev_sampling": True,
+            "contracts": [
+                {"contract_id": cid, "reason": exclusions[cid]["reason"], "twin_split": exclusions[cid]["twin_split"]}
+                for cid in excluded
+            ],
+        },
+        "contamination_guard": guard,
         "length_distribution": length_rows,
     }
     with open(OUT / "manifest.json", "w") as fh:
