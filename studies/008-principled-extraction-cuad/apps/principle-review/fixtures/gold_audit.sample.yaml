@@ -5,9 +5,9 @@
 # enumeration and NOT part of the random draw. This is NOT the audit sample.
 # Gold spans from CUAD v1, The Atticus Project, CC BY 4.0.
 sampling:
-  sampler_version: gold-audit-sampler-v4
+  sampler_version: gold-audit-sampler-v5
   seed: 20260815
-  drawn_at: '2026-08-15T18:27:32+00:00'
+  drawn_at: '2026-08-15T18:56:36+00:00'
   splits:
   - dev
   - holdout
@@ -96,11 +96,14 @@ sampling:
 
         '
     min_doc_containment: 0.15
-    gate_rationale: the miner's present_absent threshold answers 'does a passage resembling category C
-      exist where C is absent', which is a broader question than 'is there a near-duplicate document with
-      the opposite label'. Ungated it returns mostly unrelated contracts sharing legal boilerplate. The
-      document-containment floor restricts it to genuine near-twins; see detector_comparison for what
-      the gate discards
+    gate_rationale: 'the miner''s present_absent threshold answers ''does a passage resembling category
+      C exist where C is absent'', which is a broader question than ''is there a near-duplicate document
+      with the opposite label''. Ungated it returns mostly unrelated contracts sharing legal boilerplate.
+      The document-containment floor restricts it to genuine near-twins; see detector_comparison for what
+      the gate discards. Known residual failure mode at this gate: CUAD entries that are fragments of
+      one filing (a continuation excerpt or annex) score moderate containment and share boilerplate, but
+      their absence labels are legitimately correct because the fragment does not contain the clause.
+      Read the passage before trusting a fuzzy hit'
   detector_comparison:
     unit: one gold span with at least one disagreeing counterpart
     exact_normalized: 4
@@ -118,10 +121,10 @@ sampling:
     random: 6
     duplicate_census: 6
     census_definition: 'every gold span in the sampled splits whose passage appears verbatim in another
-      contract where the same category is not_annotated or marked_absent. This is an exhaustive census
-      of candidates for inconsistent_across_duplicates, NOT a random draw: label disagreement is ~0.3%
-      of spans, so a random sample would contain none. Census records must be reported separately and
-      must never enter the random sample''s defect rate.'
+      contract where the same category is marked_absent, not_annotated, or annotated only elsewhere in
+      that contract. This is an exhaustive census of candidates for inconsistent_across_duplicates, NOT
+      a random draw: label disagreement is ~0.3% of spans, so a random sample would contain none. Census
+      records must be reported separately and must never enter the random sample''s defect rate.'
   attribution: Gold spans from the Contract Understanding Atticus Dataset (CUAD) v1, The Atticus Project,
     licensed CC BY 4.0.
 records:
@@ -151,7 +154,7 @@ records:
   detected_by: none
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v4
+    sampler_version: gold-audit-sampler-v5
     stratum: Agreement Date
     draw: random
     context_chars: 400
@@ -203,7 +206,7 @@ records:
   detected_by: none
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v4
+    sampler_version: gold-audit-sampler-v5
     stratum: Anti-Assignment
     draw: random
     context_chars: 400
@@ -294,7 +297,7 @@ records:
   detected_by: none
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v4
+    sampler_version: gold-audit-sampler-v5
     stratum: Cap On Liability
     draw: random
     context_chars: 400
@@ -390,7 +393,7 @@ records:
   detected_by: none
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v4
+    sampler_version: gold-audit-sampler-v5
     stratum: Exclusivity
     draw: random
     context_chars: 400
@@ -448,7 +451,7 @@ records:
   detected_by: none
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v4
+    sampler_version: gold-audit-sampler-v5
     stratum: Expiration Date
     draw: random
     context_chars: 400
@@ -502,7 +505,7 @@ records:
   detected_by: none
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v4
+    sampler_version: gold-audit-sampler-v5
     stratum: Governing Law
     draw: random
     context_chars: 400
@@ -551,7 +554,8 @@ records:
   overlaps: []
   duplicate_counterparts:
   - contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT
-    split: ft_train
+    split: excluded
+    excluded_as: byte-identical to a dev contract (dev twin)
     detector: exact_normalized
     similarity: 1.0
     doc_containment: 1.0
@@ -563,7 +567,8 @@ records:
       agreement either written or oral, that would present a material conflict with any of the provisions
       of this Agreement, or would preclude Consultant from complying with the terms and conditions hereof.
   - contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT
-    split: ft_train
+    split: excluded
+    excluded_as: byte-identical to a dev contract (dev twin)
     detector: fuzzy_idf_jaccard
     similarity: 0.3738
     doc_containment: 1.0
@@ -586,7 +591,7 @@ records:
   detected_by: exact_normalized, fuzzy_idf_jaccard
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v4
+    sampler_version: gold-audit-sampler-v5
     stratum: duplicate_census
     draw: duplicate_census
     context_chars: 400
@@ -633,9 +638,10 @@ records:
   duplicate_counterparts:
   - contract_id: EcoScienceSolutionsInc_20171117_8-K_EX-10.1_10956472_EX-10.1_Endorsement Agreement
     split: ft_train
+    excluded_as: ''
     detector: fuzzy_idf_jaccard
     similarity: 0.4464
-    doc_containment: 0.4075
+    doc_containment: 0.38
     twin_label: marked_absent
     offsets: 5358-5596
     context_expanded: false
@@ -647,7 +653,7 @@ records:
   detected_by: fuzzy_idf_jaccard
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v4
+    sampler_version: gold-audit-sampler-v5
     stratum: duplicate_census
     draw: duplicate_census
     context_chars: 400
@@ -741,10 +747,11 @@ records:
   duplicate_counterparts:
   - contract_id: PfHospitalityGroupInc_20150923_10-12G_EX-10.1_9266710_EX-10.1_Franchise Agreement1
     split: ft_train
+    excluded_as: ''
     detector: exact_normalized
     similarity: 1.0
-    doc_containment: 0.04
-    twin_label: not_annotated
+    doc_containment: 0.035
+    twin_label: category_annotated_elsewhere
     offsets: 57059-57131
     twin_span_offsets: null
     passage: written approval for the Operating Principal to hold a smaller interest.
@@ -753,7 +760,7 @@ records:
   detected_by: exact_normalized
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v4
+    sampler_version: gold-audit-sampler-v5
     stratum: duplicate_census
     draw: duplicate_census
     context_chars: 400
@@ -795,11 +802,12 @@ records:
   overlaps: []
   duplicate_counterparts:
   - contract_id: IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement
-    split: ft_train
+    split: excluded
+    excluded_as: re-filing of a holdout contract (containment 0.946, gold agrees on all 12) (holdout twin)
     detector: exact_normalized
     similarity: 1.0
-    doc_containment: 0.7575
-    twin_label: not_annotated
+    doc_containment: 0.785
+    twin_label: category_annotated_elsewhere
     offsets: 33266-33409
     twin_span_offsets: null
     passage: The merits of the dispute shall be resolved in accordance with the laws of the State of New
@@ -809,7 +817,7 @@ records:
   detected_by: exact_normalized
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v4
+    sampler_version: gold-audit-sampler-v5
     stratum: duplicate_census
     draw: duplicate_census
     context_chars: 400
@@ -861,11 +869,12 @@ records:
   overlaps: []
   duplicate_counterparts:
   - contract_id: IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement
-    split: ft_train
+    split: excluded
+    excluded_as: re-filing of a holdout contract (containment 0.946, gold agrees on all 12) (holdout twin)
     detector: exact_normalized
     similarity: 1.0
-    doc_containment: 0.7575
-    twin_label: not_annotated
+    doc_containment: 0.785
+    twin_label: category_annotated_elsewhere
     offsets: 20427-20592
     twin_span_offsets: null
     passage: Such Advertising shall be determined by Licensee in its sole discretion and Licensee shall
@@ -875,7 +884,7 @@ records:
   detected_by: exact_normalized
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v4
+    sampler_version: gold-audit-sampler-v5
     stratum: duplicate_census
     draw: duplicate_census
     context_chars: 400
@@ -911,10 +920,11 @@ records:
   duplicate_counterparts:
   - contract_id: WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT - Intellectual Property
       Rights                 Confidentiality and Non-Use Obligations Agreement
-    split: ft_train
+    split: excluded
+    excluded_as: contains a holdout contract verbatim (containment 1.000) (holdout twin)
     detector: fuzzy_idf_jaccard
     similarity: 0.307
-    doc_containment: 0.2075
+    doc_containment: 0.1875
     twin_label: marked_absent
     offsets: 1468-1846
     context_expanded: true
@@ -927,7 +937,7 @@ records:
   detected_by: fuzzy_idf_jaccard
   sample:
     seed: 20260815
-    sampler_version: gold-audit-sampler-v4
+    sampler_version: gold-audit-sampler-v5
     stratum: duplicate_census
     draw: duplicate_census
     context_chars: 400

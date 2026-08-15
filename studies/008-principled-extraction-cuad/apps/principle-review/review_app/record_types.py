@@ -168,16 +168,22 @@ GOLD_AUDIT = RecordType(
         Field("duplicate_counterparts",
               "Same passage in other contracts, and how it is labeled there",
               "rows", slot="body",
-              config={"columns": ["contract_id", "split", "twin_label", "detector",
-                                  "similarity", "doc_containment", "offsets",
-                                  "passage"]},
-              hint="twin_label is that contract's label for THIS category. "
+              config={"columns": ["contract_id", "split", "excluded_as",
+                                  "twin_label", "detector", "similarity",
+                                  "doc_containment", "offsets", "passage"]},
+              hint="twin_label is that contract's label for THIS passage. "
+                   "'marked_absent' = category ruled absent there; "
+                   "'category_annotated_elsewhere' = category IS annotated there but "
+                   "not on this passage, i.e. a missing span rather than a missing "
+                   "category. "
                    "'marked_absent' or 'not_annotated' against an identical passage "
                    "is the inconsistent_across_duplicates case. A high "
                    "n_contracts_with_passage means boilerplate, not a near-twin. "
                    "detector=exact_normalized is byte-identical text; "
                    "fuzzy_idf_jaccard is a similarity match, so read its passage "
-                   "before trusting it."),
+                   "before trusting it. A non-empty excluded_as means that contract "
+                   "was removed from ft_train for cross-split duplication (INV1-D7); "
+                   "it is still valid evidence that the gold disagrees."),
         Field("title", "Contract title", "longtext", slot="body"),
         Field("sample", "Sampling provenance", "kv", slot="body",
               hint="Seed and stratum this record was drawn under."),

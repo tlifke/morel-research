@@ -4,6 +4,11 @@ import re
 from functools import lru_cache
 
 WHITESPACE = re.compile(r"\s+")
+DISAGREEING_LABELS = (
+    "marked_absent",
+    "not_annotated",
+    "category_annotated_elsewhere",
+)
 MIN_MATCH_CHARS = 60
 MAX_COUNTERPARTS = 4
 DETECTOR = "exact_normalized"
@@ -44,7 +49,7 @@ def sketch(normalized_text: str) -> set[int]:
 class Corpus:
     def __init__(self, dataset):
         self.dataset = dataset
-        self.texts = dataset._text
+        self.texts = dataset.texts
         self._normalized = {cid: normalize(text) for cid, text in self.texts.items()}
         self._sketches = {cid: sketch(text) for cid, text in self._normalized.items()}
 
@@ -60,11 +65,19 @@ class Corpus:
         return normalized, tuple(positions)
 
     def _split_of(self, contract_id: str) -> str:
-        record = self.dataset._records.get(contract_id)
+        record = self.dataset.record(contract_id)
         return record["split"] if record else "unassigned"
 
+    def exclusion_of(self, contract_id: str) -> str:
+        record = self.dataset.record(contract_id) or {}
+        if record.get("split") != "excluded":
+            return ""
+        reason = record.get("exclusion_reason") or "excluded"
+        twin = record.get("exclusion_twin_split")
+        return f"{reason} ({twin} twin)" if twin else reason
+
     def _gold_for(self, contract_id: str, category: str):
-        record = self.dataset._records.get(contract_id)
+        record = self.dataset.record(contract_id)
         if not record or category not in record.get("gold", {}):
             return None
         return record["gold"][category]
@@ -115,12 +128,15 @@ class Corpus:
                 label = "annotated"
             elif gold.get("is_impossible"):
                 label = "marked_absent"
+            elif gold.get("spans"):
+                label = "category_annotated_elsewhere"
             else:
                 label = "not_annotated"
             counterparts.append(
                 {
                     "contract_id": other,
                     "split": self._split_of(other),
+                    "excluded_as": self.exclusion_of(other),
                     "detector": DETECTOR,
                     "similarity": 1.0,
                     "doc_containment": round(self.containment(contract_id, other), 4),

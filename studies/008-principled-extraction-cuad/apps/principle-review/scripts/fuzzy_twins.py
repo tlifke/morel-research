@@ -48,7 +48,7 @@ class FuzzyTwins:
         absent_by_cat = defaultdict(list)
         cfg = self.config["chunking"]
         for contract_id in sorted(texts):
-            record = self.dataset._records.get(contract_id)
+            record = self.dataset.record(contract_id)
             if not record:
                 continue
             absent_here = [
@@ -146,17 +146,23 @@ class FuzzyTwins:
                         eligible, key=lambda x: (-x[0], x[1])
                     )[:self.top_k]:
                         chunk = chunks[int(candidates[col])]
-                        record = self.dataset._records.get(chunk["contract_id"], {})
+                        record = self.dataset.record(chunk["contract_id"]) or {}
                         gold = record.get("gold", {}).get(category, {})
-                        label = (
-                            "marked_absent"
-                            if gold.get("is_impossible")
-                            else "not_annotated"
-                        )
+                        if gold.get("is_impossible"):
+                            label = "marked_absent"
+                        elif gold.get("spans"):
+                            label = "category_annotated_elsewhere"
+                        else:
+                            label = "not_annotated"
                         out[key].append(
                             {
                                 "contract_id": chunk["contract_id"],
-                                "split": (record or {}).get("split", "unassigned"),
+                                "split": record.get("split", "unassigned"),
+                                "excluded_as": (
+                                    corpus.exclusion_of(chunk["contract_id"])
+                                    if corpus is not None
+                                    else ""
+                                ),
                                 "detector": DETECTOR,
                                 "similarity": round(score, 4),
                                 "doc_containment": (

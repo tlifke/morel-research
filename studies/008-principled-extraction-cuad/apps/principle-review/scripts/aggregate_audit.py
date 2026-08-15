@@ -14,7 +14,7 @@ sys.path.insert(0, str(APP_DIR))
 
 from review_app import record_types, yaml_io
 
-AGGREGATOR_VERSION = "gold-audit-aggregator-v4"
+AGGREGATOR_VERSION = "gold-audit-aggregator-v5"
 CLEAN = "clean"
 UNRULED = (
     "redaction_dependent",
@@ -115,6 +115,18 @@ def main(argv: list[str] | None = None) -> int:
             "attribution": (
                 "Gold spans from the Contract Understanding Atticus Dataset (CUAD) v1, "
                 "The Atticus Project, licensed CC BY 4.0."
+            ),
+            "convergence_with_contamination_scan": (
+                "The duplicate census and the INV1-D7 split-contamination scan are "
+                "independent methods — one asks 'does an identical passage carry the "
+                "opposite gold label', the other asks 'do two contracts straddle a "
+                "split boundary' — and they converge on the same contract pairs. "
+                "Every contract INV1-D7 excluded from ft_train appears in this census "
+                "as a counterpart. Census records whose counterpart carries a "
+                "non-empty excluded_as are that overlap. Excluded contracts are "
+                "deliberately NOT filtered out of the counterpart search: a twin "
+                "removed from training for being a duplicate is still evidence that "
+                "the gold labels disagree, which is the quantity this class measures."
             ),
         },
         "denominator": {

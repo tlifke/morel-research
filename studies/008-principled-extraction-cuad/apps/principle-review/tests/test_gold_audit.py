@@ -184,10 +184,15 @@ def test_aggregation_artifact(tmp_path):
     assert "deliberately not performed" in report["note"]
 
 
+DISAGREEING = (
+    "marked_absent", "not_annotated", "category_annotated_elsewhere",
+)
+
+
 def counterpart_record(records: list[dict]) -> dict:
     for record in records:
         if any(
-            c["twin_label"] in ("marked_absent", "not_annotated")
+            c["twin_label"] in DISAGREEING
             for c in record.get("duplicate_counterparts") or []
         ):
             return record
@@ -353,7 +358,7 @@ def test_fuzzy_only_records_exist_and_are_gated():
     for record in fuzzy_only:
         for counterpart in record["duplicate_counterparts"]:
             assert counterpart["doc_containment"] >= 0.15
-            assert counterpart["twin_label"] in ("marked_absent", "not_annotated")
+            assert counterpart["twin_label"] in DISAGREEING
 
 
 def test_two_detector_census_stays_out_of_the_headline_rate(tmp_path):
@@ -400,3 +405,40 @@ def test_two_detector_census_stays_out_of_the_headline_rate(tmp_path):
         sum(counts.values()) for counts in by_detector.values()
     ) == len(census_rows)
     assert "inconsistent_across_duplicates" not in report["overall"]["decisions"]
+
+
+def test_excluded_counterparts_are_labeled_not_filtered():
+    records = yaml_io.load_records(FIXTURE)
+    census = [
+        r for r in records
+        if record_types.dotted(r, "sample.draw") == "duplicate_census"
+    ]
+    excluded = [
+        c for r in census for c in r["duplicate_counterparts"]
+        if c["split"] == "excluded"
+    ]
+    assert excluded, "INV1-D7 contracts must still appear as counterpart evidence"
+    for counterpart in excluded:
+        assert counterpart["excluded_as"]
+        assert "twin" in counterpart["excluded_as"]
+    for counterpart in (c for r in census for c in r["duplicate_counterparts"]):
+        assert counterpart["split"] in ("dev", "holdout", "ft_train", "excluded",
+                                        "unassigned")
+        if counterpart["split"] != "excluded":
+            assert counterpart["excluded_as"] == ""
+
+
+def test_span_level_disagreement_is_distinguished_from_category_level():
+    records = yaml_io.load_records(FIXTURE)
+    labels = {
+        c["twin_label"]
+        for r in records for c in r["duplicate_counterparts"]
+    }
+    assert labels <= {
+        "annotated", "marked_absent", "not_annotated",
+        "category_annotated_elsewhere", "category_not_in_subset",
+    }
+    assert "category_annotated_elsewhere" in labels, (
+        "the Ideanomics pair disagrees on a span while agreeing on the category; "
+        "that distinction must survive into the record"
+    )

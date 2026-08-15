@@ -15,12 +15,12 @@ STUDY_SCRIPTS = STUDY_DIR / "scripts"
 sys.path.insert(0, str(STUDY_SCRIPTS))
 
 from cuad_dataset import CuadDataset
-from duplicates import MIN_MATCH_CHARS, Corpus
+from duplicates import DISAGREEING_LABELS, MIN_MATCH_CHARS, Corpus
 from fuzzy_twins import FuzzyTwins, load_config
 
 FUZZY_MIN_CONTAINMENT = 0.15
 
-SAMPLER_VERSION = "gold-audit-sampler-v4"
+SAMPLER_VERSION = "gold-audit-sampler-v5"
 DEFAULT_SPLITS = ("dev", "holdout")
 
 
@@ -221,9 +221,9 @@ def main(argv: list[str] | None = None) -> int:
     if corpus is not None and not args.no_fuzzy:
         mining = load_config()
         detector = FuzzyTwins(dataset, categories, mining)
-        fuzzy_raw = detector.run(population, dataset._text, corpus, 0.0)
+        fuzzy_raw = detector.run(population, dataset.texts, corpus, 0.0)
         fuzzy_hits = detector.run(
-            population, dataset._text, corpus, args.fuzzy_min_containment
+            population, dataset.texts, corpus, args.fuzzy_min_containment
         )
         fuzzy_meta = {
             "enabled": True,
@@ -267,10 +267,7 @@ def main(argv: list[str] | None = None) -> int:
     ]
 
     def disagrees(counterparts):
-        return any(
-            c["twin_label"] in ("marked_absent", "not_annotated")
-            for c in counterparts
-        )
+        return any(c["twin_label"] in DISAGREEING_LABELS for c in counterparts)
 
     census: list[dict] = []
     exact_keys: set = set()
@@ -304,9 +301,7 @@ def main(argv: list[str] | None = None) -> int:
         records.extend(census)
 
     split_files = {
-        split: hashlib.sha256(
-            (dataset._processed / "splits" / f"{split}.txt").read_bytes()
-        ).hexdigest()[:16]
+        split: hashlib.sha256(dataset.split_file(split).read_bytes()).hexdigest()[:16]
         for split in splits
     }
 
@@ -366,7 +361,8 @@ def main(argv: list[str] | None = None) -> int:
                 "census_definition": (
                     "every gold span in the sampled splits whose passage appears "
                     "verbatim in another contract where the same category is "
-                    "not_annotated or marked_absent. This is an exhaustive census of "
+                    "marked_absent, not_annotated, or annotated only elsewhere in "
+                    "that contract. This is an exhaustive census of "
                     "candidates for inconsistent_across_duplicates, NOT a random "
                     "draw: label disagreement is ~0.3% of spans, so a random sample "
                     "would contain none. Census records must be reported separately "

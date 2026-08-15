@@ -175,7 +175,25 @@ other. The span is fine; the corpus disagrees with itself, usually in the
 contracts (including ft_train, since a twin can live anywhere) for the gold
 span's passage, whitespace-normalized and exact, and attaches every contract
 where it recurs together with that contract's label for the same category:
-`annotated`, `not_annotated`, `marked_absent`, or `category_not_in_subset`.
+
+| twin_label | meaning |
+|---|---|
+| `annotated` | the twin annotates this passage too — no disagreement |
+| `marked_absent` | the twin rules the whole category absent (`is_impossible`) |
+| `category_annotated_elsewhere` | the twin annotates the category, but not this passage — a **missing span**, not a missing category |
+| `not_annotated` | the twin has no spans for the category and no absence ruling |
+| `category_not_in_subset` | outside the 12-category subset |
+
+The `category_annotated_elsewhere` label matters: it separates a whole-category
+miss from a finer disagreement where both contracts agree the category is
+present but only one annotates a given passage. Collapsing the two would have
+overstated the severity of half the census.
+
+Contracts excluded from ft_train by the INV1-D7 split-contamination fix are
+**not** filtered out of the counterpart search — a twin removed for being a
+duplicate is still evidence that the gold disagrees, which is exactly what this
+class measures. They render with `split: excluded` and an `excluded_as` column
+carrying the exclusion reason and which split the twin sits in.
 Counterparts are ranked by document containment over 8-gram sketches, and
 `n_contracts_with_passage` is surfaced so common boilerplate is obvious rather
 than mistaken for a twin. Passages under 60 normalized characters are not
@@ -276,6 +294,17 @@ Every counterpart row records its `detector`, `similarity` and
 `doc_containment`, and every record carries `detected_by`, so the provenance of
 each suspected case is visible in the UI and survives export. `--no-fuzzy`
 disables the second detector; `--fuzzy-min-containment` moves the gate.
+
+**Convergence with the contamination scan.** The census and the INV1-D7
+split-contamination scan are independent methods — one asks "does an identical
+passage carry the opposite gold label", the other asks "do two contracts
+straddle a split boundary" — and they land on the same contract pairs: all four
+contracts INV1-D7 excluded appear here as counterparts. The census is finer,
+though. INV1-D7 records that the Ideanomics pair's "gold agrees on all 12"
+categories, which is true at category level; the census shows the holdout
+contract annotating two Governing Law spans where its twin annotates one and
+leaves the other's verbatim text unannotated. Category-level agreement,
+span-level disagreement. Both statements are correct at their own granularity.
 
 **The census stratum.** Measured over the whole dev+holdout population: 48 of
 1288 gold spans (3.7%) have an exact-passage counterpart, and only **4** of
