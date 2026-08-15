@@ -2,7 +2,7 @@ import re
 import unicodedata
 from functools import lru_cache
 
-SENTENCE_SPLIT = re.compile(r"(?<=[.;])\s|\n\n")
+SENTENCE_SPLIT = re.compile(r"(?<=[.;])\s+|\n\s*\n")
 
 
 def sentences(text):

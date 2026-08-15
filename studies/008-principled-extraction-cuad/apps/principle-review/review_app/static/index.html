@@ -94,6 +94,73 @@ table.tbl td{padding:3px 8px 3px 0; border-bottom:1px solid var(--line); vertica
   color:var(--fg); max-width:640px}
 .card{background:var(--panel); border:1px solid var(--line); border-radius:3px; padding:8px 10px}
 .card h3{margin:0 0 5px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); font-weight:700}
+.helpbtn{
+  margin-left:7px; font-size:10px; letter-spacing:0; text-transform:none; cursor:pointer;
+  background:var(--panel2); border:1px solid var(--accent); color:var(--accent);
+  border-radius:8px; padding:1px 7px; white-space:nowrap;
+}
+.helpbtn:hover{background:#1a2135}
+.helpbtn.on{background:var(--accent); color:#0d1117; border-color:var(--accent)}
+.helptext{
+  display:none; font-size:12px; line-height:1.55; color:var(--fg); background:var(--panel2);
+  border:1px solid var(--line); border-left:3px solid var(--accent);
+  border-radius:3px; padding:7px 9px; margin:0 0 8px;
+}
+.helptext.on{display:block}
+.ev{display:flex; flex-direction:column; gap:9px}
+.ev-cite{font-size:12.5px; line-height:1.5; color:var(--fg); border-left:2px solid var(--line); padding-left:9px}
+.ev-cite.missing{border-left-color:var(--bad); color:var(--dim)}
+.pair{border:1px solid var(--line); border-radius:3px; background:var(--bg)}
+.pair-head{
+  display:flex; flex-wrap:wrap; gap:5px 10px; align-items:center;
+  padding:5px 8px; border-bottom:1px solid var(--line); font-size:11px; color:var(--dim);
+  background:var(--panel2);
+}
+.pair-head .pid{color:var(--fg); font-weight:700; font-size:12px}
+.pair-head .contrast{color:var(--faint)}
+.pair-body{display:grid; grid-template-columns:1fr 24px 1fr; align-items:stretch}
+.side{padding:7px 9px; min-width:0}
+.side.right{border-left:1px solid var(--line)}
+.vs{
+  display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--faint);
+  border-left:1px solid var(--line); border-right:1px solid var(--line); background:var(--panel);
+}
+.side-label{
+  font-size:13px; font-weight:700; padding:2px 6px; border-radius:3px; display:inline-block;
+  background:var(--panel2); border:1px solid var(--line); color:var(--dim);
+}
+.side-label.differs{border-color:var(--accent); color:#cfe0ff; background:#1a2135}
+.side-label.absent{border-color:var(--bad); color:#f2c3c3; background:#361818}
+.side-meta{font-size:10.5px; color:var(--faint); margin-top:4px; line-height:1.5; word-break:break-all}
+.side-text{
+  font-size:12.5px; line-height:1.55; margin-top:6px; white-space:pre-wrap; word-break:break-word;
+  max-height:150px; overflow-y:auto; border-left:2px solid var(--line); padding-left:8px;
+}
+.side-ctx{margin-top:5px; font-size:11px; color:var(--faint); line-height:1.5;
+  max-height:100px; overflow-y:auto; white-space:pre-wrap; word-break:break-word;
+  border-left:2px dashed var(--line); padding-left:8px}
+.fp{border:1px solid var(--line); border-left:3px solid var(--ok); background:var(--panel);
+  border-radius:3px; padding:9px 12px 11px; margin:12px 0 2px}
+.fp.empty{border-left-color:var(--neutral); color:var(--faint)}
+.fp-head{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 12px}
+.fp-head h3{margin:0; font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg); font-weight:700}
+.fp-head .prov{font-size:11px; color:var(--faint)}
+.fp-stats{display:flex; flex-wrap:wrap; gap:10px; margin-top:9px}
+.stat{flex:1 1 150px; background:var(--panel2); border:1px solid var(--line); border-radius:3px; padding:7px 10px}
+.stat .num{font-size:26px; font-weight:700; line-height:1.1; color:var(--fg)}
+.stat .lbl{font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); margin-top:3px}
+.stat .sub{font-size:11px; color:var(--dim); margin-top:4px; line-height:1.4}
+.stat.flag{border-color:var(--warn)}
+.stat.flag .num{color:#f3ddb0}
+.fp-sec{margin-top:10px}
+.fp-sec h4{margin:0 0 5px; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); font-weight:700}
+.dist{display:flex; flex-direction:column; gap:3px}
+.dist .row{display:grid; grid-template-columns:minmax(90px,1.2fr) 3fr minmax(96px,auto); gap:8px; align-items:center; font-size:11.5px}
+.dist .key{color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.dist .track{height:10px; background:var(--panel2); border:1px solid var(--line); border-radius:2px; overflow:hidden}
+.dist .fill{height:100%; background:var(--info)}
+.dist .val{color:var(--fg); text-align:right; font-variant-numeric:tabular-nums}
+.fp-note{font-size:12px; color:var(--dim); margin-top:9px; line-height:1.5; white-space:pre-wrap}
 .card .body{font-size:13px; line-height:1.5; white-space:pre-wrap}
 .card .hint{color:var(--faint); font-size:11px; margin-top:5px}
 .chips{display:flex; flex-wrap:wrap; gap:5px}
@@ -111,6 +178,7 @@ table.tbl td{padding:3px 8px 3px 0; border-bottom:1px solid var(--line); vertica
 }
 .dbtn .k{color:var(--faint); font-size:11px; margin-left:6px}
 .dbtn:hover{border-color:var(--dim)}
+.dbtn[disabled]{opacity:.4; cursor:not-allowed}
 .dbtn.on.t-ok{background:#17331f; border-color:var(--ok); color:#bdf0d2}
 .dbtn.on.t-warn{background:#332711; border-color:var(--warn); color:#f3ddb0}
 .dbtn.on.t-bad{background:#361818; border-color:var(--bad); color:#f2c3c3}
@@ -151,6 +219,9 @@ kbd{background:var(--panel2); border:1px solid var(--line); border-radius:3px; p
   <div class="progress">
     <div class="counts" id="counts"></div>
     <div class="bar"><div id="barfill" style="width:0%"></div></div>
+    <label class="ghost" style="cursor:pointer" title="Decision buttons stay disabled until a rationale is typed. Applies to every decision equally — it changes the order of the same two required steps, nothing else. Off by default.">
+      <input type="checkbox" id="rationaleFirst" style="vertical-align:-1px"> rationale first
+    </label>
     <button class="ghost" id="exportBtn">export yaml <span style="color:var(--faint)">^E</span></button>
   </div>
 </header>
@@ -165,6 +236,7 @@ kbd{background:var(--panel2); border:1px solid var(--line); border-radius:3px; p
           <option value="edit">edit</option>
           <option value="reject">reject</option>
           <option value="defer">defer</option>
+          <option value="unclear">unclear</option>
         </select>
         <select id="fFacet0"></select>
       </div>
@@ -239,8 +311,7 @@ function renderProgress(){
   let done=0, touched=0;
   schema().decisions.forEach(d=>{touched+=c[d.name]; if(!pending.includes(d.name))done+=c[d.name];});
   $("counts").innerHTML=`<b>${touched}</b>/${n} reviewed &nbsp; `+
-    schema().decisions.filter(d=>c[d.name]>0||schema().decisions.length<=4)
-      .map(d=>`${esc(d.name)} <b>${c[d.name]}</b>`).join(" · ");
+    schema().decisions.map(d=>`${esc(d.name)} <b>${c[d.name]}</b>`).join(" · ");
   $("barfill").style.width=(n?100*done/n:0)+"%";
 }
 
@@ -294,8 +365,180 @@ function renderKv(val){
       Array.isArray(val[k])?val[k].join(", "):String(val[k]))}</span>`).join("")+"</div>";
 }
 
-function renderValue(f,val,m){
+function sidecar(name){
+  const s=S.state&&S.state.sidecars?S.state.sidecars[name]:null;
+  return s&&typeof s==="object"?s:{};
+}
+
+function pairCard(p){
+  const kind=p.kind||"pair";
+  const byStatus=String(p.left&&p.left.gold_status)!==String(p.right&&p.right.gold_status);
+  const byCategory=String(p.left&&p.left.category)!==String(p.right&&p.right.category);
+  const contrast=byStatus
+    ?"contrast: one side is annotated, the other has this category ruled absent"
+    :(byCategory?"contrast: two different gold categories":"contrast: same category and status");
+  const side=(s,cls)=>{
+    if(!s)return `<div class="side ${cls}">—</div>`;
+    const absent=String(s.gold_status)==="absent";
+    const labelCls=absent?"absent":(byCategory?"differs":"");
+    const status=absent?"gold: category marked ABSENT in this contract":"gold: annotated span";
+    const meta=[esc(s.contract_id||"?"),
+      s.span_index==null?"":`span #${esc(s.span_index)}`,
+      (s.start==null&&s.end==null)?"":`chars ${esc(s.start)}–${esc(s.end)}`].filter(Boolean).join(" · ");
+    const text=s.text==null?"":String(s.text);
+    const matched=s.match_text==null?"":String(s.match_text);
+    const expanded=s.context_expanded&&matched&&matched!==text;
+    return `<div class="side ${cls}">
+      <span class="side-label ${labelCls}">${esc(s.category||"—")}</span>
+      <div class="side-meta">${esc(status)}<br>${meta}</div>
+      <div class="side-text">${esc(text||"(no span text — category is absent here)")}</div>`+
+      (expanded?'<div class="side-ctx">matched window — the span was short, so the '+
+        'miner compared it with surrounding text: '+esc(matched)+"</div>":"")+"</div>";
+  };
+  return `<div class="pair">
+    <div class="pair-head">
+      <span class="pid">${esc(p.pair_id||"pair")}</span>
+      <span>${esc(kind)}</span>
+      <span>similarity ${esc(p.similarity==null?"—":Number(p.similarity).toFixed(3))}</span>
+      <span>${p.same_contract?"same contract":"different contracts"}</span>
+      <span style="flex:1"></span>
+      <span class="contrast">${esc(contrast)}</span>
+    </div>
+    <div class="pair-body">${side(p.left,"left")}<div class="vs">vs</div>${side(p.right,"right")}</div>
+  </div>`;
+}
+
+function renderEvidence(f,val){
+  const idx=sidecar((f.config&&f.config.index)||"pairs");
+  const items=Array.isArray(val)?val:(val==null||val===""?[]:[val]);
+  if(!items.length)return '<div class="body" style="color:var(--faint)">none</div>';
+  return '<div class="ev">'+items.map(it=>{
+    if(it&&typeof it==="object"&&(it.left||it.right))return pairCard(it);
+    const key=String(it);
+    if(idx[key])return pairCard(Object.assign({pair_id:key},idx[key]));
+    if(/^pair[-_]?\d+/i.test(key))
+      return `<div class="ev-cite missing">${esc(key)} — not in the pairs index`+
+        `${S.state.sidecar_paths&&S.state.sidecar_paths.pairs?" ("+esc(S.state.sidecar_paths.pairs)+")":" (none loaded)"}</div>`;
+    return `<div class="ev-cite">${esc(key)}</div>`;
+  }).join("")+"</div>";
+}
+
+function pct(x){return (100*Number(x)).toFixed(1)+"%";}
+function num(x){return Number(x).toLocaleString();}
+
+function fpRate(block){
+  if(!block||typeof block!=="object")return null;
+  if(block.rate!=null)return Number(block.rate);
+  if(block.n_applicable!=null&&block.n_units)return Number(block.n_applicable)/Number(block.n_units);
+  return null;
+}
+
+function renderDistribution(d){
+  if(!d||typeof d!=="object")return "";
+  const rows=Array.isArray(d.rows)?d.rows:[];
+  let html="";
+  if(rows.length){
+    const vals=rows.map(r=>{
+      const rate=fpRate(r);
+      return {key:r.key==null?"—":String(r.key),rate:rate,
+        n:r.n_applicable==null?null:Number(r.n_applicable),
+        of:r.n_units==null?null:Number(r.n_units)};
+    });
+    const max=Math.max(...vals.map(v=>v.rate==null?0:v.rate),0.0001);
+    html+=`<div class="fp-sec"><h4>distribution${d.by?" by "+esc(d.by):""}</h4><div class="dist">`+
+      vals.sort((a,b)=>(b.rate||0)-(a.rate||0)).map(v=>{
+        const w=v.rate==null?0:100*v.rate/max;
+        const right=[v.rate==null?"":pct(v.rate),
+          (v.n==null?"":(v.of==null?num(v.n):num(v.n)+"/"+num(v.of)))].filter(Boolean).join(" · ");
+        return `<div class="row"><div class="key" title="${esc(v.key)}">${esc(v.key)}</div>
+          <div class="track"><div class="fill" style="width:${w.toFixed(1)}%"></div></div>
+          <div class="val">${esc(right)}</div></div>`;
+      }).join("")+"</div></div>";
+  }
+  const c=d.concentration;
+  if(c&&typeof c==="object"){
+    const chips=Object.keys(c).map(k=>
+      `<span class="chip"><span style="color:var(--faint)">${esc(k)}</span> ${esc(c[k])}</span>`).join("");
+    html+=`<div class="fp-sec"><h4>concentration</h4><div class="chips">${chips}</div></div>`;
+  }
+  return html;
+}
+
+function renderFootprint(f,val,r){
+  const idxName=(f.config&&f.config.index)||"footprint";
+  const doc=sidecar(idxName);
+  const table=(doc&&doc.principles&&typeof doc.principles==="object")?doc.principles:{};
+  const fp=(val&&typeof val==="object")?val:table[r.record_id];
+  const helpId="help-"+idxName;
+  const helpBtn=f.help?`<button class="helpbtn" data-help="${helpId}">what is this?</button>`:"";
+  const helpBox=f.help?`<div class="helptext" id="${helpId}">${esc(f.help)}</div>`:"";
+  if(!fp||typeof fp!=="object"){
+    const path=S.state.sidecar_paths?S.state.sidecar_paths.footprint:null;
+    return '<div class="fp empty"><div class="fp-head"><h3>empirical footprint</h3>'+
+      helpBtn+"</div>"+helpBox+
+      '<div class="fp-note">none measured for <b>'+esc(r.record_id)+
+      "</b> yet — this record is being judged on the proposer's argument alone. "+
+      (path?"footprint file: "+esc(path):"no footprint file loaded (--footprint)")+
+      "</div></div>";
+  }
+  const status=String(fp.status||"ok");
+  const prov=[doc.split?"split: "+doc.split:"",
+    doc.population&&doc.population.n_units!=null
+      ?num(doc.population.n_units)+" "+(doc.population.unit||"units"):"",
+    doc.population&&doc.population.n_contracts!=null?num(doc.population.n_contracts)+" contracts":"",
+    doc.generated?"generated "+doc.generated:""].filter(Boolean).join(" · ");
+  const stats=[];
+  const ap=fp.applicability, rate=fpRate(ap);
+  if(rate!=null){
+    const flag=rate<=0.02||rate>=0.98;
+    stats.push(`<div class="stat${flag?" flag":""}"><div class="num">${esc(pct(rate))}</div>
+      <div class="lbl">applicability</div><div class="sub">${
+        ap.n_applicable!=null?esc(num(ap.n_applicable)+(ap.n_units!=null?" of "+num(ap.n_units):"")):""}${
+        flag?"<br>fires on almost "+(rate<=0.02?"nothing":"everything"):""}</div></div>`);
+  }
+  const di=fp.discrimination;
+  if(di&&typeof di==="object"){
+    const p=di.pass_rate_positive, n=di.pass_rate_negative;
+    let lift=di.lift;
+    if(lift==null&&p!=null&&n!=null)lift=Number(p)-Number(n);
+    const sub=[p!=null?"gold "+pct(p):"",n!=null?"non-gold "+pct(n):"",
+      di.n_positive!=null?"n+ "+num(di.n_positive):"",
+      di.n_negative!=null?"n− "+num(di.n_negative):""].filter(Boolean).join(" · ");
+    const flag=lift!=null&&Math.abs(Number(lift))<0.05;
+    stats.push(`<div class="stat${flag?" flag":""}"><div class="num">${
+      lift==null?"—":esc((Number(lift)>=0?"+":"")+Number(lift).toFixed(2))}</div>
+      <div class="lbl">discrimination</div><div class="sub">${esc(di.metric||"")}${
+        di.metric?"<br>":""}${sub}${flag?"<br>separates nothing":""}</div></div>`);
+  }
+  const conc=fp.distribution&&fp.distribution.concentration;
+  if(conc&&conc.n_contracts_with_any!=null){
+    stats.push(`<div class="stat"><div class="num">${esc(num(conc.n_contracts_with_any))}${
+      conc.n_contracts!=null?"<span style=\"font-size:14px;color:var(--faint)\">/"+esc(num(conc.n_contracts))+"</span>":""}</div>
+      <div class="lbl">contracts touched</div><div class="sub">${
+        conc.median_per_contract!=null?"median "+esc(conc.median_per_contract)+" per contract":""}</div></div>`);
+  }
+  const known=new Set(["status","note","applicability","distribution","discrimination","examples"]);
+  const extra=Object.keys(fp).filter(k=>!known.has(k));
+  return `<div class="fp"><div class="fp-head"><h3>empirical footprint</h3>
+    ${status!=="ok"?`<span class="pill t-bad">${esc(status)}</span>`:""}
+    <span class="prov">${esc(prov)}</span><span style="flex:1"></span>${helpBtn}</div>${helpBox}`+
+    (stats.length?`<div class="fp-stats">${stats.join("")}</div>`
+      :`<div class="fp-note">footprint present but carries no measurements.</div>`)+
+    renderDistribution(fp.distribution)+
+    (Array.isArray(fp.examples)&&fp.examples.length
+      ? `<div class="fp-sec"><h4>examples</h4>`+
+        renderRows({config:{columns:[...new Set(fp.examples.flatMap(o=>Object.keys(o||{})))]}},fp.examples)+
+        "</div>" : "")+
+    (fp.note?`<div class="fp-note">${esc(fp.note)}</div>`:"")+
+    (extra.length?`<div class="fp-sec"><h4>other keys</h4><div class="body" style="font-size:12px">${
+      esc(JSON.stringify(Object.fromEntries(extra.map(k=>[k,fp[k]])),null,1))}</div></div>`:"")+
+    "</div>";
+}
+
+function renderValue(f,val,m,r){
   if(f.kind==="span")return renderSpan(f,m);
+  if(f.kind==="footprint")return renderFootprint(f,val,r);
+  if(f.kind==="evidence")return renderEvidence(f,val);
   if(f.kind==="rows")return renderRows(f,val);
   if(f.kind==="kv")return renderKv(val);
   if(Array.isArray(val))
@@ -325,11 +568,16 @@ function renderRecord(){
     return `<div class="kv${ed?" edited":""}"><span>${esc(f.label)}</span> ${esc(flat(dotted(m,f.key)))}`+
       (ed?` <span class="wasin">was ${esc(flat(dotted(src,f.key)))}</span>`:"")+"</div>";
   }).join("")+"</div>";
+  html+=fieldsBySlot("feature").map(f=>renderValue(f,dotted(m,f.key),m,r)).join("");
   const cards=fieldsBySlot("body").map(f=>{
     const val=dotted(m,f.key);
     const ed=editedKeys.includes(f.key)?" edited":"";
-    const wide=(f.kind==="rows"||f.kind==="span")?" wide":"";
-    return `<div class="card${ed}${wide}"><h3>${esc(f.label)}</h3>${renderValue(f,val,m)}${was(f.key)}`+
+    const wide=(f.kind==="rows"||f.kind==="span"||f.kind==="evidence")?" wide":"";
+    const hid="help-"+f.key.replace(/[^a-z0-9]/gi,"_");
+    const helpBtn=f.help?`<button class="helpbtn" data-help="${hid}">what is this?</button>`:"";
+    const helpBox=f.help?`<div class="helptext" id="${hid}">${esc(f.help)}</div>`:"";
+    return `<div class="card${ed}${wide}"><h3>${esc(f.label)}${helpBtn}</h3>${helpBox}`+
+      `${renderValue(f,val,m,r)}${was(f.key)}`+
       (f.hint?`<div class="hint">${esc(f.hint)}</div>`:"")+"</div>";
   });
   html+='<div class="grid">'+cards.join("")+"</div>";
@@ -351,6 +599,7 @@ function renderRecord(){
       `${esc(efLine)}</div></div>`;
   }
   $("record").innerHTML=html;
+  bindHelp();
   $("record").scrollTop=0;
   renderDecisions();
   renderEditor();
@@ -358,13 +607,40 @@ function renderRecord(){
   validate();
 }
 
+function openHelp(){
+  try{return new Set(JSON.parse(localStorage.getItem("openHelp")||"[]"));}
+  catch(e){return new Set();}
+}
+function bindHelp(){
+  const open=openHelp();
+  [...document.querySelectorAll(".helpbtn")].forEach(b=>{
+    const box=$(b.dataset.help);
+    const on=open.has(b.dataset.help);
+    if(box)box.className="helptext"+(on?" on":"");
+    b.className="helpbtn"+(on?" on":"");
+    b.onclick=()=>{
+      const set=openHelp();
+      if(set.has(b.dataset.help))set.delete(b.dataset.help); else set.add(b.dataset.help);
+      localStorage.setItem("openHelp",JSON.stringify([...set]));
+      bindHelp();
+    };
+  });
+}
+
 function decisionSpec(name){return schema().decisions.find(d=>d.name===name)||null;}
 function tone(name){const d=decisionSpec(name);return d?"t-"+d.tone:"t-neutral";}
 
+function rationaleFirst(){return $("rationaleFirst").checked;}
+function decisionsLocked(){
+  return rationaleFirst()&&$("rationale").value.trim().length===0;
+}
+
 function renderDecisions(){
+  const locked=decisionsLocked();
   $("decisions").innerHTML=schema().decisions.map(d=>
     `<button class="dbtn ${tone(d.name)}${S.decision===d.name?" on":""}" data-d="${esc(d.name)}"`+
-    (d.hint?` title="${esc(d.hint)}"`:"")+
+    (locked?" disabled":"")+
+    (d.hint?` title="${esc(d.name)} — ${esc(d.hint)}"`:` title="${esc(d.name)}"`)+
     `>${esc(d.name)}<span class="k">${esc(d.hotkey)}</span></button>`
   ).join("");
   [...document.querySelectorAll(".dbtn")].forEach(b=>b.onclick=()=>setDecision(b.dataset.d));
@@ -400,6 +676,7 @@ function renderEditor(){
 }
 
 function setDecision(d){
+  if(decisionsLocked())return;
   S.decision=(S.decision===d)?null:d;
   const ek=schema().edit_decision;
   if(ek&&S.decision===ek&&Object.keys(S.edits).length===0){
@@ -417,7 +694,8 @@ function validate(){
   const ok=!!S.decision&&has&&editChanged;
   $("saveBtn").disabled=!ok;
   let msg="";
-  if(!S.decision)msg="pick a decision";
+  if(decisionsLocked())msg="rationale first — write why, then pick a decision";
+  else if(!S.decision)msg="pick a decision";
   else if(!has)msg='<span class="warn">rationale required — a bare accept tells the writeup nothing</span>';
   else if(!editChanged)msg='<span class="warn">edit selected but nothing changed</span>';
   else msg="ready — ctrl+enter";
@@ -522,7 +800,16 @@ document.addEventListener("keydown",(ev)=>{
   const fn=nav[ev.key];
   if(fn){ev.preventDefault();fn();}
 });
-$("rationale").addEventListener("input",()=>{S.dirty=true;queueDraft();validate();});
+$("rationale").addEventListener("input",()=>{
+  S.dirty=true;queueDraft();
+  if(rationaleFirst())renderDecisions();
+  validate();
+});
+$("rationaleFirst").checked=localStorage.getItem("rationaleFirst")==="1";
+$("rationaleFirst").onchange=()=>{
+  localStorage.setItem("rationaleFirst",$("rationaleFirst").checked?"1":"0");
+  renderDecisions(); validate();
+};
 $("saveBtn").onclick=save;
 $("exportBtn").onclick=doExport;
 $("fDecision").onchange=()=>{S.sel=0;renderList();renderRecord();};

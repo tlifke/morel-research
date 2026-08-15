@@ -1,0 +1,70 @@
+schema_version: 1
+generated: '2026-08-16'
+generator:
+  script: studies/008-principled-extraction-cuad/scripts/footprint.py
+  version: '0.1'
+split: dev
+population:
+  unit: gold span
+  n_units: 732
+  n_contracts: 61
+principles:
+  sp01:
+    status: ok
+    applicability:
+      n_applicable: 143
+      n_units: 732
+      rate: 0.1954
+    distribution:
+      by: category
+      rows:
+      - key: Governing Law
+        n_applicable: 40
+        n_units: 55
+        rate: 0.7273
+      - key: Revenue/Profit Sharing
+        n_applicable: 61
+        n_units: 128
+        rate: 0.4766
+      - key: Agreement Date
+        n_applicable: 42
+        n_units: 549
+        rate: 0.0765
+      concentration:
+        n_contracts_with_any: 48
+        n_contracts: 61
+        max_per_contract: 12
+        median_per_contract: 2
+    discrimination:
+      metric: pass rate on gold spans vs sampled distractors
+      pass_rate_positive: 0.86
+      pass_rate_negative: 0.21
+      lift: 0.65
+      n_positive: 143
+      n_negative: 401
+    examples:
+    - verdict: applies
+      contract_id: SAMPLECORP_2019-EX-10.1-LICENSE AGREEMENT
+      category: Governing Law
+      text: This Agreement shall be governed by the laws of the State of New York.
+      note: fires, and gold agrees
+    - verdict: violates
+      contract_id: OTHERCORP_2020-EX-10.4-SUPPLY AGREEMENT
+      category: Governing Law
+      text: governed by the laws of Delaware
+      note: gold span is a fragment, so the sentence test fails
+    note: Applies mostly to the three yes/no categories; near-inert on date categories.
+  sp02:
+    status: not_implementable
+    note: The sketch needs a per-clause discourse parse that we do not have offsets for.
+  sp03:
+    applicability:
+      n_applicable: 728
+      n_units: 732
+    discrimination:
+      metric: pass rate on gold spans vs sampled distractors
+      pass_rate_positive: 0.99
+      pass_rate_negative: 0.98
+      n_positive: 728
+      n_negative: 401
+    note: Fires on nearly everything and separates nothing.

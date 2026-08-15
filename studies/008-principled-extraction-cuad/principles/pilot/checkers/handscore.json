@@ -1,0 +1,280 @@
+{
+  "meta": {
+    "scored_by": "claude-opus-5",
+    "assistant": "Claude Code",
+    "date": "2026-08-15",
+    "split": "dev",
+    "unit": "every Revenue/Profit Sharing gold span in dev (n=24)",
+    "question_g05": "Reading the span alone, does it show that the amount owed varies with the counterparty's revenue, profit, sales, margin or units sold (or is equity consideration under the Handbook's stated CUAD extension)? This is the judgement the g05 compliance predicate is a lexical proxy for.\n",
+    "question_g06": "Reading the span alone, is it machinery that merely administers a share (reporting, timing, objection, audit, dispute) rather than showing an entitlement exists?\n",
+    "caveat": "One rater, not a lawyer. Every span here is CUAD gold for Revenue/Profit Sharing, so a hand judgement of \"no\" is a disagreement with gold, not only with the checker.\n"
+  },
+  "g05": {
+    "gold_span_agreement": {
+      "as_written": {
+        "n": 24,
+        "agreement": 0.6667,
+        "false_fail": 8,
+        "false_fail_rate": 0.3333,
+        "false_pass": 0
+      },
+      "repaired": {
+        "n": 24,
+        "agreement": 0.875,
+        "false_fail": 3,
+        "false_fail_rate": 0.125,
+        "false_pass": 0
+      },
+      "as_written_passes_via_spurious_equity_match": 4,
+      "g06_admin_flag_on_gold_spans": {
+        "checker": 0,
+        "hand": 1
+      }
+    },
+    "negative_sentence_scan": {
+      "n_rps_absent_contracts": 27,
+      "n_sentences_scanned": 3556,
+      "as_written_passing_sentences": 140,
+      "as_written_by_branch": {
+        "per_unit": 4,
+        "equity": 136
+      },
+      "repaired_passing_sentences": 65,
+      "repaired_by_branch": {
+        "per_unit": 4,
+        "equity": 39,
+        "revenue_entitlement": 6,
+        "percentage_of_revenue": 15,
+        "based_on_revenue": 1
+      },
+      "reading": "every sentence here sits in a contract CUAD rules Revenue/Profit Sharing absent, so a passing sentence is a candidate false pass"
+    },
+    "per_span": [
+      {
+        "contract": "ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": "percentage_of_revenue",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "BLUEHILLSBANCORP,INC_05_20_2014-EX-1.1-AGENCY AGREEMENT",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": "equity",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "BLUEHILLSBANCORP,INC_05_20_2014-EX-1.1-AGENCY AGREEMENT",
+        "index": 1,
+        "hand_g05_responsive": true,
+        "as_written_signal": "equity",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "CHINARECYCLINGENERGYCORP_11_14_2013-EX-10.6-Cooperation Agreement",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": null,
+        "repaired_signal": "based_on_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "CHINARECYCLINGENERGYCORP_11_14_2013-EX-10.6-Cooperation Agreement",
+        "index": 1,
+        "hand_g05_responsive": true,
+        "as_written_signal": "equity",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "CORIOINC_07_20_2000-EX-10.5-LICENSE AND HOSTING AGREEMENT",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": "equity",
+        "repaired_signal": "revenue_entitlement",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "DOMINIADVISORTRUST_02_18_2005-EX-99.(H)(2)-SPONSORSHIP AGREEMENT",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": null,
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "GOCALLINC_03_30_2000-EX-10.7-Promotion Agreement",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": "percentage_of_revenue",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": "percentage_of_revenue",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT",
+        "index": 1,
+        "hand_g05_responsive": true,
+        "as_written_signal": null,
+        "repaired_signal": "based_on_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT",
+        "index": 2,
+        "hand_g05_responsive": false,
+        "as_written_signal": null,
+        "repaired_signal": null,
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": true
+      },
+      {
+        "contract": "INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT",
+        "index": 3,
+        "hand_g05_responsive": true,
+        "as_written_signal": "percentage_of_revenue",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT",
+        "index": 4,
+        "hand_g05_responsive": true,
+        "as_written_signal": "percentage_of_revenue",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT",
+        "index": 5,
+        "hand_g05_responsive": true,
+        "as_written_signal": "percentage_of_revenue",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT",
+        "index": 6,
+        "hand_g05_responsive": true,
+        "as_written_signal": null,
+        "repaired_signal": null,
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "KINGPHARMACEUTICALSINC_08_09_2006-EX-10.1-PROMOTION AGREEMENT",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": "percentage_of_revenue",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "KINGPHARMACEUTICALSINC_08_09_2006-EX-10.1-PROMOTION AGREEMENT",
+        "index": 1,
+        "hand_g05_responsive": true,
+        "as_written_signal": null,
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": null,
+        "repaired_signal": null,
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "NEXSTARFINANCEHOLDINGSINC_03_27_2002-EX-10.26-OUTSOURCING AGREEMENT",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": null,
+        "repaired_signal": "revenue_entitlement",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "ORBSATCORP_08_17_2007-EX-7.3-STRATEGIC ALLIANCE AGREEMENT",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": "equity",
+        "repaired_signal": "equity",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "TURNKEYCAPITAL,INC_07_20_2017-EX-1.1-Strategic Alliance Agreement",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": null,
+        "repaired_signal": null,
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "TomOnlineInc_20060501_20-F_EX-4.46_749700_EX-4.46_Co-Branding Agreement",
+        "index": 0,
+        "hand_g05_responsive": true,
+        "as_written_signal": "percentage_of_revenue",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "TomOnlineInc_20060501_20-F_EX-4.46_749700_EX-4.46_Co-Branding Agreement",
+        "index": 1,
+        "hand_g05_responsive": true,
+        "as_written_signal": "percentage_of_revenue",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      },
+      {
+        "contract": "TomOnlineInc_20060501_20-F_EX-4.46_749700_EX-4.46_Co-Branding Agreement",
+        "index": 2,
+        "hand_g05_responsive": true,
+        "as_written_signal": "percentage_of_revenue",
+        "repaired_signal": "percentage_of_revenue",
+        "as_written_g06_admin_only": false,
+        "hand_g06_admin_only": false
+      }
+    ]
+  },
+  "g06": {
+    "trigger_agreement": {
+      "n_trigger_sentences": 6,
+      "n_hand_labelled": 6,
+      "n_really_administration": 4,
+      "trigger_precision": 0.6667,
+      "n_trigger_sentences_inside_gold_rps_spans": 0
+    }
+  }
+}

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from . import record_types, yaml_io
+from .sidecars import Sidecars
 from .store import Store
 
 
@@ -16,6 +17,8 @@ class Config:
     record_type: str
     reviewer: str
     export_path: Path
+    pairs_path: Path | None = None
+    footprint_path: Path | None = None
 
     @property
     def queue_id(self) -> str:
@@ -26,6 +29,7 @@ class Service:
     def __init__(self, config: Config):
         self.config = config
         self.rt = record_types.get(config.record_type)
+        self.sidecars = Sidecars(config.pairs_path, config.footprint_path)
         self.store = Store(config.db)
         self.store.upsert_queue(
             config.queue_id, self.rt.name, str(config.source.resolve())
@@ -58,6 +62,8 @@ class Service:
             "export_path": str(self.config.export_path),
             "reviewer": self.config.reviewer,
             "schema": self.rt.as_json(),
+            "sidecars": self.sidecars.payload(),
+            "sidecar_paths": self.sidecars.paths(),
             "records": rows,
         }
 
@@ -147,7 +153,8 @@ class Service:
         target.parent.mkdir(parents=True, exist_ok=True)
         records = self.export_records()
         target.write_text(yaml_io.dump_yaml(records, self.rt), encoding="utf-8")
-        counts: dict[str, int] = {}
+        counts: dict[str, int] = {name: 0 for name in self.rt.decision_names()}
+        counts["unreviewed"] = 0
         for record in records:
             block = record.get(self.rt.review_key) or {}
             key = block.get("decision") or "unreviewed"

@@ -12,6 +12,7 @@ class Field:
     editable: bool = False
     slot: str = "body"
     hint: str = ""
+    help: str = ""
     config: dict[str, Any] = field(default_factory=dict)
 
 
@@ -72,20 +73,52 @@ PRINCIPLE = RecordType(
     headline_key="statement",
     review_key="review",
     decisions=(
-        Decision("accept", "a", "ok"),
-        Decision("edit", "e", "warn"),
-        Decision("reject", "r", "bad"),
-        Decision("defer", "d", "info"),
+        Decision("accept", "a", "ok", "the rule is real, and the checker sketch could be built"),
+        Decision("edit", "e", "warn", "the rule or its checker needs changing before it is usable"),
+        Decision("reject", "r", "bad", "the rule is wrong, or is not a rule about extraction"),
+        Decision("defer", "d", "info",
+                 "understood, but not rulable yet — needs more evidence, a footprint, "
+                 "or a decision made elsewhere"),
+        Decision("unclear", "x", "alt",
+                 "NOT defer. The statement itself is not comprehensible: you cannot tell "
+                 "what it is asserting, so there is nothing to weigh evidence against. "
+                 "Say in the rationale which part is unreadable"),
     ),
+    pending_decisions=("defer", "unclear"),
     edit_decision="edit",
     list_keys=("id", "provenance"),
     fields=(
         Field("statement", "Statement", "longtext", editable=True, slot="headline",
               hint="The rule, one sentence."),
+        Field("footprint", "Empirical footprint", "footprint", slot="feature",
+              config={"index": "footprint"},
+              hint="Measured, not proposed: the checker sketch implemented and run over "
+                   "the dev split.",
+              help="Someone implemented this principle's checker and ran it. "
+                   "APPLICABILITY is how often it fires at all — near 0% means it is "
+                   "untestable in practice, near 100% means it fires on everything and "
+                   "separates nothing. DISTRIBUTION shows whether that firing is spread "
+                   "across categories and contracts or concentrated in one corner. "
+                   "DISCRIMINATION is whether it actually splits gold-conforming from "
+                   "non-conforming material. These numbers outrank the proposer's "
+                   "argument: a principle that reads well and measures flat is not a "
+                   "principle. Absent means round 2 has not measured this one yet."),
         Field("trigger_guidance", "Trigger guidance", "longtext", editable=True, slot="body",
               hint="When to consider it."),
         Field("checker_sketch", "Checker sketch", "longtext", editable=True, slot="body",
-              hint="How gold applicability would be computed. No feasible checker, no scored set."),
+              hint="How gold applicability would be computed. No feasible checker, no scored set.",
+              help="A checker sketch is a proposed PROGRAMMATIC test — code someone "
+                   "could actually write — that decides, for a given contract, whether "
+                   "this principle applies and whether a prediction obeys it. It is "
+                   "computed from the contract text plus its CUAD gold annotations, with "
+                   "no human judgement at scoring time. You are judging exactly two "
+                   "things. (1) IMPLEMENTABLE: could this be written against the "
+                   "contract text, gold spans and character offsets we already have, "
+                   "without new annotation or a second model? (2) FAITHFUL: does it test "
+                   "the statement above — no wider, no narrower? A sound rule with a "
+                   "broken checker is an EDIT of the sketch, not a reject of the rule; "
+                   "a checker that quietly tests something easier than the statement is "
+                   "the failure mode to watch for."),
         Field("type", "Type", "badge", editable=True, slot="meta"),
         Field("scope", "Scope", "list", editable=True, slot="meta",
               hint="Target ids it can touch; empty = global."),
@@ -93,8 +126,17 @@ PRINCIPLE = RecordType(
         Field("proposer.model", "Proposer model", "text", slot="meta"),
         Field("proposer.prompt_version", "Prompt version", "text", slot="meta"),
         Field("proposer.batch_id", "Batch", "text", slot="meta"),
-        Field("evidence", "Evidence", "list", slot="body",
-              hint="Pair ids this was read off."),
+        Field("evidence", "Evidence", "evidence", slot="body",
+              config={"index": "pairs"},
+              hint="What this was read off. Mined pair ids resolve to the two spans "
+                   "in full; anything else is a citation, shown as written.",
+              help="A contrastive pair is two gold spans that look alike to the miner "
+                   "but carry different CUAD labels. The CONTRAST is the evidence: the "
+                   "question is whether the statement above is what actually separates "
+                   "the left side from the right side, or whether something else does "
+                   "and the rule is an after-the-fact story. Similarity is the miner's "
+                   "score, not a confidence. Guideline-provenance principles cite the "
+                   "Atticus Handbook instead and have no pairs to open."),
     ),
     facets=(
         Facet("provenance", "Provenance"),

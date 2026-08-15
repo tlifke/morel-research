@@ -8,7 +8,7 @@ Two record types ship today:
 
 | `--record-type` | records | decisions | used by |
 |---|---|---|---|
-| `principle` (default) | candidate `Principle` records | accept / edit / reject / defer | inv 002 |
+| `principle` (default) | candidate `Principle` records | accept / edit / reject / defer / unclear | inv 002 |
 | `gold_audit` | one CUAD gold span | the gold-defect taxonomy + defer | D-15 noise floor |
 
 The record schema is a declaration, not a hardcode — see "Reusing this app".
@@ -32,7 +32,15 @@ Options:
 | `--export` | `<source>.reviewed.yaml` next to the source | export target |
 | `--port` | `8823` | |
 | `--record-type` | `principle` | key in `review_app/record_types.py` |
+| `--pairs` | auto-discovered next to the source | mined contrastive pairs, for inline evidence |
+| `--footprint` | auto-discovered next to the source | empirical footprint artifact |
 | `--no-browser` | | do not auto-open a tab |
+
+Both sidecar files are optional and are re-read whenever their mtime changes, so
+a footprint that lands mid-session appears on the next record switch without a
+restart. Auto-discovery looks in the source file's directory for
+`mined_pairs.jsonl` / `pairs.jsonl`, and for `footprint.{yaml,yml,json}`,
+`footprints.*`, `principle_footprint*.*`.
 
 Nothing leaves the machine: no auth, no CDN, no fonts, no outbound requests.
 The whole UI is one inlined HTML file.
@@ -68,7 +76,25 @@ is still shown (in an "other fields" card) and still exported.
   A legacy bare-string `edited_from` in an input file is accepted and coerced
   to `{statement: <value>}` on import.
 - **reject** keeps the record in the file. Nothing is ever deleted.
-- **defer** is a first-class decision (`d`, then a one-line reason).
+- **defer** is a first-class decision (`d`, then a one-line reason): *the
+  statement is understood, but it is not rulable yet* — more evidence, a
+  footprint, or a decision made elsewhere is missing.
+- **unclear** (`x`) is a separate first-class decision, added after round 1
+  produced a record Tyler could only describe as "I have no idea what this
+  means". It means *the statement itself is not comprehensible*, so there is
+  nothing for evidence to bear on. That is a defect in the proposer, not a gap
+  in the data, and the two must not be pooled: a high defer rate says the
+  evidence pipeline is thin, a high unclear rate says the proposer prompt emits
+  unreadable rules. `unclear` requires a rationale like every other decision,
+  and the rationale should name the unreadable part.
+
+  Mechanically it is kept separate everywhere:
+  `pending_decisions` lists `defer` and `unclear` as two independent names (that
+  tuple only governs the progress bar, which counts neither as resolved), the
+  header breakdown prints every decision with its own count, and
+  `/api/export` returns a `counts` map seeded with *every* declared decision, so
+  `unclear` and `reject` appear as explicit `0` rather than being absent and
+  read as unmeasured. `tests/test_roundtrip.py` pins that separation.
 - `reviewer` and `date` are stamped automatically.
 - Any already-reviewed record can be reopened and changed; every save is also
   appended to a `review_history` table, so decision churn is recoverable.
@@ -76,13 +102,172 @@ is still shown (in an "other fields" card) and still exported.
 Keyboard: `j`/`k` prev/next, `u` next unreviewed, `i` focus rationale,
 `ctrl+enter` save, `ctrl+e` export, `/` search, `esc` unfocus. Decision
 hotkeys come from the record type and are listed in the sidebar
-(`a`/`e`/`r`/`d` for principles; `c`/`m`/`n`/`s`/`b`/`x`/`o`/`d` for the gold
-audit).
+(`a`/`e`/`r`/`d`/`x` for principles; `c`/`m`/`n`/`s`/`b`/`x`/`o`/`d` for the
+gold audit).
+
+### Inline evidence
+
+Round 1 rendered `evidence` as a chip reading `pair-0014` and nothing else, so
+the evidence was unreadable without leaving the app. The `evidence` field kind
+now resolves each cited id against the pairs sidecar and renders the pair in
+place: a header line (`pair_id`, `kind`, similarity, same/different contract,
+and a plain-English statement of what the contrast *is*), then the two sides
+side by side. Each side shows its gold category as a badge, whether it is an
+annotated span or a contract where the category is ruled absent, the contract
+id and character offsets, and the span text. The differing label is what is
+made prominent, because the contrast is the entire evidential content of a pair:
+
+| `kind` | what differs | how it renders |
+|---|---|---|
+| `cross_label` | the gold **category** | both category badges outlined in accent |
+| `present_absent` | the gold **status** | the absent side's badge is red and reads `category marked ABSENT in this contract` |
+
+Where the miner expanded a short span before matching (`context_expanded`), the
+matched window is shown underneath the span text and labelled as such, so a
+match driven by surrounding boilerplate is visible rather than hidden.
+
+Evidence entries that are not pair ids — the Atticus Handbook citations carried
+by the `atticus_guidelines` principles — render as plain citations, unchanged.
+A `pair-NNNN` that does not resolve renders as a red "not in the pairs index"
+line naming the file that was searched, rather than silently disappearing.
+
+Pairs file format: JSONL (or a JSON/YAML list, or a mapping keyed by id), one
+object per line, indexed on `pair_id`. Each object carries `kind`, `similarity`,
+`same_contract`, and `left`/`right` blocks with `contract_id`, `category`,
+`span_index`, `start`, `end`, `text`, `match_text`, `context_expanded`,
+`gold_status`. Everything is optional; missing keys degrade to `—`.
+
+### Field help
+
+Round 1 also produced "I don't know what a checker sketch is or what I'm being
+asked to judge about it". A `Field` may now declare `help`: longer text behind a
+`what is this?` button next to the field label, open/closed state persisted in
+`localStorage` so it can be read once and dismissed for the rest of the session.
+`checker_sketch`, `evidence` and `footprint` carry one. The checker-sketch help
+states what a sketch *is* (a programmatic test computed from the contract plus
+its gold annotations, no human judgement at scoring time) and names the only two
+questions being asked of it — is it implementable against the offsets we already
+have, and is it faithful to the statement — plus the rule that a sound rule with
+a broken checker is an `edit`, not a `reject`.
+
+### Empirical footprint
+
+The footprint is the round-2 primary evidence: measurements from actually
+implementing a principle's checker and running it over a split. It renders as a
+full-width, visually weighted block directly under the statement and above every
+other card — headline numbers as large stat tiles, then a distribution bar
+chart, then examples. Applicability at or beyond 2%/98% and an absolute
+discrimination lift under 0.05 are flagged amber in place, because "fires on
+nothing" and "fires on everything" are the two ways a principle can read well
+and measure worthless.
+
+It is **not** a record field: it is read from a sidecar keyed by principle id,
+so the artifact can be regenerated without touching the candidates file. If a
+record happens to carry its own `footprint` key, that wins. When neither exists
+the block still renders, greyed, saying which principle has no measurement and
+which file was searched — absence is stated, not hidden.
+
+**The contract.** YAML or JSON, same shape either way:
+
+```yaml
+schema_version: 1
+generated: '2026-08-16'          # optional
+generator: {script: ..., version: ...}   # optional, free-form
+split: dev                        # optional; population these numbers cover
+population:                       # optional
+  unit: gold span                 # what one unit is
+  n_units: 732
+  n_contracts: 61
+principles:                       # required key; maps principle id -> footprint
+  d05:
+    status: ok                    # ok | not_implementable | error   (default ok)
+    note: free text, one or two lines          # optional
+    applicability:                # optional
+      n_applicable: 143
+      n_units: 732
+      rate: 0.1954                # optional; derived from the counts if absent
+    distribution:                 # optional
+      by: category                # label for what the rows are keyed on
+      rows:
+        - {key: Governing Law, n_applicable: 40, n_units: 55, rate: 0.7273}
+      concentration:              # optional; any scalar keys, rendered as chips
+        n_contracts_with_any: 48
+        n_contracts: 61
+        max_per_contract: 12
+        median_per_contract: 2
+    discrimination:               # optional
+      metric: pass rate on gold spans vs sampled distractors
+      pass_rate_positive: 0.86
+      pass_rate_negative: 0.21
+      lift: 0.65                  # optional; derived as positive - negative
+      n_positive: 143
+      n_negative: 401
+    examples:                     # optional; any keys, rendered as a table
+      - {verdict: applies, contract_id: ..., category: ..., text: ..., note: ...}
+```
+
+Rules the producer can rely on:
+
+- Every key except the top-level `principles` map is optional, and every
+  principle entry may carry any subset of the three blocks. A principle that
+  could not be implemented is a legitimate footprint: `{status:
+  not_implementable, note: ...}` renders as a red status pill plus the note.
+- Rates are fractions in `[0, 1]`, not percentages; the UI formats them.
+- Ids must match the candidates file exactly. Unmatched ids are ignored
+  silently; principles with no entry render the "none measured" block.
+- Unrecognised keys inside a principle entry are dumped verbatim under
+  "other keys" rather than dropped, so an extra measurement is visible before
+  the renderer knows about it.
+- A top-level mapping of `id -> footprint` with no `principles:` wrapper is also
+  accepted and normalised on load.
+
+`fixtures/footprint.yaml` and `fixtures/mined_pairs.jsonl` are demo sidecars for
+`fixtures/candidates.sample.yaml`; they are auto-discovered when the app is
+launched with no source argument.
 
 Filters: decision state, plus one dropdown per declared facet (principles:
 provenance, type, proposer model; gold audit: category, split, stratum) and a free-text search. Header shows
 `n reviewed / n total` with an accept/edit/reject/defer breakdown; the bar
-tracks *resolved* records, so defers correctly read as not-done.
+tracks *resolved* records, so defers and unclears correctly read as not-done.
+
+### Accept-by-default
+
+Round 1 closed at 11 accept / 5 defer / 0 edit / 0 reject over 16 records. That
+is a rate worth watching but not one the tool should try to move: an interface
+that pushes toward rejection is as much a measurement error as one that pushes
+toward acceptance, and it corrupts the same number. Only direction-neutral
+changes are implemented.
+
+- **The decision breakdown always shows every decision, including zeros.**
+  It previously hid decisions with a count of 0 once a record type declared more
+  than four, which would have hidden exactly the `reject 0` that makes the
+  pattern visible. Showing all counts is symmetric — it surfaces a run of
+  rejects as readily as a run of accepts.
+- **`rationale first`** (header checkbox, **off by default**, remembered in
+  `localStorage`). With it on, the decision buttons stay disabled until a
+  rationale has been typed, so the reason is written before the verdict is
+  picked rather than justified after it. This is direction-neutral: it applies
+  identically to all five decisions and reorders two steps that were both
+  already mandatory. It is off by default because it is a real change to the
+  reviewer's flow and that is the reviewer's call, not the tool's.
+- **`unclear`** removes the pressure to accept a statement one cannot parse.
+
+Deliberately **not** implemented, as biased or unmeasurable:
+
+- *Surfacing the strongest counter-evidence next to the accept button.* Nothing
+  in the record marks any evidence as counter-evidence, so the app would have to
+  pick — and any heuristic for "strongest counter-evidence" is the tool arguing
+  for rejection with a mechanism the writeup cannot describe. Side-by-side pair
+  rendering already puts the disconfirming half of every contrast on screen; the
+  footprint block is the honest version of this, because it can contradict the
+  proposer's argument with a measurement rather than with emphasis.
+- *A running accept-rate readout framed as a rate.* The raw counts are already
+  in the header. Rendering them as "you have accepted 92%" adds no information
+  and converts a tally into a target — the reviewer starts managing the number.
+  Counts inform; a rate with an implied acceptable value nudges.
+- *Making accept harder than the other decisions* (extra confirmation, a longer
+  minimum rationale, cooling-off). Asymmetric friction manufactures the result
+  it is trying to detect.
 
 ## Export
 
@@ -355,15 +540,23 @@ adds one entry:
 - `fields` — label, kind, `editable`, `slot` (`headline | meta | body`), an
   optional hint, and an optional `config` for kind-specific keys. Kinds:
   `text`, `longtext`, `badge`, `list`, `kv` (a mapping as chips), `rows` (a
-  list of mappings as a table; `config.columns` picks the columns), and `span`
+  list of mappings as a table; `config.columns` picks the columns), `span`
   (a highlighted substring shown inside surrounding context named by
-  `config.before` / `config.after`)
+  `config.before` / `config.after`), `evidence` (a list of ids resolved against
+  a sidecar named by `config.index` and rendered as contrastive pairs), and
+  `footprint` (an external artifact keyed by record id, from the sidecar named
+  by `config.index`). Slots are `headline | meta | feature | body`; `feature`
+  renders full width between the meta chips and the body grid, and is where the
+  footprint lives. A field may also declare `help`, longer prose shown behind a
+  `what is this?` toggle next to its label
 - `facets` — which fields become filter dropdowns
 - `list_keys` — which fields label a row in the queue list
 - `decisions` — `Decision(name, hotkey, tone, hint)`; tone is one of
   `ok | warn | bad | info | alt | neutral` and drives colour
 - `pending_decisions` — decisions that count as touched but not resolved
-  (`defer`), which is what the progress bar and the aggregator exclude
+  (`defer`, `unclear`), which is what the progress bar excludes. It is a
+  progress-bar concern only; membership here never merges two decisions in any
+  count or export
 - `edit_decision` — the decision that opens the field editor, or `None` for a
   workflow where records are classified but never modified
 - `key_order` / `review_key_order` — export key order
@@ -386,7 +579,14 @@ uv run --project $APP pytest $APP/tests
 review round-trip and re-import, the rationale-required rule, `edited_from`
 per-field maps and the bare-string coercion, persistence across a restart,
 decision changes with history, and re-import preserving reviews while picking
-up new records.
+up new records. It also covers the round-2 additions: `unclear` surviving
+export and re-import as itself, export counts naming every declared decision
+including the zeros, the pairs sidecar indexing by `pair_id` and matching the
+ids the candidates actually cite, the footprint contract above (including the
+bare id-keyed variant and mtime-driven reload), graceful degradation when
+neither sidecar is present, and a re-import of the real round-1 file
+(`principles/pilot/candidates_pilot.reviewed.yaml`, read-only) reproducing all
+16 decisions byte-for-byte.
 
 `tests/test_gold_audit.py` covers the gold-audit type end to end against the
 fixture: schema conformance, lossless round-trip, defect decisions exported
@@ -398,6 +598,13 @@ artifact's counts, denominator, provenance and absence of any F1 quantity.
 
 - `fixtures/candidates.sample.yaml` — six fabricated CUAD-flavoured principles
   for demoing the app. Not real candidates; never copy into `principles/`.
+- `fixtures/mined_pairs.jsonl` — four fabricated contrastive pairs matching the
+  ids `candidates.sample.yaml` cites, so the inline-evidence renderer has
+  something to resolve. One cited id (`pair-0102`) is deliberately missing, to
+  exercise the unresolved case.
+- `fixtures/footprint.yaml` — a demo footprint covering three of the six sample
+  ids: one healthy, one `not_implementable`, one that fires on 99.5% of units
+  and discriminates nothing. The reference implementation of the contract above.
 - `fixtures/gold_audit.sample.yaml` — six real CUAD gold spans drawn by
   `scripts/sample_gold.py` (seed 20260815, n=6, context 400) so the
   `gold_audit` type has something to run against. Not the audit sample.

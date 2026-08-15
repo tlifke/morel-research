@@ -1,0 +1,1430 @@
+schema_version: 1
+generated: '2026-08-15'
+generator:
+  script: studies/008-principled-extraction-cuad/principles/pilot/checkers/run_footprints.py
+  version: '1.0'
+split: dev
+population:
+  unit: decision (contract x category)
+  n_units: 480
+  n_contracts: 40
+note: Applicability rate and denominator are over in-scope decisions (the categories a principle can govern);
+  the rate over all 480 decisions is repeated in each note.
+principles:
+  g01:
+    status: degenerate
+    note: 'Fires on 100% of yes/no extraction decisions and 0% of absences, so it carries no information
+      beyond the presence call itself. Rate over all 480 decisions: 22.5%. Applicability is computed from
+      gold presence; the discrimination number is therefore arithmetic, not evidence.'
+    applicability:
+      n_applicable: 108
+      n_units: 360
+      rate: 0.3
+    distribution:
+      by: category
+      rows:
+      - key: Anti-Assignment
+        n_applicable: 24
+        n_units: 40
+        rate: 0.6
+      - key: Cap On Liability
+        n_applicable: 21
+        n_units: 40
+        rate: 0.525
+      - key: License Grant
+        n_applicable: 16
+        n_units: 40
+        rate: 0.4
+      - key: Exclusivity
+        n_applicable: 13
+        n_units: 40
+        rate: 0.325
+      - key: Revenue/Profit Sharing
+        n_applicable: 13
+        n_units: 40
+        rate: 0.325
+      - key: Minimum Commitment
+        n_applicable: 12
+        n_units: 40
+        rate: 0.3
+      - key: Volume Restriction
+        n_applicable: 4
+        n_units: 40
+        rate: 0.1
+      - key: Most Favored Nation
+        n_applicable: 4
+        n_units: 40
+        rate: 0.1
+      - key: Source Code Escrow
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      concentration:
+        n_contracts_with_any: 33
+        n_contracts: 40
+        max_per_contract: 7
+        median_per_contract: 3
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.0
+      lift: 1.0
+      n_positive: 108
+      n_negative: 252
+    length_buckets:
+      <=4k:
+        n_decisions: 135
+        n_applicable: 17
+      4k-8k:
+        n_decisions: 99
+        n_applicable: 29
+      8k-16k:
+        n_decisions: 63
+        n_applicable: 30
+      '>16k':
+        n_decisions: 63
+        n_applicable: 32
+    stability:
+      value_categories_included:
+        n_applicable: 211
+        rate_all_decisions: 0.4396
+        delta_vs_as_written: 0.2146
+        in_scope_2x2:
+          applicable_present: 108
+          applicable_absent: 0
+          notapplicable_present: 0
+          notapplicable_absent: 252
+        phi: 1.0
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Anti-Assignment
+      gold_present: true
+      text: 'Detto may not assign any of its rights or delegate any of its obligations hereunder, whether
+        by operation of law or otherwise, without PivX''s prior written consent. Subject to the '
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Cap On Liability
+      gold_present: true
+      text: EXCEPT FOR PIVX'S OBLIGATIONS UNDER SECTION 4.2, IN NO EVENT SHALL PIVX'S OR ITS LICENSORS'
+        LIABILITY TO DETTO OR ANY THIRD PARTY ARISING OUT OF THIS AGREEMENT EXCEED THE TOTAL AMO
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: License Grant
+      gold_present: true
+      text: Subject to the terms and conditions of this Agreement, PivX hereby grants to Detto a non-transferable,
+        exclusive license to distribute PivX's Qwik-Fix Pro and any documentation sup
+  g02:
+    status: unimplementable
+    note: 'The <omitted> marker appears in zero CUAD v1 contracts and zero gold spans, so applicability
+      is 0% and the checker can never fire. Rate over all 480 decisions: 0.0%. Applicability is computed
+      from gold span content; the discrimination number is therefore arithmetic, not evidence.'
+    applicability:
+      n_applicable: 0
+      n_units: 480
+      rate: 0.0
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 0
+        n_contracts: 40
+        max_per_contract: 0
+        median_per_contract: 0
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: null
+      pass_rate_negative: 0.4396
+      lift: null
+      n_positive: 0
+      n_negative: 480
+    length_buckets:
+      <=4k:
+        n_decisions: 180
+        n_applicable: 0
+      4k-8k:
+        n_decisions: 132
+        n_applicable: 0
+      8k-16k:
+        n_decisions: 84
+        n_applicable: 0
+      '>16k':
+        n_decisions: 84
+        n_applicable: 0
+    stability:
+      marker_omitted_caps:
+        n_applicable: 0
+        rate_all_decisions: 0.0
+        delta_vs_as_written: 0.0
+        in_scope_2x2:
+          applicable_present: 0
+          applicable_absent: 0
+          notapplicable_present: 211
+          notapplicable_absent: 269
+        phi: null
+    examples:
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  g03:
+    status: discriminating-but-rare
+    note: '2.5% of decisions; a genuine multi-label partition, but duplicated exactly by d02 on dev. Rate
+      over all 480 decisions: 2.5%. Applicability is computed from gold span content; the discrimination
+      number is therefore arithmetic, not evidence.'
+    applicability:
+      n_applicable: 12
+      n_units: 480
+      rate: 0.025
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+      - key: Exclusivity
+        n_applicable: 4
+        n_units: 40
+        rate: 0.1
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      - key: Volume Restriction
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      concentration:
+        n_contracts_with_any: 6
+        n_contracts: 40
+        max_per_contract: 2
+        median_per_contract: 2
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.4252
+      lift: 0.5748
+      n_positive: 12
+      n_negative: 468
+    length_buckets:
+      <=4k:
+        n_decisions: 180
+        n_applicable: 2
+      4k-8k:
+        n_decisions: 132
+        n_applicable: 2
+      8k-16k:
+        n_decisions: 84
+        n_applicable: 4
+      '>16k':
+        n_decisions: 84
+        n_applicable: 4
+    stability:
+      soft_j80:
+        n_applicable: 14
+        rate_all_decisions: 0.0292
+        delta_vs_as_written: 0.0042
+        in_scope_2x2:
+          applicable_present: 14
+          applicable_absent: 0
+          notapplicable_present: 197
+          notapplicable_absent: 269
+        phi: 0.1957
+    examples:
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: License Grant
+      gold_present: true
+      text: University hereby grants to ArTara an exclusive license to use the Program Data solely for
+        the Project and in Regulatory Filings in the Field in the Territory.
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Exclusivity
+      gold_present: true
+      text: University hereby grants to ArTara an exclusive license to use the Program Data solely for
+        the Project and in Regulatory Filings in the Field in the Territory.
+    - verdict: applies
+      contract_id: CORIOINC_07_20_2000-EX-10.5-LICENSE AND HOSTING AGREEMENT
+      category: License Grant
+      gold_present: true
+      text: Subject to the terms and conditions of this Agreement, Commerce One hereby grants to Corio
+        a fee-bearing, perpetual and irrevocable, nonexclusive, nontransferable (except in accord
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  g04:
+    status: discriminating
+    note: '52.5% of Governing Law decisions, instance-only, phi 0.40 against gold presence; the cleanest
+      non-tautological footprint in the set. Rate over all 480 decisions: 4.4%. Applicability is computed
+      from instance only; the discrimination number is a real association.'
+    applicability:
+      n_applicable: 21
+      n_units: 40
+      rate: 0.525
+    distribution:
+      by: category
+      rows:
+      - key: Governing Law
+        n_applicable: 21
+        n_units: 40
+        rate: 0.525
+      concentration:
+        n_contracts_with_any: 21
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 0.9524
+      pass_rate_negative: 0.6316
+      lift: 0.3208
+      n_positive: 21
+      n_negative: 19
+    length_buckets:
+      <=4k:
+        n_decisions: 15
+        n_applicable: 3
+      4k-8k:
+        n_decisions: 11
+        n_applicable: 9
+      8k-16k:
+        n_decisions: 7
+        n_applicable: 4
+      '>16k':
+        n_decisions: 7
+        n_applicable: 5
+    stability:
+      wide_venue:
+        n_applicable: 23
+        rate_all_decisions: 0.0479
+        delta_vs_as_written: 0.0042
+        in_scope_2x2:
+          applicable_present: 22
+          applicable_absent: 1
+          notapplicable_present: 10
+          notapplicable_absent: 7
+        phi: 0.4551
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Governing Law
+      gold_present: true
+      text: 'This Agreement shall be governed by and construed under the laws of the State of California,
+        excluding conflict of laws provisions and excluding the 1980 United Nations Convention '
+    - verdict: applies
+      contract_id: AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement
+      category: Governing Law
+      gold_present: true
+      text: Without reference to choice or conflict of law principles, this Agreement shall be governed
+        by and construed in accordance with the laws of the State of California, USA.
+    - verdict: applies
+      contract_id: ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement
+      category: Governing Law
+      gold_present: true
+      text: This Agreement shall be governed by the laws of the State of Delaware, its rules of conflict
+        of laws notwithstanding.
+    - verdict: does not apply
+      contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+      category: Governing Law
+      gold_present: true
+      text: This Agreement shall be construed and enforced in accordance with the laws of the State of
+        California, without regard to the conflict of law principles of California or any other j
+  g05:
+    status: discriminating-applicability-failed-proxy
+    note: 'Applicability is healthy (57.5%) but the span-level compliance proxy fails its own pre-registered
+      audit: 33% false-fail on gold spans and 140 candidate false-passes in Revenue/Profit-Sharing-absent
+      contracts. Rate over all 480 decisions: 4.8%. Applicability is computed from instance only; the
+      discrimination number is a real association.'
+    applicability:
+      n_applicable: 23
+      n_units: 40
+      rate: 0.575
+    distribution:
+      by: category
+      rows:
+      - key: Revenue/Profit Sharing
+        n_applicable: 23
+        n_units: 40
+        rate: 0.575
+      concentration:
+        n_contracts_with_any: 23
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 0.4348
+      pass_rate_negative: 0.1765
+      lift: 0.2583
+      n_positive: 23
+      n_negative: 17
+    length_buckets:
+      <=4k:
+        n_decisions: 15
+        n_applicable: 6
+      4k-8k:
+        n_decisions: 11
+        n_applicable: 6
+      8k-16k:
+        n_decisions: 7
+        n_applicable: 5
+      '>16k':
+        n_decisions: 7
+        n_applicable: 6
+    stability: {}
+    examples:
+    - verdict: applies
+      contract_id: ArcGroupInc_20171211_8-K_EX-10.1_10976103_EX-10.1_Sponsorship Agreement
+      category: Revenue/Profit Sharing
+      gold_present: false
+      text: 'Exhibit 10.1 JACKSONVILLE JAGUARS SPONSORSHIP AGREEMENT This Sponsorship Agreement (this
+        "Agreement") is entered into as of November 27, 2017 (the "Execution Date") by and between '
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: Royalties will be payable by ArTara on Net Sales of Product in the Indication. ArTara will,
+        no later than […***…] following the close of each calendar quarter, pay tiered Royalties
+    - verdict: applies
+      contract_id: BLACKSTONEGSOLONG-SHORTCREDITINCOMEFUND_05_11_2020-EX-99.(K)(1)-SERVICE AGREEMENT
+      category: Revenue/Profit Sharing
+      gold_present: false
+      text: Exhibit (k)(1) SERVICE AGREEMENT FOR TRANSFER AGENT SERVICES TO BLACKSTONE / GSO LONG-SHORT
+        CREDIT INCOME FUND Rev. December 2009 THIS SERVICE AGREEMENT FOR TRANSFER AGENT SERVICES
+    - verdict: does not apply
+      contract_id: NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: 'For all referrals under Section 6.1, except where NTC has evidence that it referral the customer
+        (including its affiliates) to ALFA AESAR to purchase a prior sample of the Product '
+    hand_score:
+      gold_span_agreement:
+        as_written:
+          n: 24
+          agreement: 0.6667
+          false_fail: 8
+          false_fail_rate: 0.3333
+          false_pass: 0
+        repaired:
+          n: 24
+          agreement: 0.875
+          false_fail: 3
+          false_fail_rate: 0.125
+          false_pass: 0
+        as_written_passes_via_spurious_equity_match: 4
+        g06_admin_flag_on_gold_spans:
+          checker: 0
+          hand: 1
+      negative_sentence_scan:
+        n_rps_absent_contracts: 27
+        n_sentences_scanned: 3556
+        as_written_passing_sentences: 140
+        as_written_by_branch:
+          per_unit: 4
+          equity: 136
+        repaired_passing_sentences: 65
+        repaired_by_branch:
+          per_unit: 4
+          equity: 39
+          revenue_entitlement: 6
+          percentage_of_revenue: 15
+          based_on_revenue: 1
+        reading: every sentence here sits in a contract CUAD rules Revenue/Profit Sharing absent, so a
+          passing sentence is a candidate false pass
+  g06:
+    status: discriminating-but-rare
+    note: '12.5% of Revenue/Profit Sharing decisions, 6 trigger sentences in dev, 2 of 6 hand-judged not
+      administration at all. Rate over all 480 decisions: 1.0%. Applicability is computed from instance
+      only; the discrimination number is a real association.'
+    applicability:
+      n_applicable: 5
+      n_units: 40
+      rate: 0.125
+    distribution:
+      by: category
+      rows:
+      - key: Revenue/Profit Sharing
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+      concentration:
+        n_contracts_with_any: 5
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 0.8
+      pass_rate_negative: 0.2571
+      lift: 0.5429
+      n_positive: 5
+      n_negative: 35
+    length_buckets:
+      <=4k:
+        n_decisions: 15
+        n_applicable: 1
+      4k-8k:
+        n_decisions: 11
+        n_applicable: 0
+      8k-16k:
+        n_decisions: 7
+        n_applicable: 1
+      '>16k':
+        n_decisions: 7
+        n_applicable: 3
+    stability:
+      narrow_admin:
+        n_applicable: 4
+        rate_all_decisions: 0.0083
+        delta_vs_as_written: -0.0021
+        in_scope_2x2:
+          applicable_present: 3
+          applicable_absent: 1
+          notapplicable_present: 10
+          notapplicable_absent: 26
+        phi: 0.3025
+    examples:
+    - verdict: applies
+      contract_id: CORIOINC_07_20_2000-EX-10.5-LICENSE AND HOSTING AGREEMENT
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: In addition, the parties shall share certain revenues related to purchases made by Customers
+        utilizing Commerce One's MarketSite.net Service, as set forth in EXHIBIT B hereto.
+    - verdict: applies
+      contract_id: INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: 'Within twenty (20) days after the end of each Calendar Quarter , GSK shall pay Theravance
+        royalty payments based on Net Sales in such Calendar Quarter during the Term as follows: O'
+    - verdict: applies
+      contract_id: NEXSTARFINANCEHOLDINGSINC_03_27_2002-EX-10.26-OUTSOURCING AGREEMENT
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: 'Notwithstanding anything herein to the contrary, WYZZ shall continue to be the owner of and
+        shall be entitled to all revenues resulting from the sale of advertising and other time '
+    - verdict: does not apply
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: Royalties will be payable by ArTara on Net Sales of Product in the Indication. ArTara will,
+        no later than […***…] following the close of each calendar quarter, pay tiered Royalties
+    hand_score:
+      n_trigger_sentences: 6
+      n_hand_labelled: 6
+      n_really_administration: 4
+      trigger_precision: 0.6667
+      n_trigger_sentences_inside_gold_rps_spans: 0
+  g07:
+    status: degenerate
+    note: 'Fires on 95% of Agreement Date decisions by construction: applicability is gold presence. Rate
+      over all 480 decisions: 7.9%. Applicability is computed from gold presence; the discrimination number
+      is therefore arithmetic, not evidence.'
+    applicability:
+      n_applicable: 38
+      n_units: 40
+      rate: 0.95
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 38
+        n_units: 40
+        rate: 0.95
+      concentration:
+        n_contracts_with_any: 38
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.0
+      lift: 1.0
+      n_positive: 38
+      n_negative: 2
+    length_buckets:
+      <=4k:
+        n_decisions: 15
+        n_applicable: 13
+      4k-8k:
+        n_decisions: 11
+        n_applicable: 11
+      8k-16k:
+        n_decisions: 7
+        n_applicable: 7
+      '>16k':
+        n_decisions: 7
+        n_applicable: 7
+    stability: {}
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+    - verdict: applies
+      contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+      category: Agreement Date
+      gold_present: true
+      text: June 1, 2020
+    - verdict: applies
+      contract_id: ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: December 12, 2014
+  g08:
+    status: discriminating-but-rare
+    note: '12.5% of Agreement Date decisions, instance-only, and all 5 firings sit on gold-present contracts;
+      a narrow but real subcase. Rate over all 480 decisions: 1.0%. Applicability is computed from instance
+      only; the discrimination number is a real association.'
+    applicability:
+      n_applicable: 5
+      n_units: 40
+      rate: 0.125
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+      concentration:
+        n_contracts_with_any: 5
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.9429
+      lift: 0.0571
+      n_positive: 5
+      n_negative: 35
+    length_buckets:
+      <=4k:
+        n_decisions: 15
+        n_applicable: 1
+      4k-8k:
+        n_decisions: 11
+        n_applicable: 3
+      8k-16k:
+        n_decisions: 7
+        n_applicable: 0
+      '>16k':
+        n_decisions: 7
+        n_applicable: 1
+    stability:
+      head_only:
+        n_applicable: 5
+        rate_all_decisions: 0.0104
+        delta_vs_as_written: 0.0
+        in_scope_2x2:
+          applicable_present: 5
+          applicable_absent: 0
+          notapplicable_present: 33
+          notapplicable_absent: 2
+        phi: 0.0867
+      wide_window:
+        n_applicable: 5
+        rate_all_decisions: 0.0104
+        delta_vs_as_written: 0.0
+        in_scope_2x2:
+          applicable_present: 5
+          applicable_absent: 0
+          notapplicable_present: 33
+          notapplicable_absent: 2
+        phi: 0.0867
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+    - verdict: applies
+      contract_id: KINGPHARMACEUTICALSINC_08_09_2006-EX-10.1-PROMOTION AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: June 27, 2006
+    - verdict: applies
+      contract_id: PharmagenInc_20120803_8-KA_EX-10.1_7693204_EX-10.1_Endorsement Agreement
+      category: Agreement Date
+      gold_present: true
+      text: February 20, 2012
+    - verdict: does not apply
+      contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+      category: Agreement Date
+      gold_present: true
+      text: June 1, 2020
+  d01:
+    status: degenerate-and-contradictory
+    note: '70% of Agreement Date decisions, but applicability is defined by gold already having the clipped
+      shape, and the rule contradicts g01. Rate over all 480 decisions: 5.8%. Applicability is computed
+      from gold span content; the discrimination number is therefore arithmetic, not evidence.'
+    applicability:
+      n_applicable: 28
+      n_units: 40
+      rate: 0.7
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 28
+        n_units: 40
+        rate: 0.7
+      concentration:
+        n_contracts_with_any: 28
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.8333
+      lift: 0.1667
+      n_positive: 28
+      n_negative: 12
+    length_buckets:
+      <=4k:
+        n_decisions: 15
+        n_applicable: 9
+      4k-8k:
+        n_decisions: 11
+        n_applicable: 6
+      8k-16k:
+        n_decisions: 7
+        n_applicable: 7
+      '>16k':
+        n_decisions: 7
+        n_applicable: 6
+    stability:
+      len60:
+        n_applicable: 28
+        rate_all_decisions: 0.0583
+        delta_vs_as_written: 0.0
+        in_scope_2x2:
+          applicable_present: 28
+          applicable_absent: 0
+          notapplicable_present: 10
+          notapplicable_absent: 2
+        phi: 0.3504
+    examples:
+    - verdict: applies
+      contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+      category: Agreement Date
+      gold_present: true
+      text: June 1, 2020
+    - verdict: applies
+      contract_id: ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: December 12, 2014
+    - verdict: applies
+      contract_id: AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement
+      category: Agreement Date
+      gold_present: true
+      text: February 1, 2019
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  d02:
+    status: discriminating-but-rare
+    note: 'Identical firing set to g03 on dev (12 decisions); the two are the same principle reached from
+      two sources. Rate over all 480 decisions: 2.5%. Applicability is computed from gold span content;
+      the discrimination number is therefore arithmetic, not evidence.'
+    applicability:
+      n_applicable: 12
+      n_units: 480
+      rate: 0.025
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+      - key: Exclusivity
+        n_applicable: 4
+        n_units: 40
+        rate: 0.1
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      - key: Volume Restriction
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      concentration:
+        n_contracts_with_any: 6
+        n_contracts: 40
+        max_per_contract: 2
+        median_per_contract: 2
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.4252
+      lift: 0.5748
+      n_positive: 12
+      n_negative: 468
+    length_buckets:
+      <=4k:
+        n_decisions: 180
+        n_applicable: 2
+      4k-8k:
+        n_decisions: 132
+        n_applicable: 2
+      8k-16k:
+        n_decisions: 84
+        n_applicable: 4
+      '>16k':
+        n_decisions: 84
+        n_applicable: 4
+    stability:
+      overlap_any:
+        n_applicable: 16
+        rate_all_decisions: 0.0333
+        delta_vs_as_written: 0.0083
+        in_scope_2x2:
+          applicable_present: 16
+          applicable_absent: 0
+          notapplicable_present: 195
+          notapplicable_absent: 269
+        phi: 0.2097
+      iou80:
+        n_applicable: 12
+        rate_all_decisions: 0.025
+        delta_vs_as_written: 0.0
+        in_scope_2x2:
+          applicable_present: 12
+          applicable_absent: 0
+          notapplicable_present: 199
+          notapplicable_absent: 269
+        phi: 0.1808
+    examples:
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: License Grant
+      gold_present: true
+      text: University hereby grants to ArTara an exclusive license to use the Program Data solely for
+        the Project and in Regulatory Filings in the Field in the Territory.
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Exclusivity
+      gold_present: true
+      text: University hereby grants to ArTara an exclusive license to use the Program Data solely for
+        the Project and in Regulatory Filings in the Field in the Territory.
+    - verdict: applies
+      contract_id: CORIOINC_07_20_2000-EX-10.5-LICENSE AND HOSTING AGREEMENT
+      category: License Grant
+      gold_present: true
+      text: Subject to the terms and conditions of this Agreement, Commerce One hereby grants to Corio
+        a fee-bearing, perpetual and irrevocable, nonexclusive, nontransferable (except in accord
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  d03:
+    status: discriminating
+    note: '15% of in-scope decisions, phi 0.47, the strongest gold association in the set; applicability
+      reads gold span text, so treat with care. Rate over all 480 decisions: 2.5%. Applicability is computed
+      from gold span content; the discrimination number is therefore arithmetic, not evidence.'
+    applicability:
+      n_applicable: 12
+      n_units: 80
+      rate: 0.15
+    distribution:
+      by: category
+      rows:
+      - key: Minimum Commitment
+        n_applicable: 6
+        n_units: 40
+        rate: 0.15
+      - key: Revenue/Profit Sharing
+        n_applicable: 6
+        n_units: 40
+        rate: 0.15
+      concentration:
+        n_contracts_with_any: 6
+        n_contracts: 40
+        max_per_contract: 2
+        median_per_contract: 2
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 0.8333
+      pass_rate_negative: 0.2206
+      lift: 0.6127
+      n_positive: 12
+      n_negative: 68
+    length_buckets:
+      <=4k:
+        n_decisions: 30
+        n_applicable: 0
+      4k-8k:
+        n_decisions: 22
+        n_applicable: 2
+      8k-16k:
+        n_decisions: 14
+        n_applicable: 2
+      '>16k':
+        n_decisions: 14
+        n_applicable: 8
+    stability:
+      instance_text:
+        n_applicable: 14
+        rate_all_decisions: 0.0292
+        delta_vs_as_written: 0.0042
+        in_scope_2x2:
+          applicable_present: 11
+          applicable_absent: 3
+          notapplicable_present: 14
+          notapplicable_absent: 52
+        phi: 0.4702
+    examples:
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: Royalties will be payable by ArTara on Net Sales of Product in the Indication. ArTara will,
+        no later than […***…] following the close of each calendar quarter, pay tiered Royalties
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Minimum Commitment
+      gold_present: false
+      text: Exhibit 10.5 CERTAIN CONFIDENTIAL INFORMATION CONTAINED IN THIS DOCUMENT, MARKED BY […***…],
+        HAS BEEN OMITTED BECAUSE ARTARA THERAPEUTICS, INC. HAS DETERMINED THE INFORMATION (I) I
+    - verdict: applies
+      contract_id: GOCALLINC_03_30_2000-EX-10.7-Promotion Agreement
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: 'PageMaster Corporation will pay Go Call $3.00 per pager (beginning with pager # 1) and 5%
+        of all airtime renewal revenue for each pager redeemed for this promotion consistent with '
+    - verdict: does not apply
+      contract_id: ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement
+      category: Minimum Commitment
+      gold_present: true
+      text: 'Logo Size: The minimum logo size is 1" or 25mm. In digital formats, the minimum width is
+        100 pixels at 72 dpi.'
+  d04:
+    status: discriminating-after-widening
+    note: '35% in scope as written and misses half the gold-present contracts; widening the verb lexicon
+      raises phi 0.21 to 0.47 and recall 6/12 to 10/12. Rate over all 480 decisions: 2.9%. Applicability
+      is computed from instance only; the discrimination number is a real association.'
+    applicability:
+      n_applicable: 14
+      n_units: 40
+      rate: 0.35
+    distribution:
+      by: category
+      rows:
+      - key: Minimum Commitment
+        n_applicable: 14
+        n_units: 40
+        rate: 0.35
+      concentration:
+        n_contracts_with_any: 14
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 0.4286
+      pass_rate_negative: 0.2308
+      lift: 0.1978
+      n_positive: 14
+      n_negative: 26
+    length_buckets:
+      <=4k:
+        n_decisions: 15
+        n_applicable: 2
+      4k-8k:
+        n_decisions: 11
+        n_applicable: 4
+      8k-16k:
+        n_decisions: 7
+        n_applicable: 5
+      '>16k':
+        n_decisions: 7
+        n_applicable: 3
+    stability:
+      widened_verbs:
+        n_applicable: 18
+        rate_all_decisions: 0.0375
+        delta_vs_as_written: 0.0083
+        in_scope_2x2:
+          applicable_present: 9
+          applicable_absent: 9
+          notapplicable_present: 3
+          notapplicable_absent: 19
+        phi: 0.3948
+      widened_floor_and_verbs:
+        n_applicable: 19
+        rate_all_decisions: 0.0396
+        delta_vs_as_written: 0.0104
+        in_scope_2x2:
+          applicable_present: 10
+          applicable_absent: 9
+          notapplicable_present: 2
+          notapplicable_absent: 19
+        phi: 0.4698
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Minimum Commitment
+      gold_present: false
+      text: 'Exhibit 10d-2 RESELLER AGREEMENT BY AND BETWEEN PIVX CORPORATION AND DETTO TECHNOLOGIES This
+        Reseller Agreement is entered as of this ___ day of _________, 2004 ("Effective Date") '
+    - verdict: applies
+      contract_id: ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT
+      category: Minimum Commitment
+      gold_present: false
+      text: Exhibit 99.1 COOPERATION AGREEMENT This Cooperation Agreement (this "Agreement") dated December
+        12, 2014, is by and among the persons and entities listed on Schedule A (collectivel
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Minimum Commitment
+      gold_present: false
+      text: Exhibit 10.5 CERTAIN CONFIDENTIAL INFORMATION CONTAINED IN THIS DOCUMENT, MARKED BY […***…],
+        HAS BEEN OMITTED BECAUSE ARTARA THERAPEUTICS, INC. HAS DETERMINED THE INFORMATION (I) I
+    - verdict: does not apply
+      contract_id: ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement
+      category: Minimum Commitment
+      gold_present: true
+      text: 'Logo Size: The minimum logo size is 1" or 25mm. In digital formats, the minimum width is
+        100 pixels at 72 dpi.'
+  d05:
+    status: near-degenerate
+    note: 'Fires on 75% of Minimum Commitment and Volume Restriction decisions and on 30 of 40 contracts;
+      a quantity plus a bound cue is ambient legalese. Rate over all 480 decisions: 12.5%. Applicability
+      is computed from instance only; the discrimination number is a real association.'
+    applicability:
+      n_applicable: 60
+      n_units: 80
+      rate: 0.75
+    distribution:
+      by: category
+      rows:
+      - key: Minimum Commitment
+        n_applicable: 30
+        n_units: 40
+        rate: 0.75
+      - key: Volume Restriction
+        n_applicable: 30
+        n_units: 40
+        rate: 0.75
+      concentration:
+        n_contracts_with_any: 30
+        n_contracts: 40
+        max_per_contract: 2
+        median_per_contract: 2
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 0.2667
+      pass_rate_negative: 0.0
+      lift: 0.2667
+      n_positive: 60
+      n_negative: 20
+    length_buckets:
+      <=4k:
+        n_decisions: 30
+        n_applicable: 10
+      4k-8k:
+        n_decisions: 22
+        n_applicable: 22
+      8k-16k:
+        n_decisions: 14
+        n_applicable: 14
+      '>16k':
+        n_decisions: 14
+        n_applicable: 14
+    stability:
+      lower_only:
+        n_applicable: 52
+        rate_all_decisions: 0.1083
+        delta_vs_as_written: -0.0167
+        in_scope_2x2:
+          applicable_present: 16
+          applicable_absent: 36
+          notapplicable_present: 0
+          notapplicable_absent: 28
+        phi: 0.3669
+      upper_only:
+        n_applicable: 48
+        rate_all_decisions: 0.1
+        delta_vs_as_written: -0.025
+        in_scope_2x2:
+          applicable_present: 14
+          applicable_absent: 34
+          notapplicable_present: 2
+          notapplicable_absent: 30
+        phi: 0.2807
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Minimum Commitment
+      gold_present: false
+      text: 'Exhibit 10d-2 RESELLER AGREEMENT BY AND BETWEEN PIVX CORPORATION AND DETTO TECHNOLOGIES This
+        Reseller Agreement is entered as of this ___ day of _________, 2004 ("Effective Date") '
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Volume Restriction
+      gold_present: false
+      text: 'Exhibit 10d-2 RESELLER AGREEMENT BY AND BETWEEN PIVX CORPORATION AND DETTO TECHNOLOGIES This
+        Reseller Agreement is entered as of this ___ day of _________, 2004 ("Effective Date") '
+    - verdict: applies
+      contract_id: ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT
+      category: Minimum Commitment
+      gold_present: false
+      text: Exhibit 99.1 COOPERATION AGREEMENT This Cooperation Agreement (this "Agreement") dated December
+        12, 2014, is by and among the persons and entities listed on Schedule A (collectivel
+  d06:
+    status: degenerate
+    note: 'One firing in 480 decisions; the evidence base was already n=1 and dev does not enlarge it.
+      Rate over all 480 decisions: 0.2%. Applicability is computed from gold presence; the discrimination
+      number is therefore arithmetic, not evidence.'
+    applicability:
+      n_applicable: 1
+      n_units: 40
+      rate: 0.025
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      concentration:
+        n_contracts_with_any: 1
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 0.0
+      pass_rate_negative: 0.9744
+      lift: -0.9744
+      n_positive: 1
+      n_negative: 39
+    length_buckets:
+      <=4k:
+        n_decisions: 15
+        n_applicable: 1
+      4k-8k:
+        n_decisions: 11
+        n_applicable: 0
+      8k-16k:
+        n_decisions: 7
+        n_applicable: 0
+      '>16k':
+        n_decisions: 7
+        n_applicable: 0
+    stability:
+      head4000:
+        n_applicable: 1
+        rate_all_decisions: 0.0021
+        delta_vs_as_written: 0.0
+        in_scope_2x2:
+          applicable_present: 0
+          applicable_absent: 1
+          notapplicable_present: 38
+          notapplicable_absent: 1
+        phi: -0.698
+    examples:
+    - verdict: applies
+      contract_id: PelicanDeliversInc_20200211_S-1_EX-10.3_11975895_EX-10.3_Development Agreement1
+      category: Agreement Date
+      gold_present: false
+      text: SeattleSoftwareDevelopers SOFTWARE DEVELOPMENT AGREEMENT PELICAN DELIVERS iOS APPLICATION
+        ENHANCEMENTS & WEB APPLICATION DEVELOPMENT PHASE 1 4 102nd Ave NE Suite 300 Bellevue, WA 9
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  d07:
+    status: degenerate
+    note: 'Zero firings on dev; only 10 gold spans in the whole 12-category dev+ft_train pool contain
+      furniture strictly inside. Rate over all 480 decisions: 0.0%. Applicability is computed from gold
+      span content; the discrimination number is therefore arithmetic, not evidence.'
+    applicability:
+      n_applicable: 0
+      n_units: 480
+      rate: 0.0
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 0
+        n_contracts: 40
+        max_per_contract: 0
+        median_per_contract: 0
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: null
+      pass_rate_negative: 0.4396
+      lift: null
+      n_positive: 0
+      n_negative: 480
+    length_buckets:
+      <=4k:
+        n_decisions: 180
+        n_applicable: 0
+      4k-8k:
+        n_decisions: 132
+        n_applicable: 0
+      8k-16k:
+        n_decisions: 84
+        n_applicable: 0
+      '>16k':
+        n_decisions: 84
+        n_applicable: 0
+    stability:
+      wide_furniture:
+        n_applicable: 1
+        rate_all_decisions: 0.0021
+        delta_vs_as_written: 0.0021
+        in_scope_2x2:
+          applicable_present: 1
+          applicable_absent: 0
+          notapplicable_present: 210
+          notapplicable_absent: 269
+        phi: 0.0516
+    examples:
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  d08:
+    status: degenerate-by-construction
+    note: 'Fires on 55% of Minimum Commitment decisions but only ever on gold-absent ones, because applicability
+      requires is_impossible. Rate over all 480 decisions: 4.6%. Applicability is computed from gold presence;
+      the discrimination number is therefore arithmetic, not evidence.'
+    applicability:
+      n_applicable: 22
+      n_units: 40
+      rate: 0.55
+    distribution:
+      by: category
+      rows:
+      - key: Minimum Commitment
+        n_applicable: 22
+        n_units: 40
+        rate: 0.55
+      concentration:
+        n_contracts_with_any: 22
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when applicable vs when not
+      pass_rate_positive: 0.0
+      pass_rate_negative: 0.6667
+      lift: -0.6667
+      n_positive: 22
+      n_negative: 18
+    length_buckets:
+      <=4k:
+        n_decisions: 15
+        n_applicable: 8
+      4k-8k:
+        n_decisions: 11
+        n_applicable: 8
+      8k-16k:
+        n_decisions: 7
+        n_applicable: 4
+      '>16k':
+        n_decisions: 7
+        n_applicable: 2
+    stability: {}
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Minimum Commitment
+      gold_present: false
+      text: 'Exhibit 10d-2 RESELLER AGREEMENT BY AND BETWEEN PIVX CORPORATION AND DETTO TECHNOLOGIES This
+        Reseller Agreement is entered as of this ___ day of _________, 2004 ("Effective Date") '
+    - verdict: applies
+      contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+      category: Minimum Commitment
+      gold_present: false
+      text: Exhibit 10.7 CONSULTING AGREEMENT Aduro Biotech, Inc., with a place of business at 740 Heinz
+        Avenue, Berkeley, CA 94710 ("Aduro") and IREYA B.V having an address at Staalwijkstraat
+    - verdict: applies
+      contract_id: ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT
+      category: Minimum Commitment
+      gold_present: false
+      text: Exhibit 99.1 COOPERATION AGREEMENT This Cooperation Agreement (this "Agreement") dated December
+        12, 2014, is by and among the persons and entities listed on Schedule A (collectivel
+    - verdict: does not apply
+      contract_id: ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement
+      category: Minimum Commitment
+      gold_present: true
+      text: 'Logo Size: The minimum logo size is 1" or 25mm. In digital formats, the minimum width is
+        100 pixels at 72 dpi.'

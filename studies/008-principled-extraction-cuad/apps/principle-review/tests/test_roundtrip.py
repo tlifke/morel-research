@@ -4,14 +4,24 @@ from pathlib import Path
 
 import pytest
 
-from review_app import record_types, yaml_io
+from review_app import record_types, sidecars, yaml_io
 from review_app.service import Config, Service
 
 APP_DIR = Path(__file__).resolve().parent.parent
 FIXTURE = APP_DIR / "fixtures" / "candidates.sample.yaml"
+PAIRS = APP_DIR / "fixtures" / "mined_pairs.jsonl"
+FOOTPRINT = APP_DIR / "fixtures" / "footprint.yaml"
+PILOT = (
+    APP_DIR.parent.parent / "principles" / "pilot" / "candidates_pilot.reviewed.yaml"
+)
 
 
-def make_service(tmp_path: Path, source: Path | None = None) -> Service:
+def make_service(
+    tmp_path: Path,
+    source: Path | None = None,
+    pairs: Path | None = None,
+    footprint: Path | None = None,
+) -> Service:
     src = source or FIXTURE
     config = Config(
         source=src,
@@ -19,6 +29,8 @@ def make_service(tmp_path: Path, source: Path | None = None) -> Service:
         record_type="principle",
         reviewer="tyler",
         export_path=tmp_path / "out.yaml",
+        pairs_path=pairs,
+        footprint_path=footprint,
     )
     service = Service(config)
     service.sync_from_disk()
@@ -63,7 +75,7 @@ def test_review_roundtrip_and_reimport(tmp_path):
     })
     out = service.export()
     assert out["counts"] == {
-        "accept": 1, "edit": 1, "reject": 1, "defer": 1, "unreviewed": 2
+        "accept": 1, "edit": 1, "reject": 1, "defer": 1, "unclear": 0, "unreviewed": 2
     }
 
     records = {r["id"]: r for r in yaml_io.load_records(tmp_path / "out.yaml")}
@@ -202,3 +214,124 @@ def test_reimport_preserves_reviews_and_picks_up_new_records(tmp_path):
     rows = {r["record_id"]: r for r in service.store.records(service.config.queue_id)}
     assert rows["sp01"]["review"]["decision"] == "accept"
     assert rows["sp07"]["review"] is None
+
+
+def test_unclear_is_a_distinct_decision_from_defer(tmp_path):
+    rt = record_types.get("principle")
+    assert "unclear" in rt.decision_names()
+    assert "unclear" in rt.pending_decisions
+    assert "defer" in rt.pending_decisions
+
+    service = make_service(tmp_path)
+    service.save_review({
+        "record_id": "sp01",
+        "decision": "unclear",
+        "rationale": "cannot tell what 'role designator' is meant to cover",
+    })
+    service.save_review({
+        "record_id": "sp02",
+        "decision": "defer",
+        "rationale": "clear enough, but I want the footprint first",
+    })
+    out = service.export()
+    assert out["counts"]["unclear"] == 1
+    assert out["counts"]["defer"] == 1
+
+    exported = {r["id"]: r for r in yaml_io.load_records(tmp_path / "out.yaml")}
+    assert exported["sp01"]["review"]["decision"] == "unclear"
+    assert exported["sp02"]["review"]["decision"] == "defer"
+
+    revived = make_service(tmp_path / "second", source=tmp_path / "out.yaml")
+    rows = {r["record_id"]: r for r in revived.store.records(revived.config.queue_id)}
+    assert rows["sp01"]["source"]["review"]["decision"] == "unclear"
+    assert rows["sp02"]["source"]["review"]["decision"] == "defer"
+
+
+def test_unclear_requires_a_rationale(tmp_path):
+    service = make_service(tmp_path)
+    with pytest.raises(ValueError):
+        service.save_review({
+            "record_id": "sp01", "decision": "unclear", "rationale": "  "
+        })
+
+
+def test_export_counts_list_every_decision_even_at_zero(tmp_path):
+    service = make_service(tmp_path)
+    counts = service.export()["counts"]
+    for name in record_types.get("principle").decision_names():
+        assert name in counts
+    assert counts["reject"] == 0
+    assert counts["unclear"] == 0
+
+
+def test_pairs_sidecar_is_indexed_by_pair_id(tmp_path):
+    service = make_service(tmp_path, pairs=PAIRS, footprint=FOOTPRINT)
+    state = service.state()
+    pairs = state["sidecars"]["pairs"]
+    assert "pair-0412" in pairs
+    left = pairs["pair-0412"]["left"]
+    right = pairs["pair-0412"]["right"]
+    assert left["category"] != right["category"]
+    assert left["text"] and right["text"]
+    cited = set()
+    for row in state["records"]:
+        for item in row["merged"].get("evidence") or []:
+            if isinstance(item, str) and item.startswith("pair-"):
+                cited.add(item)
+    assert cited & set(pairs)
+    assert state["sidecar_paths"]["pairs"] == str(PAIRS)
+
+
+def test_footprint_sidecar_shape(tmp_path):
+    service = make_service(tmp_path, pairs=PAIRS, footprint=FOOTPRINT)
+    fp = service.state()["sidecars"]["footprint"]
+    assert fp["split"] == "dev"
+    assert fp["population"]["n_units"] == 732
+    entry = fp["principles"]["sp01"]
+    assert entry["applicability"]["n_applicable"] == 143
+    assert entry["distribution"]["rows"][0]["key"]
+    assert entry["discrimination"]["pass_rate_positive"] == 0.86
+    assert fp["principles"]["sp02"]["status"] == "not_implementable"
+
+
+def test_sidecars_absent_degrade_to_empty(tmp_path):
+    service = make_service(tmp_path)
+    state = service.state()
+    assert state["sidecars"] == {"pairs": {}, "footprint": {}}
+    assert state["sidecar_paths"] == {"pairs": None, "footprint": None}
+
+
+def test_footprint_accepts_a_bare_id_keyed_mapping(tmp_path):
+    path = tmp_path / "fp.yaml"
+    path.write_text(
+        "sp01:\n  applicability:\n    n_applicable: 3\n    n_units: 10\n",
+        encoding="utf-8",
+    )
+    loaded = sidecars.load_footprint(path)
+    assert loaded["principles"]["sp01"]["applicability"]["n_units"] == 10
+
+
+def test_footprint_is_reloaded_when_the_file_changes(tmp_path):
+    path = tmp_path / "fp.yaml"
+    path.write_text("principles:\n  sp01:\n    note: first\n", encoding="utf-8")
+    service = make_service(tmp_path, footprint=path)
+    assert service.state()["sidecars"]["footprint"]["principles"]["sp01"]["note"] == "first"
+    path.write_text("principles:\n  sp01:\n    note: second\n", encoding="utf-8")
+    assert service.state()["sidecars"]["footprint"]["principles"]["sp01"]["note"] == "second"
+
+
+def test_round_one_pilot_decisions_survive_reimport(tmp_path):
+    if not PILOT.exists():
+        pytest.skip("pilot review file not present")
+    raw = PILOT.read_text(encoding="utf-8")
+    before = yaml_io.load_records(PILOT)
+    service = make_service(tmp_path, source=PILOT, pairs=PAIRS, footprint=FOOTPRINT)
+    service.export()
+    after = yaml_io.load_records(tmp_path / "out.yaml")
+    assert yaml_io.canonical_dump(before) == yaml_io.canonical_dump(after)
+    assert PILOT.read_text(encoding="utf-8") == raw
+    reviews = {r["id"]: (r.get("review") or {}).get("decision") for r in after}
+    assert reviews == {
+        r["id"]: (r.get("review") or {}).get("decision") for r in before
+    }
+    assert set(reviews.values()) <= set(service.rt.decision_names()) | {None}

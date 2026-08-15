@@ -1,0 +1,502 @@
+meta:
+  generated: '2026-08-15'
+  scope: >-
+    dev (40) + ft_train (364) = 404 contracts; holdout never loaded
+  loader: scripts/cuad_dataset.py
+  guidelines_source: >-
+    CUAD Labeling Handbook (Atticus Project, 2021), paraphrased only — the PDF is
+    copyrighted and non-redistributable; plus the CC BY 4.0 CUAD v1 category descriptions in
+    data/processed/categories.json
+  method: >-
+    for each guideline-derived principle (g01-g08) the OTHER source is the gold annotation,
+    tested empirically; for each data-mined principle (d01-d08) the OTHER source is the
+    Handbook, read for the relevant categories
+  statuses: [corroborated, contradicted, silent]
+  silence_caveat: >-
+    silent is NOT evidence against. It is usually structural — the Handbook documents 30 of
+    CUAD's 41 categories and has zero mentions of Minimum Commitment or Volume Restriction,
+    and contrastive mining is blind to positionally-identified categories.
+  summary:
+    atticus_guidelines: {n: 8, corroborated: 8, contradicted: 0, silent: 0}
+    data_mined: {n: 8, corroborated: 3, contradicted: 3, silent: 2}
+    total: {n: 16, corroborated: 11, contradicted: 3, silent: 2}
+    independent_rediscovery: >-
+      2 of 8 guideline-documented conventions were independently recovered by the mining arm
+      (d02 recovers g03; d01 recovers the Handbook's date-label exemption that g01 carves out)
+      = 25%
+    mining_only: >-
+      5 of 8 mined principles concern conventions the Handbook does not document at all (d03
+      in part, d04, d05, d07 main clause, d08)
+
+g01:
+  direction: guideline -> data
+  status: corroborated
+  claim_tested: >-
+    gold spans for yes/no-shaped categories begin and end on sentence boundaries; the
+    date/party categories are exempt
+  evidence:
+  - 'yes/no categories, 12-category study subset: 2,663 of 3,291 gold spans (80.9%)
+    both start at a sentence boundary and end on terminal punctuation'
+  - 'all 33 yes/no categories in CUAD: 5,744 of 7,117 (80.7%) — the effect is not an
+    artifact of the subset'
+  - 'Agreement Date, the category g01 exempts: 5 of 380 spans (1.3%). The exemption is
+    real and enormous, not a hedge'
+  - per-category both-boundary rates in the subset range from Source Code Escrow 0.54
+    to Volume Restriction 0.78 under the strict test
+  quantification:
+    yesno_subset_spans: 3291
+    yesno_subset_compliant: 2663
+    yesno_subset_rate: 0.809
+    yesno_all41_rate: 0.807
+    agreement_date_rate: 0.013
+  confidence: >-
+    high on the direction and on the scope split; medium on the level. The boundary test
+    allows a section-number or paragraph-break start; the stricter terminal-punctuation-only
+    test gives 63.3% rather than 80.9%, so the residual ~19% is partly OCR/whitespace noise
+    in the EDGAR text, not annotator behaviour.
+  note: >-
+    this is the empirical half of the d01-vs-g01 question. See d01.
+
+g02:
+  direction: guideline -> data
+  status: corroborated
+  claim_tested: >-
+    non-contiguous responsive fragments are labelled together, the intervening
+    non-responsive text dropped and marked "<omitted>"
+  evidence:
+  - 2,105 of 5,417 gold category-labels (38.9%) carry more than one span
+  - 1,512 adjacent same-label span pairs are separated by a gap of over 1,000
+    characters — non-contiguity is the normal case, not an edge case
+  - 120 cases of the exact Handbook shape - a lead-in span ending in a colon followed
+    by a span more than 50 characters later (e.g. INNOVIVA Ip Ownership Assignment
+    [152205:152318] then [152830:...])
+  quantification:
+    labels_with_spans: 5417
+    multi_span_labels: 2105
+    multi_span_rate: 0.389
+    gap_over_1000_chars: 1512
+    leadin_colon_then_distant_subsection: 120
+    literal_marker_occurrences: 0
+  confidence: >-
+    medium. The convention is corroborated; the marker is not testable. The literal string
+    "<omitted>" appears in 0 of 404 contract texts because CUAD gold is character offsets
+    into the raw contract, so the marker exists only in the annotation UI. A checker can
+    test the multi-span shape but not the marker.
+  note: >-
+    the marker must be introduced by the prompt or no model will emit it, which makes the
+    marker half of g02 a test of instruction-following, not legal judgement.
+
+g03:
+  direction: guideline -> data
+  status: corroborated
+  claim_tested: >-
+    a sentence responsive to several categories is extracted under each
+  evidence:
+  - '997 of 9,912 distinct gold character ranges (10.1%) carry two or more categories'
+  - '321 of 404 contracts (79.5%) contain at least one exactly dual-labelled range'
+  - 'top pairs: Agreement Date | Effective Date 207, License Grant | Non-Transferable
+    License 167, Cap On Liability | Uncapped Liability 112'
+  - 'within the 12-category study subset the rate falls to 90 of 3,962 ranges (2.3%) in
+    67 contracts — real but much rarer'
+  quantification:
+    distinct_ranges: 9912
+    dual_labelled_ranges: 997
+    dual_rate: 0.101
+    contracts_with_dual: 321
+    subset_dual_rate: 0.023
+  confidence: >-
+    high. Exact-offset match only; the rate rises if near-identical offsets are counted.
+  note: >-
+    independently recovered by the mining arm as d02 — the one clean case of the two
+    derivation arms converging on the same convention from independent sources.
+
+g04:
+  direction: guideline -> data
+  status: corroborated
+  claim_tested: >-
+    Governing Law covers choice of substantive law only; venue, forum, jurisdiction-consent
+    and arbitration clauses are not responsive
+  evidence:
+  - 'only 5 of 370 Governing Law gold spans (1.4%) carry venue/arbitration language with
+    no governing-law cue'
+  - 'the decisive negative test: Governing-Law-positive contracts contain 1,176
+    sentences that are venue/arbitration-only, and 6 of them (0.5%) overlap a gold
+    Governing Law span'
+  - 'the five exceptions are pure arbitration clauses (e.g. UsioInc Affiliate Agreement 2
+    [24826:25007] and [25008:25179], two AAA arbitration sentences)'
+  quantification:
+    gl_spans: 370
+    gl_contracts: 351
+    venue_only_spans: 5
+    venue_only_span_rate: 0.014
+    venue_only_sentences_available: 1176
+    venue_only_sentences_labelled: 6
+    venue_sentence_label_rate: 0.005
+  confidence: >-
+    high. This is the strongest guideline-to-data corroboration in the set — a documented
+    rule with a large, cleanly-separated negative population that gold declines to label
+    99.5% of the time.
+
+g05:
+  direction: guideline -> data
+  status: corroborated
+  claim_tested: >-
+    Revenue/Profit Sharing requires an amount that varies with the counterparty's
+    revenue/profit/sales/margin/units; fixed and milestone amounts are not
+  evidence:
+  - 'negative direction (the discriminative one): Revenue/Profit-Sharing-positive
+    contracts contain 16 fixed-amount milestone/lump-sum/flat-fee sentences and only 2
+    are labelled (12.5%) — and both of those are equity consideration, which the
+    Handbook explicitly extends the label to cover'
+  - 'positive direction: 195 of 329 RPS gold spans (59.3%) carry a variable-amount signal
+    under a lexical proxy (percentage near a revenue base, per-unit, share/split/based-on
+    a revenue base, or equity)'
+  - 'the 134 spans the proxy misses are mostly proxy failures rather than gold failures —
+    e.g. CHINARECYCLINGENERGYCORP [2912:3036] "fee according to the income from" is
+    plainly variable but matches no pattern'
+  quantification:
+    rps_spans: 329
+    variable_signal_spans: 195
+    variable_signal_rate: 0.593
+    fixed_milestone_sentences_available: 16
+    fixed_milestone_labelled: 2
+    fixed_label_rate: 0.125
+  confidence: >-
+    medium-high on the exclusion of fixed amounts; low on the 59.3% figure, which is a
+    lexical proxy for an arithmetic property and under-recalls. Treat the negative test as
+    the result and the positive rate as a floor.
+
+g06:
+  direction: guideline -> data
+  status: corroborated
+  claim_tested: >-
+    machinery that administers a revenue share — reporting, timing, objection, audit — is
+    not itself Revenue/Profit Sharing
+  evidence:
+  - 'Revenue/Profit-Sharing-positive contracts contain 196 sentences that pair
+    administration vocabulary (report / statement of account / audit / object / dispute /
+    records) with a revenue base and carry no entitlement signal; 2 of them (1.0%)
+    overlap gold'
+  - 'only 2 of 329 RPS gold spans (0.6%) are administration-shaped with no entitlement
+    signal'
+  - 'both exceptions are entitlement sentences that merely mention reporting, e.g.
+    NakedBrandGroup [18140:18323] "Naked will report, and Wade will be paid, royalty
+    payments at..."'
+  quantification:
+    rps_spans: 329
+    admin_only_spans: 2
+    admin_only_span_rate: 0.006
+    admin_sentences_available: 196
+    admin_sentences_labelled: 2
+    admin_sentence_label_rate: 0.010
+  confidence: >-
+    high on the direction, medium on the level — shares g05's lexical weakness. Distinct
+    from g05 in the error it catches (right-topic-wrong-function vs wrong-arithmetic) and
+    should stay a separate id.
+
+g07:
+  direction: guideline -> data
+  status: corroborated
+  claim_tested: >-
+    exactly one Agreement Date per contract, the date text alone, excluding execution
+    wording and excluding header/footer/recital dates
+  evidence:
+  - 'one span: 368 of 374 Agreement-Date-positive contracts (98.4%). The 6 exceptions
+    carry both the intro date and a partial date from an attached exhibit or order form
+    (worked case: OASYSMOBILE,INC_07_05_2001-EX-10.17)'
+  - 'date alone: 7 of 380 spans (1.8%) contain execution wording. Median span length is
+    16 characters, p90 is 26'
+  - 'no recital dates: 0 of 380 spans sit inside an open WHEREAS clause'
+  quantification:
+    ad_positive_contracts: 374
+    exactly_one_span: 368
+    exactly_one_rate: 0.984
+    ad_spans: 380
+    spans_with_execution_wording: 7
+    spans_in_open_recital: 0
+    span_len_median: 16
+  confidence: >-
+    high. Consistent with reviews/agreement-date-check.md, re-derived here on the
+    post-contamination-fix 404.
+  note: >-
+    the "exactly one" test disagrees with gold on 1.6% of positives, so report it separately
+    from the other two tests and expect a ~1.6% annotation floor.
+
+g08:
+  direction: guideline -> data
+  status: corroborated
+  claim_tested: >-
+    a partially redacted or blank agreement date is still labelled, not ruled absent
+  evidence:
+  - '30 of 380 Agreement Date gold spans (7.9%) are themselves blank or redacted
+    constructs — e.g. AULAMERICANUNITTRUST "this day of , 20" at offset 79, LUCIDINC
+    "[*]", StaarSurgical "____________"'
+  - 'zero clean counterexamples: no contract in dev+ft_train leaves a date-shaped blank
+    construct belonging to this agreement unlabelled (2 borderline, per
+    reviews/agreement-date-check.md)'
+  - 'Agreement Date is gold-absent in only 30 of 404 contracts (7.4%), and those are
+    empty slots ("Date:", "Dated: .") with no date-shaped text, not blanked dates'
+  quantification:
+    ad_positive_contracts: 374
+    blank_or_redacted_gold_spans: 30
+    blank_rate_of_ad_spans: 0.079
+    ad_absent_contracts: 30
+  confidence: >-
+    high. This overturns the study plan's original assumption in g08's own checker sketch —
+    compliance and correctness point the SAME way here, not opposite.
+  note: >-
+    needs the tightening recorded in reviews/agreement-date-check.md — the trigger must be a
+    date-SHAPED construct with missing components, not merely a missing date. A bare "Date:"
+    slot is gold-absent.
+
+d01:
+  direction: mined -> guidelines
+  status: corroborated
+  claim_tested: >-
+    extract the minimal expression answering the target, clipped out of its carrying
+    sentence, rather than the whole sentence (scope: Agreement Date)
+  evidence:
+  - 'Handbook ch.1, general labeling rules — the "label one sentence at a time" rule is
+    stated with an explicit exceptions pointer to the Parties and Agreement
+    Date/Effective Date labels. Date labels are carved out by name'
+  - 'Handbook, Agreement Date, IS-NOT list — instructs the annotator to label the date
+    only and not the surrounding execution reference. This is d01 stated as policy'
+  - 'gold agrees: 370 of 380 Agreement Date spans (97.4%) are under 40 characters and
+    365 (96.1%) are proper substrings of their containing sentence'
+  quantification:
+    ad_spans: 380
+    under_40_chars: 370
+    rate_under_40: 0.974
+    proper_substring_of_sentence: 365
+    rate_substring: 0.961
+  confidence: >-
+    high, on all three legs — the Handbook documents both the exemption and the rule, and
+    gold follows it at 96-97%.
+  note: >-
+    THE d01-vs-g01 QUESTION. There is no contradiction; the two are scope-differentiated and
+    the Handbook draws the line itself. g01 governs yes/no categories (80.9%
+    sentence-shaped) and already exempts the date categories in its trigger_guidance; d01
+    governs Agreement Date (1.3% sentence-shaped, 97.4% minimal). The apparent conflict is a
+    drafting artifact - d01's STATEMENT is phrased generally ("rather than the whole
+    containing sentence") while its scope field says Agreement Date. The fix is to move the
+    scope into the statement, not to choose between the two. If d01 were applied unscoped it
+    WOULD contradict g01, and gold would side with g01.
+
+d02:
+  direction: mined -> guidelines
+  status: corroborated
+  claim_tested: >-
+    a passage satisfying more than one target's definition is extracted under each; targets
+    are not mutually exclusive
+  evidence:
+  - 'Handbook ch.1 carries a dedicated rule for a sentence responsive to multiple labels,
+    directing the annotator to label it under each. Verbatim policy match'
+  - 'the CC BY 4.0 CUAD v1 category descriptions place several study-subset categories in
+    shared groups (Agreement Date / Effective Date in group 1; the licence family in
+    group 4), where one text context legitimately serves several labels'
+  - 'already empirically confirmed in reviews/principle-claim-checks.md and re-derived
+    here — see g03'
+  quantification:
+    dual_labelled_ranges: 997
+    dual_rate: 0.101
+    contracts_with_dual: 321
+  confidence: >-
+    high.
+  note: >-
+    this is the same convention as g03, reached independently from data. It is the only
+    clean case of the two derivation arms converging, and it is the strongest single piece
+    of evidence that the mining arm recovers real conventions.
+
+d03:
+  direction: mined -> guidelines
+  status: corroborated
+  claim_tested: >-
+    a pure proportion-of-outcome obligation answers the sharing target; the same obligation
+    answers the minimum-commitment target once it also guarantees a fixed floor
+  evidence:
+  - 'Handbook, Revenue/Profit Sharing IS list — a payment calculated as a share of the
+    other party''s revenue, profit, sales or margin is responsive. Directly supports the
+    first clause'
+  - 'Handbook, Revenue/Profit Sharing IS-NOT list — payments in fixed amounts, including
+    milestone payments and tiered schedules in fixed amounts, are not responsive; a bare
+    reference to a royalty or commission is not evidence either. Supports the boundary
+    d03 draws'
+  - 'the Minimum Commitment half is UNDOCUMENTED — the Handbook has zero occurrences of
+    "Minimum Commitment" and no section for it'
+  quantification: null
+  confidence: >-
+    medium. The sharing half is documented policy; the minimum-commitment half is
+    structurally untestable against the Handbook and rests on d03's own four mined pairs.
+  note: >-
+    half-corroborated, half-silent. The silence is structural, not adverse.
+
+d04:
+  direction: mined -> guidelines
+  status: contradicted
+  claim_tested: >-
+    a guaranteed floor qualifies for the minimum-commitment target whichever party it binds
+    and whatever it is a floor on — not only a buyer's purchase obligation
+  evidence:
+  - 'the published CUAD v1 category description for Minimum Commitment asks whether there
+    is a minimum order size or minimum amount or units per time period that one party
+    must BUY FROM THE COUNTERPARTY (CC BY 4.0, data/processed/categories.json). Applied
+    literally this excludes supplier-side floors, payment floors, performance floors and
+    access floors — exactly what d04 says qualifies'
+  - 'the Handbook itself is SILENT: it documents 30 of the 41 CUAD categories and
+    Minimum Commitment is not one of them. The one-line description is the only
+    guideline-side statement that exists'
+  - 'gold sides with d04 against the published definition: only 84 of 336 Minimum
+    Commitment spans (25.0%) encode purchase-by-this-party, and 98 of 133 MC-positive
+    contracts (73.7%) contain no such span at all
+    (reviews/principle-claim-checks.md, claim 2)'
+  quantification:
+    mc_spans_hand_classified: 336
+    purchase_by_this_party: 84
+    purchase_rate: 0.250
+    mc_positive_contracts_with_no_purchase_span: 98
+    of_mc_positive_contracts: 133
+  confidence: >-
+    high on the contradiction, high on which side gold is on. The 336-span classification is
+    one reader's judgement, but the purchase bucket would have to more than double to rescue
+    the literal definition.
+  note: >-
+    HIGHEST-VALUE CONTRADICTION IN THE SET. It is a documentation-versus-practice divergence
+    with a measured sign: a model given only the published definition returns an
+    AbsenceClaim on roughly three quarters of the contracts gold marks present. d04 also
+    UNDERSTATES the effect — it names supply, payment and access but not performance/effort
+    floors, which are 55 spans (16.4%).
+
+d05:
+  direction: mined -> guidelines
+  status: silent
+  silence_reason: >-
+    the Handbook has no section for Minimum Commitment and none for Volume Restriction —
+    zero occurrences of either name in 95 pages. Both halves of the threshold-direction
+    boundary are undocumented, so there is nothing to agree or disagree with
+  claim_tested: >-
+    when two targets differ only in threshold direction, assign by which side of the
+    threshold the clause binds on
+  evidence:
+  - 'Handbook chapter 2 documents 30 labels; Minimum Commitment, Volume Restriction,
+    Price Restrictions, Cap on Liability, Uncapped Liability, Warranty Duration,
+    Affiliate License-Licensee and Unlimited/AYCE License have no sections'
+  - 'the only guideline-side statement is the CC BY 4.0 one-line Volume Restriction
+    description — a fee increase or consent requirement if one party''s use exceeds a
+    threshold — which weakly corroborates d05''s upper-bound half and says nothing about
+    the lower-bound half'
+  quantification: null
+  confidence: >-
+    high that the silence is structural. d05 is the most strongly evidenced mined principle
+    (8 pairs, 6 same-contract, 4 near-verbatim) and its silence here is a fact about the
+    Handbook, not about d05.
+  note: >-
+    this is precisely the gap the mining arm exists to fill — two thirds of the Savelka
+    confusable trio are undocumented, and the only derivation route to them is the data.
+
+d06:
+  direction: mined -> guidelines
+  status: contradicted
+  claim_tested: >-
+    claim absence when the document does not state the specific fact the target asks for,
+    even where it states a neighbouring fact that plausibly stands in
+  evidence:
+  - 'CONTRADICTED ON THE CITED EVIDENCE. The Handbook''s Agreement Date IS list carries an
+    explicit rule: when a date in the introductory paragraph is defined as the Effective
+    Date, it is labelled under BOTH Agreement Date and Effective Date, with a worked
+    example. d06''s only informative pair (pair-0026, IOVANCEBIOTHERAPEUTICS strategic
+    alliance, "Effective Date: April 17, 2017" in the opening line, Agreement Date
+    gold-absent) is a case where gold departs from that documented rule'
+  - 'gold follows the Handbook rule overwhelmingly: 207 character ranges carry both
+    Agreement Date and Effective Date. Against that, 6 contracts have a concrete
+    intro-region date labelled Effective Date while Agreement Date is absent (Iovance,
+    InmodeLtd, LOYALTYPOINTINC, NATIONALPROCESSINGINC, OPTIMIZEDTRANSPORTATIONMANAGEMENT,
+    WHITESMOKE). The evidence base sits in a ~3% annotation tail'
+  - 'the ABSTRACT statement is separately corroborated: the Handbook''s Agreement Date
+    IS-NOT list excludes header/footer dates and Whereas/Recitals dates, and its
+    Effective Date IS-NOT list excludes the agreement date and the signature-page date.
+    Near-miss dates are not answers'
+  quantification:
+    ad_absent_contracts: 30
+    ad_absent_with_effective_date_present: 19
+    ad_absent_with_concrete_intro_region_date_labelled_effective_date: 6
+    ranges_labelled_both_agreement_and_effective_date: 207
+  confidence: >-
+    high on the contradiction with the cited evidence; the general statement is fine and
+    separately documented. This is the record whose STATUS depends on which level you read
+    it at, and the curator should be told that explicitly.
+  note: >-
+    the proposer flagged d06 as weakly supported (effective n=1) and was right to. The
+    cross-source check localises the weakness — the principle is not wrong, its single piece
+    of evidence is an annotation error against the Handbook. If d06 is kept, it needs
+    different evidence.
+
+d07:
+  direction: mined -> guidelines
+  status: contradicted
+  claim_tested: >-
+    document furniture interrupting a passage is carried along inside the extracted span,
+    but furniture standing on its own is never extracted
+  evidence:
+  - 'MAIN CLAUSE REFUTED BY GOLD, re-derived independently here: 22 gold spans across
+    dev+ft_train contain furniture strictly inside them, against 175 same-category
+    adjacent gold span pairs separated by nothing but furniture — 155 of which split
+    mid-sentence, ruling out "two separate clauses straddling a page break". The dominant
+    convention is to SPLIT at the furniture and exclude it, by roughly 8:1'
+  - 'SECOND CLAUSE CONFIRMED: 0 gold spans consist only of furniture'
+  - 'the Handbook is SILENT on the main clause. Its only furniture rule is narrow and
+    category-specific — a date in a header or footer is not an Agreement Date, and a date
+    in a footer is not an Effective Date, with a note that CUAD contracts come from EDGAR
+    so a footer may carry the SEC filing date. It never addresses whether furniture
+    interrupting a labelled passage is carried inside the span'
+  - 'the guidelines arm anticipated the right answer without being told: g07''s checker
+    sketch already speaks of gold spans split around embedded furniture'
+  quantification:
+    spans_with_furniture_inside: 22
+    spans_that_are_only_furniture: 0
+    adjacent_pairs_separated_by_furniture_only: 175
+    of_which_split_midsentence: 155
+    split_to_swallow_ratio: 7.95
+  confidence: >-
+    high. Two independent regex families (this pass and reviews/principle-claim-checks.md)
+    give 22/175 and 25/204 — same conclusion, and the ratio is stable at 5-8:1.
+  note: >-
+    WORKED EXAMPLE OF THE METHOD WORKING. d07 was read off ONE pair and generalised the
+    wrong way; its compliance rule would penalise the behaviour gold exhibits 175 times in
+    favour of the behaviour it exhibits 22 times. Tyler deferred it for "more support"
+    without knowing this. If kept, the defensible form is disjunctive - furniture is never a
+    span on its own, and an interrupted passage is annotated EITHER as one span swallowing
+    the furniture OR as two spans split at it, so a scorer must not treat either shape as a
+    violation.
+
+d08:
+  direction: mined -> guidelines
+  status: silent
+  silence_reason: >-
+    the Handbook has no Minimum Commitment section at all, so it says nothing about whether
+    an unquantified undertaking satisfies the target
+  claim_tested: >-
+    an obligation carrying no quantified threshold does not satisfy a target that asks for
+    one, however emphatic the commitment language
+  evidence:
+  - 'zero occurrences of "Minimum Commitment" in the 95-page Handbook; the label is one
+    of 11 CUAD categories chapter 2 does not document'
+  - 'the CC BY 4.0 one-line description does presuppose a quantity — a minimum order
+    size or minimum amount or units per time period — which weakly corroborates d08''s
+    direction, but it is a definition, not guidance, and it is the same one-liner d04
+    contradicts on the other axis'
+  - 'the applicability trigger is very broad in practice: 232 of 272 MC-absent contracts
+    (85.3%) contain at least one sentence matching d08''s unquantified-undertaking cue,
+    so the principle will fire almost everywhere it is absent'
+  quantification:
+    mc_absent_contracts: 272
+    mc_present_contracts: 132
+    absent_contracts_matching_undertaking_cue: 232
+    trigger_rate_on_absent: 0.853
+  confidence: >-
+    high that the Handbook is silent; the 85.3% trigger rate is a separate caution about
+    scoreability rather than about truth.
+  note: >-
+    Tyler deferred this one saying he had no idea what it means. The cross-source answer is
+    that the guidelines cannot help — the category is undocumented — so if it is kept it
+    must be kept on the strength of its three contract-level absence rulings alone, and its
+    checker needs a much tighter trigger.

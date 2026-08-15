@@ -8,7 +8,7 @@ from pathlib import Path
 
 import uvicorn
 
-from . import record_types
+from . import record_types, sidecars
 from .service import Config
 from .server import create_app
 
@@ -26,12 +26,28 @@ def build_config(args: argparse.Namespace) -> Config:
         if args.export
         else source.with_name(source.stem + ".reviewed.yaml")
     )
+    pairs = (
+        Path(args.pairs).expanduser().resolve()
+        if args.pairs
+        else sidecars.discover(source.parent, sidecars.PAIR_NAMES)
+    )
+    footprint = (
+        Path(args.footprint).expanduser().resolve()
+        if args.footprint
+        else sidecars.discover(source.parent, sidecars.FOOTPRINT_NAMES)
+    )
+    if args.pairs and not pairs.exists():
+        sys.exit(f"pairs file not found: {pairs}")
+    if args.footprint and not footprint.exists():
+        sys.exit(f"footprint file not found: {footprint}")
     return Config(
         source=source,
         db=db,
         record_type=args.record_type,
         reviewer=args.reviewer,
         export_path=export,
+        pairs_path=pairs,
+        footprint_path=footprint,
     )
 
 
@@ -43,6 +59,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--reviewer", default="tyler")
     parser.add_argument("--db", default=None)
     parser.add_argument("--export", default=None)
+    parser.add_argument("--pairs", default=None)
+    parser.add_argument("--footprint", default=None)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8823)
     parser.add_argument("--no-browser", action="store_true")
