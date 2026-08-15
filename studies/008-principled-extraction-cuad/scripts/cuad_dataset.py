@@ -63,6 +63,21 @@ class CuadDataset:
         return texts
 
     @property
+    def texts(self):
+        return self._text
+
+    def record(self, contract_id):
+        return self._records.get(contract_id)
+
+    def split_file(self, split):
+        if split not in SPLITS:
+            raise ValueError(f"unknown split {split!r}; expected one of {SPLITS}")
+        return self._processed / "splits" / f"{split}.txt"
+
+    def all_contract_ids(self):
+        return sorted(self._records)
+
+    @property
     def categories(self):
         return list(self._categories_override or self._catalog["subset"])
 

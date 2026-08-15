@@ -244,7 +244,12 @@ def main(argv: list[str] | None = None) -> int:
                 "question than 'is there a near-duplicate document with the opposite "
                 "label'. Ungated it returns mostly unrelated contracts sharing legal "
                 "boilerplate. The document-containment floor restricts it to genuine "
-                "near-twins; see detector_comparison for what the gate discards"
+                "near-twins; see detector_comparison for what the gate discards. "
+                "Known residual failure mode at this gate: CUAD entries that are "
+                "fragments of one filing (a continuation excerpt or annex) score "
+                "moderate containment and share boilerplate, but their absence "
+                "labels are legitimately correct because the fragment does not "
+                "contain the clause. Read the passage before trusting a fuzzy hit"
             ),
         }
 

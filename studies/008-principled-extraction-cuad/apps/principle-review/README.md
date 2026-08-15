@@ -188,6 +188,95 @@ governing-law passage is byte-identical and the amendment marks the category
 absent. Passage-first, document-similarity-as-context is the design that finds
 it.
 
+**Two detectors.** Exact matching is not enough — it can only find passages
+that survived copying byte-for-byte, so its yield is a lower bound. The second
+detector reuses the study's contrastive-pair miner
+(`scripts/mine_contrastive_pairs.py`) by importing `Space`, `jaccard_block`,
+`terms` and `chunk_text` directly: idf-weighted Jaccard over unigram+bigram
+term sets, NFKC/lowercase/whitespace normalization, digits and redactions
+folded to tokens. Its parameters come from `principles/pilot/mining_config.yaml`
+and are not re-tuned here: `present_absent` threshold 0.20, `min_terms_per_unit`
+8, `top_k_per_query` 1, and context expansion for spans under 120 characters
+(which is what makes a bare Agreement Date matchable at all). No third
+similarity metric was written.
+
+Different floors govern the two detectors, because they carry different
+evidential weight:
+
+| | exact_normalized | fuzzy_idf_jaccard |
+|---|---|---|
+| match | byte-identical after whitespace normalization | idf-weighted Jaccard >= 0.20 |
+| minimum unit | 60 normalized characters | 8 in-vocabulary terms (the miner's rule) |
+| document-containment gate | none | >= 0.15 |
+
+**The fuzzy detector needs the containment gate, and this is the tuning risk.**
+The miner's threshold answers *"does a passage resembling category C exist
+somewhere C is marked absent"* — a broader and different question than *"is
+there a near-duplicate document with the opposite label"*. Ungated at 0.20 it
+returns 22 candidates over dev+holdout, of which **17 have document containment
+0.0**: unrelated contracts sharing legal boilerplate ("This Agreement may not be
+assigned without prior written consent" matched against "shall be binding upon
+successors and assigns"), and several outright category mismatches (a
+Cap-On-Liability span matched to a punitive-damages waiver; a Minimum-Commitment
+purchase schedule matched to a termination clause). A census that is ~90% false
+positives is worse than no census, so fuzzy hits must also come from documents
+that are actually similar. The 0.15 containment floor was set by reading all 22
+candidates by hand, not by optimizing a number.
+
+Detector comparison over the full dev+holdout population, emitted into every
+sample file under `sampling.detector_comparison`:
+
+| detector | disagreeing spans found |
+|---|---|
+| exact_normalized | 4 |
+| fuzzy_idf_jaccard (gated) | 3 |
+| fuzzy_idf_jaccard (ungated) | 22 |
+| both | 1 |
+| exact only | 3 |
+| fuzzy only | 2 |
+| union (census size) | 6 |
+| discarded by the gate | 19 |
+
+**Neither detector subsumes the other**, which is the argument for keeping both.
+Exact-only finds three cases the fuzzy pass misses, including a byte-identical
+Minimum Commitment passage across two contracts whose document containment is
+0.02 — evidence exact accepts precisely because byte-identity over 60+
+characters is strong on its own and needs no document-similarity corroboration.
+
+The two fuzzy-only cases were each checked by hand against the source
+contracts, and **one of the two is a false positive**:
+
+- *Confirmed.* Pharmagen (dev) vs EcoScience (ft_train), containment 0.375: two
+  companies' endorsement agreements built from the same template. The
+  EcoScience document contains a section literally headed `8. Exclusivity.`
+  imposing an exclusivity obligation, yet its gold marks Exclusivity
+  `is_impossible: true`. A genuine annotation miss that exact matching cannot
+  reach, because the parties' names differ.
+- *False positive.* WOMENSGOLF endorsement agreement vs its
+  "- Intellectual Property Rights..." entry, containment 0.215. That second
+  entry is not a twin: it is a **continuation fragment** of the same filing,
+  beginning mid-document at page 9 section 11.6, and it contains no signing
+  date at all — so `Agreement Date: is_impossible` is correct there. The match
+  came from context expansion pulling execution-block boilerplate around a
+  25-character date span. Per D-19, gold follows the Atticus Handbook on
+  date-shaped constructs, and this case does not contradict it.
+
+So the fuzzy-only confirmation rate is **1 of 2**, and the named failure mode is
+CUAD entries that are *fragments of one filing* rather than near-duplicate
+documents: they score moderate containment and share boilerplate, but their
+absence labels are legitimately correct. Raising the gate to 0.3 would drop this
+false positive and keep the confirmed case — but that is fitting a threshold to
+two data points, so the gate stays at 0.15 and the fragment mode is documented
+instead. The strongest case overall is found by both detectors: two CUAD entries
+for the ADURO consulting agreement that are byte-identical (12020 characters
+each, one in dev and one in ft_train), where Exclusivity is annotated in one and
+`is_impossible` in the other.
+
+Every counterpart row records its `detector`, `similarity` and
+`doc_containment`, and every record carries `detected_by`, so the provenance of
+each suspected case is visible in the UI and survives export. `--no-fuzzy`
+disables the second detector; `--fuzzy-min-containment` moves the gate.
+
 **The census stratum.** Measured over the whole dev+holdout population: 48 of
 1288 gold spans (3.7%) have an exact-passage counterpart, and only **4** of
 those show label disagreement — about 0.3% of spans. A random sample of 120
@@ -195,9 +284,11 @@ would be expected to contain 0.4 of them, so this class is invisible to random
 sampling. The sampler therefore also emits an exhaustive **census** of every
 span whose passage recurs under an opposite label, tagged
 `sample.draw: duplicate_census` (disable with `--no-duplicate-census`). The
-census is a targeted enumeration of suspected defects, not a draw: the
-aggregator counts it in its own section and excludes it from every rate, since
-pooling it would bias the noise floor upward. Random-draw records are tagged
+census is the union of both detectors. It is a targeted enumeration of
+suspected defects, not a draw: the aggregator counts it in its own section,
+broken down by `detected_by` so each matcher's confirmation rate is visible,
+and excludes it from every rate, since pooling it would bias the noise floor
+upward. Random-draw records are tagged
 `sample.draw: random` and are the only input to the headline figures.
 
 **Aggregate.**
