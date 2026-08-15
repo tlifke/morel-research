@@ -749,7 +749,7 @@ async function refresh(keepId){
   const res=await fetch("/api/state");
   S.state=await res.json();
   $("src").textContent=S.state.source;
-  if(!$("fFacet0").dataset.built){buildFacets();buildDecisionFilter();renderKeyHelp();}
+  if(!$("fFacet0").dataset.built){buildFacets();buildDecisionFilter();renderKeyHelp();reportSync();}
   renderProgress();
   const v=visible();
   if(keepId){const i=v.findIndex(r=>r.record_id===keepId); if(i>=0)S.sel=i;}
@@ -790,18 +790,39 @@ function nextUnreviewed(){
   select(Math.min(S.sel+1,v.length-1));
 }
 
-async function doExport(){
+async function doExport(force){
   const res=await fetch("/api/export",{method:"POST",
-    headers:{"Content-Type":"application/json"},body:"{}"});
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(force?{force:true}:{})});
+  if(res.status===409){
+    const e=await res.json();
+    if(window.confirm(e.detail+"\n\nOverwrite it anyway?"))return doExport(true);
+    toast("export cancelled — nothing was written",true);
+    return;
+  }
+  if(!res.ok){const e=await res.json();toast("not exported: "+(e.detail||res.status),true);return;}
   const j=await res.json();
   toast(`exported ${j.n} records\n${j.path}`);
+}
+
+function reportSync(){
+  const s=S.state.last_sync||{};
+  const adopted=(s.adopted_from_file||[]).length;
+  const clashes=s.conflicts||[];
+  if(clashes.length)
+    toast(`${clashes.length} record(s) disagree with the file; kept the store's `+
+      `decision:\n`+clashes.map(c=>
+        `${c.record_id}: kept ${c.kept_from_db}, ignored ${c.ignored_from_file}`
+      ).join("\n"),true);
+  else if(adopted)
+    toast(`restored ${adopted} decision(s) from the source file`);
 }
 
 document.addEventListener("keydown",(ev)=>{
   if(!S.state)return;
   const inField=/^(TEXTAREA|INPUT|SELECT)$/.test(document.activeElement.tagName);
   if((ev.ctrlKey||ev.metaKey)&&ev.key==="Enter"){ev.preventDefault();save();return;}
-  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==="e"){ev.preventDefault();doExport();return;}
+  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==="e"){ev.preventDefault();doExport(false);return;}
   if(ev.key==="Escape"){document.activeElement.blur();return;}
   if(inField)return;
   const nav={j:()=>select(S.sel+1),k:()=>select(S.sel-1),u:nextUnreviewed,
@@ -823,7 +844,7 @@ $("rationaleFirst").onchange=()=>{
   renderDecisions(); validate();
 };
 $("saveBtn").onclick=save;
-$("exportBtn").onclick=doExport;
+$("exportBtn").onclick=()=>doExport(false);
 $("fDecision").onchange=()=>{S.sel=0;renderList();renderRecord();};
 $("fText").oninput=()=>{S.sel=0;renderList();renderRecord();};
 window.addEventListener("beforeunload",()=>{

@@ -310,14 +310,91 @@ candidates file, and because a crash mid-typing must not lose a rationale:
   export time by diffing edits against the source, not stored as its own
   truth.
 - `reviews` — current decision per record
-- `review_history` — append-only, every save ever made
+- `review_history` — append-only, every save ever made, with `origin` naming
+  whether it came from the tool (`app`) or was adopted from the source file
+  (`import`)
 - `drafts` — rationale/edits autosaved ~400 ms after typing stops, and again
   on tab close. Cleared once the decision is saved. Unsaved drafts show a
   `draft` pill in the queue list and reload with the record.
 
 Re-running the app against an updated candidates file re-imports it: new
 records appear, existing decisions survive, changed source text is refreshed.
-Decisions are keyed on the record `id`, so ids must be stable.
+
+### Durability
+
+The store is not the only copy of a decision, and it must not be treated as
+one. A real incident: `state/` was removed between sessions by something
+outside this app, and relaunching produced an empty queue that then overwrote
+the reviewed YAML with 16 null decisions. Three things changed as a result.
+
+**1. Import adopts `review` blocks from the source file.** A file whose records
+carry populated `review` blocks — which is exactly what `export` writes, and
+what is committed to git — rehydrates the queue on load. The exported YAML is
+therefore the durable artifact and the SQLite file is a cache; losing `state/`
+now costs nothing but drafts.
+
+The conflict rule, chosen deliberately:
+
+| situation | outcome |
+|---|---|
+| file has a decision, store has none | **adopted** from the file, with its original `reviewer`, `date` and `rationale` preserved verbatim |
+| store has a decision, file has none | store's decision stands |
+| both, and they agree | store's decision stands, no change |
+| both, and they **disagree** | **store wins**, the file's decision is ignored, and the disagreement is reported |
+
+The store wins because it is the live session: a human at the keyboard edited
+it most recently, and a stale file on disk must never silently overwrite that.
+Import is never destructive — it only ever fills gaps. Every adoption and every
+conflict is printed at startup, returned from `/api/reimport`, carried in
+`/api/state` as `last_sync`, and toasted in the UI (conflicts as an error
+toast). Adopted rows are written to `review_history` with `origin: import`,
+against `origin: app` for decisions made in the tool, so provenance is
+recoverable per record.
+
+Adopting an `edit` also reconstructs the store's split between proposed and
+reviewed text: the file's record body holds the edited values and its
+`edited_from` map holds the originals, so the originals are restored as the
+record `source` and the file's values become the `edits`. Export then re-derives
+an identical `edited_from`, which is what makes export → import → export
+byte-identical for edited records.
+
+**2. Every commit is checkpointed.** `synchronous=FULL`, and
+`wal_checkpoint(TRUNCATE)` runs after each saved review. WAL already survived an
+unclean kill, but the main `.sqlite3` file was staying at 4 KB with all content
+in the `-wal` sidecar, so copying or moving the database without its sidecar
+silently produced an empty-looking but valid database. The main file is now
+self-contained after every save. Nothing depends on a graceful shutdown; there
+is no shutdown hook.
+
+**3. Export refuses to lose decisions.** If the export target already exists and
+holds *more* decided records than the queue about to be written, export raises
+and writes nothing (`409` over HTTP; the UI shows the numbers and asks before
+retrying with `force`). Equal or growing counts pass unguarded, as does a fresh
+or empty target. This is the specific guard for "a queue that failed to load its
+decisions overwrites the good file".
+
+### What decisions key to
+
+Reviews key on `(queue_id, record_id)`, where `queue_id` is the **resolved
+absolute path of the source file** and `record_id` is the record's `id` field.
+The consequences, stated plainly because round 2 merges candidates with
+calibration controls into a new file:
+
+- **Renaming or re-dumping the file starts a new, empty queue.** The path is the
+  key; nothing follows the file. This is not a bug to route around, it is why
+  adoption exists.
+- **The thing that actually carries a decision across files is the record `id`
+  plus its `review` block.** To move round-1 decisions into a round-2 file,
+  carry both — copy the records with their `review` blocks into the new file and
+  keep the ids identical. On first load they are adopted, whatever the file is
+  called and whatever else has been merged in beside them.
+- **Ids must be stable and unique within a file.** A record with no `id` falls
+  back to `__<ordinal>`, which is positional and will silently re-key if the
+  file is reordered — give every record an explicit id.
+- **Two different files reviewed under one `--db` keep separate queues.** That
+  is deliberate: reviewing `candidates_pilot.yaml` and
+  `candidates_pilot.reviewed.yaml` are two queues in one database, and decisions
+  do not leak between them except through the file contents.
 
 ## Gold-span audit (`gold_audit`)
 
@@ -602,6 +679,18 @@ bare id-keyed variant and mtime-driven reload), graceful degradation when
 neither sidecar is present, and a re-import of the real round-1 file
 (`principles/pilot/candidates_pilot.reviewed.yaml`, read-only) reproducing all
 16 decisions byte-for-byte.
+
+`tests/test_durability.py` covers the loss incident. It launches the **real
+console-script entry point** as a subprocess, saves decisions over HTTP, kills
+the process with `SIGKILL` and with `SIGTERM`, relaunches, and asserts the
+decisions and rationales are still there; it copies the main `.sqlite3` away
+from its `-wal` and asserts the copy alone still carries the decisions; it
+deletes the entire `state/` directory and asserts a relaunch against the
+exported YAML restores every decision, with an identical re-export; and it pins
+the conflict rule, the `origin` provenance, the preserved review dates, the
+`edited_from` reconstruction, and the export guard in both the refusing and the
+permitting direction. The suite was verified to fail when store persistence is
+sabotaged, so the assertions have teeth.
 
 `tests/test_gold_audit.py` covers the gold-audit type end to end against the
 fixture: schema conformance, lossless round-trip, defect decisions exported

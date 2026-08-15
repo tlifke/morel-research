@@ -75,7 +75,21 @@ class Store:
         self.conn = sqlite3.connect(str(path), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
+        self.conn.execute("PRAGMA synchronous=FULL")
+        self._migrate()
         self.conn.commit()
+        self.checkpoint()
+
+    def _migrate(self) -> None:
+        columns = {
+            row["name"]
+            for row in self.conn.execute("PRAGMA table_info(review_history)")
+        }
+        if "origin" not in columns:
+            self.conn.execute("ALTER TABLE review_history ADD COLUMN origin TEXT")
+
+    def checkpoint(self) -> None:
+        self.conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
 
     def close(self) -> None:
         self.conn.close()
@@ -178,13 +192,27 @@ class Store:
         edits: dict[str, Any],
         edited_from: str | None,
         review_date: str | None = None,
+        origin: str = "app",
+        source: dict[str, Any] | None = None,
     ) -> None:
         stamp = review_date or today()
         ts = now()
-        self.conn.execute(
-            "UPDATE records SET edits_json=? WHERE queue_id=? AND record_id=?",
-            (json.dumps(edits, sort_keys=True), queue_id, record_id),
-        )
+        if source is None:
+            self.conn.execute(
+                "UPDATE records SET edits_json=? WHERE queue_id=? AND record_id=?",
+                (json.dumps(edits, sort_keys=True), queue_id, record_id),
+            )
+        else:
+            self.conn.execute(
+                "UPDATE records SET edits_json=?, source_json=? "
+                "WHERE queue_id=? AND record_id=?",
+                (
+                    json.dumps(edits, sort_keys=True),
+                    json.dumps(source, sort_keys=True),
+                    queue_id,
+                    record_id,
+                ),
+            )
         self.conn.execute(
             "INSERT INTO reviews (queue_id, record_id, decision, rationale, reviewer, "
             "  review_date, edited_from, updated_at) VALUES (?,?,?,?,?,?,?,?) "
@@ -196,8 +224,8 @@ class Store:
         )
         self.conn.execute(
             "INSERT INTO review_history (queue_id, record_id, decision, rationale, "
-            "  reviewer, review_date, edited_from, edits_json, written_at) "
-            "VALUES (?,?,?,?,?,?,?,?,?)",
+            "  reviewer, review_date, edited_from, edits_json, written_at, origin) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
             (
                 queue_id,
                 record_id,
@@ -208,12 +236,14 @@ class Store:
                 edited_from,
                 json.dumps(edits, sort_keys=True),
                 ts,
+                origin,
             ),
         )
         self.conn.execute(
             "DELETE FROM drafts WHERE queue_id=? AND record_id=?", (queue_id, record_id)
         )
         self.conn.commit()
+        self.checkpoint()
 
     def save_draft(self, queue_id: str, record_id: str, draft: dict[str, Any]) -> None:
         self.conn.execute(
@@ -226,7 +256,8 @@ class Store:
 
     def history(self, queue_id: str, record_id: str) -> list[dict[str, Any]]:
         rows = self.conn.execute(
-            "SELECT decision, rationale, reviewer, review_date, edited_from, written_at "
+            "SELECT decision, rationale, reviewer, review_date, edited_from, "
+            "  written_at, origin "
             "FROM review_history WHERE queue_id=? AND record_id=? ORDER BY history_id",
             (queue_id, record_id),
         ).fetchall()
