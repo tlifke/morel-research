@@ -1,0 +1,3875 @@
+schema_version: 1
+generated: '2026-08-15'
+generator:
+  script: studies/008-principled-extraction-cuad/principles/pilot/round2/checkers/run_footprints2.py
+  version: '1.0'
+split: dev
+population:
+  unit: decision (contract x category)
+  n_units: 480
+  n_contracts: 40
+  n_categories: 12
+note: Headline applicability rate and denominator are over the full 12-category dev decision set (480
+  decisions). The rate restricted to a principle's declared scope is under scope_and_faithfulness.in_scope_applicability,
+  and the discrimination 2x2 is computed on that in-scope subset. holdout was never loaded; ft_train was
+  not used.
+principles:
+  p01:
+    status: discriminating-but-rare
+    note: 'Fires on 5/480 decisions (1.0%) over the 12-category dev set; 5/40 (12.5%) within its declared
+      scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
+      with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
+      Phi against gold presence, in scope: 0.3833.'
+    applicability:
+      n_applicable: 5
+      n_units: 480
+      rate: 0.0104
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 5
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 0.8
+      pass_rate_negative: 0.2571
+      lift: 0.5429
+      n_positive: 5
+      n_negative: 35
+      phi: 0.3833
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: pass
+      gold_dependency: instance_only
+      why: Applicability reads contract text only; a decision can be applicable with the category gold-present
+        or gold-absent, so compliance is not a restatement of the answer.
+      twobytwo_applicability_x_gold:
+        applicable_present: 4
+        applicable_absent: 1
+        notapplicable_present: 9
+        notapplicable_absent: 26
+      twobytwo_all_decisions:
+        applicable_present: 4
+        applicable_absent: 1
+        notapplicable_present: 207
+        notapplicable_absent: 268
+      structurally_empty_cells: &id003 []
+      observed_empty_cells: []
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id001
+      - Revenue/Profit Sharing
+      eligible_categories: *id001
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: g06
+      in_scope_applicability:
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 1
+        n_units: 180
+        rate: 0.0056
+      - key: 4k-8k
+        n_applicable: 0
+        n_units: 132
+        rate: 0.0
+      - key: 8k-16k
+        n_applicable: 1
+        n_units: 84
+        rate: 0.0119
+      - key: '>16k'
+        n_applicable: 3
+        n_units: 84
+        rate: 0.0357
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0021
+      variants:
+        narrow_admin:
+          n_applicable_all_decisions: 4
+          rate_all_decisions: 0.0083
+          delta_vs_as_written: -0.0021
+          rate_in_scope: 0.1
+          phi_in_scope: 0.3025
+    examples:
+    - verdict: applies
+      contract_id: CORIOINC_07_20_2000-EX-10.5-LICENSE AND HOSTING AGREEMENT
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: In addition, the parties shall share certain revenues related to purchases made by Customers
+        utilizing Commerce One's MarketSite.net Service, as set forth in EXHIBIT B hereto.
+    - verdict: applies
+      contract_id: INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: 'Within twenty (20) days after the end of each Calendar Quarter , GSK shall pay Theravance
+        royalty payments based on Net Sales in such Calendar Quarter during the Term as follows: O'
+    - verdict: applies
+      contract_id: NEXSTARFINANCEHOLDINGSINC_03_27_2002-EX-10.26-OUTSOURCING AGREEMENT
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: 'Notwithstanding anything herein to the contrary, WYZZ shall continue to be the owner of and
+        shall be entitled to all revenues resulting from the sale of advertising and other time '
+    - verdict: does not apply
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: Royalties will be payable by ArTara on Net Sales of Product in the Indication. ArTara will,
+        no later than […***…] following the close of each calendar quarter, pay tiered Royalties
+  p02:
+    status: tautological-applicability
+    note: 'Fires on 1/480 decisions (0.2%) over the 12-category dev set; 1/40 (2.5%) within its declared
+      scope. Separability: fail — Applicability requires gold is_impossible, so the applicable x gold-present
+      cell is empty by construction and the principle can only ever be scored on absences. Phi against
+      gold presence, in scope: -0.698.'
+    applicability:
+      n_applicable: 1
+      n_units: 480
+      rate: 0.0021
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 1
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 0.0
+      pass_rate_negative: 0.9744
+      lift: -0.9744
+      n_positive: 1
+      n_negative: 39
+      phi: -0.698
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_absence
+      why: Applicability requires gold is_impossible, so the applicable x gold-present cell is empty by
+        construction and the principle can only ever be scored on absences.
+      twobytwo_applicability_x_gold:
+        applicable_present: 0
+        applicable_absent: 1
+        notapplicable_present: 38
+        notapplicable_absent: 1
+      twobytwo_all_decisions:
+        applicable_present: 0
+        applicable_absent: 1
+        notapplicable_present: 211
+        notapplicable_absent: 268
+      structurally_empty_cells: &id016
+      - applicable_present
+      observed_empty_cells:
+      - applicable_present
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id002
+      - Agreement Date
+      eligible_categories: *id002
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: d06
+      in_scope_applicability:
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 1
+        n_units: 180
+        rate: 0.0056
+      - key: 4k-8k
+        n_applicable: 0
+        n_units: 132
+        rate: 0.0
+      - key: 8k-16k
+        n_applicable: 0
+        n_units: 84
+        rate: 0.0
+      - key: '>16k'
+        n_applicable: 0
+        n_units: 84
+        rate: 0.0
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0
+      variants:
+        head4000:
+          n_applicable_all_decisions: 1
+          rate_all_decisions: 0.0021
+          delta_vs_as_written: 0.0
+          rate_in_scope: 0.025
+          phi_in_scope: -0.698
+    examples:
+    - verdict: applies
+      contract_id: PelicanDeliversInc_20200211_S-1_EX-10.3_11975895_EX-10.3_Development Agreement1
+      category: Agreement Date
+      gold_present: false
+      text: SeattleSoftwareDevelopers SOFTWARE DEVELOPMENT AGREEMENT PELICAN DELIVERS iOS APPLICATION
+        ENHANCEMENTS & WEB APPLICATION DEVELOPMENT PHASE 1 4 102nd Ave NE Suite 300 Bellevue, WA 9
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  p03:
+    status: never-fires-in-dev
+    note: 'Fires on 0/480 decisions (0.0%) over the 12-category dev set. Separability: pass — Applicability
+      reads contract text plus a cross-contract text-overlap property; no gold field is consulted. Phi
+      against gold presence is undefined (a margin is zero). Unstable: a lexicon or threshold variant
+      moves the rate by up to 22.5% of all decisions. Sketch names a 400+ character substring shared with
+      ''another contract'' and points at scan_split_contamination.py. Implemented as an exact 400-character
+      shared-window test against the other 39 dev contracts on whitespace-normalised text, since the sketch''s
+      containment-score artifact is not part of this deliverable. The derivative cue alone fires on 4
+      of 40 dev contracts (48 decisions), but none of those four shares a 400-character window with any
+      other dev contract, so the sketch as written is empty on dev. The shared-text half was computed
+      within dev only; a wider corpus would likely find twins, which makes this a split-size artefact
+      rather than a settled zero.'
+    applicability:
+      n_applicable: 0
+      n_units: 480
+      rate: 0.0
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 0
+        n_contracts: 40
+        max_per_contract: 0
+        median_per_contract: 0
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: null
+      pass_rate_negative: 0.4396
+      lift: null
+      n_positive: 0
+      n_negative: 480
+      phi: null
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: pass
+      gold_dependency: corpus_and_instance
+      why: Applicability reads contract text plus a cross-contract text-overlap property; no gold field
+        is consulted.
+      twobytwo_applicability_x_gold:
+        applicable_present: 0
+        applicable_absent: 0
+        notapplicable_present: 211
+        notapplicable_absent: 269
+      twobytwo_all_decisions:
+        applicable_present: 0
+        applicable_absent: 0
+        notapplicable_present: 211
+        notapplicable_absent: 269
+      structurally_empty_cells: []
+      observed_empty_cells:
+      - applicable_present
+      - applicable_absent
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: all 12 categories
+      eligible_categories:
+      - Agreement Date
+      - Governing Law
+      - Expiration Date
+      - Anti-Assignment
+      - Cap On Liability
+      - License Grant
+      - Exclusivity
+      - Revenue/Profit Sharing
+      - Minimum Commitment
+      - Volume Restriction
+      - Most Favored Nation
+      - Source Code Escrow
+      faithfulness: closest_faithful
+      faithfulness_note: Sketch names a 400+ character substring shared with 'another contract' and points
+        at scan_split_contamination.py. Implemented as an exact 400-character shared-window test against
+        the other 39 dev contracts on whitespace-normalised text, since the sketch's containment-score
+        artifact is not part of this deliverable.
+      reused_existing_checker: null
+      in_scope_applicability:
+        n_applicable: 0
+        n_units: 480
+        rate: 0.0
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 0
+        n_units: 180
+        rate: 0.0
+      - key: 4k-8k
+        n_applicable: 0
+        n_units: 132
+        rate: 0.0
+      - key: 8k-16k
+        n_applicable: 0
+        n_units: 84
+        rate: 0.0
+      - key: '>16k'
+        n_applicable: 0
+        n_units: 84
+        rate: 0.0
+    stability:
+      max_abs_rate_swing_all_decisions: 0.225
+      variants:
+        cue_only_no_shared_text:
+          n_applicable_all_decisions: 48
+          rate_all_decisions: 0.1
+          delta_vs_as_written: 0.1
+          rate_in_scope: 0.1
+          phi_in_scope: -0.0714
+        wide_cue_no_shared_text:
+          n_applicable_all_decisions: 108
+          rate_all_decisions: 0.225
+          delta_vs_as_written: 0.225
+          rate_in_scope: 0.225
+          phi_in_scope: -0.0148
+        wide_derivative_cue:
+          n_applicable_all_decisions: 0
+          rate_all_decisions: 0.0
+          delta_vs_as_written: 0.0
+          rate_in_scope: 0.0
+          phi_in_scope: null
+        head6000:
+          n_applicable_all_decisions: 0
+          rate_all_decisions: 0.0
+          delta_vs_as_written: 0.0
+          rate_in_scope: 0.0
+          phi_in_scope: null
+    examples:
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  p04:
+    status: discriminating-but-rare
+    note: 'Fires on 5/480 decisions (1.0%) over the 12-category dev set; 5/40 (12.5%) within its declared
+      scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
+      with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
+      Phi against gold presence, in scope: 0.0867. Sketch asks for first ~3000 characters or the signature
+      block; implemented as head 3000 plus trailing 3000 characters, and the ''bare comma where a date
+      should follow an execution verb'' clause is dropped because it fires on ordinary prose.'
+    applicability:
+      n_applicable: 5
+      n_units: 480
+      rate: 0.0104
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 5
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.9429
+      lift: 0.0571
+      n_positive: 5
+      n_negative: 35
+      phi: 0.0867
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: pass
+      gold_dependency: instance_only
+      why: Applicability reads contract text only; a decision can be applicable with the category gold-present
+        or gold-absent, so compliance is not a restatement of the answer.
+      twobytwo_applicability_x_gold:
+        applicable_present: 5
+        applicable_absent: 0
+        notapplicable_present: 33
+        notapplicable_absent: 2
+      twobytwo_all_decisions:
+        applicable_present: 5
+        applicable_absent: 0
+        notapplicable_present: 206
+        notapplicable_absent: 269
+      structurally_empty_cells: *id003
+      observed_empty_cells:
+      - applicable_absent
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id004
+      - Agreement Date
+      eligible_categories: *id004
+      faithfulness: tightened
+      faithfulness_note: Sketch asks for first ~3000 characters or the signature block; implemented as
+        head 3000 plus trailing 3000 characters, and the 'bare comma where a date should follow an execution
+        verb' clause is dropped because it fires on ordinary prose.
+      reused_existing_checker: g08
+      in_scope_applicability:
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 1
+        n_units: 180
+        rate: 0.0056
+      - key: 4k-8k
+        n_applicable: 3
+        n_units: 132
+        rate: 0.0227
+      - key: 8k-16k
+        n_applicable: 0
+        n_units: 84
+        rate: 0.0
+      - key: '>16k'
+        n_applicable: 1
+        n_units: 84
+        rate: 0.0119
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0
+      variants:
+        head_only:
+          n_applicable_all_decisions: 5
+          rate_all_decisions: 0.0104
+          delta_vs_as_written: 0.0
+          rate_in_scope: 0.125
+          phi_in_scope: 0.0867
+        wide_window:
+          n_applicable_all_decisions: 5
+          rate_all_decisions: 0.0104
+          delta_vs_as_written: 0.0
+          rate_in_scope: 0.125
+          phi_in_scope: 0.0867
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+    - verdict: applies
+      contract_id: KINGPHARMACEUTICALSINC_08_09_2006-EX-10.1-PROMOTION AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: June 27, 2006
+    - verdict: applies
+      contract_id: PharmagenInc_20120803_8-KA_EX-10.1_7693204_EX-10.1_Endorsement Agreement
+      category: Agreement Date
+      gold_present: true
+      text: February 20, 2012
+    - verdict: does not apply
+      contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+      category: Agreement Date
+      gold_present: true
+      text: June 1, 2020
+  p05:
+    status: degenerate-universal
+    note: 'Fires on 480/480 decisions (100.0%) over the 12-category dev set. Separability: pass-but-vacuous
+      — Applicability consults nothing at all, so it cannot leak the answer — and cannot select anything
+      either. Phi against gold presence is undefined (a margin is zero). Applicable to every decision
+      by construction. It cannot select, cannot discriminate, and will dominate any citation-frequency
+      aggregate it is pooled into.'
+    applicability:
+      n_applicable: 480
+      n_units: 480
+      rate: 1.0
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 40
+        n_units: 40
+        rate: 1.0
+      - key: Governing Law
+        n_applicable: 40
+        n_units: 40
+        rate: 1.0
+      - key: Expiration Date
+        n_applicable: 40
+        n_units: 40
+        rate: 1.0
+      - key: Anti-Assignment
+        n_applicable: 40
+        n_units: 40
+        rate: 1.0
+      - key: Cap On Liability
+        n_applicable: 40
+        n_units: 40
+        rate: 1.0
+      - key: License Grant
+        n_applicable: 40
+        n_units: 40
+        rate: 1.0
+      - key: Exclusivity
+        n_applicable: 40
+        n_units: 40
+        rate: 1.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 40
+        n_units: 40
+        rate: 1.0
+      - key: Minimum Commitment
+        n_applicable: 40
+        n_units: 40
+        rate: 1.0
+      - key: Volume Restriction
+        n_applicable: 40
+        n_units: 40
+        rate: 1.0
+      - key: Most Favored Nation
+        n_applicable: 40
+        n_units: 40
+        rate: 1.0
+      - key: Source Code Escrow
+        n_applicable: 40
+        n_units: 40
+        rate: 1.0
+      concentration:
+        n_contracts_with_any: 40
+        n_contracts: 40
+        max_per_contract: 12
+        median_per_contract: 12
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 0.4396
+      pass_rate_negative: null
+      lift: null
+      n_positive: 480
+      n_negative: 0
+      phi: null
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: pass-but-vacuous
+      gold_dependency: universal
+      why: Applicability consults nothing at all, so it cannot leak the answer — and cannot select anything
+        either.
+      twobytwo_applicability_x_gold:
+        applicable_present: 211
+        applicable_absent: 269
+        notapplicable_present: 0
+        notapplicable_absent: 0
+      twobytwo_all_decisions:
+        applicable_present: 211
+        applicable_absent: 269
+        notapplicable_present: 0
+        notapplicable_absent: 0
+      structurally_empty_cells:
+      - notapplicable_present
+      - notapplicable_absent
+      observed_empty_cells:
+      - notapplicable_present
+      - notapplicable_absent
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: all 12 categories
+      eligible_categories:
+      - Agreement Date
+      - Governing Law
+      - Expiration Date
+      - Anti-Assignment
+      - Cap On Liability
+      - License Grant
+      - Exclusivity
+      - Revenue/Profit Sharing
+      - Minimum Commitment
+      - Volume Restriction
+      - Most Favored Nation
+      - Source Code Escrow
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: null
+      in_scope_applicability:
+        n_applicable: 480
+        n_units: 480
+        rate: 1.0
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 180
+        n_units: 180
+        rate: 1.0
+      - key: 4k-8k
+        n_applicable: 132
+        n_units: 132
+        rate: 1.0
+      - key: 8k-16k
+        n_applicable: 84
+        n_units: 84
+        rate: 1.0
+      - key: '>16k'
+        n_applicable: 84
+        n_units: 84
+        rate: 1.0
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0
+      variants: {}
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Governing Law
+      gold_present: true
+      text: 'This Agreement shall be governed by and construed under the laws of the State of California,
+        excluding conflict of laws provisions and excluding the 1980 United Nations Convention '
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Expiration Date
+      gold_present: true
+      text: The term of this Agreement shall commence on the Effective Date and continue for six (6) months.
+  p06:
+    status: discriminating
+    note: 'Fires on 21/480 decisions (4.4%) over the 12-category dev set; 21/40 (52.5%) within its declared
+      scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
+      with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
+      Phi against gold presence, in scope: 0.4005.'
+    applicability:
+      n_applicable: 21
+      n_units: 480
+      rate: 0.0437
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 21
+        n_units: 40
+        rate: 0.525
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 21
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 0.9524
+      pass_rate_negative: 0.6316
+      lift: 0.3208
+      n_positive: 21
+      n_negative: 19
+      phi: 0.4005
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: pass
+      gold_dependency: instance_only
+      why: Applicability reads contract text only; a decision can be applicable with the category gold-present
+        or gold-absent, so compliance is not a restatement of the answer.
+      twobytwo_applicability_x_gold:
+        applicable_present: 20
+        applicable_absent: 1
+        notapplicable_present: 12
+        notapplicable_absent: 7
+      twobytwo_all_decisions:
+        applicable_present: 20
+        applicable_absent: 1
+        notapplicable_present: 191
+        notapplicable_absent: 268
+      structurally_empty_cells: *id003
+      observed_empty_cells: []
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id005
+      - Governing Law
+      eligible_categories: *id005
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: g04
+      in_scope_applicability:
+        n_applicable: 21
+        n_units: 40
+        rate: 0.525
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 3
+        n_units: 180
+        rate: 0.0167
+      - key: 4k-8k
+        n_applicable: 9
+        n_units: 132
+        rate: 0.0682
+      - key: 8k-16k
+        n_applicable: 4
+        n_units: 84
+        rate: 0.0476
+      - key: '>16k'
+        n_applicable: 5
+        n_units: 84
+        rate: 0.0595
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0042
+      variants:
+        wide_venue:
+          n_applicable_all_decisions: 23
+          rate_all_decisions: 0.0479
+          delta_vs_as_written: 0.0042
+          rate_in_scope: 0.575
+          phi_in_scope: 0.4551
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Governing Law
+      gold_present: true
+      text: 'This Agreement shall be governed by and construed under the laws of the State of California,
+        excluding conflict of laws provisions and excluding the 1980 United Nations Convention '
+    - verdict: applies
+      contract_id: AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement
+      category: Governing Law
+      gold_present: true
+      text: Without reference to choice or conflict of law principles, this Agreement shall be governed
+        by and construed in accordance with the laws of the State of California, USA.
+    - verdict: applies
+      contract_id: ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement
+      category: Governing Law
+      gold_present: true
+      text: This Agreement shall be governed by the laws of the State of Delaware, its rules of conflict
+        of laws notwithstanding.
+    - verdict: does not apply
+      contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+      category: Governing Law
+      gold_present: true
+      text: This Agreement shall be construed and enforced in accordance with the laws of the State of
+        California, without regard to the conflict of law principles of California or any other j
+  p07:
+    status: tautological-applicability
+    note: 'Fires on 38/480 decisions (7.9%) over the 12-category dev set; 38/40 (95.0%) within its declared
+      scope. Separability: fail — Applicability is defined as the category being gold-present, so the
+      applicable x gold-absent cell is empty by construction and any compliance rate computed on the applicable
+      set is conditioned on the answer. Phi against gold presence, in scope: 1.0.'
+    applicability:
+      n_applicable: 38
+      n_units: 480
+      rate: 0.0792
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 38
+        n_units: 40
+        rate: 0.95
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 38
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.0
+      lift: 1.0
+      n_positive: 38
+      n_negative: 2
+      phi: 1.0
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_presence
+      why: Applicability is defined as the category being gold-present, so the applicable x gold-absent
+        cell is empty by construction and any compliance rate computed on the applicable set is conditioned
+        on the answer.
+      twobytwo_applicability_x_gold:
+        applicable_present: 38
+        applicable_absent: 0
+        notapplicable_present: 0
+        notapplicable_absent: 2
+      twobytwo_all_decisions:
+        applicable_present: 38
+        applicable_absent: 0
+        notapplicable_present: 173
+        notapplicable_absent: 269
+      structurally_empty_cells: &id011
+      - applicable_absent
+      observed_empty_cells:
+      - applicable_absent
+      - notapplicable_present
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id006
+      - Agreement Date
+      eligible_categories: *id006
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: g07
+      in_scope_applicability:
+        n_applicable: 38
+        n_units: 40
+        rate: 0.95
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 13
+        n_units: 180
+        rate: 0.0722
+      - key: 4k-8k
+        n_applicable: 11
+        n_units: 132
+        rate: 0.0833
+      - key: 8k-16k
+        n_applicable: 7
+        n_units: 84
+        rate: 0.0833
+      - key: '>16k'
+        n_applicable: 7
+        n_units: 84
+        rate: 0.0833
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0
+      variants: {}
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+    - verdict: applies
+      contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+      category: Agreement Date
+      gold_present: true
+      text: June 1, 2020
+    - verdict: applies
+      contract_id: ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: December 12, 2014
+  p08:
+    status: unimplementable
+    note: 'Fires on 0/480 decisions (0.0%) over the 12-category dev set. Separability: fail — Applicability
+      is computed from the category''s own gold span text, which requires the category to be present;
+      the applicable x gold-absent cell is empty by construction. Phi against gold presence is undefined
+      (a margin is zero). The literal marker ''<omitted>'' occurs 0 times in dev contract text and 0 times
+      in dev gold spans. The checker cannot fire on this corpus at all, which disqualifies the principle
+      as a measurable rule here regardless of whether the Handbook prescribes it.'
+    applicability:
+      n_applicable: 0
+      n_units: 480
+      rate: 0.0
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 0
+        n_contracts: 40
+        max_per_contract: 0
+        median_per_contract: 0
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: null
+      pass_rate_negative: 0.4396
+      lift: null
+      n_positive: 0
+      n_negative: 480
+      phi: null
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_span_content_own
+      why: Applicability is computed from the category's own gold span text, which requires the category
+        to be present; the applicable x gold-absent cell is empty by construction.
+      twobytwo_applicability_x_gold:
+        applicable_present: 0
+        applicable_absent: 0
+        notapplicable_present: 211
+        notapplicable_absent: 269
+      twobytwo_all_decisions:
+        applicable_present: 0
+        applicable_absent: 0
+        notapplicable_present: 211
+        notapplicable_absent: 269
+      structurally_empty_cells: &id008
+      - applicable_absent
+      observed_empty_cells:
+      - applicable_present
+      - applicable_absent
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: all 12 categories
+      eligible_categories:
+      - Agreement Date
+      - Governing Law
+      - Expiration Date
+      - Anti-Assignment
+      - Cap On Liability
+      - License Grant
+      - Exclusivity
+      - Revenue/Profit Sharing
+      - Minimum Commitment
+      - Volume Restriction
+      - Most Favored Nation
+      - Source Code Escrow
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: g02
+      in_scope_applicability:
+        n_applicable: 0
+        n_units: 480
+        rate: 0.0
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 0
+        n_units: 180
+        rate: 0.0
+      - key: 4k-8k
+        n_applicable: 0
+        n_units: 132
+        rate: 0.0
+      - key: 8k-16k
+        n_applicable: 0
+        n_units: 84
+        rate: 0.0
+      - key: '>16k'
+        n_applicable: 0
+        n_units: 84
+        rate: 0.0
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0
+      variants:
+        marker_omitted_caps:
+          n_applicable_all_decisions: 0
+          rate_all_decisions: 0.0
+          delta_vs_as_written: 0.0
+          rate_in_scope: 0.0
+          phi_in_scope: null
+    examples:
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  p09:
+    status: discriminating
+    note: 'Fires on 21/480 decisions (4.4%) over the 12-category dev set; 21/40 (52.5%) within its declared
+      scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
+      with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
+      Phi against gold presence, in scope: 0.1502.'
+    applicability:
+      n_applicable: 21
+      n_units: 480
+      rate: 0.0437
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 21
+        n_units: 40
+        rate: 0.525
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 21
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 0.1429
+      pass_rate_negative: 0.0526
+      lift: 0.0903
+      n_positive: 21
+      n_negative: 19
+      phi: 0.1502
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: pass
+      gold_dependency: instance_only
+      why: Applicability reads contract text only; a decision can be applicable with the category gold-present
+        or gold-absent, so compliance is not a restatement of the answer.
+      twobytwo_applicability_x_gold:
+        applicable_present: 3
+        applicable_absent: 18
+        notapplicable_present: 1
+        notapplicable_absent: 18
+      twobytwo_all_decisions:
+        applicable_present: 3
+        applicable_absent: 18
+        notapplicable_present: 208
+        notapplicable_absent: 251
+      structurally_empty_cells: *id003
+      observed_empty_cells: []
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id007
+      - Volume Restriction
+      eligible_categories: *id007
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: null
+      in_scope_applicability:
+        n_applicable: 21
+        n_units: 40
+        rate: 0.525
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 1
+        n_units: 180
+        rate: 0.0056
+      - key: 4k-8k
+        n_applicable: 8
+        n_units: 132
+        rate: 0.0606
+      - key: 8k-16k
+        n_applicable: 5
+        n_units: 84
+        rate: 0.0595
+      - key: '>16k'
+        n_applicable: 7
+        n_units: 84
+        rate: 0.0833
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0146
+      variants:
+        narrow_ceiling:
+          n_applicable_all_decisions: 17
+          rate_all_decisions: 0.0354
+          delta_vs_as_written: -0.0083
+          rate_in_scope: 0.425
+          phi_in_scope: 0.0506
+        wide_ceiling:
+          n_applicable_all_decisions: 28
+          rate_all_decisions: 0.0583
+          delta_vs_as_written: 0.0146
+          rate_in_scope: 0.7
+          phi_in_scope: 0.2182
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Volume Restriction
+      gold_present: false
+      text: 'Exhibit 10d-2 RESELLER AGREEMENT BY AND BETWEEN PIVX CORPORATION AND DETTO TECHNOLOGIES This
+        Reseller Agreement is entered as of this ___ day of _________, 2004 ("Effective Date") '
+    - verdict: applies
+      contract_id: ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement
+      category: Volume Restriction
+      gold_present: false
+      text: Exhibit 10.2 Execution Version INTELLECTUAL PROPERTY AGREEMENT This INTELLECTUAL PROPERTY
+        AGREEMENT (this "Agreement"), dated as of December 31, 2018 (the "Effective Date") is ente
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Volume Restriction
+      gold_present: false
+      text: Exhibit 10.5 CERTAIN CONFIDENTIAL INFORMATION CONTAINED IN THIS DOCUMENT, MARKED BY […***…],
+        HAS BEEN OMITTED BECAUSE ARTARA THERAPEUTICS, INC. HAS DETERMINED THE INFORMATION (I) I
+    - verdict: does not apply
+      contract_id: CHINARECYCLINGENERGYCORP_11_14_2013-EX-10.6-Cooperation Agreement
+      category: Volume Restriction
+      gold_present: true
+      text: For the amount of electricity generated up to 800 million KWH after the project is put into
+        operation, it shall be charged of the energy saving service fee at 0.40 RMB/KWH.
+  p10:
+    status: tautological-applicability
+    note: 'Fires on 28/480 decisions (5.8%) over the 12-category dev set; 28/40 (70.0%) within its declared
+      scope. Separability: fail — Applicability is computed from the category''s own gold span text, which
+      requires the category to be present; the applicable x gold-absent cell is empty by construction.
+      Phi against gold presence, in scope: 0.3504.'
+    applicability:
+      n_applicable: 28
+      n_units: 480
+      rate: 0.0583
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 28
+        n_units: 40
+        rate: 0.7
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 28
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.8333
+      lift: 0.1667
+      n_positive: 28
+      n_negative: 12
+      phi: 0.3504
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_span_content_own
+      why: Applicability is computed from the category's own gold span text, which requires the category
+        to be present; the applicable x gold-absent cell is empty by construction.
+      twobytwo_applicability_x_gold:
+        applicable_present: 28
+        applicable_absent: 0
+        notapplicable_present: 10
+        notapplicable_absent: 2
+      twobytwo_all_decisions:
+        applicable_present: 28
+        applicable_absent: 0
+        notapplicable_present: 183
+        notapplicable_absent: 269
+      structurally_empty_cells: *id008
+      observed_empty_cells:
+      - applicable_absent
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id009
+      - Agreement Date
+      eligible_categories: *id009
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: d01
+      in_scope_applicability:
+        n_applicable: 28
+        n_units: 40
+        rate: 0.7
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 9
+        n_units: 180
+        rate: 0.05
+      - key: 4k-8k
+        n_applicable: 6
+        n_units: 132
+        rate: 0.0455
+      - key: 8k-16k
+        n_applicable: 7
+        n_units: 84
+        rate: 0.0833
+      - key: '>16k'
+        n_applicable: 6
+        n_units: 84
+        rate: 0.0714
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0
+      variants:
+        len60:
+          n_applicable_all_decisions: 28
+          rate_all_decisions: 0.0583
+          delta_vs_as_written: 0.0
+          rate_in_scope: 0.7
+          phi_in_scope: 0.3504
+    examples:
+    - verdict: applies
+      contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+      category: Agreement Date
+      gold_present: true
+      text: June 1, 2020
+    - verdict: applies
+      contract_id: ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: December 12, 2014
+    - verdict: applies
+      contract_id: AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement
+      category: Agreement Date
+      gold_present: true
+      text: February 1, 2019
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  p11:
+    status: discriminating
+    note: 'Fires on 23/480 decisions (4.8%) over the 12-category dev set; 23/40 (57.5%) within its declared
+      scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
+      with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
+      Phi against gold presence, in scope: 0.2726.'
+    applicability:
+      n_applicable: 23
+      n_units: 480
+      rate: 0.0479
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 23
+        n_units: 40
+        rate: 0.575
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 23
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 0.4348
+      pass_rate_negative: 0.1765
+      lift: 0.2583
+      n_positive: 23
+      n_negative: 17
+      phi: 0.2726
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: pass
+      gold_dependency: instance_only
+      why: Applicability reads contract text only; a decision can be applicable with the category gold-present
+        or gold-absent, so compliance is not a restatement of the answer.
+      twobytwo_applicability_x_gold:
+        applicable_present: 10
+        applicable_absent: 13
+        notapplicable_present: 3
+        notapplicable_absent: 14
+      twobytwo_all_decisions:
+        applicable_present: 10
+        applicable_absent: 13
+        notapplicable_present: 201
+        notapplicable_absent: 256
+      structurally_empty_cells: *id003
+      observed_empty_cells: []
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id010
+      - Revenue/Profit Sharing
+      eligible_categories: *id010
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: g05
+      in_scope_applicability:
+        n_applicable: 23
+        n_units: 40
+        rate: 0.575
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 6
+        n_units: 180
+        rate: 0.0333
+      - key: 4k-8k
+        n_applicable: 6
+        n_units: 132
+        rate: 0.0455
+      - key: 8k-16k
+        n_applicable: 5
+        n_units: 84
+        rate: 0.0595
+      - key: '>16k'
+        n_applicable: 6
+        n_units: 84
+        rate: 0.0714
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0
+      variants: {}
+    examples:
+    - verdict: applies
+      contract_id: ArcGroupInc_20171211_8-K_EX-10.1_10976103_EX-10.1_Sponsorship Agreement
+      category: Revenue/Profit Sharing
+      gold_present: false
+      text: 'Exhibit 10.1 JACKSONVILLE JAGUARS SPONSORSHIP AGREEMENT This Sponsorship Agreement (this
+        "Agreement") is entered into as of November 27, 2017 (the "Execution Date") by and between '
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: Royalties will be payable by ArTara on Net Sales of Product in the Indication. ArTara will,
+        no later than […***…] following the close of each calendar quarter, pay tiered Royalties
+    - verdict: applies
+      contract_id: BLACKSTONEGSOLONG-SHORTCREDITINCOMEFUND_05_11_2020-EX-99.(K)(1)-SERVICE AGREEMENT
+      category: Revenue/Profit Sharing
+      gold_present: false
+      text: Exhibit (k)(1) SERVICE AGREEMENT FOR TRANSFER AGENT SERVICES TO BLACKSTONE / GSO LONG-SHORT
+        CREDIT INCOME FUND Rev. December 2009 THIS SERVICE AGREEMENT FOR TRANSFER AGENT SERVICES
+    - verdict: does not apply
+      contract_id: NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: 'For all referrals under Section 6.1, except where NTC has evidence that it referral the customer
+        (including its affiliates) to ALFA AESAR to purchase a prior sample of the Product '
+  p12:
+    status: tautological-applicability
+    note: 'Fires on 103/480 decisions (21.5%) over the 12-category dev set; 103/120 (85.8%) within its
+      declared scope. Separability: fail — Applicability is defined as the category being gold-present,
+      so the applicable x gold-absent cell is empty by construction and any compliance rate computed on
+      the applicable set is conditioned on the answer. Phi against gold presence, in scope: 1.0. Unstable:
+      a lexicon or threshold variant moves the rate by up to 13.5% of all decisions.'
+    applicability:
+      n_applicable: 103
+      n_units: 480
+      rate: 0.2146
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 38
+        n_units: 40
+        rate: 0.95
+      - key: Governing Law
+        n_applicable: 32
+        n_units: 40
+        rate: 0.8
+      - key: Expiration Date
+        n_applicable: 33
+        n_units: 40
+        rate: 0.825
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 39
+        n_contracts: 40
+        max_per_contract: 3
+        median_per_contract: 3
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.0
+      lift: 1.0
+      n_positive: 103
+      n_negative: 17
+      phi: 1.0
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_presence
+      why: Applicability is defined as the category being gold-present, so the applicable x gold-absent
+        cell is empty by construction and any compliance rate computed on the applicable set is conditioned
+        on the answer.
+      twobytwo_applicability_x_gold:
+        applicable_present: 103
+        applicable_absent: 0
+        notapplicable_present: 0
+        notapplicable_absent: 17
+      twobytwo_all_decisions:
+        applicable_present: 103
+        applicable_absent: 0
+        notapplicable_present: 108
+        notapplicable_absent: 269
+      structurally_empty_cells: *id011
+      observed_empty_cells:
+      - applicable_absent
+      - notapplicable_present
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id012
+      - Agreement Date
+      - Governing Law
+      - Expiration Date
+      eligible_categories: *id012
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: null
+      in_scope_applicability:
+        n_applicable: 103
+        n_units: 120
+        rate: 0.8583
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 30
+        n_units: 180
+        rate: 0.1667
+      - key: 4k-8k
+        n_applicable: 33
+        n_units: 132
+        rate: 0.25
+      - key: 8k-16k
+        n_applicable: 20
+        n_units: 84
+        rate: 0.2381
+      - key: '>16k'
+        n_applicable: 20
+        n_units: 84
+        rate: 0.2381
+    stability:
+      max_abs_rate_swing_all_decisions: 0.1354
+      variants:
+        agreement_date_only:
+          n_applicable_all_decisions: 38
+          rate_all_decisions: 0.0792
+          delta_vs_as_written: -0.1354
+          rate_in_scope: 0.3167
+          phi_in_scope: 0.2766
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Governing Law
+      gold_present: true
+      text: 'This Agreement shall be governed by and construed under the laws of the State of California,
+        excluding conflict of laws provisions and excluding the 1980 United Nations Convention '
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Expiration Date
+      gold_present: true
+      text: The term of this Agreement shall commence on the Effective Date and continue for six (6) months.
+  p13:
+    status: near-degenerate-frequency
+    note: 'Fires on 60/480 decisions (12.5%) over the 12-category dev set; 60/80 (75.0%) within its declared
+      scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
+      with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
+      Phi against gold presence, in scope: 0.2887. A quantity token plus a bound cue is ambient contract
+      language: it fires on 30 of 40 contracts and on three quarters of in-scope decisions. Applicability
+      is close to unconditional within scope.'
+    applicability:
+      n_applicable: 60
+      n_units: 480
+      rate: 0.125
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 30
+        n_units: 40
+        rate: 0.75
+      - key: Volume Restriction
+        n_applicable: 30
+        n_units: 40
+        rate: 0.75
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 30
+        n_contracts: 40
+        max_per_contract: 2
+        median_per_contract: 2
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 0.2667
+      pass_rate_negative: 0.0
+      lift: 0.2667
+      n_positive: 60
+      n_negative: 20
+      phi: 0.2887
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: pass
+      gold_dependency: instance_only
+      why: Applicability reads contract text only; a decision can be applicable with the category gold-present
+        or gold-absent, so compliance is not a restatement of the answer.
+      twobytwo_applicability_x_gold:
+        applicable_present: 16
+        applicable_absent: 44
+        notapplicable_present: 0
+        notapplicable_absent: 20
+      twobytwo_all_decisions:
+        applicable_present: 16
+        applicable_absent: 44
+        notapplicable_present: 195
+        notapplicable_absent: 225
+      structurally_empty_cells: *id003
+      observed_empty_cells:
+      - notapplicable_present
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id013
+      - Minimum Commitment
+      - Volume Restriction
+      eligible_categories: *id013
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: d05
+      in_scope_applicability:
+        n_applicable: 60
+        n_units: 80
+        rate: 0.75
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 10
+        n_units: 180
+        rate: 0.0556
+      - key: 4k-8k
+        n_applicable: 22
+        n_units: 132
+        rate: 0.1667
+      - key: 8k-16k
+        n_applicable: 14
+        n_units: 84
+        rate: 0.1667
+      - key: '>16k'
+        n_applicable: 14
+        n_units: 84
+        rate: 0.1667
+    stability:
+      max_abs_rate_swing_all_decisions: 0.025
+      variants:
+        lower_only:
+          n_applicable_all_decisions: 52
+          rate_all_decisions: 0.1083
+          delta_vs_as_written: -0.0167
+          rate_in_scope: 0.65
+          phi_in_scope: 0.3669
+        upper_only:
+          n_applicable_all_decisions: 48
+          rate_all_decisions: 0.1
+          delta_vs_as_written: -0.025
+          rate_in_scope: 0.6
+          phi_in_scope: 0.2807
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Minimum Commitment
+      gold_present: false
+      text: 'Exhibit 10d-2 RESELLER AGREEMENT BY AND BETWEEN PIVX CORPORATION AND DETTO TECHNOLOGIES This
+        Reseller Agreement is entered as of this ___ day of _________, 2004 ("Effective Date") '
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Volume Restriction
+      gold_present: false
+      text: 'Exhibit 10d-2 RESELLER AGREEMENT BY AND BETWEEN PIVX CORPORATION AND DETTO TECHNOLOGIES This
+        Reseller Agreement is entered as of this ___ day of _________, 2004 ("Effective Date") '
+    - verdict: applies
+      contract_id: ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT
+      category: Minimum Commitment
+      gold_present: false
+      text: Exhibit 99.1 COOPERATION AGREEMENT This Cooperation Agreement (this "Agreement") dated December
+        12, 2014, is by and among the persons and entities listed on Schedule A (collectivel
+  p14:
+    status: discriminating
+    note: 'Fires on 14/480 decisions (2.9%) over the 12-category dev set; 14/40 (35.0%) within its declared
+      scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
+      with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
+      Phi against gold presence, in scope: 0.2059.'
+    applicability:
+      n_applicable: 14
+      n_units: 480
+      rate: 0.0292
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 14
+        n_units: 40
+        rate: 0.35
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 14
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 0.4286
+      pass_rate_negative: 0.2308
+      lift: 0.1978
+      n_positive: 14
+      n_negative: 26
+      phi: 0.2059
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: pass
+      gold_dependency: instance_only
+      why: Applicability reads contract text only; a decision can be applicable with the category gold-present
+        or gold-absent, so compliance is not a restatement of the answer.
+      twobytwo_applicability_x_gold:
+        applicable_present: 6
+        applicable_absent: 8
+        notapplicable_present: 6
+        notapplicable_absent: 20
+      twobytwo_all_decisions:
+        applicable_present: 6
+        applicable_absent: 8
+        notapplicable_present: 205
+        notapplicable_absent: 261
+      structurally_empty_cells: *id003
+      observed_empty_cells: []
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id014
+      - Minimum Commitment
+      eligible_categories: *id014
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: d04
+      in_scope_applicability:
+        n_applicable: 14
+        n_units: 40
+        rate: 0.35
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 2
+        n_units: 180
+        rate: 0.0111
+      - key: 4k-8k
+        n_applicable: 4
+        n_units: 132
+        rate: 0.0303
+      - key: 8k-16k
+        n_applicable: 5
+        n_units: 84
+        rate: 0.0595
+      - key: '>16k'
+        n_applicable: 3
+        n_units: 84
+        rate: 0.0357
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0104
+      variants:
+        widened_verbs:
+          n_applicable_all_decisions: 18
+          rate_all_decisions: 0.0375
+          delta_vs_as_written: 0.0083
+          rate_in_scope: 0.45
+          phi_in_scope: 0.3948
+        widened_floor_and_verbs:
+          n_applicable_all_decisions: 19
+          rate_all_decisions: 0.0396
+          delta_vs_as_written: 0.0104
+          rate_in_scope: 0.475
+          phi_in_scope: 0.4698
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Minimum Commitment
+      gold_present: false
+      text: 'Exhibit 10d-2 RESELLER AGREEMENT BY AND BETWEEN PIVX CORPORATION AND DETTO TECHNOLOGIES This
+        Reseller Agreement is entered as of this ___ day of _________, 2004 ("Effective Date") '
+    - verdict: applies
+      contract_id: ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT
+      category: Minimum Commitment
+      gold_present: false
+      text: Exhibit 99.1 COOPERATION AGREEMENT This Cooperation Agreement (this "Agreement") dated December
+        12, 2014, is by and among the persons and entities listed on Schedule A (collectivel
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Minimum Commitment
+      gold_present: false
+      text: Exhibit 10.5 CERTAIN CONFIDENTIAL INFORMATION CONTAINED IN THIS DOCUMENT, MARKED BY […***…],
+        HAS BEEN OMITTED BECAUSE ARTARA THERAPEUTICS, INC. HAS DETERMINED THE INFORMATION (I) I
+    - verdict: does not apply
+      contract_id: ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement
+      category: Minimum Commitment
+      gold_present: true
+      text: 'Logo Size: The minimum logo size is 1" or 25mm. In digital formats, the minimum width is
+        100 pixels at 72 dpi.'
+  p15:
+    status: discriminating
+    note: 'Fires on 12/480 decisions (2.5%) over the 12-category dev set; 12/80 (15.0%) within its declared
+      scope. Separability: partial — Applicability reads gold span text, but of sibling categories rather
+      than the decision''s own, so both gold-present and gold-absent decisions can be applicable; the
+      leak is indirect but real. Phi against gold presence, in scope: 0.472. Applicability reads gold
+      span text, but of the sibling category rather than the decision''s own, so it is not a pure restatement
+      of the answer; it is still a gold-derived trigger and cannot be computed at inference time.'
+    applicability:
+      n_applicable: 12
+      n_units: 480
+      rate: 0.025
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 6
+        n_units: 40
+        rate: 0.15
+      - key: Minimum Commitment
+        n_applicable: 6
+        n_units: 40
+        rate: 0.15
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 6
+        n_contracts: 40
+        max_per_contract: 2
+        median_per_contract: 2
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 0.8333
+      pass_rate_negative: 0.2206
+      lift: 0.6127
+      n_positive: 12
+      n_negative: 68
+      phi: 0.472
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: partial
+      gold_dependency: gold_span_content_other
+      why: Applicability reads gold span text, but of sibling categories rather than the decision's own,
+        so both gold-present and gold-absent decisions can be applicable; the leak is indirect but real.
+      twobytwo_applicability_x_gold:
+        applicable_present: 10
+        applicable_absent: 2
+        notapplicable_present: 15
+        notapplicable_absent: 53
+      twobytwo_all_decisions:
+        applicable_present: 10
+        applicable_absent: 2
+        notapplicable_present: 201
+        notapplicable_absent: 267
+      structurally_empty_cells: []
+      observed_empty_cells: []
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id015
+      - Minimum Commitment
+      - Revenue/Profit Sharing
+      eligible_categories: *id015
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: d03
+      in_scope_applicability:
+        n_applicable: 12
+        n_units: 80
+        rate: 0.15
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 0
+        n_units: 180
+        rate: 0.0
+      - key: 4k-8k
+        n_applicable: 2
+        n_units: 132
+        rate: 0.0152
+      - key: 8k-16k
+        n_applicable: 2
+        n_units: 84
+        rate: 0.0238
+      - key: '>16k'
+        n_applicable: 8
+        n_units: 84
+        rate: 0.0952
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0042
+      variants:
+        instance_text:
+          n_applicable_all_decisions: 14
+          rate_all_decisions: 0.0292
+          delta_vs_as_written: 0.0042
+          rate_in_scope: 0.175
+          phi_in_scope: 0.4702
+    examples:
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: Royalties will be payable by ArTara on Net Sales of Product in the Indication. ArTara will,
+        no later than […***…] following the close of each calendar quarter, pay tiered Royalties
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Minimum Commitment
+      gold_present: false
+      text: Exhibit 10.5 CERTAIN CONFIDENTIAL INFORMATION CONTAINED IN THIS DOCUMENT, MARKED BY […***…],
+        HAS BEEN OMITTED BECAUSE ARTARA THERAPEUTICS, INC. HAS DETERMINED THE INFORMATION (I) I
+    - verdict: applies
+      contract_id: GOCALLINC_03_30_2000-EX-10.7-Promotion Agreement
+      category: Revenue/Profit Sharing
+      gold_present: true
+      text: 'PageMaster Corporation will pay Go Call $3.00 per pager (beginning with pager # 1) and 5%
+        of all airtime renewal revenue for each pager redeemed for this promotion consistent with '
+    - verdict: does not apply
+      contract_id: ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement
+      category: Minimum Commitment
+      gold_present: true
+      text: 'Logo Size: The minimum logo size is 1" or 25mm. In digital formats, the minimum width is
+        100 pixels at 72 dpi.'
+  p16:
+    status: tautological-applicability
+    note: 'Fires on 22/480 decisions (4.6%) over the 12-category dev set; 22/40 (55.0%) within its declared
+      scope. Separability: fail — Applicability requires gold is_impossible, so the applicable x gold-present
+      cell is empty by construction and the principle can only ever be scored on absences. Phi against
+      gold presence, in scope: -0.7237.'
+    applicability:
+      n_applicable: 22
+      n_units: 480
+      rate: 0.0458
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 22
+        n_units: 40
+        rate: 0.55
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 22
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 0.0
+      pass_rate_negative: 0.6667
+      lift: -0.6667
+      n_positive: 22
+      n_negative: 18
+      phi: -0.7237
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_absence
+      why: Applicability requires gold is_impossible, so the applicable x gold-present cell is empty by
+        construction and the principle can only ever be scored on absences.
+      twobytwo_applicability_x_gold:
+        applicable_present: 0
+        applicable_absent: 22
+        notapplicable_present: 12
+        notapplicable_absent: 6
+      twobytwo_all_decisions:
+        applicable_present: 0
+        applicable_absent: 22
+        notapplicable_present: 211
+        notapplicable_absent: 247
+      structurally_empty_cells: *id016
+      observed_empty_cells:
+      - applicable_present
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id017
+      - Minimum Commitment
+      eligible_categories: *id017
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: d08
+      in_scope_applicability:
+        n_applicable: 22
+        n_units: 40
+        rate: 0.55
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 8
+        n_units: 180
+        rate: 0.0444
+      - key: 4k-8k
+        n_applicable: 8
+        n_units: 132
+        rate: 0.0606
+      - key: 8k-16k
+        n_applicable: 4
+        n_units: 84
+        rate: 0.0476
+      - key: '>16k'
+        n_applicable: 2
+        n_units: 84
+        rate: 0.0238
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0
+      variants: {}
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Minimum Commitment
+      gold_present: false
+      text: 'Exhibit 10d-2 RESELLER AGREEMENT BY AND BETWEEN PIVX CORPORATION AND DETTO TECHNOLOGIES This
+        Reseller Agreement is entered as of this ___ day of _________, 2004 ("Effective Date") '
+    - verdict: applies
+      contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+      category: Minimum Commitment
+      gold_present: false
+      text: Exhibit 10.7 CONSULTING AGREEMENT Aduro Biotech, Inc., with a place of business at 740 Heinz
+        Avenue, Berkeley, CA 94710 ("Aduro") and IREYA B.V having an address at Staalwijkstraat
+    - verdict: applies
+      contract_id: ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT
+      category: Minimum Commitment
+      gold_present: false
+      text: Exhibit 99.1 COOPERATION AGREEMENT This Cooperation Agreement (this "Agreement") dated December
+        12, 2014, is by and among the persons and entities listed on Schedule A (collectivel
+    - verdict: does not apply
+      contract_id: ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement
+      category: Minimum Commitment
+      gold_present: true
+      text: 'Logo Size: The minimum logo size is 1" or 25mm. In digital formats, the minimum width is
+        100 pixels at 72 dpi.'
+  p17:
+    status: tautological-applicability
+    note: 'Fires on 3/480 decisions (0.6%) over the 12-category dev set; 3/40 (7.5%) within its declared
+      scope. Separability: fail — Applicability requires the category to be gold-present before any text
+      test runs, so the applicable x gold-absent cell is empty by construction. Phi against gold presence,
+      in scope: 0.1424. Sketch''s ''within 200 characters of a governing-law cue'' is implemented as a
+      window around the conflicts tail rather than a sentence test. The sketch''s own regex is used verbatim,
+      and it misses the very common ''without regard to ITS conflicts of laws'' phrasing; the wide_tail
+      variant repairs that and more than quadruples the firing count, which is the single largest instability
+      in the round-2 set.'
+    applicability:
+      n_applicable: 3
+      n_units: 480
+      rate: 0.0063
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 3
+        n_units: 40
+        rate: 0.075
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 3
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.7838
+      lift: 0.2162
+      n_positive: 3
+      n_negative: 37
+      phi: 0.1424
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_presence_and_instance
+      why: Applicability requires the category to be gold-present before any text test runs, so the applicable
+        x gold-absent cell is empty by construction.
+      twobytwo_applicability_x_gold:
+        applicable_present: 3
+        applicable_absent: 0
+        notapplicable_present: 29
+        notapplicable_absent: 8
+      twobytwo_all_decisions:
+        applicable_present: 3
+        applicable_absent: 0
+        notapplicable_present: 208
+        notapplicable_absent: 269
+      structurally_empty_cells: &id019
+      - applicable_absent
+      observed_empty_cells:
+      - applicable_absent
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id018
+      - Governing Law
+      eligible_categories: *id018
+      faithfulness: faithful
+      faithfulness_note: Sketch's 'within 200 characters of a governing-law cue' is implemented as a window
+        around the conflicts tail rather than a sentence test. The sketch's own regex is used verbatim,
+        and it misses the very common 'without regard to ITS conflicts of laws' phrasing; the wide_tail
+        variant repairs that and more than quadruples the firing count, which is the single largest instability
+        in the round-2 set.
+      reused_existing_checker: null
+      in_scope_applicability:
+        n_applicable: 3
+        n_units: 40
+        rate: 0.075
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 1
+        n_units: 180
+        rate: 0.0056
+      - key: 4k-8k
+        n_applicable: 1
+        n_units: 132
+        rate: 0.0076
+      - key: 8k-16k
+        n_applicable: 0
+        n_units: 84
+        rate: 0.0
+      - key: '>16k'
+        n_applicable: 1
+        n_units: 84
+        rate: 0.0119
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0208
+      variants:
+        wide_tail:
+          n_applicable_all_decisions: 13
+          rate_all_decisions: 0.0271
+          delta_vs_as_written: 0.0208
+          rate_in_scope: 0.325
+          phi_in_scope: 0.3469
+        distance400:
+          n_applicable_all_decisions: 3
+          rate_all_decisions: 0.0063
+          delta_vs_as_written: 0.0
+          rate_in_scope: 0.075
+          phi_in_scope: 0.1424
+        distance60:
+          n_applicable_all_decisions: 2
+          rate_all_decisions: 0.0042
+          delta_vs_as_written: -0.0021
+          rate_in_scope: 0.05
+          phi_in_scope: 0.1147
+    examples:
+    - verdict: applies
+      contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
+      category: Governing Law
+      gold_present: true
+      text: This Agreement shall be construed and enforced in accordance with the laws of the State of
+        California, without regard to the conflict of law principles of California or any other j
+    - verdict: applies
+      contract_id: SUNTRONCORP_05_17_2006-EX-10.22-MAINTENANCE AGREEMENT
+      category: Governing Law
+      gold_present: true
+      text: THE VALIDITY, CONSTRUCTION AND ENFORCEABILITY OF THIS AGREEMENT SHALL BE GOVERNED BY THE LAWS
+        OF THE STATE OF MINNESOTA, WITHOUT GIVING EFFECT TO CONFLICT OF LAWS PRINCIPLES THEREO
+    - verdict: applies
+      contract_id: TomOnlineInc_20060501_20-F_EX-4.46_749700_EX-4.46_Co-Branding Agreement
+      category: Governing Law
+      gold_present: true
+      text: This Agreement will be governed by and construed in accordance with the laws of England and
+        Wales, without regard to conflict of laws principles.
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Governing Law
+      gold_present: true
+      text: 'This Agreement shall be governed by and construed under the laws of the State of California,
+        excluding conflict of laws provisions and excluding the 1980 United Nations Convention '
+  p18:
+    status: tautological-applicability
+    note: 'Fires on 12/480 decisions (2.5%) over the 12-category dev set. Separability: fail — Applicability
+      is computed from the category''s own gold span text, which requires the category to be present;
+      the applicable x gold-absent cell is empty by construction. Phi against gold presence, in scope:
+      0.1808.'
+    applicability:
+      n_applicable: 12
+      n_units: 480
+      rate: 0.025
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+      - key: Exclusivity
+        n_applicable: 4
+        n_units: 40
+        rate: 0.1
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      - key: Volume Restriction
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      concentration:
+        n_contracts_with_any: 6
+        n_contracts: 40
+        max_per_contract: 2
+        median_per_contract: 2
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.4252
+      lift: 0.5748
+      n_positive: 12
+      n_negative: 468
+      phi: 0.1808
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_span_content_own
+      why: Applicability is computed from the category's own gold span text, which requires the category
+        to be present; the applicable x gold-absent cell is empty by construction.
+      twobytwo_applicability_x_gold:
+        applicable_present: 12
+        applicable_absent: 0
+        notapplicable_present: 199
+        notapplicable_absent: 269
+      twobytwo_all_decisions:
+        applicable_present: 12
+        applicable_absent: 0
+        notapplicable_present: 199
+        notapplicable_absent: 269
+      structurally_empty_cells: *id008
+      observed_empty_cells:
+      - applicable_absent
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: all 12 categories
+      eligible_categories:
+      - Agreement Date
+      - Governing Law
+      - Expiration Date
+      - Anti-Assignment
+      - Cap On Liability
+      - License Grant
+      - Exclusivity
+      - Revenue/Profit Sharing
+      - Minimum Commitment
+      - Volume Restriction
+      - Most Favored Nation
+      - Source Code Escrow
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: d02
+      in_scope_applicability:
+        n_applicable: 12
+        n_units: 480
+        rate: 0.025
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 2
+        n_units: 180
+        rate: 0.0111
+      - key: 4k-8k
+        n_applicable: 2
+        n_units: 132
+        rate: 0.0152
+      - key: 8k-16k
+        n_applicable: 4
+        n_units: 84
+        rate: 0.0476
+      - key: '>16k'
+        n_applicable: 4
+        n_units: 84
+        rate: 0.0476
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0083
+      variants:
+        overlap_any:
+          n_applicable_all_decisions: 16
+          rate_all_decisions: 0.0333
+          delta_vs_as_written: 0.0083
+          rate_in_scope: 0.0333
+          phi_in_scope: 0.2097
+        iou80:
+          n_applicable_all_decisions: 12
+          rate_all_decisions: 0.025
+          delta_vs_as_written: 0.0
+          rate_in_scope: 0.025
+          phi_in_scope: 0.1808
+    examples:
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: License Grant
+      gold_present: true
+      text: University hereby grants to ArTara an exclusive license to use the Program Data solely for
+        the Project and in Regulatory Filings in the Field in the Territory.
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Exclusivity
+      gold_present: true
+      text: University hereby grants to ArTara an exclusive license to use the Program Data solely for
+        the Project and in Regulatory Filings in the Field in the Territory.
+    - verdict: applies
+      contract_id: CORIOINC_07_20_2000-EX-10.5-LICENSE AND HOSTING AGREEMENT
+      category: License Grant
+      gold_present: true
+      text: Subject to the terms and conditions of this Agreement, Commerce One hereby grants to Corio
+        a fee-bearing, perpetual and irrevocable, nonexclusive, nontransferable (except in accord
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  p19:
+    status: never-fires-in-dev
+    note: 'Fires on 0/480 decisions (0.0%) over the 12-category dev set. Separability: fail — Applicability
+      is computed from the category''s own gold span text, which requires the category to be present;
+      the applicable x gold-absent cell is empty by construction. Phi against gold presence is undefined
+      (a margin is zero). Furniture is not rare in dev — the regex matches 219 times across 12 of 40 contracts
+      — but no 12-category dev gold span contains a match strictly inside it, so applicability is 0. The
+      complementary half of the sketch (no span is wholly furniture) is trivially satisfied and carries
+      no signal.'
+    applicability:
+      n_applicable: 0
+      n_units: 480
+      rate: 0.0
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 0
+        n_contracts: 40
+        max_per_contract: 0
+        median_per_contract: 0
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: null
+      pass_rate_negative: 0.4396
+      lift: null
+      n_positive: 0
+      n_negative: 480
+      phi: null
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_span_content_own
+      why: Applicability is computed from the category's own gold span text, which requires the category
+        to be present; the applicable x gold-absent cell is empty by construction.
+      twobytwo_applicability_x_gold:
+        applicable_present: 0
+        applicable_absent: 0
+        notapplicable_present: 211
+        notapplicable_absent: 269
+      twobytwo_all_decisions:
+        applicable_present: 0
+        applicable_absent: 0
+        notapplicable_present: 211
+        notapplicable_absent: 269
+      structurally_empty_cells: *id008
+      observed_empty_cells:
+      - applicable_present
+      - applicable_absent
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: all 12 categories
+      eligible_categories:
+      - Agreement Date
+      - Governing Law
+      - Expiration Date
+      - Anti-Assignment
+      - Cap On Liability
+      - License Grant
+      - Exclusivity
+      - Revenue/Profit Sharing
+      - Minimum Commitment
+      - Volume Restriction
+      - Most Favored Nation
+      - Source Code Escrow
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: d07
+      in_scope_applicability:
+        n_applicable: 0
+        n_units: 480
+        rate: 0.0
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 0
+        n_units: 180
+        rate: 0.0
+      - key: 4k-8k
+        n_applicable: 0
+        n_units: 132
+        rate: 0.0
+      - key: 8k-16k
+        n_applicable: 0
+        n_units: 84
+        rate: 0.0
+      - key: '>16k'
+        n_applicable: 0
+        n_units: 84
+        rate: 0.0
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0021
+      variants:
+        wide_furniture:
+          n_applicable_all_decisions: 1
+          rate_all_decisions: 0.0021
+          delta_vs_as_written: 0.0021
+          rate_in_scope: 0.0021
+          phi_in_scope: 0.0516
+    examples:
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  p20:
+    status: tautological-applicability
+    note: 'Fires on 40/480 decisions (8.3%) over the 12-category dev set. Separability: fail — Applicability
+      is computed from the category''s own gold span text, which requires the category to be present;
+      the applicable x gold-absent cell is empty by construction. Phi against gold presence, in scope:
+      0.3404. Sketch requires the attachment heading search to start at the execution block; implemented
+      exactly that way. Contracts with no locatable execution block are not applicable, as the sketch
+      prescribes. Every firing sits on a gold-present decision, because applicability requires a gold
+      span. What varies across contracts is only whether an attachment heading follows the execution block;
+      that text test is doing real work, but it is gated behind the answer.'
+    applicability:
+      n_applicable: 40
+      n_units: 480
+      rate: 0.0833
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 6
+        n_units: 40
+        rate: 0.15
+      - key: Governing Law
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+      - key: Expiration Date
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+      - key: Anti-Assignment
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+      - key: Cap On Liability
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+      - key: License Grant
+        n_applicable: 4
+        n_units: 40
+        rate: 0.1
+      - key: Exclusivity
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      - key: Revenue/Profit Sharing
+        n_applicable: 3
+        n_units: 40
+        rate: 0.075
+      - key: Minimum Commitment
+        n_applicable: 2
+        n_units: 40
+        rate: 0.05
+      - key: Volume Restriction
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      - key: Most Favored Nation
+        n_applicable: 3
+        n_units: 40
+        rate: 0.075
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 6
+        n_contracts: 40
+        max_per_contract: 8
+        median_per_contract: 8
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.3886
+      lift: 0.6114
+      n_positive: 40
+      n_negative: 440
+      phi: 0.3404
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_span_content_own
+      why: Applicability is computed from the category's own gold span text, which requires the category
+        to be present; the applicable x gold-absent cell is empty by construction.
+      twobytwo_applicability_x_gold:
+        applicable_present: 40
+        applicable_absent: 0
+        notapplicable_present: 171
+        notapplicable_absent: 269
+      twobytwo_all_decisions:
+        applicable_present: 40
+        applicable_absent: 0
+        notapplicable_present: 171
+        notapplicable_absent: 269
+      structurally_empty_cells: *id008
+      observed_empty_cells:
+      - applicable_absent
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: all 12 categories
+      eligible_categories:
+      - Agreement Date
+      - Governing Law
+      - Expiration Date
+      - Anti-Assignment
+      - Cap On Liability
+      - License Grant
+      - Exclusivity
+      - Revenue/Profit Sharing
+      - Minimum Commitment
+      - Volume Restriction
+      - Most Favored Nation
+      - Source Code Escrow
+      faithfulness: faithful
+      faithfulness_note: Sketch requires the attachment heading search to start at the execution block;
+        implemented exactly that way. Contracts with no locatable execution block are not applicable,
+        as the sketch prescribes.
+      reused_existing_checker: null
+      in_scope_applicability:
+        n_applicable: 40
+        n_units: 480
+        rate: 0.0833
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 3
+        n_units: 180
+        rate: 0.0167
+      - key: 4k-8k
+        n_applicable: 0
+        n_units: 132
+        rate: 0.0
+      - key: 8k-16k
+        n_applicable: 15
+        n_units: 84
+        rate: 0.1786
+      - key: '>16k'
+        n_applicable: 22
+        n_units: 84
+        rate: 0.2619
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0187
+      variants:
+        strict_heading:
+          n_applicable_all_decisions: 31
+          rate_all_decisions: 0.0646
+          delta_vs_as_written: -0.0187
+          rate_in_scope: 0.0646
+          phi_in_scope: 0.2967
+        narrow_execution_block:
+          n_applicable_all_decisions: 40
+          rate_all_decisions: 0.0833
+          delta_vs_as_written: 0.0
+          rate_in_scope: 0.0833
+          phi_in_scope: 0.3404
+    examples:
+    - verdict: applies
+      contract_id: ArcGroupInc_20171211_8-K_EX-10.1_10976103_EX-10.1_Sponsorship Agreement
+      category: Agreement Date
+      gold_present: true
+      text: November 27, 2017
+    - verdict: applies
+      contract_id: ArcGroupInc_20171211_8-K_EX-10.1_10976103_EX-10.1_Sponsorship Agreement
+      category: Expiration Date
+      gold_present: true
+      text: 'The term of this Agreement (the "Term") shall commence as of April 1, 2018 (the "Effective
+        Date") and shall expire upon the later of: (a) the conclusion of the 2022/23 NFL season a'
+    - verdict: applies
+      contract_id: ArcGroupInc_20171211_8-K_EX-10.1_10976103_EX-10.1_Sponsorship Agreement
+      category: License Grant
+      gold_present: true
+      text: Subject to the terms and conditions of this Agreement, as part of the consideration of the
+        full and timely payment of the Sponsor Fees, Club hereby grants to Sponsor, and Sponsor h
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  p21:
+    status: tautological-applicability
+    note: 'Fires on 19/480 decisions (4.0%) over the 12-category dev set; 19/40 (47.5%) within its declared
+      scope. Separability: fail — Applicability requires the category to be gold-present before any text
+      test runs, so the applicable x gold-absent cell is empty by construction. Phi against gold presence,
+      in scope: 0.2182. Sketch''s compliance half needs a date normaliser across corpus formats. Applicability
+      is implemented as written (gold present, execution block located, at least one date literal after
+      it); the date-equality subsetting the sketch asks for is a compliance-time concern and is not part
+      of the footprint.'
+    applicability:
+      n_applicable: 19
+      n_units: 480
+      rate: 0.0396
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 19
+        n_units: 40
+        rate: 0.475
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Exclusivity
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Volume Restriction
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      concentration:
+        n_contracts_with_any: 19
+        n_contracts: 40
+        max_per_contract: 1
+        median_per_contract: 1
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.9048
+      lift: 0.0952
+      n_positive: 19
+      n_negative: 21
+      phi: 0.2182
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_presence_and_instance
+      why: Applicability requires the category to be gold-present before any text test runs, so the applicable
+        x gold-absent cell is empty by construction.
+      twobytwo_applicability_x_gold:
+        applicable_present: 19
+        applicable_absent: 0
+        notapplicable_present: 19
+        notapplicable_absent: 2
+      twobytwo_all_decisions:
+        applicable_present: 19
+        applicable_absent: 0
+        notapplicable_present: 192
+        notapplicable_absent: 269
+      structurally_empty_cells: *id019
+      observed_empty_cells:
+      - applicable_absent
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: &id020
+      - Agreement Date
+      eligible_categories: *id020
+      faithfulness: closest_faithful
+      faithfulness_note: Sketch's compliance half needs a date normaliser across corpus formats. Applicability
+        is implemented as written (gold present, execution block located, at least one date literal after
+        it); the date-equality subsetting the sketch asks for is a compliance-time concern and is not
+        part of the footprint.
+      reused_existing_checker: null
+      in_scope_applicability:
+        n_applicable: 19
+        n_units: 40
+        rate: 0.475
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 6
+        n_units: 180
+        rate: 0.0333
+      - key: 4k-8k
+        n_applicable: 4
+        n_units: 132
+        rate: 0.0303
+      - key: 8k-16k
+        n_applicable: 4
+        n_units: 84
+        rate: 0.0476
+      - key: '>16k'
+        n_applicable: 5
+        n_units: 84
+        rate: 0.0595
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0
+      variants:
+        narrow_execution_block:
+          n_applicable_all_decisions: 19
+          rate_all_decisions: 0.0396
+          delta_vs_as_written: 0.0
+          rate_in_scope: 0.475
+          phi_in_scope: 0.2182
+    examples:
+    - verdict: applies
+      contract_id: AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement
+      category: Agreement Date
+      gold_present: true
+      text: February 1, 2019
+    - verdict: applies
+      contract_id: ArcGroupInc_20171211_8-K_EX-10.1_10976103_EX-10.1_Sponsorship Agreement
+      category: Agreement Date
+      gold_present: true
+      text: November 27, 2017
+    - verdict: applies
+      contract_id: ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement
+      category: Agreement Date
+      gold_present: true
+      text: December 31, 2018
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004
+  p22:
+    status: tautological-applicability
+    note: 'Fires on 108/480 decisions (22.5%) over the 12-category dev set; 108/360 (30.0%) within its
+      declared scope. Separability: fail — Applicability is defined as the category being gold-present,
+      so the applicable x gold-absent cell is empty by construction and any compliance rate computed on
+      the applicable set is conditioned on the answer. Phi against gold presence, in scope: 1.0. Unstable:
+      a lexicon or threshold variant moves the rate by up to 21.5% of all decisions.'
+    applicability:
+      n_applicable: 108
+      n_units: 480
+      rate: 0.225
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 24
+        n_units: 40
+        rate: 0.6
+      - key: Cap On Liability
+        n_applicable: 21
+        n_units: 40
+        rate: 0.525
+      - key: License Grant
+        n_applicable: 16
+        n_units: 40
+        rate: 0.4
+      - key: Exclusivity
+        n_applicable: 13
+        n_units: 40
+        rate: 0.325
+      - key: Revenue/Profit Sharing
+        n_applicable: 13
+        n_units: 40
+        rate: 0.325
+      - key: Minimum Commitment
+        n_applicable: 12
+        n_units: 40
+        rate: 0.3
+      - key: Volume Restriction
+        n_applicable: 4
+        n_units: 40
+        rate: 0.1
+      - key: Most Favored Nation
+        n_applicable: 4
+        n_units: 40
+        rate: 0.1
+      - key: Source Code Escrow
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      concentration:
+        n_contracts_with_any: 33
+        n_contracts: 40
+        max_per_contract: 7
+        median_per_contract: 3
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.0
+      lift: 1.0
+      n_positive: 108
+      n_negative: 252
+      phi: 1.0
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_presence
+      why: Applicability is defined as the category being gold-present, so the applicable x gold-absent
+        cell is empty by construction and any compliance rate computed on the applicable set is conditioned
+        on the answer.
+      twobytwo_applicability_x_gold:
+        applicable_present: 108
+        applicable_absent: 0
+        notapplicable_present: 0
+        notapplicable_absent: 252
+      twobytwo_all_decisions:
+        applicable_present: 108
+        applicable_absent: 0
+        notapplicable_present: 103
+        notapplicable_absent: 269
+      structurally_empty_cells: *id011
+      observed_empty_cells:
+      - applicable_absent
+      - notapplicable_present
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: all 12 categories
+      eligible_categories:
+      - Anti-Assignment
+      - Cap On Liability
+      - License Grant
+      - Exclusivity
+      - Revenue/Profit Sharing
+      - Minimum Commitment
+      - Volume Restriction
+      - Most Favored Nation
+      - Source Code Escrow
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: g01
+      in_scope_applicability:
+        n_applicable: 108
+        n_units: 360
+        rate: 0.3
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 17
+        n_units: 180
+        rate: 0.0944
+      - key: 4k-8k
+        n_applicable: 29
+        n_units: 132
+        rate: 0.2197
+      - key: 8k-16k
+        n_applicable: 30
+        n_units: 84
+        rate: 0.3571
+      - key: '>16k'
+        n_applicable: 32
+        n_units: 84
+        rate: 0.381
+    stability:
+      max_abs_rate_swing_all_decisions: 0.2146
+      variants:
+        value_categories_included:
+          n_applicable_all_decisions: 211
+          rate_all_decisions: 0.4396
+          delta_vs_as_written: 0.2146
+          rate_in_scope: 0.3
+          phi_in_scope: 1.0
+    examples:
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Anti-Assignment
+      gold_present: true
+      text: 'Detto may not assign any of its rights or delegate any of its obligations hereunder, whether
+        by operation of law or otherwise, without PivX''s prior written consent. Subject to the '
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Cap On Liability
+      gold_present: true
+      text: EXCEPT FOR PIVX'S OBLIGATIONS UNDER SECTION 4.2, IN NO EVENT SHALL PIVX'S OR ITS LICENSORS'
+        LIABILITY TO DETTO OR ANY THIRD PARTY ARISING OUT OF THIS AGREEMENT EXCEED THE TOTAL AMO
+    - verdict: applies
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: License Grant
+      gold_present: true
+      text: Subject to the terms and conditions of this Agreement, PivX hereby grants to Detto a non-transferable,
+        exclusive license to distribute PivX's Qwik-Fix Pro and any documentation sup
+  p23:
+    status: tautological-applicability
+    note: 'Fires on 12/480 decisions (2.5%) over the 12-category dev set. Separability: fail — Applicability
+      is computed from the category''s own gold span text, which requires the category to be present;
+      the applicable x gold-absent cell is empty by construction. Phi against gold presence, in scope:
+      0.1808.'
+    applicability:
+      n_applicable: 12
+      n_units: 480
+      rate: 0.025
+    distribution:
+      by: category
+      rows:
+      - key: Agreement Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Governing Law
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Expiration Date
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Anti-Assignment
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Cap On Liability
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: License Grant
+        n_applicable: 5
+        n_units: 40
+        rate: 0.125
+      - key: Exclusivity
+        n_applicable: 4
+        n_units: 40
+        rate: 0.1
+      - key: Revenue/Profit Sharing
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Minimum Commitment
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      - key: Volume Restriction
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      - key: Most Favored Nation
+        n_applicable: 0
+        n_units: 40
+        rate: 0.0
+      - key: Source Code Escrow
+        n_applicable: 1
+        n_units: 40
+        rate: 0.025
+      concentration:
+        n_contracts_with_any: 6
+        n_contracts: 40
+        max_per_contract: 2
+        median_per_contract: 2
+    discrimination:
+      metric: P(category present in gold) when the principle applies vs when it does not, over in-scope
+        decisions; phi is the 2x2 correlation
+      pass_rate_positive: 1.0
+      pass_rate_negative: 0.4252
+      lift: 0.5748
+      n_positive: 12
+      n_negative: 468
+      phi: 0.1808
+      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+        exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
+        improves extraction.
+      what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
+        not. That needs the two-arm run.
+    separability:
+      verdict: fail
+      gold_dependency: gold_span_content_own
+      why: Applicability is computed from the category's own gold span text, which requires the category
+        to be present; the applicable x gold-absent cell is empty by construction.
+      twobytwo_applicability_x_gold:
+        applicable_present: 12
+        applicable_absent: 0
+        notapplicable_present: 199
+        notapplicable_absent: 269
+      twobytwo_all_decisions:
+        applicable_present: 12
+        applicable_absent: 0
+        notapplicable_present: 199
+        notapplicable_absent: 269
+      structurally_empty_cells: *id008
+      observed_empty_cells:
+      - applicable_absent
+      caveat: The requested {passes, fails} x {gold present, gold absent} table cannot be filled before
+        model outputs exist; what is filled here is {applicable, not applicable} x {gold present, gold
+        absent}, which is the table that decides whether compliance could ever be separable from correctness.
+    scope_and_faithfulness:
+      declared_scope: all 12 categories
+      eligible_categories:
+      - Agreement Date
+      - Governing Law
+      - Expiration Date
+      - Anti-Assignment
+      - Cap On Liability
+      - License Grant
+      - Exclusivity
+      - Revenue/Profit Sharing
+      - Minimum Commitment
+      - Volume Restriction
+      - Most Favored Nation
+      - Source Code Escrow
+      faithfulness: faithful
+      faithfulness_note: null
+      reused_existing_checker: g03
+      in_scope_applicability:
+        n_applicable: 12
+        n_units: 480
+        rate: 0.025
+    length_buckets:
+      by: contract token count
+      rows:
+      - key: <=4k
+        n_applicable: 2
+        n_units: 180
+        rate: 0.0111
+      - key: 4k-8k
+        n_applicable: 2
+        n_units: 132
+        rate: 0.0152
+      - key: 8k-16k
+        n_applicable: 4
+        n_units: 84
+        rate: 0.0476
+      - key: '>16k'
+        n_applicable: 4
+        n_units: 84
+        rate: 0.0476
+    stability:
+      max_abs_rate_swing_all_decisions: 0.0042
+      variants:
+        soft_j80:
+          n_applicable_all_decisions: 14
+          rate_all_decisions: 0.0292
+          delta_vs_as_written: 0.0042
+          rate_in_scope: 0.0292
+          phi_in_scope: 0.1957
+    examples:
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: License Grant
+      gold_present: true
+      text: University hereby grants to ArTara an exclusive license to use the Program Data solely for
+        the Project and in Regulatory Filings in the Field in the Territory.
+    - verdict: applies
+      contract_id: ArtaraTherapeuticsInc_20200110_8-K_EX-10.5_11943350_EX-10.5_License Agreement
+      category: Exclusivity
+      gold_present: true
+      text: University hereby grants to ArTara an exclusive license to use the Program Data solely for
+        the Project and in Regulatory Filings in the Field in the Territory.
+    - verdict: applies
+      contract_id: CORIOINC_07_20_2000-EX-10.5-LICENSE AND HOSTING AGREEMENT
+      category: License Grant
+      gold_present: true
+      text: Subject to the terms and conditions of this Agreement, Commerce One hereby grants to Corio
+        a fee-bearing, perpetual and irrevocable, nonexclusive, nontransferable (except in accord
+    - verdict: does not apply
+      contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      category: Agreement Date
+      gold_present: true
+      text: this ___ day of _________, 2004

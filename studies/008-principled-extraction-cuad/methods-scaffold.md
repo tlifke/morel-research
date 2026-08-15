@@ -270,6 +270,37 @@ adversarial critique — converged on the same disqualifications (`g02`
 unimplementable, `d07` and `d06` dead, the tautology family). Convergence of
 methods built for different purposes is worth reporting as corroboration.
 
+**Numbers to pin before publication — three known discrepancies.** Flagged here
+so they are resolved deliberately rather than by whichever document is quoted
+last.
+
+1. **`d07`'s counts differ across three independent passes**: 25 internal /
+   204 adjacent / 127 mid-sentence; 22 / 175 / 155; 22 / 158 / 145. All three
+   used different regex families for "page furniture". **The direction and the
+   ~5–8:1 magnitude replicate; the exact counts are metric-dependent.** Report
+   it that way — as a finding replicated by three independent operationalisations
+   — rather than picking one triple and implying precision we do not have.
+   **[human]** This is a strength if stated honestly and a liability if a single
+   number is quoted as exact.
+2. **The tautology tally is unsettled.** Prose elsewhere says "of 8
+   guideline-derived, one unimplementable and two tautological"; the footprint
+   table flags `g01`, `g07` **and** `g03`. Recount from the footprint artifact
+   before any version reaches the paper.
+3. **`d05`'s status differs by level and both readings are correct.** Its
+   *statement* is well-evidenced and the guidelines' silence on it raises rather
+   than lowers its standing; its *checker* is near-degenerate. Always say which
+   level is being reported — this is decoupling 3 in miniature.
+
+**Blinding limitation on the calibration instrument, stated because it is
+real.** The curator was told in conversation how many controls exist and what
+failure modes they span, before round 2 was run. He does not know *which*
+records they are, which preserves the primary signal — identity of the catches.
+But a known count can shape behaviour (a reviewer may reject to a quota), so
+the catch rate must be read alongside the false-alarm rate on real candidates,
+and the disclosure reported. `reviews/calibration-controls.md` also states the
+count and the taxonomy while being marked curator-safe; that internal
+contradiction should be reconciled rather than left.
+
 **[human]** The five deferred records are the highest-information output of
 round 1 and should not be presented as a backlog that was cleared. In
 particular the `d01`-vs-`g01` contradiction is a disagreement *between our two

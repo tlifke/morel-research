@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study 008 — Principle derivation: round 1 vs round 2</title>
+<style>
+  :root {
+    --bg:        #FAFAF8;
+    --surface:   #FFFFFF;
+    --band:      #F5E6D3;
+    --band-soft: #FBF3E8;
+    --line:      #E8D5BF;
+    --line-soft: #F0E4D5;
+    --text:      #3B2F2F;
+    --muted:     #6B5E5E;
+    --accent:    #C1694F;
+    --accent-dk: #A3523A;
+    --green:     #2D5016;
+    --green-lt:  #4A7A2E;
+    --blue:      #3D6478;
+    --mustard:   #B8821C;
+    --red:       #C14F4F;
+    --mushroom:  #9C7676;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.62;
+    overflow-x: hidden;
+  }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 28px; }
+  .wide { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+
+  header.masthead {
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    padding: 52px 0 34px;
+    margin-bottom: 40px;
+  }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin: 0 0 14px;
+  }
+  h1 { font-size: 33px; line-height: 1.2; margin: 0 0 14px; font-weight: 640; letter-spacing: -0.015em; }
+  .subtitle { font-size: 18px; color: var(--muted); margin: 0 0 22px; max-width: 64ch; }
+
+  h2 {
+    font-size: 23px; margin: 0 0 6px; font-weight: 640; letter-spacing: -0.01em;
+  }
+  h2 .num { color: var(--accent); font-family: var(--mono); font-size: 16px; margin-right: 10px; }
+  h3 { font-size: 17px; margin: 30px 0 8px; font-weight: 660; }
+  section { margin-bottom: 54px; }
+  .lede { color: var(--muted); margin: 0 0 22px; max-width: 72ch; }
+  p { max-width: 74ch; }
+
+  code, .mono { font-family: var(--mono); font-size: 0.88em; }
+  code { background: var(--band-soft); border: 1px solid var(--line-soft); border-radius: 3px; padding: 0.5px 4px; }
+
+  .rule { border: 0; border-top: 1px solid var(--line); margin: 0 0 40px; }
+
+  .statusbar {
+    display: flex; flex-wrap: wrap; gap: 10px; margin: 0;
+  }
+  .pill {
+    font-size: 12.5px; font-weight: 650; letter-spacing: 0.03em;
+    border-radius: 999px; padding: 4px 12px; border: 1px solid var(--line);
+    background: var(--band-soft); color: var(--muted);
+  }
+  .pill.done   { background: #EDF2E6; border-color: #CBD9BA; color: var(--green); }
+  .pill.open   { background: #FBF0DC; border-color: #E8CE96; color: #7A5405; }
+  .pill.warn   { background: #FBECEA; border-color: #EFC4BC; color: #8E3524; }
+
+  /* ---------- diagram ---------- */
+  .scroller { overflow-x: auto; overflow-y: hidden; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
+  .diagram { min-width: 1080px; }
+
+  .drow {
+    display: grid;
+    grid-template-columns: 118px 1fr 22px 1fr 22px 1.15fr 22px 0.95fr 22px 0.75fr;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 18px;
+  }
+  .dhead {
+    display: grid;
+    grid-template-columns: 118px 1fr 22px 1fr 22px 1.15fr 22px 0.95fr 22px 0.75fr;
+    margin-bottom: 8px;
+  }
+  .dhead div {
+    font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--mushroom); font-weight: 700; padding: 0 4px;
+  }
+  .rowlabel {
+    display: flex; flex-direction: column; justify-content: center;
+    padding-right: 14px; border-right: 3px solid var(--line);
+  }
+  .rowlabel .r { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+  .rowlabel .d { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+
+  .arrow {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--mushroom); font-size: 17px; font-weight: 700;
+  }
+
+  .stage {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 11px 13px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    margin: 0 3px;
+  }
+  .stage .t { font-size: 14px; font-weight: 680; line-height: 1.3; }
+  .stage .s { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .stage ul { margin: 2px 0 0; padding-left: 15px; }
+  .stage li { font-size: 12.5px; color: var(--muted); line-height: 1.45; margin-bottom: 3px; }
+
+  .stage.gate { background: var(--band-soft); border-color: var(--line); border-width: 2px; }
+  .stage.locked { background: #EDF2E6; border-color: #CBD9BA; }
+  .stage.empty {
+    background: repeating-linear-gradient(135deg, #FBF9F6, #FBF9F6 7px, #F3EFE9 7px, #F3EFE9 14px);
+    border-style: dashed; border-color: #DCD3C6; color: var(--muted);
+    align-items: center; justify-content: center; text-align: center;
+  }
+  .stage.added {
+    background: #FDF1EC;
+    border: 2px dashed var(--accent);
+  }
+  .stage.added .t { color: var(--accent-dk); }
+  .newtag {
+    align-self: flex-start;
+    font-size: 10px; letter-spacing: 0.11em; text-transform: uppercase; font-weight: 800;
+    background: var(--accent); color: #fff; border-radius: 3px; padding: 2px 6px;
+  }
+  .substage {
+    background: var(--surface); border: 1px solid #E9C9BD; border-radius: 5px;
+    padding: 7px 9px; margin-bottom: 6px;
+  }
+  .substage:last-child { margin-bottom: 0; }
+  .substage .st { font-size: 13px; font-weight: 660; }
+  .substage .ss { font-size: 12px; color: var(--muted); line-height: 1.42; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; margin: 16px 0 0; font-size: 13px; color: var(--muted); }
+  .legend span.key { display: inline-block; width: 26px; height: 13px; border-radius: 3px; vertical-align: -2px; margin-right: 7px; }
+  .k-carried { background: var(--surface); border: 1px solid var(--line); }
+  .k-added   { background: #FDF1EC; border: 2px dashed var(--accent); }
+  .k-none    { background: #F3EFE9; border: 1px dashed #DCD3C6; }
+
+  /* ---------- tables ---------- */
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--surface); }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  thead th {
+    font-size: 11.5px; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--mushroom); font-weight: 700; border-bottom: 2px solid var(--line);
+    background: var(--band-soft);
+  }
+  tbody tr:last-child td { border-bottom: 1px solid var(--line); }
+  td.num { font-family: var(--mono); white-space: nowrap; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 7px; }
+  .tablewrap table { min-width: 640px; }
+  .tablewrap.wide-table table { min-width: 860px; }
+
+  /* ---------- stat tiles ---------- */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 20px 0 6px; }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 13px 14px; }
+  .tile .v { font-size: 27px; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; font-family: var(--mono); }
+  .tile .l { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.35; }
+  .tile.zero .v { color: var(--red); }
+  .tile.hi .v { color: var(--green); }
+
+  /* ---------- cards ---------- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 16px; margin-top: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 16px 18px; }
+  .card .cnum { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 700; letter-spacing: 0.08em; }
+  .card h4 { margin: 6px 0 8px; font-size: 16.5px; font-weight: 680; line-height: 1.3; }
+  .card p { font-size: 14px; color: var(--muted); margin: 0 0 9px; max-width: none; }
+  .card p:last-child { margin-bottom: 0; }
+  .card .ev { font-size: 13px; color: var(--text); background: var(--band-soft);
+              border-left: 3px solid var(--accent); padding: 8px 11px; border-radius: 0 4px 4px 0; }
+
+  .constraint { border-left: 4px solid var(--blue); background: var(--surface); border-radius: 0 7px 7px 0;
+                padding: 14px 18px; margin-bottom: 14px; border-top: 1px solid var(--line);
+                border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .constraint h4 { margin: 0 0 6px; font-size: 16px; font-weight: 680; }
+  .constraint p { font-size: 14.5px; margin: 0 0 8px; }
+  .constraint p:last-child { margin: 0; }
+
+  .callout {
+    background: var(--band-soft); border: 1px solid var(--line); border-radius: 7px;
+    padding: 16px 18px; margin: 20px 0;
+  }
+  .callout p { margin: 0 0 8px; font-size: 14.5px; }
+  .callout p:last-child { margin: 0; }
+  .callout.open { background: #FBF0DC; border-color: #E8CE96; }
+
+  .quote { font-style: italic; color: var(--accent-dk); }
+
+  .srcline { font-size: 12.5px; color: var(--mushroom); margin-top: 10px; font-family: var(--mono); }
+
+  footer {
+    border-top: 1px solid var(--line); background: var(--surface);
+    padding: 30px 0 46px; margin-top: 20px; font-size: 13.5px; color: var(--muted);
+  }
+  footer p { max-width: 78ch; margin: 0 0 10px; }
+
+  @media (max-width: 620px) {
+    body { font-size: 16px; }
+    h1 { font-size: 27px; }
+    .wrap, .wide { padding: 0 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Study 008 · principled extraction (CUAD) · investigation 002 (WS2)</p>
+    <h1>Principle derivation: what changed between round 1 and round 2</h1>
+    <p class="subtitle">A methods reference for the curation gate as a measured object. Round 1 was
+      run and measured on 2026-08-15. Round 2 is designed and instrumented but <strong>has not been
+      run</strong>; nothing on this page reports a round-2 outcome.</p>
+    <div class="statusbar">
+      <span class="pill done">Round 1 — measured 2026-08-15</span>
+      <span class="pill open">Round 2 — designed, not yet run</span>
+      <span class="pill">Pilot scope: 16 candidates, 5 categories, 1 curator</span>
+      <span class="pill">Gate G2 · locked set not yet written</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section>
+    <p>This page exists to make one difference legible: the round-1 pipeline put a human between a
+      model's proposal and a locked principle set with nothing in between, and the round-2 pipeline
+      puts four measurement stages there instead. Every round-2 addition traces to a specific
+      round-1 observation, and that mapping is the argument that the redesign was principled rather
+      than reactive.</p>
+    <p>Everything here is traceable to <code>methods-scaffold.md</code> §4 / §4a,
+      <code>investigations/002-principle-derivation/investigation.md</code>,
+      <code>plans/decisions.md</code> (D-9, D-19, D-20, D-21),
+      <code>principles/pilot/round1/</code>, and the reports under <code>reviews/</code>. Anything
+      not yet determined is marked <span class="pill open">open</span>.</p>
+  </section>
+</div>
+
+<hr class="rule">
+
+<div class="wide">
+  <section>
+    <h2><span class="num">1</span>The two pipelines</h2>
+    <p class="lede">Same spine in both rounds: two independent derivation sources → a pinned proposer
+      with mechanical filters → a human curation gate → a locked set. Round 2 inserts a
+      pre-gate measurement band and re-instruments the gate itself. Added stages are drawn in
+      dashed accent; carried-over stages are plain.</p>
+
+    <div class="scroller">
+      <div class="diagram">
+
+        <div class="dhead">
+          <div></div>
+          <div>Sources</div><div></div>
+          <div>Proposal + mechanical filter</div><div></div>
+          <div>Before the gate</div><div></div>
+          <div>Curation gate (G2)</div><div></div>
+          <div>Output</div>
+        </div>
+
+        <!-- ROUND 1 -->
+        <div class="drow">
+          <div class="rowlabel">
+            <span class="r">Round 1</span>
+            <span class="d">run 2026-08-15</span>
+          </div>
+
+          <div class="stage">
+            <div class="t">Two independent arms</div>
+            <ul>
+              <li><strong>Atticus Labeling Handbook</strong> + CUAD v1 Datasheet → g01–g08</li>
+              <li><strong>Contrastive mining</strong> over ft_train only, deterministic, config
+                pinned in <code>mining_config.yaml</code> → d01–d08</li>
+              <li>Savelka confusable trio drives category choice</li>
+            </ul>
+            <div class="s">Arms stay blind to each other, so overlap is real evidence (D-9).</div>
+          </div>
+          <div class="arrow">→</div>
+
+          <div class="stage">
+            <div class="t">Pinned proposer</div>
+            <ul>
+              <li><code>claude-opus-5</code>, prompt version, batch id, invocation and harness
+                stamped on every record</li>
+              <li>Mandatory <code>evidence</code> pointers and <code>checker_sketch</code></li>
+              <li>Missing either → discarded <strong>mechanically</strong>, before human review</li>
+            </ul>
+          </div>
+          <div class="arrow">→</div>
+
+          <div class="stage empty">
+            <div class="t">Nothing</div>
+            <div class="s">No checker was implemented, no footprint measured, no cross-source
+              check, no critique, no controls. The curator judged a statement, a sketch, and
+              opaque evidence ids.</div>
+          </div>
+          <div class="arrow">→</div>
+
+          <div class="stage gate">
+            <div class="t">Human curation gate</div>
+            <ul>
+              <li>Decisions: accept / edit / reject / defer</li>
+              <li>Rationale required on <em>every</em> decision, including accept</li>
+              <li><code>edited_from</code> keyed per changed field; rejects retained</li>
+              <li>Local review app, append-only history, autosaved drafts</li>
+            </ul>
+            <div class="s">Non-expert curator (the protocol assumes an expert).</div>
+          </div>
+          <div class="arrow">→</div>
+
+          <div class="stage locked">
+            <div class="t">Locked set</div>
+            <div class="s">Accepted + edited records → <code>locked-YYYY-MM-DD.yaml</code>.
+              <strong>Not written for the pilot</strong> — round 1 fed round 2 instead.</div>
+          </div>
+        </div>
+
+        <!-- ROUND 2 -->
+        <div class="drow">
+          <div class="rowlabel">
+            <span class="r">Round 2</span>
+            <span class="d">not yet run</span>
+          </div>
+
+          <div class="stage">
+            <div class="t">Two independent arms</div>
+            <div class="s">Unchanged. Same two arms, same blindness between them, same
+              provenance stamping.</div>
+          </div>
+          <div class="arrow">→</div>
+
+          <div class="stage">
+            <div class="t">Pinned proposer</div>
+            <div class="s">Unchanged. Same pinned model / prompt version / batch stamping, same
+              mechanical discard of proposals missing evidence or a checker sketch.</div>
+          </div>
+          <div class="arrow">→</div>
+
+          <div class="stage added">
+            <span class="newtag">new in round 2</span>
+            <div class="t">Pre-gate measurement band</div>
+            <div class="substage">
+              <div class="st">1 · Checkers implemented and run</div>
+              <div class="ss">Every candidate's checker is coded and run over <strong>dev</strong>
+                (40 contracts × 12 categories = 480 decisions) before curation. Each candidate
+                arrives with an empirical footprint: rate, in-scope rate, per-category and
+                per-length distribution, a discrimination 2×2, and stability under lexicon
+                variants. Reported in <code>reviews/principle-footprints.md</code>.</div>
+            </div>
+            <div class="substage">
+              <div class="st">2 · Cross-source validation</div>
+              <div class="ss">Each principle is tested against the <em>other</em> source —
+                guideline-derived against gold, data-mined against the Handbook — with outcomes
+                <em>corroborated / contradicted / silent</em>. Over dev + ft_train (404 contracts);
+                holdout never loaded. <code>reviews/cross-source-validation.md</code>.</div>
+            </div>
+            <div class="substage">
+              <div class="st">3 · Adversarial critique</div>
+              <div class="ss">A second model argues <em>against</em> each principle, citing gold,
+                and states its own confidence. The curator adjudicates a disagreement instead of
+                judging a proposition in a vacuum. <code>reviews/principle-critiques.md</code>.</div>
+            </div>
+            <div class="substage">
+              <div class="st">4 · Calibration controls seeded</div>
+              <div class="ss">Principles demonstrably wrong against gold are merged into the
+                round-2 queue in the same schema, register and evidence style, with filled
+                proposer blocks and ids deliberately non-contiguous. The curator knows controls
+                exist; not which they are. <code>reviews/calibration-controls.md</code>.</div>
+            </div>
+          </div>
+          <div class="arrow">→</div>
+
+          <div class="stage gate">
+            <div class="t">Human curation gate</div>
+            <div class="s">Same protocol, same required rationale, same per-field
+              <code>edited_from</code>. Four instrument changes:</div>
+            <div class="substage">
+              <div class="st">+ Inline evidence <span class="newtag">new</span></div>
+              <div class="ss">Cited pair ids resolve against the pairs sidecar and render in place:
+                both sides, gold category badges, contract id and offsets, span text, and what the
+                contrast <em>is</em>. Unresolved ids render red rather than vanishing.</div>
+            </div>
+            <div class="substage">
+              <div class="st">+ Footprint block <span class="newtag">new</span></div>
+              <div class="ss">Full-width, above every other card: stat tiles, distribution bars,
+                examples. Applicability at or beyond 2%/98% and discrimination lift under 0.05 are
+                flagged amber in place. A missing footprint renders greyed and names the file it
+                looked in.</div>
+            </div>
+            <div class="substage">
+              <div class="st">+ <code>unclear</code> decision <span class="newtag">new</span></div>
+              <div class="ss">First-class, separate from defer everywhere: defer = "understood but
+                not rulable yet", unclear = "the statement is not comprehensible". Never pooled in
+                any count or export.</div>
+            </div>
+            <div class="substage">
+              <div class="st">+ Checker-sketch help <span class="newtag">new</span></div>
+              <div class="ss">"What is this?" text naming the only two questions asked of a sketch —
+                is it implementable against offsets we already have, is it faithful to the
+                statement — plus the rule that a sound rule with a broken checker is an
+                <code>edit</code>, not a <code>reject</code>.</div>
+            </div>
+          </div>
+          <div class="arrow">→</div>
+
+          <div class="stage locked">
+            <div class="t">Locked set + control score</div>
+            <div class="s">Three hard constraints gate entry (§5). Controls are removed after
+              scoring <strong>regardless of decision</strong> — an accepted control is a finding,
+              not a principle.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="legend">
+      <div><span class="key k-carried"></span>carried over from round 1</div>
+      <div><span class="key k-added"></span>added in round 2</div>
+      <div><span class="key k-none"></span>stage absent in that round</div>
+    </div>
+
+    <p class="srcline">sources: methods-scaffold.md §4/§4a · investigation.md · D-9 · apps/principle-review/README.md</p>
+  </section>
+</div>
+
+<hr class="rule">
+
+<div class="wide">
+  <section>
+    <h2><span class="num">2</span>Why each round-2 addition exists</h2>
+    <p class="lede">Every addition traces to a specific thing round 1 did. None of them was added
+      because it seemed like good practice.</p>
+
+    <div class="tablewrap wide-table">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:26%">Round-1 observation</th>
+            <th style="width:20%">Round-2 addition</th>
+            <th>The mechanism it is exploiting or repairing</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Eleven accepts, several resting on <span class="quote">"I don't have the domain
+              expertise to disprove this. Accepted."</span> Absence of disconfirming knowledge was
+              being read as support.</td>
+            <td><strong>Checkers implemented and run before curation</strong></td>
+            <td>Converts <em>"is this a good principle?"</em> (needs expertise) into <em>"does this
+              checker discriminate?"</em> (needs none). A principle firing on 0% or 100% of
+              decisions is useless however authoritative its source.</td>
+          </tr>
+          <tr>
+            <td>Every <em>confident</em> decision was a cross-source comparison — <code>d01</code>
+              deferred as contradicting <code>g01</code>, <code>d02</code> accepted as aligning with
+              <code>g03</code>. Every low-confidence decision was single-source.</td>
+            <td><strong>Cross-source validation, made structural</strong></td>
+            <td>Generalises the one mechanism that actually produced curator confidence. A relation
+              between two independent sources is checkable where the truth of a proposition is not.
+              <em>Silent</em> is expected and is not evidence against: mining is blind to positional
+              categories, and the Handbook is silent on two thirds of the Savelka trio.</td>
+          </tr>
+          <tr>
+            <td>The curator was handed assertions, not disagreements, and had no ground on which to
+              contest one.</td>
+            <td><strong>Adversarial critique</strong></td>
+            <td>Adjudicating a disagreement sits at the same lower expertise bar that made the
+              cross-source calls easy. The critic grounds its case in gold and states how strong it
+              believes that case to be.</td>
+          </tr>
+          <tr>
+            <td>0 rejects and 0 edits out of 16. A gate that never exercises its negative power may
+              be measuring nothing — and every downstream claim resting on "the set was
+              human-curated" inherits that weakness.</td>
+            <td><strong>Calibration controls</strong></td>
+            <td>Turns rubber-stamping from an intuition into a measured rate. Wrong-against-gold
+              principles are seeded blind; the catch rate makes "the curation gate discriminates" a
+              claim with evidence rather than an assumption.</td>
+          </tr>
+          <tr>
+            <td>Evidence rendered as an opaque chip reading <code>pair-0014</code>; the curator
+              deferred <code>d06</code> saying he <span class="quote">couldn't see the pairs</span>.</td>
+            <td><strong>Inline evidence rendering</strong></td>
+            <td>Puts the disconfirming half of every contrast on screen without leaving the app, so
+              single-source judgement is at least as easy as it needs to be.</td>
+          </tr>
+          <tr>
+            <td><code>d08</code> drew <span class="quote">"I have no idea what this means."</span>
+              Under a four-decision vocabulary that had to be logged as a defer.</td>
+            <td><strong>Separate <code>unclear</code> decision</strong></td>
+            <td>Diagnostically different populations: a high defer rate says the evidence pipeline
+              is thin; a high unclear rate says the proposer prompt emits unreadable rules. A
+              comprehensibility failure is a legitimate rejection criterion in its own right.</td>
+          </tr>
+          <tr>
+            <td>Round 1 also produced <span class="quote">"I don't know what a checker sketch is or
+              what I'm being asked to judge about it."</span></td>
+            <td><strong>Checker-sketch field help</strong></td>
+            <td>Names the two questions being asked of a sketch, and the accompanying rule that a
+              sound rule with a broken checker is an edit rather than a reject — which is exactly
+              the distinction the edit-rate analysis needs to survive.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <p><strong>Deliberately not added, and the reason is methodological.</strong> Nothing that
+        pushes the gate toward rejection was implemented: no "strongest counter-evidence" panel next
+        to the accept button (the app would have to pick, which is the tool arguing for rejection
+        with a mechanism the writeup cannot describe), no running accept-rate readout framed as a
+        rate (counts inform; a rate with an implied acceptable value nudges), and no extra friction
+        on accept specifically (asymmetric friction manufactures the result it is trying to detect).
+        An interface that pushes toward rejection is as much a measurement error as one that pushes
+        toward acceptance, and it corrupts the same number.</p>
+      <p>The one flow change, <code>rationale first</code>, is off by default and applies identically
+        to all five decisions.</p>
+    </div>
+
+    <p class="srcline">sources: methods-scaffold.md §4a · reviews/calibration-controls.md · apps/principle-review/README.md</p>
+  </section>
+</div>
+
+<hr class="rule">
+
+<div class="wide">
+  <section>
+    <h2><span class="num">3</span>The round-1 measured outcome</h2>
+    <p class="lede">16 candidates (8 guideline-derived, 8 data-mined), one curator, five pilot
+      categories, 2026-08-15. Recorded in <code>principles/pilot/round1/round1_summary.yaml</code>
+      and <code>round1_decisions.yaml</code>.</p>
+
+    <div class="tiles">
+      <div class="tile"><div class="v">16</div><div class="l">candidates reviewed</div></div>
+      <div class="tile hi"><div class="v">11</div><div class="l">accept</div></div>
+      <div class="tile"><div class="v">5</div><div class="l">defer</div></div>
+      <div class="tile zero"><div class="v">0</div><div class="l">reject</div></div>
+      <div class="tile zero"><div class="v">0</div><div class="l">edit</div></div>
+    </div>
+    <p style="font-size:14px;color:var(--muted);margin-top:8px">The zero rejects and zero edits is
+      the headline: the gate never exercised its negative power at all.</p>
+
+    <h3>Acceptance by provenance</h3>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>arm</th><th class="num">accept</th><th class="num">defer</th><th class="num">reject</th><th class="num">edit</th><th>deferred records</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Atticus guidelines (g01–g08)</td><td class="num">7</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="mono">g01</td></tr>
+          <tr><td>Data-mined (d01–d08)</td><td class="num">4</td><td class="num">4</td><td class="num">0</td><td class="num">0</td><td class="mono">d01, d06, d07, d08</td></tr>
+          <tr><td><strong>total</strong></td><td class="num"><strong>11</strong></td><td class="num"><strong>5</strong></td><td class="num"><strong>0</strong></td><td class="num"><strong>0</strong></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:14px;color:var(--muted);margin-top:10px">Confidence tracked source
+      authority: guidelines 7/8 accepted against data-mined 4/8. §4 shows that quality did not.</p>
+
+    <h3>The gate discriminates over structural properties, not substantive ones</h3>
+    <p>This is the sharper claim the round-1 record supports, and it is not "the human gate is
+      worthless".</p>
+
+    <div class="cards">
+      <div class="card">
+        <div class="cnum">WHERE IT WORKED</div>
+        <h4>Contradiction and corroboration</h4>
+        <p><code>d01</code> was deferred as directly contradicting <code>g01</code>;
+          <code>d02</code> was accepted as aligning with <code>g03</code>. Both relations were
+          detected <strong>without domain expertise</strong>, because a relation between two sources
+          is checkable where the truth of a proposition is not.</p>
+        <p class="ev">Every confident decision was a cross-source comparison. Every low-confidence
+          decision was single-source.</p>
+      </div>
+      <div class="card">
+        <div class="cnum">WHERE IT WORKED</div>
+        <h4>Evidence strength</h4>
+        <p>Both defers were correct on the merits. <code>d07</code> was deferred asking for more
+          support — independent verification later found its main clause refuted (D-20: 204
+          furniture-split counterexamples against 25 supporting spans, replicated by a second
+          independent regex family). <code>d06</code> was deferred, and the proposer had already
+          conceded it sat below its own evidence bar (effective n=1).</p>
+        <p class="ev">Two genuinely weak candidates were caught by a curator with no contract-law
+          background.</p>
+      </div>
+      <div class="card">
+        <div class="cnum">WHERE IT WORKED</div>
+        <h4>Comprehensibility</h4>
+        <p><code>d08</code> drew <span class="quote">"I have no idea what this means"</span> — a
+          comprehensibility failure of the principle rather than of the curator, and a legitimate
+          rejection criterion in its own right. Round 1 had no vocabulary to record it as one.</p>
+      </div>
+      <div class="card" style="border-color:#E9C9BD;background:#FDF6F3">
+        <div class="cnum" style="color:var(--red)">WHERE IT DID NOT</div>
+        <h4>Substantive truth</h4>
+        <p>Accept-by-default under uncertainty. <code>g02</code> was accepted as
+          <span class="quote">"another clear principle direct from the guidelines"</span> — and it
+          is one; the Handbook genuinely prescribes the convention. It is also provably inert: the
+          <code>&lt;omitted&gt;</code> marker occurs 0 times in 404 contract texts and 0 times in the
+          raw CUAD v1 JSON, because CUAD encodes discontiguity as multiple spans. Being true was
+          never the issue.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p><strong>The expertise limitation, stated plainly.</strong> D-9 describes curation as
+        expert-derived or expert-curated in the general case. This study substituted a
+        <strong>non-expert curator</strong>. The round-2 additions are the designed response to that
+        constraint, not a post-hoc excuse — and this is the most contestable part of the method, so
+        the writeup pre-empts it rather than defending it later.</p>
+      <p><strong>The five deferred records are the highest-information output of round 1</strong> and
+        should not be presented as a backlog that was cleared. In particular the
+        <code>d01</code>-vs-<code>g01</code> contradiction is a disagreement <em>between our two
+        derivation methods</em>. (Cross-source validation later found it is not a real contradiction:
+        <code>g01</code>'s own trigger guidance exempts the date categories, which is exactly
+        <code>d01</code>'s scope, and the Handbook draws that line itself. The record's defect is
+        that its statement is phrased globally while its scope field is narrow — a drafting artifact,
+        fixable by an edit.)</p>
+    </div>
+
+    <p class="srcline">sources: round1_summary.yaml · round1_decisions.yaml · methods-scaffold.md §4a · D-20 · reviews/cross-source-validation.md §2</p>
+  </section>
+</div>
+
+<hr class="rule">
+
+<div class="wide">
+  <section>
+    <h2><span class="num">4</span>The three decouplings</h2>
+    <p class="lede">Each is stated as <em>X did not predict Y</em>. Each undercuts a heuristic a
+      reader would otherwise assume, and together they are the case for the round-2 instrumentation.
+      All measured on the pilot's 16 candidates: checkers over dev (480 decisions), cross-source
+      validation over dev + ft_train (404 contracts), and independent adversarial review. These are
+      the most transferable findings on this page.</p>
+
+    <div class="cards">
+      <div class="card">
+        <div class="cnum">DECOUPLING 1</div>
+        <h4>Provenance did not predict quality</h4>
+        <p>Of the 8 guideline-derived principles, <strong>one is unimplementable and two are
+          tautological</strong>. Of the 8 data-mined, <strong>one is refuted, one fires once in 480
+          decisions, and one fires on nearly everything</strong>.</p>
+        <p><strong>The two best footprints are one from each arm</strong> (<code>g04</code>,
+          <code>d04</code>). The curator's acceptance rate, by contrast, <em>was</em>
+          source-dependent: 7/8 guidelines against 4/8 mined.</p>
+        <p class="ev">Confidence tracked source authority; quality did not. This is the sharpest
+          single justification for replacing source-based judgement with measurement.</p>
+      </div>
+
+      <div class="card">
+        <div class="cnum">DECOUPLING 2</div>
+        <h4>Evidence strength did not predict measurement value</h4>
+        <p><code>d05</code> has the strongest derivation evidence in the set — 8 mined pairs across
+          4 contracts, 6 of them same-contract contrasts, 4 near-verbatim minimal pairs — and the
+          adversarial critic could not break its main clause.</p>
+        <p>Its footprint is among the worst in the set: it is applicable on <strong>75% of in-scope
+          decisions and fires on 100% of contracts over 4k tokens</strong>. A quantity plus a bound
+          cue is ambient legalese. It cannot discriminate at that rate.</p>
+        <p class="ev">Best-evidenced is not most-measurable. The two questions are independent and
+          only the second one determines whether a principle can carry the mediation analysis.</p>
+      </div>
+
+      <div class="card">
+        <div class="cnum">DECOUPLING 3</div>
+        <h4>Statement truth did not predict checker usability</h4>
+        <p>Adversarial review <strong>could not break 5 of 16 statements</strong> — but only
+          <strong>2 of those 5 had checkers it also could not break</strong>.</p>
+        <p><code>d04</code> is the extreme: the best-evidenced statement in the pilot, attached to a
+          regex that reaches 27% of the spans it is about and misses the second-largest span class
+          entirely.</p>
+        <p class="ev">A principle can be true and unmeasurable. "Is this a good principle?"
+          decomposes into two independent questions, and the statement/checker gap is where most of
+          the damage was. This is why checkers now precede curation (D-21).</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p><strong>Two independent instruments converged.</strong> The applicability footprints and the
+        adversarial critique were built for different purposes and reached the same disqualifications
+        — <code>g02</code> unimplementable, <code>d07</code> and <code>d06</code> dead, and the
+        tautology family. Convergence of methods built for different purposes is worth reporting as
+        corroboration rather than as redundancy.</p>
+    </div>
+
+    <h3>Cross-source validation, as a measured asymmetry</h3>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>arm, tested against the other source</th><th class="num">corroborated</th><th class="num">contradicted</th><th class="num">silent</th><th class="num">n</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>guidelines-derived (g01–g08), tested against gold</td><td class="num">8</td><td class="num">0</td><td class="num">0</td><td class="num">8</td></tr>
+          <tr><td>data-mined (d01–d08), tested against the Handbook</td><td class="num">3</td><td class="num">3</td><td class="num">2</td><td class="num">8</td></tr>
+          <tr><td><strong>total</strong></td><td class="num"><strong>11</strong></td><td class="num"><strong>3</strong></td><td class="num"><strong>2</strong></td><td class="num"><strong>16</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:14px;color:var(--muted);margin-top:10px">Two secondary numbers the study
+      wants regardless of curation: <strong>independent rediscovery 2 of 8 (25%)</strong> — the
+      mining arm, which never saw the Handbook, recovered two documented conventions — and
+      <strong>mining-only coverage 5 of 8</strong>, conventions the Handbook does not document at
+      all. Silence is structural, not evidence against: Minimum Commitment and Volume Restriction
+      appear zero times in the Handbook's 95 pages, so two thirds of the Savelka trio have no
+      guidance to check against by construction.</p>
+
+    <p class="srcline">sources: reviews/principle-footprints.md · reviews/cross-source-validation.md · reviews/principle-critiques.md · methods-scaffold.md §4a · D-20 · D-21</p>
+  </section>
+</div>
+
+<hr class="rule">
+
+<div class="wrap">
+  <section>
+    <h2><span class="num">5</span>The three hard constraints on entry to the scored set</h2>
+    <p class="lede">A candidate that survives curation still has to clear all three. Two were in the
+      protocol from the start; the third was forced by adversarial review of the pilot.</p>
+
+    <div class="constraint">
+      <h4>1 · No feasible checker or labeling plan → excluded</h4>
+      <p>The checker is sketched at proposal time, not afterwards. A principle with no feasible
+        <code>(instance, gold) → bool</code> test does not enter the scored set, however sound the
+        rule reads.</p>
+      <p><strong>Pilot casualty:</strong> <code>g02</code>. Accepted in round 1 as a clear
+        Handbook-derived principle, and it is one — but its applicability condition is satisfied 0
+        times out of 404 contracts, so no model behaviour can ever move it.</p>
+    </div>
+
+    <div class="constraint">
+      <h4>2 · A principle the schema already enforces is unmeasurable</h4>
+      <p>The harness guarantees output coverage (exactly one decision per target, D-14) and validates
+        structure before scoring. A candidate that merely restates a schema guarantee — "emit a
+        decision for every category", "cite at least one principle" — shows 100% compliance in every
+        condition <em>by construction</em>, contributing nothing to mediation while quietly inflating
+        the compliance pass-rate.</p>
+      <p><strong>Screening test:</strong> if you cannot describe an output that is schema-valid yet
+        violates the principle, the principle is not scoreable.</p>
+    </div>
+
+    <div class="constraint" style="border-left-color:var(--accent)">
+      <h4>3 · Compliance must be separable from correctness &nbsp;<span class="pill warn">D-21</span></h4>
+      <p>A principle enters the scored set only if <strong>a model can pass its checker and still be
+        wrong, and fail it while still being right</strong>. Screening is mechanical: populate the
+        2×2 of {passes checker, fails checker} × {answer right, answer wrong} over dev; a
+        structurally empty off-diagonal disqualifies.</p>
+      <p><strong>Why a tautological checker destroys the analysis.</strong> The chain the study
+        reports is <span class="mono">principles → compliance → success</span>, with compliance as
+        the <em>mediation variable</em>. If passing the checker and getting the answer right are the
+        same event, a C2/C3 compliance gain cannot be evidence that principles work
+        <em>through</em> compliance — the mediation coefficient is not merely noisy, it is
+        unidentifiable. The causal claim degenerates into a restatement of answer accuracy.</p>
+      <p><strong>Pilot casualties: 6 of 16 checkers.</strong> Two gate applicability on
+        <code>gold.is_impossible</code>, so the checker asks the answer; four define compliance as
+        emitting the gold answer. Every one of them read as sound prose. The defect lives entirely
+        in the checker — which is precisely why checkers must be implemented and inspected
+        <strong>before</strong> curation, not after.</p>
+      <p>Worse, the two gold-gated ones are structurally incapable of registering their own cost:
+        they only look at instances where absence is correct, so the false absences they would induce
+        elsewhere never enter the compliance number at all.</p>
+    </div>
+
+    <div class="callout">
+      <p><strong>Constraint 3 is the reason the pipeline changed shape, not just gained stages.</strong>
+        Constraints 1 and 2 can be applied by reading a record. Constraint 3 cannot: it is a
+        measurement over dev, so it forces the checker-implementation stage to sit before the gate
+        rather than after it. Round 1's ordering made it structurally impossible to enforce.</p>
+    </div>
+
+    <p class="srcline">sources: investigation.md (three hard constraints) · D-21 · reviews/principle-critiques.md "Worry 0" · methods-scaffold.md §4</p>
+  </section>
+</div>
+
+<hr class="rule">
+
+<div class="wrap">
+  <section>
+    <h2><span class="num">6</span>The calibration-control instrument, in general terms</h2>
+    <p class="lede">Enough to cite in methods without compromising the blind. No control is
+      identified anywhere on this page, and the answer key is not to be opened until round-2
+      decisions are recorded.</p>
+
+    <p>Principles that are demonstrably wrong against gold are seeded into the round-2 queue in the
+      same schema, register, level of detail and evidence style as real candidates, with filled
+      proposer blocks, and renumbered so they do not form a contiguous block. Each was
+      <em>disproved</em> against dev + ft_train before entering the set — candidates whose wrongness
+      could not be demonstrated were discarded during authoring, because a control whose wrongness
+      cannot be shown is indistinguishable from a real principle that happens to be wrong, and would
+      corrupt the measurement in the direction that flatters the gate. Holdout was never loaded.
+      Difficulty is tagged per control across an easy / medium / hard spread, deliberately: an
+      all-easy set makes a perfect catch rate uninformative, an all-hard set makes a zero
+      uninformative.</p>
+
+    <h3>Scoring rules, fixed in advance</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th style="width:20%">outcome</th><th>definition</th></tr></thead>
+        <tbody>
+          <tr><td><strong>catch</strong></td><td><code>reject</code>, or an <code>edit</code> that removes the wrong claim</td></tr>
+          <tr><td><strong>miss</strong></td><td><code>accept</code></td></tr>
+          <tr><td><strong>abstention</strong></td><td><code>defer</code> — reported as its own category and <strong>never counted as a catch</strong>. Round 1 shows defer is this curator's response to uncertainty, not to detected error; folding defers into catches would let the gate score well by being uniformly unsure.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="margin-top:16px">Three numbers get reported, not one — overall catch rate, catch rate
+      by difficulty tag, and abstention rate — alongside the <strong>false-alarm rate</strong> on
+      real candidates, because a curator who rejects everything catches every control while adding
+      no information.</p>
+
+    <div class="callout open">
+      <p><strong>Open, and it must be recorded on the record before scoring.</strong> The difficulty
+        tags depend on which of two conditions round 2 actually runs. If controls are curated
+        <em>raw</em>, the tags stand and the instrument measures unaided detection. If controls
+        receive the same cross-source and critique pass as real candidates, expect them all to
+        surface pre-flagged, and the instrument instead measures <strong>whether the curator acts on
+        a contradiction flag</strong> — under which a miss is a much stronger negative result, and
+        the difficulty tags must be reported as not applicable rather than reused. The two are not
+        comparable, and the difference is larger than any effect this instrument can resolve at this
+        sample size.</p>
+    </div>
+
+    <p><strong>Limits carried with any result:</strong> the sample is small and the binomial
+      intervals are wide — the instrument is powered to separate "near zero" from "substantial", not
+      to estimate a rate, so the difficulty-stratified reading is the primary result and the overall
+      rate is secondary. It tests detection of wrongness, not recognition of value. It says nothing
+      about whether good-but-unobvious principles survive — the round-1 defers are exactly that
+      population. It is one curator, one round, one queue. And once round 2 is scored the controls
+      are <em>burnt</em>: a round-3 measurement needs new ones, and the measured catch rate should be
+      expected to rise for reasons that have nothing to do with the gate's quality.</p>
+
+    <p style="font-size:14px;color:var(--muted)">No control may reach the locked set. After scoring
+      all are removed regardless of their review decisions, including any that were accepted — an
+      accepted control is the finding, not a principle.</p>
+
+    <p class="srcline">source: reviews/calibration-controls.md (safe for the curator to read; contains nothing identifying)</p>
+  </section>
+</div>
+
+<hr class="rule">
+
+<div class="wide">
+  <section>
+    <h2><span class="num">7</span>Which round-2 changes earned their place</h2>
+
+    <div class="callout open">
+      <p><strong>This section is deliberately empty. Round 2 has not been run.</strong> The table
+        below is the shape of the answer, to be filled in after round-2 decisions are recorded and
+        the controls are scored. Nothing is pre-filled and no verdict is anticipated — a round-2
+        addition that costs more than it catches is a reportable result, and pre-writing the
+        verdicts would destroy the only thing this table is for.</p>
+    </div>
+
+    <div class="tablewrap wide-table">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:22%">round-2 addition</th>
+            <th style="width:26%">what it cost</th>
+            <th style="width:26%">what it caught</th>
+            <th style="width:26%">verdict</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Checker implementation + empirical footprints</strong><br>
+              <span style="font-size:13px;color:var(--muted)">dev, 480 decisions</span></td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— open</td>
+          </tr>
+          <tr>
+            <td><strong>Cross-source validation</strong><br>
+              <span style="font-size:13px;color:var(--muted)">corroborated / contradicted / silent</span></td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— open</td>
+          </tr>
+          <tr>
+            <td><strong>Adversarial critique</strong><br>
+              <span style="font-size:13px;color:var(--muted)">second model argues against, citing gold</span></td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— open</td>
+          </tr>
+          <tr>
+            <td><strong>Calibration controls</strong><br>
+              <span style="font-size:13px;color:var(--muted)">catch / miss / abstention + false alarms</span></td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— open</td>
+          </tr>
+          <tr>
+            <td><strong>UI: inline evidence</strong></td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— open</td>
+          </tr>
+          <tr>
+            <td><strong>UI: footprint display</strong></td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— open</td>
+          </tr>
+          <tr>
+            <td><strong>UI: <code>unclear</code> decision</strong></td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— open</td>
+          </tr>
+          <tr>
+            <td><strong>UI: checker-sketch help</strong></td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
+            <td class="mono" style="color:var(--mushroom)">— open</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Other round-2 items still open</h3>
+    <ul>
+      <li>Whether calibration controls are curated <strong>raw</strong> or <strong>after the
+        cross-source and critique pass</strong> — must be recorded before scoring; the two conditions
+        are not comparable.</li>
+      <li>The final principle set: count, type distribution, provenance distribution, and the 3–5
+        deliberately rare principles.</li>
+      <li>Acceptance rate by provenance, edit rate, per-field edit distribution, and how many model
+        proposals survived to the scored set — all reportable directly from the review record with no
+        extra bookkeeping.</li>
+      <li>Whether the prompt-visible vs scored-citation distinction gets made explicit as a new
+        decision (raised by the footprints report for the two universally-applicable principles).</li>
+      <li>Tyler's sign-off at gate G2, and the locked set at
+        <code>principles/locked-YYYY-MM-DD.yaml</code>. Claude proposes; Claude does not lock.</li>
+    </ul>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Data.</strong> CUAD is released under <strong>CC BY 4.0</strong>; attribute
+      <strong>The Atticus Project</strong>. Cite <span class="mono">hendrycks2021cuad</span>
+      (arXiv:2103.06268). CUAD v1 category descriptions and the CUAD Datasheet are quotable under
+      that licence and are quoted directly where used.</p>
+    <p><strong>The Atticus Labeling Handbook is separately copyrighted, paywalled and
+      non-redistributable.</strong> No verbatim Handbook prose appears in this repo or on this page;
+      every reference to it is a paraphrase with a section pointer, and a reader cannot obtain the
+      source for free.</p>
+    <p><strong>Blind.</strong> This page identifies no calibration control, states no control's
+      claim, and does not report the size of the control set. The answer key
+      (<code>principles/pilot/controls_key.yaml</code>) must not be opened until round-2 decisions
+      are recorded.</p>
+    <p>Study 008 · investigation 002 (WS2) · round 1 measured 2026-08-15, round 2 not yet run ·
+      in-repo reference at <code>studies/008-principled-extraction-cuad/reviews/derivation-pipeline.html</code>
+      · AI Assistant Used: Claude Code</p>
+  </div>
+</footer>
+
+</body>
+</html>
