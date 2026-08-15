@@ -1,0 +1,1175 @@
+meta:
+  role: adversarial critic, round 2
+  input: principles/pilot/candidates_round2.yaml (23 candidates, p01..p23)
+  evidence_scope: dev (40) + ft_train (364) = 404 contracts, 12-category subset via scripts/cuad_dataset.py
+  holdout_loaded: false
+  blinding: >
+    controls.yaml, controls_key.yaml, round2_key.yaml, round1/, cross_source_validation.yaml,
+    critiques.yaml, round2/, reviews/cross-source-validation.md, reviews/principle-critiques.md,
+    reviews/calibration-controls.md and the Atticus Handbook PDF were NOT read. One leak is
+    disclosed in reviews/round2-critiques.md (a grep hit in the permitted plans/decisions.md
+    surfaced round-1 aggregate counts); no round-2 conclusion below depends on it.
+  date: 2026-08-15
+  assistant: Claude Code
+  confidence_vocabulary:
+    strong: the objection lands; the principle or its checker should not ship as written
+    moderate: the objection lands but is survivable with a rewrite of statement or checker
+    weak: the objection is real but small; the candidate is close to sound
+    could_not_break: I attacked it and failed; report it as sound
+  could_not_break_count: 3
+  fields_per_record: [verdict, confidence, recommendation, objections, strongest_defence]
+
+p01:
+  verdict: >
+    Statement is close to the gold convention and I could not overturn it; the objections are
+    small-n counterexamples and near-total redundancy with p11's checker.
+  confidence: weak
+  recommendation: keep_with_checker_rewrite
+  objections:
+  - axis: counterexample
+    claim: >
+      Gold does label bare administration sentences as Revenue/Profit Sharing, so the IS-NOT rule
+      is not absolute and the checker will fire against gold-matching output.
+    counterexamples:
+    - contract_id: ExactSciencesCorp_20180822_8-K_EX-10.1_11331629_EX-10.1_Promotion Agreement
+      offsets: '[143896:144004]'
+      note: >
+        "Such royalty payment shall be payable to Pfizer within thirty (30) days of the end of each
+        Calendar Quarter." Pure payment-timing machinery, no entitlement signal, gold RPS.
+    - contract_id: JOINTCORP_09_19_2014-EX-10.15-FRANCHISE AGREEMENT
+      offsets: '[50494:...]'
+      note: account-sweep administration sentence carrying no percentage-of-revenue term, gold RPS.
+    - contract_id: NakedBrandGroupInc_20150731_POS AM (on S-1)_EX-10.75_9196027_EX-10.75_Endorsement Agreement
+      offsets: '[18140:...]'
+      note: '"Naked will pay Wade royalties as follows:" — a bare lead-in, gold RPS.'
+    quantification: >
+      4 of 329 RPS gold spans (1.2%) match an administration pattern with no p11-style entitlement
+      signal. A gold-perfect model is scored non-compliant on those 4. Low but non-zero.
+    confidence: weak
+  - axis: schema_redundancy
+    claim: >
+      The compliance test is literally p11's test with an administration prefilter — "no predicted
+      span is an administration sentence WHEN IT LACKS the p11 entitlement signals". Any span that
+      fails p01 also fails p11, so p01 contributes no independent column and the H4 confusion
+      matrix cannot separate them the way the sketch claims it will.
+    counterexamples: []
+    quantification: >
+      p11 flags 165/329 gold RPS spans as signal-less; p01's 4 flagged spans are a subset of those.
+      Independent discriminating power over p11 is at most 4 spans corpus-wide.
+    confidence: moderate
+  - axis: degeneracy
+    claim: Applicability is instance-level and narrow, so the denominator is small.
+    counterexamples: []
+    quantification: 63 of 404 contracts (15.6%) contain an admin-pattern sentence near a revenue term.
+    confidence: weak
+  strongest_defence: >
+    The direction is right: 325 of 329 RPS gold spans carry substantive entitlement content, and the
+    error it targets (right-topic-wrong-function) is a real model failure mode that no other candidate
+    in the set catches. Keep the statement; make the checker not simply be p11 with an extra filter.
+
+p02:
+  verdict: >
+    Disqualified on axis 5. Applicability is gated on gold is_impossible, so compliance is a
+    restatement of correctness and the off-diagonal is structurally empty.
+  confidence: strong
+  recommendation: drop
+  objections:
+  - axis: compliance_correctness_collapse
+    claim: >
+      "Applicable to an Agreement Date decision when gold is_impossible is true ... Compliance: the
+      decision is an AbsenceClaim." A model can only be applicable-and-non-compliant by being wrong,
+      and applicable-and-compliant by being right. There is no cell where compliance and correctness
+      disagree.
+    counterexamples: []
+    quantification: >
+      11 of 404 contracts are applicable, all gold-absent by construction. 116 gold-present contracts
+      satisfy the identical TEXT-side condition (a date literal in the first 2,000 chars not preceded
+      by an execution cue) and are excluded solely by the gold gate — i.e. the gate removes 91% of the
+      cases where the principle could have been shown wrong.
+    confidence: strong
+  - axis: degeneracy
+    claim: Even granting the gate, the denominator is 11 contracts; the compliance rate will be noise.
+    counterexamples: []
+    quantification: 11/404 = 2.7% applicability, and Agreement Date is gold-absent in only 30 contracts total.
+    confidence: strong
+  - axis: circularity
+    claim: >
+      "Claim absence when the document does not state the fact asked for" restates the definition of
+      is_impossible. It is present in every condition via the task definition and adds nothing a
+      principled arm has that a bare arm does not.
+    counterexamples: []
+    quantification: n/a — structural.
+    confidence: moderate
+  strongest_defence: >
+    The underlying behaviour is real and worth measuring — the IOVANCE contract (pair-0026) offers an
+    "Effective Date: April 17, 2017" and gold still marks Agreement Date absent, so near-miss
+    substitution is a genuine model trap. But it must be measured with an instance-only trigger over
+    all 127 near-miss contracts, not with a gold-absence gate.
+
+p03:
+  verdict: >
+    Contradicted by its own cited evidence and by the corpus. The evidence pairs are near-duplicate
+    annotation noise, not an amendment convention, and the one pair that IS amendment-shaped runs the
+    opposite way.
+  confidence: strong
+  recommendation: drop
+  objections:
+  - axis: counterexample
+    claim: >
+      Amendment-shaped documents in CUAD carry gold spans routinely; they are not blanket-absent for
+      reproduced clauses.
+    counterexamples:
+    - contract_id: VARIABLESEPARATEACCOUNT_04_30_2014-EX-13.C-UNCONDITIONAL CAPITAL MAINTENANCE AGREEMENT
+      offsets: '[1280:2748], [3516:4041], [15110:15202]'
+      note: >
+        Title opens "AMENDED AND RESTATED UNCONDITIONAL CAPITAL MAINTENANCE AGREEMENT". This is the
+        amended-and-restated document and it is gold-PRESENT for Minimum Commitment. Its near-twin
+        SEPARATEACCOUNTIIOFAGL_05_02_2011-EX-99.(J)(4), which is NOT an amendment, is gold-ABSENT.
+        p03 predicts exactly the reverse.
+    - contract_id: NETGEAR,INC_04_21_2003-EX-10.16- AMENDMENT #2 TO THE DISTRIBUTION AGREEMENT
+      offsets: 'Agreement Date [~128:...]'
+      note: >
+        Amendment-shaped, and gold-PRESENT for Agreement Date ("October 1,1996"). Supports p03 only
+        for Governing Law, where it is absent.
+    quantification: >
+      25 of 404 contracts are amendment-shaped by title or opening. All 25 carry at least one
+      gold-present category in the 12-category subset, 86 gold spans in total. Agreement Date is
+      present in 24/25 (96%, vs 92% elsewhere). Governing Law and Expiration Date are genuinely
+      depressed (36% and 32% vs 90% and 85%), so the true effect is category-specific, not the
+      blanket rule p03 states.
+    confidence: strong
+  - axis: defect_derived
+    claim: >
+      Pairs 0031, 0032 and 0035 are the AIG capital-maintenance twins and pair-0034 the
+      GSVINC/VITAMINSHOPPE sponsorship twins. Neither pair is an amendment/original relationship —
+      they are two separately filed contracts sharing boilerplate, annotated inconsistently. The
+      principle generalises annotator disagreement across near-duplicate documents into a legal rule.
+    counterexamples:
+    - contract_id: GSVINC_05_15_1998-EX-10-SPONSORSHIP AGREEMENT
+      offsets: 'Minimum Commitment [30330:30730]'
+      note: >
+        gold-present; the byte-similar VITAMINSHOPPECOMINC_09_13_1999-EX-10.26 passage at [33214:33843]
+        is gold-absent. Neither document amends the other.
+    quantification: 3 of the 3 cited pairs (pair-0031/0032/0035) are non-amendment near-duplicates.
+    confidence: strong
+  - axis: checker_infidelity
+    claim: >
+      The checker's applicability requires a 400+ character shared substring with ANOTHER contract —
+      a cross-document contamination test, not a within-document amendment test. It therefore fires
+      on near-duplicate filings (the defect class) and misses amendments whose base agreement is not
+      in the corpus.
+    counterexamples: []
+    quantification: >
+      The study has already excluded 4 contracts as cross-split duplicates (INV1-D7); the residual
+      duplicate population is exactly what this applicability rule selects for.
+    confidence: strong
+  strongest_defence: >
+    The NETGEAR family is a genuine amendment case where the reproduced entire-agreement/Governing Law
+    paragraph is gold-absent in both amendments and gold-present in the base agreement. If Tyler wants
+    this idea at all, it is a Governing-Law-scoped principle backed by one family, not a scope-[] rule.
+
+p04:
+  verdict: >
+    First half is confirmed by gold (32 present vs 2 absent on date-shaped blanks). Second half and
+    the applicability regex over-reach onto the bare-slot family, which gold treats as absence.
+  confidence: moderate
+  recommendation: rewrite_statement
+  objections:
+  - axis: counterexample
+    claim: >
+      The clause "absence is claimed only when no agreement date appears in the introductory
+      paragraph, on the cover page, or on the signature page" is wrong for contracts whose signature
+      page has a date SLOT but no date-shaped construct. Gold rules those absent.
+    counterexamples:
+    - contract_id: InnerscopeHearingTechnologiesInc_20181109_8-K_EX-10.6_11446484_EX-10.6_Distributor Agreement
+      offsets: 'signature block "Dated: ."'
+      note: gold-ABSENT despite a date position existing on the signature page.
+    - contract_id: FUSIONPHARMACEUTICALSINC_06_05_2020-EX-10.17-Supply Agreement - FUSION
+      offsets: signature block "Title Title Date Date"
+      note: gold-ABSENT; empty signature-block date fields.
+    quantification: >
+      Contracts whose only blank-date evidence is a bare Date:/Dated: slot: 11 gold-absent vs 85
+      gold-present. The checker's stated trigger — "a bare comma or blank sitting where a date should
+      follow an execution verb" — fires on the 11 and demands an Extraction, which is wrong.
+      By contrast, date-SHAPED blank constructs are 32 present vs 2 absent (94% present), so the
+      first half of the statement is solid.
+    confidence: moderate
+  - axis: checker_infidelity
+    claim: >
+      The statement says the answer is "recorded with the unknown components bracketed", but the
+      compliance test only asks whether the decision is an Extraction rather than an AbsenceClaim.
+      The bracketing convention — the actually testable part of the Handbook rule — is untested.
+    counterexamples: []
+    quantification: >
+      Gold spans for these cases are the raw blank text ("this day of , 20", "____________", "[*]"),
+      not bracketed reconstructions, so the statement's answer-format clause is unsupported by gold
+      anyway.
+    confidence: moderate
+  - axis: degeneracy
+    claim: Narrow denominator.
+    counterexamples: []
+    quantification: 30 of 404 contracts (7.4%) contain any blank-date construct.
+    confidence: weak
+  strongest_defence: >
+    reviews/agreement-date-check.md already verified the core: 30 blank/redacted constructs are
+    gold-present and zero clean counterexamples exist. The LOUD FLAG in the sketch is stale — the sign
+    of the disagreement is favourable, and the only repair needed is to require a date-SHAPED construct
+    (month, "day of", or year stub) in the trigger and drop the bare-slot clause from the statement.
+
+p05:
+  verdict: >
+    Disqualified on axis 4. The output schema guarantees exactly one decision per target, so
+    compliance is 100% by construction and the principle is unmeasurable.
+  confidence: strong
+  recommendation: drop
+  objections:
+  - axis: schema_redundancy
+    claim: >
+      "Every category receives a ruling and absence is recorded rather than left blank" is the decision
+      schema, not a legal principle. The sketch admits it: "Applicability: every decision in every
+      contract — the principle has no narrowing condition." The only residual test (never an Extraction
+      with an empty span list) is a schema-validation failure, which the harness should reject before
+      scoring rather than score as a principle.
+    counterexamples: []
+    quantification: >
+      Applicability = 100% of decisions. Expected compliance = 100% modulo malformed output. The
+      column carries no information about legal judgement.
+    confidence: strong
+  - axis: circularity
+    claim: >
+      It restates the task definition that is present in every condition, including the unprincipled
+      control arm. A principled arm cannot outperform a control on it.
+    counterexamples: []
+    quantification: n/a — structural.
+    confidence: strong
+  - axis: degeneracy
+    claim: >
+      The sketch anticipates the problem ("expected to be one of the highest-frequency principles ...
+      report it separately so it does not carry the aggregate") and proposes reporting hygiene rather
+      than deletion. A principle that must be quarantined from the headline is not carrying weight.
+    counterexamples: []
+    quantification: n/a — structural.
+    confidence: strong
+  strongest_defence: >
+    If the schema ever permits an omitted target, this becomes the instruction-following floor and is
+    worth one column. Under the stated design (exactly one decision per target guaranteed), it is not.
+
+p06:
+  verdict: >
+    I could not break this. Gold respects the venue/arbitration exclusion at 98.9%, the four
+    exceptions are explicable, and the checker's escape hatch already covers the mixed-paragraph case.
+  confidence: could_not_break
+  recommendation: keep
+  objections:
+  - axis: counterexample
+    claim: A handful of gold Governing Law spans are pure arbitration clauses with no choice-of-law language.
+    counterexamples:
+    - contract_id: UsioInc_20040428_SB-2_EX-10.11_1723988_EX-10.11_Affiliate Agreement 2
+      offsets: '[24826:...] and [25008:...]'
+      note: >
+        "All disputes or claims ... shall be resolved by arbitration in McLean, Virginia" — gold
+        Governing Law, no governing-law verb. Two spans in one contract.
+    - contract_id: KIROMICBIOPHARMA,INC_04_08_2020-EX-10.28-JOINT VENTURE AGREEMENT
+      offsets: '[35631:...]'
+      note: ICC arbitration clause labelled Governing Law.
+    quantification: >
+      4 of 370 Governing Law gold spans (1.1%) match a venue/arbitration pattern and NOT a
+      governing-law pattern, so a gold-perfect model fails the compliance test 4 times corpus-wide.
+      A further 18 spans match both patterns, and the checker explicitly permits those.
+    confidence: weak
+  - axis: degeneracy
+    claim: Applicability fires on nearly two thirds of contracts, so the trigger barely narrows anything.
+    counterexamples: []
+    quantification: 255 of 404 contracts (63.1%) contain a venue/arbitration sentence.
+    confidence: weak
+  - axis: circularity
+    claim: >
+      The "law governing only one section is not responsive" half restates the category's
+      whole-contract scope and is hard to separate from the definition given to every arm.
+    counterexamples: []
+    quantification: >
+      Not quantifiable from gold; the venue half is clearly non-definitional and does the work.
+    confidence: weak
+  strongest_defence: >
+    This is the strongest candidate in the set. The statement is explicit, the checker tests what the
+    statement says, applicability is instance-only (no gold gate), and the off-diagonal is populated in
+    both directions: a model can extract the right choice-of-law sentence AND a venue sentence
+    (non-compliant, partially correct) or extract only a venue sentence (compliant on nothing, wrong).
+    The 1.1% gold-disagreement floor should be reported, not treated as a defect.
+
+p07:
+  verdict: >
+    Sound on span shape, mildly wrong on the "exactly one" test, and heavily duplicated by p12 —
+    which the sketch itself concedes. Keep at most one of p07 and p12.
+  confidence: weak
+  recommendation: keep_with_checker_rewrite
+  objections:
+  - axis: counterexample
+    claim: >
+      Test (1) — span list length 1 — disagrees with gold on Agreement Date positives that carry two
+      spans, scoring a gold-perfect model non-compliant.
+    counterexamples:
+    - contract_id: OASYSMOBILE,INC_07_05_2001-EX-10.17-OUTSOURCING AGREEMENT
+      offsets: two gold Agreement Date spans (intro date plus an exhibit order-form partial date)
+      note: cited in reviews/agreement-date-check.md as the worked example.
+    quantification: 6 of 374 Agreement Date positives (1.6%) carry two gold spans.
+    confidence: weak
+  - axis: counterexample
+    claim: Test (2) — span must not contain execution wording — also disagrees with gold on a small set.
+    counterexamples:
+    - contract_id: GULFSOUTHMEDICALSUPPLYINC_12_24_1997-EX-10.6
+      offsets: gold span "This Affiliate Agreement is executed as of the 14th day of December, 1997."
+      note: gold includes the full execution sentence, which test (2) rejects.
+    - contract_id: MOVADOGROUPINC_04_30_2003-EX-10.28
+      offsets: gold span "IN WITNESS WHEREOF, the parties hereto have executed this Agreement as of this 4th day of April, 2003."
+      note: same failure.
+    quantification: >
+      7 of 380 Agreement Date gold spans (1.8%) contain dated / as of / entered into / made this.
+      Median gold span length is 16 characters and only 9/380 exceed 40, so the convention itself is real.
+    confidence: weak
+  - axis: schema_redundancy
+    claim: >
+      Test (1) is p12's entire compliance rule restricted to Agreement Date. Two candidates scoring the
+      same boolean on the same column double-count in any aggregate.
+    counterexamples: []
+    quantification: >
+      p12's Agreement Date share is 374 of its 1,057 applicable decisions (35%), all of them also
+      scored by p07 test (1).
+    confidence: moderate
+  strongest_defence: >
+    Tests (2) and (3) are genuinely independent of gold and of p12, they test what the statement says,
+    and the off-diagonal is populated (a model can emit the whole preamble sentence — correct span
+    content, non-compliant shape). Report the three tests separately as the sketch already proposes,
+    and delete test (1) in favour of p12's.
+
+p08:
+  verdict: >
+    Fatal degeneracy. The literal marker "<omitted>" occurs zero times in CUAD gold and zero times in
+    the contract text, so applicability is empty and the checker can never fire.
+  confidence: strong
+  recommendation: drop
+  objections:
+  - axis: degeneracy
+    claim: >
+      "Applicability: the gold span set for this decision contains at least one span containing the
+      literal marker '<omitted>'." No such span exists.
+    counterexamples: []
+    quantification: >
+      0 of 4,052 gold spans in the 12-category subset contain "<omitted>". 0 occurrences of the string
+      anywhere in the 404 contract texts. The only omission-shaped token found in gold spans is a bare
+      ellipsis "..." (40 occurrences), which the checker does not look for.
+    confidence: strong
+  - axis: defect_derived
+    claim: >
+      The convention is a Handbook/Datasheet artefact of the annotation tool. It did not survive into
+      the released CUAD v1 SQuAD-format answers, which are contiguous character ranges by construction
+      — a discontiguous annotation is emitted as multiple spans, not one span with a marker.
+    counterexamples: []
+    quantification: >
+      Multi-span gold is the mechanism CUAD v1 actually uses: Expiration Date 40/332 positives carry
+      2-7 spans, Governing Law 19/351, Agreement Date 6/374.
+    confidence: strong
+  - axis: checker_infidelity
+    claim: >
+      The sketch concedes the deeper problem — "the marker must appear in the prompt's task definition
+      or no model will ever emit it, which makes this a partial test of instruction-following rather
+      than of legal judgement". Adding the marker to the prompt would also change every arm's output
+      format, contaminating the comparison the study is built to make.
+    counterexamples: []
+    quantification: n/a — structural.
+    confidence: strong
+  strongest_defence: >
+    The underlying legal behaviour (label the lead-in plus the operative subsection, drop the
+    intervening subsections) is real and important. It should be restated as a multi-span principle
+    over CUAD's actual representation, with no marker.
+
+p09:
+  verdict: >
+    Refuted by gold. 80% of ceiling-bearing Volume Restriction gold spans state no consequence, so the
+    compliance rule penalises the dominant gold behaviour.
+  confidence: strong
+  recommendation: drop
+  objections:
+  - axis: counterexample
+    claim: >
+      "A span carrying the ceiling alone is a violation" — gold carries the ceiling alone most of the time.
+    counterexamples:
+    - contract_id: GOCALLINC_03_30_2000-EX-10.7-Promotion Agreement
+      offsets: '[2793:2998]'
+      note: >
+        "shall provide a minimum of 100,000 up to 500,000 pagers for the fulfillment of this
+        promotion" — bare quantity cap, no fee and no consent, gold Volume Restriction (and gold
+        Minimum Commitment as well).
+    - contract_id: MPLXLP_06_17_2015-EX-10.1-TRANSPORTATION SERVICES AGREEMENT
+      offsets: '[32140:32305]'
+      note: >
+        "The amount of expansion capacity ... shall not exceed ninety percent (90%) of the total
+        expansion capacity." Ceiling only, gold Volume Restriction.
+    - contract_id: ATMOSENERGYCORP_11_22_2002-EX-10.17-TRANSPORTATION SERVICE AGREEMENT
+      offsets: '[916:...]'
+      note: '"Maximum Daily Delivery Obligation (MDDO) means the maximum daily quantity..." — a bare definition.'
+    - contract_id: GluMobileInc_20070319_S-1A_EX-10.09_436630_EX-10.09_Content License Agreement
+      offsets: '[102627:102895]'
+      note: >
+        "Up to: 1 Java Game ... 5 MMS 10 Wallpapers" — the right-hand side of the principle's own
+        cited pairs 0014/0016/0018. Bare list of ceilings, gold Volume Restriction.
+    quantification: >
+      82 of 103 Volume Restriction gold spans carrying a ceiling cue (80%) contain no fee/price/
+      charge/rate/consent/approval token. 106 of all 136 VR gold spans (78%) contain no consequence
+      cue at all. The checker would report ~80% non-compliance for a gold-perfect model.
+    confidence: strong
+  - axis: defect_derived
+    claim: >
+      The principle is built on pair-0017 and pair-0021, both from SUMMAFOURINC — a software spec
+      table ("There shall be fewer than 1 talkoff in 5 hours of voice") that CUAD has keyword-labelled
+      into both Minimum Commitment and Volume Restriction. That is annotation noise, not a convention
+      about consequences.
+    counterexamples:
+    - contract_id: SUMMAFOURINC_06_19_1998-EX-10.3-SOFTWARE LICENSE AND MAINTENANCE AGREEMENT
+      offsets: 'MC [90190:90359] / VR [89626:89755] / VR [89756:89895]'
+      note: engineering acceptance-test minima labelled as commercial volume terms.
+    quantification: 2 of the 2 cited pairs come from this one contract.
+    confidence: moderate
+  - axis: scope_error
+    claim: >
+      Stated as a Volume Restriction absence rule, but its real target is the sub-case where a cap has
+      a repricing consequence. Recast that way it would fire on ~20% of VR spans instead of demanding
+      absence on 80%.
+    counterexamples: []
+    quantification: 21 of 103 ceiling-bearing VR gold spans do carry a consequence cue.
+    confidence: moderate
+  strongest_defence: >
+    Some Volume Restriction golds genuinely do pair a cap with a consequence, and a model that emits
+    a bare capacity number with no legal effect is making a real error. But the principle inverts the
+    burden: gold's default is that a ceiling alone is responsive.
+
+p10:
+  verdict: >
+    I could not break this on the merits. Gold Agreement Date spans really are minimal (median 16
+    characters, 9/380 over 40). The only live objections are scope drafting and a gold-shaped
+    applicability gate.
+  confidence: could_not_break
+  recommendation: keep
+  objections:
+  - axis: scope_error
+    claim: >
+      The statement is universal ("the minimal expression that answers the target question ... rather
+      than the whole containing sentence") but scope is [Agreement Date]. Applied at face value to the
+      yes/no categories it directly contradicts p22, whose gold basis is full sentences.
+    counterexamples:
+    - contract_id: BLACKSTONEGSOLONG-SHORTCREDITINCOMEFUND_05_11_2020-EX-99.(K)(1)-SERVICE AGREEMENT
+      offsets: '[24399:24565]'
+      note: >
+        Governing Law gold is the full sentence, not the minimal expression "the State of New York".
+        A universal reading of p10 would score this wrong.
+    quantification: >
+      Governing Law gold spans average full-sentence length; the minimal-value convention is confined
+      to the date categories. Scope must stay narrow or the statement must be rewritten.
+    confidence: moderate
+  - axis: compliance_correctness_collapse
+    claim: >
+      Applicability is defined by the SHAPE of the gold span (under 40 chars, fully matched by a date
+      regex, a proper substring of its sentence). That is a gold gate, and compliance is "the emitted
+      span set matches gold under the same length and regex tests".
+    counterexamples: []
+    quantification: >
+      Off-diagonal is not empty — a model can emit a correctly-shaped but wrong date (compliant,
+      incorrect) — so this is a weaker version of the p02/p16 problem, not the fatal version. But
+      applicability still cannot be computed without gold.
+    confidence: weak
+  - axis: degeneracy
+    claim: >
+      Trailing punctuation in gold ("25th day of May, 1999." — pair-0001's own left span) is not
+      fully matched by the stated regex, so that span falls out of applicability. The gate is more
+      brittle than the statement.
+    counterexamples:
+    - contract_id: AMERICANPHYSICIANSCAPITALINC_03_31_2003-EX-10.26-AGENCY AGREEMENT
+      offsets: '[18252:18274]'
+      note: '"25th day of May, 1999." — trailing period defeats a fullmatch.'
+    quantification: cited pair-0001 itself would be excluded by the checker's own applicability test.
+    confidence: weak
+  strongest_defence: >
+    The convention is unambiguous in gold and the failure mode it targets (a model returning the whole
+    preamble sentence) is the single most likely span-boundary error on Agreement Date. Fix the
+    applicability to be instance-only (a date literal inside a longer sentence) and it is clean.
+
+p11:
+  verdict: >
+    The statement is probably right; the checker is not. It flags half of all gold Revenue/Profit
+    Sharing spans as non-compliant, so it cannot be shipped as a compliance measure.
+  confidence: strong
+  recommendation: keep_with_checker_rewrite
+  objections:
+  - axis: checker_infidelity
+    claim: >
+      The three-way lexical test — (a) percentage adjacent to a revenue term, (b) per-unit pattern,
+      (c) equity pattern — fails on a majority of gold spans, because CUAD's RPS gold includes many
+      spans that reference the sharing arithmetic without restating it.
+    counterexamples:
+    - contract_id: INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT
+      offsets: '[82805:...]'
+      note: '"The quarterly royalty payments made under this Section 6.3.1 may be based on estimated Net Sales." No percentage token.'
+    - contract_id: CORIOINC_07_20_2000-EX-10.5-LICENSE AND HOSTING AGREEMENT
+      offsets: '[11952:...]'
+      note: '"the parties shall share certain revenues related to purchases made by Customers" — responsive, no arithmetic.'
+    - contract_id: CHINARECYCLINGENERGYCORP_11_14_2013
+      offsets: '[2912:...]'
+      note: '"shall charge Party B energy saving service fee according to the income from ..." — revenue-linked, no percentage token.'
+    quantification: >
+      165 of 329 gold RPS spans (50.2%) fail all three tests. A gold-perfect model scores ~50%
+      compliance. The sketch's self-declared tolerance was "if the false-pass rate exceeds ~15%,
+      narrow or hand-label"; the false-FAIL rate is 50%.
+    confidence: strong
+  - axis: counterexample
+    claim: >
+      The Handbook's own hardest negative (a percentage applied to a fixed amount) passes the lexical
+      test, so the checker's errors are two-directional, not the "small, one-directional false-pass
+      rate" the sketch predicts.
+    counterexamples: []
+    quantification: >
+      Not separately quantified — but the 50% false-fail rate already dominates whatever the false-pass
+      rate is.
+    confidence: moderate
+  - axis: schema_redundancy
+    claim: p01's compliance test is this test with an administration prefilter; the two share their failure mode.
+    counterexamples: []
+    quantification: all 4 of p01's flagged spans are inside p11's 165.
+    confidence: moderate
+  strongest_defence: >
+    The legal claim — "the word royalty is not evidence either way, the arithmetic is" — is the single
+    most useful disambiguation in the set for the confusable trio, and it is not derivable from the
+    one-line category definition. Keep the statement; the compliance test must move to hand labelling
+    or to a much softer rule (e.g. no predicted span whose ONLY monetary content is a fixed sum).
+
+p12:
+  verdict: >
+    Directionally right but disagrees with gold on 6% of the decisions it scores, concentrated in
+    Expiration Date, and it double-counts p07 test (1).
+  confidence: moderate
+  recommendation: keep_with_checker_rewrite
+  objections:
+  - axis: counterexample
+    claim: >
+      "The emitted span list has length exactly 1" is false of gold for all three named categories,
+      worst for Expiration Date.
+    counterexamples:
+    - contract_id: OASYSMOBILE,INC_07_05_2001-EX-10.17-OUTSOURCING AGREEMENT
+      offsets: two Agreement Date gold spans
+      note: intro date plus an exhibit order-form partial date.
+    quantification: >
+      Multi-span gold positives: Expiration Date 40/332 (12.0%, one contract with 7 spans),
+      Governing Law 19/351 (5.4%), Agreement Date 6/374 (1.6%). Aggregate 65 of 1,057 applicable
+      decisions (6.2%) where a gold-perfect model is scored non-compliant.
+    confidence: moderate
+  - axis: schema_redundancy
+    claim: >
+      p07's test (1) is this same boolean on the Agreement Date third of the denominator. The sketch
+      names the overlap and proposes reporting hygiene; the cleaner fix is to keep exactly one.
+    counterexamples: []
+    quantification: 374 of 1,057 applicable decisions (35%) are scored by both p07 and p12.
+    confidence: moderate
+  - axis: compliance_correctness_collapse
+    claim: >
+      Applicability is "gold marks it present", a gold gate. It is not a fatal one — a model can emit
+      one wrong span (compliant, incorrect) — but it does mean the principle is silent on exactly the
+      contracts where over-extraction is most likely, the gold-absent ones.
+    counterexamples: []
+    quantification: >
+      Gold-absent decisions excluded from applicability: 30 (Agreement Date) + 53 (Governing Law) +
+      72 (Expiration Date) = 155 of 1,212.
+    confidence: weak
+  strongest_defence: >
+    It is the cheapest check in the set, needs no matcher, and catches a real and common model failure
+    (returning every choice-of-law sentence in the document). A 6% gold floor is tolerable if reported
+    per category rather than pooled — Expiration Date at 12% should probably be dropped from scope.
+
+p13:
+  verdict: >
+    The statement is nearly circular but the direction holds in gold at 99%. The real damage is in the
+    proposed strengthening, which gold refutes at 85%.
+  confidence: moderate
+  recommendation: keep_with_checker_rewrite
+  objections:
+  - axis: counterexample
+    claim: >
+      The suggested strengthening — "when both cue classes fire in one contract, require that both
+      decisions be Extractions" — is wrong far more often than it is right.
+    counterexamples:
+    - contract_id: CoherusBiosciencesInc_20200227_10-K_EX-10.29_12021376_EX-10.29_Development Agreement
+      offsets: n/a
+      note: both cue classes present in text, Minimum Commitment present, Volume Restriction absent.
+    quantification: >
+      249 of 404 contracts contain both cue classes. Of those, 109 have BOTH categories gold-absent,
+      83 have only Minimum Commitment, 19 have only Volume Restriction — 211 of 249 (85%) would be
+      scored non-compliant by the strengthening while matching gold exactly.
+    confidence: strong
+  - axis: checker_infidelity
+    claim: >
+      The compliance rule is undefined for spans carrying BOTH cue classes, which is precisely the
+      hard case the statement is meant to govern.
+    counterexamples:
+    - contract_id: GOCALLINC_03_30_2000-EX-10.7-Promotion Agreement
+      offsets: '[2793:2998]'
+      note: >
+        "a minimum of 100,000 up to 500,000 pagers" — LOWER and UPPER cues in one span, and gold
+        assigns it to BOTH Minimum Commitment and Volume Restriction. The checker's "a span whose cue
+        class contradicts the decision it appears in is a violation" has no defined answer here.
+    - contract_id: ATMOSENERGYCORP_11_22_2002-EX-10.17-TRANSPORTATION SERVICE AGREEMENT
+      offsets: '[16435:16542]'
+      note: '"Max 13,370 Dfli/Day, Min 13,370 DthDay." — same problem, same dual gold.'
+    quantification: 26 of 470 MC+VR gold spans (5.5%) carry both cue classes.
+    confidence: moderate
+  - axis: circularity
+    claim: >
+      "Assign by which side of the threshold it binds on" restates the difference between the names
+      "Minimum Commitment" and "Volume Restriction". Every arm receives that distinction in the
+      category definitions.
+    counterexamples: []
+    quantification: >
+      The lexical cue lists are close to a keyword classifier for the two labels: a model that routes
+      "minimum" to MC and "maximum" to VR passes 465 of 470 applicable gold spans without doing any
+      legal reasoning. Directly contradicting spans are only 5 (4 MC with upper-only cues, 1 VR with
+      lower-only).
+    confidence: moderate
+  strongest_defence: >
+    The direction is empirically clean (231 LOWER-only MC spans vs 4 UPPER-only; 97 UPPER-only VR spans
+    vs 1 LOWER-only), 111 of 470 spans carry neither cue so applicability genuinely narrows, and the
+    off-diagonal is populated — a model can route the cue class correctly and still pick the wrong
+    span. Keep it, drop the strengthening, and define the both-cue case explicitly as dual assignment.
+
+p14:
+  verdict: >
+    The statement is the best-evidenced claim in the entire set and I could not touch it. The checker
+    is the problem: it demands an Extraction on 41% of applicable contracts that gold marks absent.
+  confidence: strong
+  recommendation: keep_with_checker_rewrite
+  objections:
+  - axis: checker_infidelity
+    claim: >
+      Compliance is "the decision is an Extraction covering that sentence rather than an AbsenceClaim",
+      triggered purely on a lexical supply-side-minimum pattern. Where gold says absent, the checker
+      rewards the wrong answer — a compliance/correctness inversion in the direction that actively
+      trains bad behaviour.
+    counterexamples: []
+    quantification: >
+      136 of 404 contracts match the applicability pattern (a minimum/at-least/no-less-than sentence
+      within 200 chars of a quantity token, supply-verb rather than purchase-verb). 56 of those 136
+      (41%) are gold-ABSENT for Minimum Commitment. The checker demands an extraction on all 56.
+    confidence: strong
+  - axis: scope_error
+    claim: >
+      The applicability regex ("supply|deliver|provide|share|allocate|make available" and NOT
+      "buy|purchase|order") misses the largest non-purchase bucket in gold — performance and effort
+      floors — so the checker under-covers the very phenomenon the statement is about.
+    counterexamples:
+    - contract_id: IMMUNOMEDICSINC_08_07_2019-EX-10.1-PROMOTION AGREEMENT
+      offsets: '[38270:38496]'
+      note: '"deploy and maintain a sales force of at least [***] Sales Representatives" — headcount floor, no supply verb.'
+    - contract_id: CANOPETROLEUM,INC_12_13_2007-EX-10.1-Sponsorship Agreement
+      offsets: '[1116:1204]'
+      note: '"shall produce no less than forty (40) original episodes" — production-output floor, no supply verb.'
+    quantification: >
+      Per reviews/principle-claim-checks.md, performance/effort floors are 55 of 336 Minimum Commitment
+      gold spans (16.4%) and are invisible to this regex.
+    confidence: moderate
+  - axis: degeneracy
+    claim: Applicability is wide.
+    counterexamples: []
+    quantification: 136 of 404 contracts (33.7%).
+    confidence: weak
+  strongest_defence: >
+    Independently verified: only 25.0% of Minimum Commitment gold spans encode purchase-by-this-party,
+    and 73.7% of MC-positive contracts contain no such span at all. A model applying the printed
+    one-line definition literally abstains on three quarters of the contracts gold marks present. This
+    is the highest-value statement in the round. It needs a compliance rule that does not equate
+    "found a supply-side minimum sentence" with "must extract".
+
+p15:
+  verdict: >
+    The exclusive routing it prescribes is contradicted by gold, which dual-labels floor-plus-share
+    clauses, and the checker's HAS_FLOOR test (any dollar amount counts) misroutes real sharing spans.
+  confidence: moderate
+  recommendation: rewrite_statement
+  objections:
+  - axis: counterexample
+    claim: >
+      "Spans with HAS_FLOOR true appear in the Minimum Commitment decision; spans with HAS_SHARE true
+      and HAS_FLOOR false appear in Revenue/Profit Sharing" is an exclusive routing. Gold assigns the
+      hybrid clause to BOTH.
+    counterexamples:
+    - contract_id: JOINTCORP_09_19_2014-EX-10.15-FRANCHISE AGREEMENT
+      offsets: '[41193:41432]'
+      note: >
+        "a continuing franchise royalty fee of seven percent (7%) of the gross revenues ... with a
+        minimum monthly amount of Seven Hundred and No/100 Dollars ($700.00)" — gold Minimum Commitment
+        AND gold Revenue/Profit Sharing on the same character range. p15 forces it into MC alone, which
+        loses the RPS decision. It is also pair-0009's own left span.
+    - contract_id: PacificapEntertainmentHoldingsInc_20051115_8-KA_EX-1.01
+      offsets: 'MC [6202:6470] / RPS [4802:5581]'
+      note: >
+        pair-0012. The MC span is "agrees to share a minimum of $50,000.00 annually" and the RPS span
+        is "agrees to share 10% of the net revenue" — two DIFFERENT clauses, so the pair does not in
+        fact demonstrate the routing rule the proposer read out of it.
+    quantification: >
+      4 exact character ranges in the 12-category subset carry both Minimum Commitment and
+      Revenue/Profit Sharing. Small in absolute terms, but they are exactly the clauses p15 exists to
+      govern, and p15 gets all of them wrong.
+    confidence: moderate
+  - axis: checker_infidelity
+    claim: >
+      HAS_FLOOR fires on any currency literal (/\$\s?[\d,]+/), which is far broader than "guarantees a
+      fixed floor". Many pure sharing spans quote dollar thresholds inside a tier table.
+    counterexamples:
+    - contract_id: INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT
+      offsets: '[83681:...] and [84204:...]'
+      note: '"The 15% royalty payable on the first U.S. $3 Billion of total annual worldwide Net Sales" — a tier boundary, not a floor.'
+    - contract_id: GOCALLINC_03_30_2000-EX-10.7-Promotion Agreement
+      offsets: '[7709:...]'
+      note: '"will pay Go Call $3.00 per pager and 5% of all airtime" — per-unit sharing, misread as a floor.'
+    quantification: >
+      10 of 134 gold RPS spans that satisfy HAS_SHARE also satisfy HAS_FLOOR (7.5%) and would be
+      routed out of Revenue/Profit Sharing by the checker.
+    confidence: moderate
+  - axis: circularity
+    claim: >
+      Half the statement ("an obligation stated purely as a proportion of an outcome answers the
+      sharing target") restates the Revenue/Profit Sharing definition. Only the second clause does work,
+      and that clause is the one gold contradicts.
+    counterexamples: []
+    quantification: n/a — structural.
+    confidence: weak
+  strongest_defence: >
+    The hybrid clause is genuinely the hardest call in the confusable trio and the study needs a
+    principle that addresses it. The correct statement is the non-exclusive one: a clause that both
+    fixes a floor and states a share answers both targets. That version is testable and matches gold.
+
+p16:
+  verdict: >
+    Disqualified twice over: applicability is gated on gold is_impossible (axis 5), and the statement
+    is contradicted by its own cited evidence — gold labels unquantified undertakings as Minimum
+    Commitment.
+  confidence: strong
+  recommendation: drop
+  objections:
+  - axis: compliance_correctness_collapse
+    claim: >
+      "Applicable to a Minimum Commitment decision when gold is_impossible is true ... Compliance: the
+      decision is an AbsenceClaim." Compliant and applicable implies correct; non-compliant and
+      applicable implies incorrect. The off-diagonal is structurally empty.
+    counterexamples: []
+    quantification: >
+      All applicable decisions are gold-absent by construction. The 63 gold-PRESENT spans that satisfy
+      the text-side condition are invisible to the checker — and they are the cases that refute the
+      statement.
+    confidence: strong
+  - axis: counterexample
+    claim: >
+      Gold routinely labels commitments that carry no quantified threshold, including the exact
+      undertaking-cue shape the checker describes.
+    counterexamples:
+    - contract_id: CoherusBiosciencesInc_20200227_10-K_EX-10.29_12021376_EX-10.29_Development Agreement
+      offsets: '[48667:48702]'
+      note: >
+        "In particular, Licensee commits to:" — no quantity, undertaking cue, gold Minimum Commitment.
+        This is pair-0037's own left span: the evidence the principle cites contains its counterexample.
+    - contract_id: JOINTCORP_09_19_2014-EX-10.15-FRANCHISE AGREEMENT
+      offsets: '[66768:66783]'
+      note: '"You agree that:" — 15 characters, no quantity, gold Minimum Commitment. pair-0038 left span.'
+    - contract_id: CytodynInc_20200109_10-Q_EX-10.5_11941634_EX-10.5_License Agreement
+      offsets: '[116212:116356]'
+      note: a termination-rights lead-in with no quantity, gold Minimum Commitment. pair-0036 left span.
+    - contract_id: NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT
+      offsets: '[15763:...]'
+      note: '"will provide training ... as reasonably necessary, but no l[ess]" — no quantity token.'
+    quantification: >
+      63 of 334 Minimum Commitment gold spans (18.9%) contain no quantity token whatsoever; 4 of those
+      also match the checker's undertaking cue exactly. All three of the principle's cited pairs have a
+      gold-PRESENT left span that the statement says should have been ruled absent.
+    confidence: strong
+  - axis: defect_derived
+    claim: >
+      The mined pairs are cross-contract similarity pairs at 0.20-0.26 similarity between unrelated
+      documents. Pairing "In particular, Licensee commits to:" (Coherus, present) with a Green Cross
+      commercially-reasonable-efforts sentence (MacroGenics, absent) is a lexical coincidence, not a
+      convention, and the proposer read the convention off the absent side while the present side says
+      the opposite.
+    counterexamples: []
+    quantification: 3 of 3 cited pairs are cross-contract with same_contract=false.
+    confidence: strong
+  strongest_defence: >
+    The idea behind it — that a strong-sounding but unquantified undertaking is not automatically a
+    minimum commitment — is a plausible model trap. But gold does not support it, and the checker as
+    written cannot measure it.
+
+p17:
+  verdict: >
+    Refuted outright, in the opposite direction. 52% of Governing Law gold spans INCLUDE the
+    conflicts-of-law tail; only 3 spans in the corpus stop before a nearby one.
+  confidence: strong
+  recommendation: drop
+  objections:
+  - axis: counterexample
+    claim: >
+      "The span for the governing-law target ends at the named jurisdiction; the conflicts-of-law tail
+      is left outside the span" — gold does the opposite.
+    counterexamples:
+    - contract_id: BLACKSTONEGSOLONG-SHORTCREDITINCOMEFUND_05_11_2020-EX-99.(K)(1)-SERVICE AGREEMENT
+      offsets: '[24399:24565]'
+      note: >
+        gold span ends "...the State of New York, without regard to principles of conflicts of law."
+        — the tail is inside the span.
+    - contract_id: ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT
+      offsets: '[24928:25157]'
+      note: gold span runs through "excluding conflict of laws provisions and excluding the 1980 United Nations Convention".
+    - contract_id: ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement
+      offsets: '[33798:33915]'
+      note: gold span ends "...its rules of conflict of laws notwithstanding."
+    - contract_id: LejuHoldingsLtd_20140121_DRS (on F-1)_EX-10.26_8473102_EX-10.26_Content License Agreement
+      offsets: '[1286:1401]'
+      note: >
+        "...governed by the laws of the PRC, without regard to conflicts of law principles." This is
+        pair-0029's own left span — the principle's cited evidence contains the tail inside the gold span.
+    quantification: >
+      194 of 370 Governing Law gold spans (52.4%) contain a conflicts-of-law tail. Only 3 gold spans
+      corpus-wide end before a conflicts tail that begins within the following 200 characters. The
+      checker's compliance rule ("no emitted span's end offset falls at or beyond the start of that
+      tail") would score a gold-perfect model non-compliant on essentially every applicable decision.
+    confidence: strong
+  - axis: defect_derived
+    claim: >
+      Both cited pairs share a left span — the same SINA/Leju termination-agreement sentence, filed
+      twice (LejuHoldings and ChinaRealEstate). The principle is generalised from one sentence
+      appearing in two near-duplicate documents, and that sentence includes the tail.
+    counterexamples: []
+    quantification: >
+      2 of 2 cited pairs; both right-hand sides are the same WOMENSGOLFUNLIMITED counterparts clause,
+      which is a mining artefact rather than a governing-law negative.
+    confidence: strong
+  - axis: checker_infidelity
+    claim: >
+      The rationale offered ("the tail is boilerplate found in documents with no such target at all")
+      is an argument about the tail's discriminative value for detection, not about span boundaries.
+      The checker tests boundaries.
+    counterexamples: []
+    quantification: 45 of 404 contracts (11.1%) contain a conflicts tail at all, so applicability is also narrow.
+    confidence: moderate
+  strongest_defence: >
+    None that survives. If anything the inverse principle is supported: the conflicts tail belongs
+    inside the Governing Law span more often than not.
+
+p18:
+  verdict: >
+    Compliance is a restatement of correctness under a gold-overlap gate, it is a near-duplicate of
+    p23, and in the study's category subset the phenomenon reduces almost entirely to one category pair.
+  confidence: moderate
+  recommendation: drop
+  objections:
+  - axis: compliance_correctness_collapse
+    claim: >
+      Applicability is computed from gold overlap and compliance is "the model's output assigns the
+      overlapping passage to both categories". Emitting the gold passage under both categories IS the
+      correct answer for both decisions, so compliance and correctness are the same event.
+    counterexamples: []
+    quantification: >
+      Every applicable decision is one where gold has a span; compliance requires reproducing that
+      span. A model cannot be compliant and wrong, and can only be non-compliant by being wrong on at
+      least one of the two decisions.
+    confidence: strong
+  - axis: schema_redundancy
+    claim: >
+      p23 states the same rule ("a sentence responsive to more than one category is extracted under
+      every category it is responsive to") with the same gold-overlap applicability and the same
+      compliance semantics. Keeping both double-counts one behaviour.
+    counterexamples: []
+    quantification: >
+      The two statements are paraphrases; the only difference is that p18 says "passage" and p23 says
+      "sentence", and p23 uses a soft token-overlap threshold where p18 uses exact ranges.
+    confidence: strong
+  - axis: degeneracy
+    claim: >
+      In the 12-category subset the phenomenon is dominated by one pair, and if the pilot narrows to
+      the confusable trio plus the date/law categories it nearly vanishes.
+    counterexamples: []
+    quantification: >
+      90 exactly dual-labelled ranges in 67 of 404 contracts (16.6%). 69 of the 90 (77%) are
+      Exclusivity | License Grant. Within the confusable trio only 6 remain
+      (Minimum Commitment | Revenue/Profit Sharing 4, Minimum Commitment | Volume Restriction 2).
+    confidence: moderate
+  strongest_defence: >
+    The underlying fact is verified and corpus-wide (1,010 dual-labelled ranges across all 41
+    categories, 79% of contracts), and "resist spending the passage once" is a real model bias worth
+    naming in a prompt. It just cannot be scored with a gold-derived applicability gate.
+
+p19:
+  verdict: >
+    The second half is confirmed and the first half is refuted. Gold's dominant behaviour is to SPLIT
+    at furniture, which this principle's compliance rule names as a violation.
+  confidence: strong
+  recommendation: rewrite_statement
+  objections:
+  - axis: counterexample
+    claim: >
+      "Violations are ... emitting two spans split at the furniture boundary" describes what gold does
+      most of the time.
+    counterexamples:
+    - contract_id: MPLXLP_06_17_2015-EX-10.1-TRANSPORTATION SERVICES AGREEMENT
+      offsets: 'Anti-Assignment, gap [49993:50003]'
+      note: >
+        gap is "\n\n15\n\n\n\n\n\n", splitting "...without the prior written consent of the" /
+        "other Party pursuant to Section 8.1." — mid-sentence, so unambiguously one passage.
+    - contract_id: 2ThemartComInc_19990826_10-12G_EX-10.10_6700288_EX-10.10_Co-Branding Agreement_ Agency Agreement
+      offsets: 'Anti-Assignment, gap [12361:12412]'
+      note: 'gap is an SEC "Source:" line, splitting "...are not sublicenseable," / "transferable or assignable."'
+    - contract_id: OTISWORLDWIDECORP_04_03_2020-EX-10.4-INTELLECTUAL PROPERTY AGREEMENT
+      offsets: Anti-Assignment adjacent pair split at a bare page number
+      note: '"...any or all of its rights or" / "delegate any or all of its obligations..."'
+    quantification: >
+      Across all 41 categories: 25 gold spans swallow furniture vs 204 same-category adjacent pairs
+      separated by nothing but furniture (127 of them splitting mid-sentence) — 8:1 against the
+      principle. Restricted to the study's 12-category subset the ratio is 8 swallow vs 17 split, 2:1
+      against. Either way the checker penalises the majority gold shape.
+    confidence: strong
+  - axis: defect_derived
+    claim: >
+      The principle rests on a single mined pair (pair-0033, GluMobile), whose right-hand side is a
+      confidential-treatment legend that happens to be gold-ABSENT. One instance was generalised into
+      a convention that runs against the corpus.
+    counterexamples: []
+    quantification: 1 of 1 cited pairs.
+    confidence: strong
+  - axis: degeneracy
+    claim: The complementary half is unbreakable but also fires on nothing.
+    counterexamples: []
+    quantification: >
+      0 of 11,180 gold spans (all categories) and 0 of 4,052 (subset) consist only of furniture, so
+      the "no emitted span is wholly matched by F" test can never separate two arms on gold-shaped output.
+    confidence: moderate
+  strongest_defence: >
+    The disjunctive version is defensible and is what the corpus supports: furniture is never a span on
+    its own, and a passage interrupted by furniture is annotated either as one span swallowing it or as
+    two spans split at it — so a scorer must not treat either shape as a violation. That is weaker than
+    p19 but true.
+
+p20:
+  verdict: >
+    Real but over-broad. 9% of gold spans in applicable contracts sit in post-signature attachments,
+    concentrated in exactly the categories the study cares most about.
+  confidence: moderate
+  recommendation: keep_with_checker_rewrite
+  objections:
+  - axis: counterexample
+    claim: >
+      "No emitted span's located offset falls at or beyond the first such heading" scores gold-matching
+      extractions non-compliant whenever CUAD annotated the attachment.
+    counterexamples:
+    - contract_id: GluMobileInc_20070319_S-1A_EX-10.09_436630_EX-10.09_Content License Agreement
+      offsets: 'Minimum Commitment [99482:99726], [99915:100190]; Volume Restriction [102627:102895]'
+      note: schedule-of-deliverables tables well past the execution block, all gold-present.
+    - contract_id: LejuHoldingsLtd_20140121_DRS (on F-1)_EX-10.26_8473102_EX-10.26_Content License Agreement
+      offsets: 'Agreement Date [133:146]'
+      note: >
+        the Exhibit B termination agreement is the gold Agreement Date source. Its twin filing
+        (ChinaRealEstateInformationCorp_20090929_F-1_EX-10.32, same text at [47029:47298]) is
+        gold-absent — the exhibit/main-document boundary is decided by file segmentation, not policy.
+    quantification: >
+      97 of 404 contracts are applicable (execution block followed by an attachment heading). In those,
+      110 of 1,211 gold spans (9.1%) fall at or beyond the first post-execution attachment heading,
+      in 30 of the 97 contracts. By category: Minimum Commitment 28, Cap On Liability 19,
+      License Grant 14, Anti-Assignment 13, Revenue/Profit Sharing 13, Volume Restriction 9.
+    confidence: moderate
+  - axis: defect_derived
+    claim: >
+      The gold's own treatment of attachments is inconsistent across near-duplicate filings, so a
+      compliance rule built on it will partly measure CUAD's file segmentation rather than model behaviour.
+    counterexamples:
+    - contract_id: PfHospitalityGroupInc_20150923_10-12G_EX-10.1_9266710_EX-10.1_Franchise Agreement1
+      offsets: n/a
+      note: >
+        gold-absent for Agreement Date, while its sibling ...Franchise Agreement3 (Appendix C's sample
+        NDA) is gold-present. Same SEC filing, same package, opposite treatment of the attachment.
+    quantification: 2 documented near-duplicate pairs where the attachment decision flips.
+    confidence: moderate
+  - axis: checker_infidelity
+    claim: >
+      The heading regex will fire on a table-of-contents entry or an in-body cross-reference that
+      happens to sit after the execution block in a multi-document file, truncating the searchable
+      region arbitrarily. The sketch names the front-matter case but not the multi-agreement case.
+    counterexamples: []
+    quantification: >
+      198 of 404 contracts (49%) contain at least one attachment-heading line anywhere; only 97 have
+      one after an execution block, so the position test is doing real work but is sensitive to which
+      execution block it anchors on in multi-agreement files.
+    confidence: weak
+  strongest_defence: >
+    91% of gold spans in applicable contracts do respect the boundary, and over-reading into pricing
+    schedules is a plausible model error. Scoped to Governing Law / Agreement Date / Expiration Date
+    (only 10 of the 110 offending spans) it would be nearly clean; on Minimum Commitment and
+    Revenue/Profit Sharing it should not ship.
+
+p21:
+  verdict: >
+    Refuted. Where a preamble date and a signature-page date both exist, gold takes the preamble date
+    almost always, not the execution date.
+  confidence: strong
+  recommendation: drop
+  objections:
+  - axis: counterexample
+    claim: >
+      "Where the introductory paragraph names one date and the signature pages another, the
+      signature-page date is the one extracted" — gold does the reverse.
+    counterexamples:
+    - contract_id: GOCALLINC_03_30_2000-EX-10.7-Promotion Agreement
+      offsets: 'gold [243:256] = "March 12,1999"'
+      note: 'signature block reads "Dated: 3/13/99" twice. Gold takes the intro date, not the execution date.'
+    - contract_id: CORIOINC_07_20_2000-EX-10.5-LICENSE AND HOSTING AGREEMENT
+      offsets: 'gold [273:289] = "October 29, 1999"'
+      note: signature-block date is 11/5/99. Gold takes the intro date.
+    - contract_id: ASHWORTHINC_01_29_1999-EX-10.(D)-PROMOTION AGREEMENT AND NANTZ COMMUNICATIONS, INC.
+      offsets: 'gold [387:399] = "June 1, 1998"'
+      note: signature-block dates are all December 16, 1998 — six months later. Gold takes the intro date.
+    - contract_id: ConformisInc_20191101_10-Q_EX-10.6_11861402_EX-10.6_Development Agreement
+      offsets: gold "September 30, 2019"
+      note: signature date September 26, 2019. Gold takes the intro date.
+    - contract_id: PapaJohnsInternationalInc_20190617_8-K_EX-10.1_11707365_EX-10.1_Endorsement Agreement
+      offsets: gold "March 15, 2019"
+      note: signature dates 6/6/19 and June 11, 2019. Gold takes the intro date.
+    quantification: >
+      Under the checker's own applicability rule (execution block present and at least one date literal
+      after it): 145 applicable contracts, gold span AFTER the block in 6, BEFORE in 139 — 95.9%
+      against the principle. Masking SEC "Source:" furniture lines to be fair: 77 applicable, 2 after
+      vs 75 before — 97.4% against, and in 0 of the 75 does the post-block date resolve to the same
+      calendar day (so the sketch's same-day escape hatch never fires). Under the strictest possible
+      reading — an explicit "Dated: <date>" signature date must exist — 35 applicable: 9 gold-after,
+      15 gold-intro-same-day, 11 gold-intro-DIFFERENT-day. Even there, on the 20 genuinely conflicting
+      contracts gold prefers the intro date 11 to 9. There is no reading of the corpus in which the
+      execution date is the rule.
+    confidence: strong
+  - axis: compliance_correctness_collapse
+    claim: >
+      Applicability is gated on "gold marks Agreement Date present", and the same-day escape clause
+      means the check passes trivially wherever the two dates agree — so the only decisions it grades
+      substantively are the conflicting ones, where it grades gold itself as non-compliant.
+    counterexamples: []
+    quantification: >
+      The sketch already asks for the conflicting subset to be reported separately. On that subset the
+      gold-follower compliance rate is 9/20 = 45% under the strictest reading and 2/77 = 2.6% under
+      the checker's stated reading.
+    confidence: strong
+  - axis: scope_error
+    claim: >
+      The second clause ("a preamble or cover-page date is taken only when the execution block carries
+      none") inverts CUAD's actual search order, which starts at the introductory paragraph.
+    counterexamples: []
+    quantification: >
+      368 of 374 Agreement Date positives carry a single span and the overwhelming majority sit in the
+      first few hundred characters of the document.
+    confidence: strong
+  strongest_defence: >
+    If the Handbook really prescribes the execution block, this is the study's cleanest
+    documentation-versus-practice divergence and is worth measuring AS a divergence — but it must not
+    be scored as a compliance principle, because following it costs answer accuracy on ~96% of the
+    contracts where it bites.
+
+p22:
+  verdict: >
+    Directionally correct but the period-to-period test fails on 30% of gold spans, largely because of
+    the same furniture-splitting artefact that sinks p19.
+  confidence: moderate
+  recommendation: keep_with_checker_rewrite
+  objections:
+  - axis: counterexample
+    claim: >
+      "A span passes if its start offset is preceded only by whitespace, terminal punctuation or a
+      section-number token, and its end offset lands on terminal punctuation or a semicolon" — a large
+      minority of gold spans fail this.
+    counterexamples:
+    - contract_id: ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT
+      offsets: Anti-Assignment span ending "...enforceable by any other persons" with no terminal punctuation
+      note: gold span truncated before the period.
+    - contract_id: OTISWORLDWIDECORP_04_03_2020-EX-10.4-INTELLECTUAL PROPERTY AGREEMENT
+      offsets: Anti-Assignment spans split at a page number
+      note: '"...any or all of its rights or" / "delegate any or all of its obligations..." — neither half is a sentence.'
+    - contract_id: MPLXLP_06_17_2015-EX-10.1-TRANSPORTATION SERVICES AGREEMENT
+      offsets: 'Anti-Assignment span at [18.2 heading] and the [49993] split'
+      note: starts mid-heading, ends mid-sentence.
+    quantification: >
+      Over the 9 yes/no categories in the subset (2,921 gold spans): 78% start cleanly, 88% end on
+      terminal punctuation, only 70% satisfy BOTH. 886 gold spans (30.3%) would be scored non-compliant
+      for a gold-perfect model. A large share of the failures are furniture splits, so the check partly
+      measures a PDF-extraction artefact.
+    confidence: moderate
+  - axis: checker_infidelity
+    claim: >
+      The statement's second clause ("includes the lead-in clause needed to make the subsection read as
+      a complete sentence") is not tested at all. The compliance rule only inspects boundary characters
+      and would pass a subsection extracted without its lead-in provided it starts on a section number
+      — which the rule explicitly allows.
+    counterexamples:
+    - contract_id: CoherusBiosciencesInc_20200227_10-K_EX-10.29_12021376_EX-10.29_Development Agreement
+      offsets: '[48667:48702] then [49054:49743]'
+      note: >
+        gold separates the lead-in "In particular, Licensee commits to:" from the "(c) dedicate the
+        minimum ... resources" subsection as two spans, so gold itself does not merge lead-in and
+        subsection here.
+    quantification: >
+      The section-number allowance is the sketch's self-declared "fuzzy part" and it neutralises the
+      clause that carries the legal content.
+    confidence: moderate
+  - axis: scope_error
+    claim: >
+      trigger_guidance narrows to "all three of the confusable trio" while scope is [] and the checker
+      applies to every non-answer-shaped category. The three descriptions of scope do not agree.
+    counterexamples: []
+    quantification: >
+      The checker's category list would cover 9 of the study's 12 categories (2,921 spans), not 3
+      (799 spans) — a 3.7x difference in denominator depending on which reading is taken.
+    confidence: moderate
+  strongest_defence: >
+    Full-sentence extraction is a genuine convention and the failure mode (returning a bare noun phrase
+    or an unbounded paragraph) is real and common. The 70% gold-pass rate is a floor that must be
+    measured and subtracted, not ignored — and it should be reported separately for furniture-adjacent
+    spans, since those failures are corpus artefacts rather than convention.
+
+p23:
+  verdict: >
+    Same defect as p18 and a near-duplicate of it: gold-gated applicability makes compliance a
+    restatement of correctness, and the phenomenon is rare in the study's categories.
+  confidence: moderate
+  recommendation: drop
+  objections:
+  - axis: compliance_correctness_collapse
+    claim: >
+      "Applicability: the same gold span text appears under two or more in-scope targets ...
+      Compliance: the predicted span sets for those targets each contain a span whose normalised token
+      overlap with the SHARED GOLD PASSAGE exceeds a threshold." Compliance is defined as soft-matching
+      the gold span, which is the Level B correctness metric.
+    counterexamples: []
+    quantification: >
+      The compliance test and the answer metric are the same computation on the same spans; the only
+      difference is that this one requires it on two decisions at once. Off-diagonal is empty by
+      construction.
+    confidence: strong
+  - axis: schema_redundancy
+    claim: p18 states the same rule with the same gold-overlap gate; the pair should collapse to at most one.
+    counterexamples: []
+    quantification: >
+      p18 uses exact-range overlap, p23 uses normalised text equality; on the corpus these select
+      almost the same set (90 exact ranges, 118 overlapping cross-category span pairs).
+    confidence: strong
+  - axis: degeneracy
+    claim: >
+      The sketch calls rarity "a feature ... one of the deliberately rare principles H4 needs", but in
+      the study's own subset it is rare AND concentrated, so it cannot support a per-condition rate.
+    counterexamples:
+    - contract_id: JOINTCORP_09_19_2014-EX-10.15-FRANCHISE AGREEMENT
+      offsets: '[41193:41432]'
+      note: one of only 4 Minimum Commitment | Revenue/Profit Sharing dual ranges in the whole subset.
+    quantification: >
+      90 dual-labelled ranges in 67 of 404 contracts; 69 (77%) are the single Exclusivity | License
+      Grant pair. Excluding that pair leaves 21 ranges corpus-wide across 11 category pairs.
+    confidence: moderate
+  strongest_defence: >
+    The convention is verified (1,010 dual-labelled ranges across all 41 categories, 79% of contracts)
+    and the anti-bias it targets — spending a passage once — is real. If it is kept, keep p23 over p18
+    (the soft matcher is the better instrument) and give it an applicability gate computed from the
+    model's own output plus a category-pair prior, not from gold.
