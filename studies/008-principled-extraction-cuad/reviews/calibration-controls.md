@@ -49,6 +49,31 @@ adversarial critique in front of him", not "detectable by a contracts lawyer".
 The spread is deliberate. An all-easy set would make a 100% catch rate
 uninformative; an all-hard set would make a 0% catch rate uninformative.
 
+## What the pre-review pipeline does to the difficulty tags
+
+The round-1 candidates were given two gold-side artifacts before review:
+`principles/pilot/cross_source_validation.yaml` (every claim tested empirically
+against gold) and `principles/pilot/critiques.yaml` (an adversarial critic that
+measures gold and reports the strongest case against each candidate). Every
+control in this set is refutable by exactly that treatment — that is what
+"demonstrably wrong, with receipts" means.
+
+So the tags depend on what round 2 runs:
+
+- **If the controls are curated raw**, the difficulty tags stand as written and
+  the instrument measures unaided detection.
+- **If the controls receive the same cross-source validation and critique pass**,
+  expect all seven to surface as `contradicted` or `refuted`, and the instrument
+  measures something different but equally worth knowing: **whether the curator
+  acts on a contradiction flag**. Under that condition a miss is a much stronger
+  negative result — the curator accepted a principle his own tooling told him was
+  refuted — and the difficulty tags should be reported as "not applicable, all
+  controls pre-flagged" rather than reused.
+
+Record which of the two conditions was run, on the record, before scoring. They
+are not comparable and the difference is larger than any effect this instrument
+can resolve at n=7.
+
 ## Scoring
 
 Per control, from its round-2 `review` block:

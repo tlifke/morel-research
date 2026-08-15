@@ -20,6 +20,12 @@ instrument:
     those numbers, renumber on merge and update the mapping in this file — the
     control set must not occupy a contiguous or terminal id block once merged.
   gold_used: dev + ft_train (404 contracts). HOLDOUT WAS NEVER LOADED.
+  difficulty_tags_assume: >
+    Difficulty is tagged for a curator reviewing the raw record. Every control is
+    refutable by the treatment already applied to the round-1 set in
+    cross_source_validation.yaml and critiques.yaml, so if round 2 runs those
+    passes over the controls they will all be pre-flagged and the tags no longer
+    apply — see the corresponding section in reviews/calibration-controls.md.
   authored: 2026-08-15
   author_note: AI Assistant Used, Claude Code. Statements, Handbook page cites and
     defect arguments in controls.yaml are fabricated to match the register of the
@@ -39,26 +45,15 @@ controls:
     already in the queue and was accepted in round 1.
   disconfirming_evidence:
     counts:
-    - 316 of 380 Agreement Date gold spans (83.2%) begin in the first 5% of their
-      document; only 40 spans sit beyond the 50% mark.
-    - 74 contracts have both a gold Agreement Date and a date literal after an
-      "IN WITNESS WHEREOF" execution block. In 61 of those, every gold span
-      precedes the execution block.
-    - In 34 of those 61, the execution-block date is a different calendar day from
-      the gold span, i.e. gold demonstrably preferred the preamble date over the
-      signature date. In the remaining 27 the two dates coincide, so they are
-      uninformative. The 13 contracts not in the 61 were not individually classified.
+    - 316 of 380 Agreement Date gold spans (83.2%) begin in the first 5% of their document; only 40 spans sit beyond the 50% mark.
+    - 74 contracts have both a gold Agreement Date and a date literal after an "IN WITNESS WHEREOF" execution block. In 61 of those, every gold span precedes the execution block.
+    - In 34 of those 61, the execution-block date is a different calendar day from the gold span, i.e. gold demonstrably preferred the preamble date over the signature date. In the remaining 27 the two dates coincide, so they are uninformative. The 13 contracts not in the 61 were not individually classified.
     examples:
-    - DOMINIADVISORTRUST_02_18_2005-EX-99.(H)(2)-SPONSORSHIP — gold [110:126]
-      "February 4, 2005"; execution block dated October 6, 2004.
-    - NEXSTARFINANCEHOLDINGSINC_03_27_2002-EX-10.26-OUTSOURCING — gold [238:255]
-      "November 28, 2001"; execution block dated September 30, 2001.
-    - ASHWORTHINC_01_29_1999-EX-10.(D)-PROMOTION AGREEMENT — gold [387:399]
-      "June 1, 1998"; execution block dated December 16, 1998.
-    - CHANGEPOINTCORP_03_08_2000-EX-10.6-LICENSE AND HOSTING — gold "December 13,
-      1999"; execution block dated February 15, 2000.
-    - ADAPTIMMUNETHERAPEUTICSPLC_04_06_2017-EX-10.11 — gold [396:424] "23rd day of
-      September, 2016"; execution block dated August 8, 2016.
+    - DOMINIADVISORTRUST_02_18_2005-EX-99.(H)(2)-SPONSORSHIP — gold [110:126] "February 4, 2005"; execution block dated October 6, 2004.
+    - NEXSTARFINANCEHOLDINGSINC_03_27_2002-EX-10.26-OUTSOURCING — gold [238:255] "November 28, 2001"; execution block dated September 30, 2001.
+    - ASHWORTHINC_01_29_1999-EX-10.(D)-PROMOTION AGREEMENT — gold [387:399] "June 1, 1998"; execution block dated December 16, 1998.
+    - CHANGEPOINTCORP_03_08_2000-EX-10.6-LICENSE AND HOSTING — gold "December 13, 1999"; execution block dated February 15, 2000.
+    - ADAPTIMMUNETHERAPEUTICSPLC_04_06_2017-EX-10.11 — gold [396:424] "23rd day of September, 2016"; execution block dated August 8, 2016.
   difficulty_rationale: >
     Medium. No domain expertise is needed: g07 states the opposite search order and
     is already accepted, so cross-source consistency alone catches it. It is not
@@ -79,25 +74,15 @@ controls:
     sits in the filed document, including pricing schedules and attached forms.
   disconfirming_evidence:
     counts:
-    - 16 contracts contain at least one subset-category gold span at or after an
-      attachment heading (EXHIBIT / SCHEDULE / ANNEX / APPENDIX on its own line)
-      that itself follows the execution block; 71 such spans in total.
-    - Those 71 spans span 8 of the 12 subset categories, Cap On Liability 18,
-      Minimum Commitment 13, License Grant 11, Anti-Assignment 10, Volume
-      Restriction 8, Revenue/Profit Sharing 4, Governing Law 4, Exclusivity 3.
-    - This is a lower bound. The heuristic requires an execution-block marker AND a
-      heading on its own line, so attachments introduced by running text are missed.
+    - 16 contracts contain at least one subset-category gold span at or after an attachment heading (EXHIBIT / SCHEDULE / ANNEX / APPENDIX on its own line) that itself follows the execution block; 71 such spans in total.
+    - Those 71 spans span 8 of the 12 subset categories, Cap On Liability 18, Minimum Commitment 13, License Grant 11, Anti-Assignment 10, Volume Restriction 8, Revenue/Profit Sharing 4, Governing Law 4, Exclusivity 3.
+    - This is a lower bound. The heuristic requires an execution-block marker AND a heading on its own line, so attachments introduced by running text are missed.
     examples:
-    - CHANGEPOINTCORP_03_08_2000-EX-10.6-LICENSE AND HOSTING — 15 gold spans after
-      EXHIBIT A, including a full Governing Law clause at [151209:151449].
-    - CERES,INC_01_25_2012-EX-10.20-Collaboration Agreement — 12 spans after
-      EXHIBIT A (Anti-Assignment [97788:98121], Cap On Liability [97148:...]).
-    - Apollo Endosurgery - Manufacturing and Supply Agreement — Minimum Commitment
-      [42983:43047], "Minimum yearly purchases of [***] units on each contract year."
-    - BLACKBOXSTOCKSINC_08_05_2014-EX-10.1-DISTRIBUTOR — Minimum Commitment
-      [16977:17006], "*Minimum order of 1,000 Units", inside EXHIBIT A.
-    - ATMOSENERGYCORP_11_22_2002-EX-10.17 — Minimum Commitment [16435:16542] and
-      [16557:16900] inside SCHEDULE 2.
+    - CHANGEPOINTCORP_03_08_2000-EX-10.6-LICENSE AND HOSTING — 15 gold spans after EXHIBIT A, including a full Governing Law clause at [151209:151449].
+    - CERES,INC_01_25_2012-EX-10.20-Collaboration Agreement — 12 spans after EXHIBIT A (Anti-Assignment [97788:98121], Cap On Liability [97148:...]).
+    - Apollo Endosurgery - Manufacturing and Supply Agreement — Minimum Commitment [42983:43047], "Minimum yearly purchases of [***] units on each contract year."
+    - BLACKBOXSTOCKSINC_08_05_2014-EX-10.1-DISTRIBUTOR — Minimum Commitment [16977:17006], "*Minimum order of 1,000 Units", inside EXHIBIT A.
+    - ATMOSENERGYCORP_11_22_2002-EX-10.17 — Minimum Commitment [16435:16542] and [16557:16900] inside SCHEDULE 2.
   difficulty_rationale: >
     Hard. Nothing in the round-1 queue contradicts it, it matches lay intuition
     about what "the contract" means, and refuting it requires either looking at
@@ -121,18 +106,12 @@ controls:
     - Agreement Date, 6 of 374 positive contracts have 2+ spans (1.6%), max 2.
     - Governing Law, 19 of 351 positive contracts have 2+ spans (5.4%), max 2.
     - Expiration Date, 40 of 332 positive contracts have 2+ spans (12.0%), max 7.
-    - Across the three categories, 65 of 1,057 positive contract-category cells
-      (6.2%) carry more than one gold span, and the rate rises with the category
-      the control least justifies.
+    - Across the three categories, 65 of 1,057 positive contract-category cells (6.2%) carry more than one gold span, and the rate rises with the category the control least justifies.
     examples:
-    - NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1 (dev) — Governing Law
-      [32252:32417] and [47839:48007].
-    - CHANGEPOINTCORP_03_08_2000-EX-10.6 — Governing Law [71307:71548] and
-      [151209:151449].
-    - AzulSa_20170303_F-1A_EX-10.3 — Expiration Date [15620:16060], [32035:32167],
-      [32399:32514].
-    - BERKELEYLIGHTS,INC_06_26_2020-EX-10.12 — Expiration Date [27325:27528],
-      [169184:169585], [169605:170104].
+    - NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1 (dev) — Governing Law [32252:32417] and [47839:48007].
+    - CHANGEPOINTCORP_03_08_2000-EX-10.6 — Governing Law [71307:71548] and [151209:151449].
+    - AzulSa_20170303_F-1A_EX-10.3 — Expiration Date [15620:16060], [32035:32167], [32399:32514].
+    - BERKELEYLIGHTS,INC_06_26_2020-EX-10.12 — Expiration Date [27325:27528], [169184:169585], [169605:170104].
   difficulty_rationale: >
     Hard. The over-broad move is the hardest class to catch by reading, because the
     principle is genuinely correct on the category the reader will test it against
@@ -157,13 +136,9 @@ controls:
     empty span list, so no schema-valid output can violate this principle.
   disconfirming_evidence:
     counts:
-    - Applicability is 4,848 of 4,848 decisions over dev + ft_train (404 contracts
-      x 12 targets); no narrowing condition exists.
-    - Compliance is 100% in every arm by construction, so the principle contributes
-      a constant to the compliance rate and nothing to the H1 mediation analysis,
-      while inflating the aggregate pass rate.
-    - Its own checker_sketch concedes both facts, "the principle has no narrowing
-      condition" and "expected to be one of the highest-frequency principles."
+    - Applicability is 4,848 of 4,848 decisions over dev + ft_train (404 contracts x 12 targets); no narrowing condition exists.
+    - Compliance is 100% in every arm by construction, so the principle contributes a constant to the compliance rate and nothing to the H1 mediation analysis, while inflating the aggregate pass rate.
+    - Its own checker_sketch concedes both facts, "the principle has no narrowing condition" and "expected to be one of the highest-frequency principles."
   difficulty_rationale: >
     Easy. The exact screen for this class is written into the investigation
     document the curator authored the queue under, no domain knowledge is needed,
@@ -185,28 +160,14 @@ controls:
     from the parent.
   disconfirming_evidence:
     counts:
-    - All 8 contracts in dev + ft_train whose title marks them as an amendment,
-      addendum or amended-and-restated agreement carry at least one subset gold
-      span. 0 of 8 are annotated the way the control predicts.
-    - 4 of those 8 carry their own Governing Law span, in each case a clause that
-      restates or adopts the parent agreement's governing law.
+    - All 8 contracts in dev + ft_train whose title marks them as an amendment, addendum or amended-and-restated agreement carry at least one subset gold span. 0 of 8 are annotated the way the control predicts.
+    - 4 of those 8 carry their own Governing Law span, in each case a clause that restates or adopts the parent agreement's governing law.
     examples:
-    - FEDERATEDGOVERNMENTINCOMESECURITIESINC..._AMENDMENT — Governing Law
-      [3156:3270], "This Amendment shall be governed by and construed in
-      accordance with..."; and its sibling _SECONDAMENDMENT — Governing Law
-      [4740:4861].
-    - MTITECHNOLOGYCORP_11_16_2004-EX-10.102-Reseller Agreement Premier Addendum —
-      6 subset categories annotated, 10 spans, including Governing Law
-      [18885:19027], Anti-Assignment [18349:18862], Cap On Liability x2, License
-      Grant x2.
-    - NEONSYSTEMSINC_03_01_1999-EX-10.5-DISTRIBUTOR AGREEMENT_Amendment — 6
-      categories, including Governing Law [19127:19227] and Revenue/Profit Sharing
-      [3427:4079] and [4106:4881].
-    - ADMA BioManufacturing Amendment #3 — Minimum Commitment [3814:4115] and
-      [4384:4867], Cap On Liability [9639:9802] and [11196:11459].
-    - NETGEAR,INC..._AMENDMENT TO THE DISTRIBUTOR AGREEMENT — Exclusivity
-      [4145:4582] annotated in the amendment itself, i.e. the amendment is in scope;
-      its missing Governing Law (pair-0028) is the defect, not the rule.
+    - FEDERATEDGOVERNMENTINCOMESECURITIESINC..._AMENDMENT — Governing Law [3156:3270], "This Amendment shall be governed by and construed in accordance with..."; and its sibling _SECONDAMENDMENT — Governing Law [4740:4861].
+    - MTITECHNOLOGYCORP_11_16_2004-EX-10.102-Reseller Agreement Premier Addendum — 6 subset categories annotated, 10 spans, including Governing Law [18885:19027], Anti-Assignment [18349:18862], Cap On Liability x2, License Grant x2.
+    - NEONSYSTEMSINC_03_01_1999-EX-10.5-DISTRIBUTOR AGREEMENT_Amendment — 6 categories, including Governing Law [19127:19227] and Revenue/Profit Sharing [3427:4079] and [4106:4881].
+    - ADMA BioManufacturing Amendment #3 — Minimum Commitment [3814:4115] and [4384:4867], Cap On Liability [9639:9802] and [11196:11459].
+    - NETGEAR,INC..._AMENDMENT TO THE DISTRIBUTOR AGREEMENT — Exclusivity [4145:4582] annotated in the amendment itself, i.e. the amendment is in scope; its missing Governing Law (pair-0028) is the defect, not the rule.
   difficulty_rationale: >
     Medium. The pattern is documented as a defect in D-15 and d06's own defect
     argument explicitly discards a pair of this exact shape ("a near-duplicate
@@ -234,19 +195,14 @@ controls:
   disconfirming_evidence:
     counts:
     - 136 Volume Restriction gold spans in 65 positive contracts.
-    - 94 of 136 (69.1%) match neither a fee/price/charge/rate/payment cue nor a
-      consent/approval cue anywhere in the span.
+    - 94 of 136 (69.1%) match neither a fee/price/charge/rate/payment cue nor a consent/approval cue anywhere in the span.
     - Only 7 of 136 (5.1%) mention consent or approval at all.
-    - Its cited pairs, pair-0017 and pair-0021, are the two pairs d05 explicitly
-      discarded as keyword-driven and matching neither definition.
+    - Its cited pairs, pair-0017 and pair-0021, are the two pairs d05 explicitly discarded as keyword-driven and matching neither definition.
     examples:
-    - GOCALLINC_03_30_2000-EX-10.7 [2793:2998] — "shall provide a minimum of 100,000
-      up to 500,000 pagers", a bare quantity band, no consequence.
-    - ASHWORTHINC_01_29_1999-EX-10.(D) [4130:4561] — "available for up to four
-      photography sessions", no fee, no consent.
+    - GOCALLINC_03_30_2000-EX-10.7 [2793:2998] — "shall provide a minimum of 100,000 up to 500,000 pagers", a bare quantity band, no consequence.
+    - ASHWORTHINC_01_29_1999-EX-10.(D) [4130:4561] — "available for up to four photography sessions", no fee, no consent.
     - ADAMSGOLFINC_03_21_2005-EX-10.17 [9397:9675] — "on not more than [*****] days".
-    - MPLXLP_06_17_2015-EX-10.1 [32140:32305] — expansion capacity "shall not exceed
-      ninety percent", no consequence stated in span.
+    - MPLXLP_06_17_2015-EX-10.1 [32140:32305] — expansion capacity "shall not exceed ninety percent", no consequence stated in span.
   difficulty_rationale: >
     Easy. Detectable without gold and without domain expertise by holding the
     statement next to the category description in data/processed/categories.json,
@@ -266,21 +222,13 @@ controls:
     cited pairs contain gold spans that end with the tail.
   disconfirming_evidence:
     counts:
-    - 205 of 370 Governing Law gold spans (55.4%) contain conflicts-of-law or
-      choice-of-law wording inside the span.
-    - Both spans on the informative side of the cited pairs contradict it, so the
-      control is refuted by its own evidence, if the pair text is read.
+    - 205 of 370 Governing Law gold spans (55.4%) contain conflicts-of-law or choice-of-law wording inside the span.
+    - Both spans on the informative side of the cited pairs contradict it, so the control is refuted by its own evidence, if the pair text is read.
     examples:
-    - ChinaRealEstateInformationCorp..._EX-10.32 [48274:48389] (pair-0030 left) —
-      "This Termination Agreement shall be governed by the laws of the PRC, without
-      regard to conflicts of law principles."
-    - LejuHoldingsLtd..._EX-10.26 [1286:1401] (pair-0029 left) — identical wording,
-      tail included.
-    - GlobalTechnologiesGroupInc..._EX-10.9 [34574:34688] — "...governed by the laws
-      of the State of Florida without regard to..."
-    - SPIENERGYCO,LTD_03_09_2011-EX-99.5 [32533:32591] — a gold span consisting of
-      nothing but the tail, "giving effect to the conflicts of laws principles
-      thereof."
+    - ChinaRealEstateInformationCorp..._EX-10.32 [48274:48389] (pair-0030 left) — "This Termination Agreement shall be governed by the laws of the PRC, without regard to conflicts of law principles."
+    - LejuHoldingsLtd..._EX-10.26 [1286:1401] (pair-0029 left) — identical wording, tail included.
+    - GlobalTechnologiesGroupInc..._EX-10.9 [34574:34688] — "...governed by the laws of the State of Florida without regard to..."
+    - SPIENERGYCO,LTD_03_09_2011-EX-99.5 [32533:32591] — a gold span consisting of nothing but the tail, "giving effect to the conflicts of laws principles thereof."
   difficulty_rationale: >
     Medium. It sits in tension with g01 (whole sentences), and the record's own
     checker_sketch raises and then waves away that tension, which is a readable
@@ -293,44 +241,20 @@ controls:
 
 tell_audit:
   checked_and_matched:
-  - Field set and key order identical to candidates_pilot.yaml for both provenances
-    (guidelines records carry no defect_argument / n_supporting_pairs; data-mined
-    records carry both, in the same position).
+  - Field set and key order identical to candidates_pilot.yaml for both provenances (guidelines records carry no defect_argument / n_supporting_pairs; data-mined records carry both, in the same position).
   - review block present and all-null, as in the pre-review file.
-  - proposer block fully populated with the same values the real records use per
-    provenance (guidelines, prompt_version null, batch_id null, source_document set;
-    data-mined, proposer_v1, a real cm-NNN batch, source_document null).
-  - Word-count distributions kept inside the real per-provenance ranges after two
-    rounds of trimming. Final, statement, guidelines 29-49 (real 29-55), data-mined
-    29-33 (real 20-44); trigger_guidance, guidelines 25-33 (real 23-31), data-mined
-    25-30 (real 23-46); checker_sketch, guidelines 89-149 (real 85-173), data-mined
-    61-82 (real 63-96); defect_argument 88-173 (real 75-166).
-  - type distribution spread across constraint, disambiguation, procedure, absence,
-    preference rather than clustering in one or two values.
-  - Evidence citations are real, guidelines records cite Handbook sections and pages
-    in the same format as g01-g08; data-mined records cite pair ids that exist in
-    mined_pairs.jsonl and belong to the batch named in the proposer block
-    (cm-003, cm-006, cm-007), with n_supporting_pairs matching the list length.
-  - Contract ids, offsets and quotations inside defect_argument blocks are real and
-    verified against gold, so following any of them up leads to real text.
-  - Register, em-dash rate, hedging ("WEAK, and stated as such"), self-flagged
-    limitations and cheapness-of-implementation asides all mirror the real records.
-  - Vocabulary diffed against the real candidates; no word appears 3+ times in the
-    controls and never in the real set except common English ("itself", "found",
-    "cap"), all of which appear in the real records' other fields.
+  - proposer block fully populated with the same values the real records use per provenance (guidelines, prompt_version null, batch_id null, source_document set; data-mined, proposer_v1, a real cm-NNN batch, source_document null).
+  - Word-count distributions kept inside the real per-provenance ranges after two rounds of trimming. Final, statement, guidelines 29-49 (real 29-55), data-mined 29-33 (real 20-44); trigger_guidance, guidelines 25-33 (real 23-31), data-mined 25-30 (real 23-46); checker_sketch, guidelines 89-149 (real 85-173), data-mined 61-82 (real 63-96); defect_argument 88-173 (real 75-166).
+  - type distribution spread across constraint, disambiguation, procedure, absence, preference rather than clustering in one or two values.
+  - Evidence citations are real, guidelines records cite Handbook sections and pages in the same format as g01-g08; data-mined records cite pair ids that exist in mined_pairs.jsonl and belong to the batch named in the proposer block (cm-003, cm-006, cm-007), with n_supporting_pairs matching the list length.
+  - Contract ids, offsets and quotations inside defect_argument blocks are real and verified against gold, so following any of them up leads to real text.
+  - Register, em-dash rate, hedging ("WEAK, and stated as such"), self-flagged limitations and cheapness-of-implementation asides all mirror the real records.
+  - Vocabulary diffed against the real candidates; no word appears 3+ times in the controls and never in the real set except common English ("itself", "found", "cap"), all of which appear in the real records' other fields.
   residual_risks:
-  - The seven ids are contiguous within each namespace. Renumber and interleave at
-    merge time, or this alone identifies them.
-  - Two controls (g09, g11) are near-neighbours of g07, and two (d10, d11) touch the
-    same categories as d05 and g04. That is normal for this queue, which already
-    contains overlapping candidates, but a reviewer noticing that "the new batch
-    circles the old batch" may find the controls as a group.
-  - controls.yaml was hand-written, not emitted by the same YAML dumper. If merged
-    by concatenation the line-wrapping and quoting style differ subtly. Merge by
-    loading both files and re-dumping through one writer.
-  - The Handbook page citations in the controls are fabricated. Anyone who obtains
-    the Atticus Handbook can refute g09-g12 directly. That is a legitimate detection
-    route and is scored as a catch, not as an instrument failure.
+  - The seven ids are contiguous within each namespace. Renumber and interleave at merge time, or this alone identifies them.
+  - Two controls (g09, g11) are near-neighbours of g07, and two (d10, d11) touch the same categories as d05 and g04. That is normal for this queue, which already contains overlapping candidates, but a reviewer noticing that "the new batch circles the old batch" may find the controls as a group.
+  - controls.yaml was hand-written, not emitted by the same YAML dumper. If merged by concatenation the line-wrapping and quoting style differ subtly. Merge by loading both files and re-dumping through one writer.
+  - The Handbook page citations in the controls are fabricated. Anyone who obtains the Atticus Handbook can refute g09-g12 directly. That is a legitimate detection route and is scored as a catch, not as an instrument failure.
 
 scoring:
   catch_definition: >
