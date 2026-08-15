@@ -176,6 +176,24 @@ informative rather than dominated by a few high-frequency rules.
 **Hard constraint.** No feasible checker or labeling plan → not in the scored
 set. Sketch the checker at proposal time, not afterwards.
 
+**Third hard constraint — compliance must be able to come apart from
+correctness.** A principle enters the scored set only if **a model can pass its
+checker and still be wrong, and fail it while still being right.** If those two
+cells are empty, compliance is a restatement of answer correctness and the
+`principles → compliance → success` chain is a tautology rather than a causal
+claim — the mediation analysis H1 rests on cannot be estimated at all.
+
+This is not hypothetical. Adversarial review of the pilot found **six of
+sixteen checkers** with this defect: two gate applicability on
+`gold.is_impossible` (so the checker asks the answer), and four define
+compliance as emitting the gold answer. Every one of them looked reasonable as
+prose. The defect lives entirely in the checker, which is why checkers must be
+implemented and inspected **before** curation, not after.
+
+Screening test, to be run mechanically per principle over dev: populate the
+2×2 of {passes checker, fails checker} × {answer right, answer wrong}. If
+either off-diagonal cell is structurally empty, the principle is excluded.
+
 **Second hard constraint — a principle the schema already enforces is
 unmeasurable.** The harness guarantees output coverage (exactly one decision
 per target, D-14) and validates structure before scoring. Any candidate that

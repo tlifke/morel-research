@@ -310,6 +310,33 @@ Format:
 > disagreement is a result about the derivation method, not a defect to patch
 > away: data mining generalised from a single pair, documentation did not.
 
+> **D-21 — Compliance must be separable from correctness, or the mediation
+> analysis is a tautology** (2026-08-15, from adversarial review)
+> Third hard constraint on entry to the scored set: a principle qualifies only
+> if **a model can pass its checker and still be wrong, and fail it while being
+> right.** Screening is mechanical — populate the 2×2 of {passes, fails} ×
+> {right, wrong} over dev; a structurally empty off-diagonal disqualifies.
+> Found by adversarial review in **6 of 16** pilot checkers: two gate
+> applicability on `gold.is_impossible` (the checker asks the answer), four
+> define compliance as emitting the gold answer. All six read as sound prose.
+> Consequence, and it is the reason checkers now precede curation: **a
+> principle can be true while its checker is unusable.** "Is this a good
+> principle?" decomposes into two independent questions — is the statement
+> right, and does the checker measure anything the answer does not already
+> determine. The pilot's adversarial pass could not break 5 of 16 *statements*
+> but only 2 of those also had unbreakable *checkers*; the statement/checker gap
+> is where most of the damage was.
+>
+> Two further pilot findings of the same family:
+> - **g02 can never fire.** Its `<omitted>` marker occurs 0 times in gold
+>   spans, contract text, and the entire raw `CUADv1.json` — CUAD encodes
+>   discontiguity as *multiple spans*, not a marker. It was **accepted** in
+>   round 1 and is provably inert.
+> - **g05's checker flags 53.5% of gold** (176/329), 3.5× over the abort
+>   threshold its own sketch pre-registered. The pre-registration worked: the
+>   sketch named the condition under which it should be abandoned, and the
+>   measurement hit it.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing

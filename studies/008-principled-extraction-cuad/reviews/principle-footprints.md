@@ -35,7 +35,7 @@ could conceivably govern (its scope categories, or for g01 the nine yes/no categ
 | **d08** | 4.6% | 55.0% | 22/40 | −0.72 | yes | **degenerate by construction** | fires only where gold is already absent; the phi is the definition, not a finding |
 | **g01** | 22.5% | **30.0%** | 33/40 | **1.00** | yes | **degenerate** | fires on 100% of yes/no extractions and 0% of absences — exactly the presence call, restated |
 | **g07** | 7.9% | **95.0%** | 38/40 | 1.00 | yes | **degenerate** | applicability *is* gold presence for Agreement Date |
-| **d01** | 5.8% | 70.0% | 28/40 | 0.35 | yes | **degenerate and contradictory** | applicability is "gold already has the clipped shape"; also contradicts g01 |
+| **d01** | 5.8% | 70.0% | 28/40 | 0.35 | yes | **degenerate** | applicability is "gold already has the clipped shape", so the checker is the answer restated |
 | **d06** | **0.2%** | 2.5% | 1/40 | −0.70 | yes | **degenerate** | one firing in 480 decisions |
 | **d07** | **0.0%** | 0.0% | 0/40 | — | yes | **degenerate** | zero firings; 10 qualifying spans exist in the whole 404-contract dev+ft_train pool |
 | **g02** | **0.0%** | 0.0% | 0/40 | — | — | **unimplementable** | the `<omitted>` marker does not exist in CUAD v1 |
@@ -49,7 +49,7 @@ Ordering above is by how much the footprint tells us, not by rate.
 **g02 is unimplementable, and this is a disqualifying finding under the study's own rule.**
 The Handbook genuinely prescribes the `<omitted>` convention, and the checker sketch is a
 faithful reading of it. But the literal string `<omitted>` occurs in **0 of 404** dev+ft_train
-contract texts and **0 of all gold spans**. The convention was a labelling-tool convention that
+contract texts and **0 of 4,052** gold spans in the 12-category subset. The convention was a labelling-tool convention that
 did not survive into the released CUAD v1 JSON: non-contiguous responsive material appears there
 as *multiple separate spans*, not one marked-up span. Applicability is therefore identically
 zero and no model behaviour can ever move it. Per component-contracts.md — "a principle without
@@ -78,11 +78,12 @@ rather than evidence. The footprint still tells us something, but only about **r
   cannot appear in an H4 confusion matrix as anything but background.
 - **g07** fires on 38 of 40 Agreement Date decisions for the same reason.
 - **d01** fires on 28 of 40 — and its applicability test is "gold is already a short clipped date
-  string", so it can only ever be applicable where the model has nothing to learn. It also
-  contradicts g01 (Tyler flagged this): g01 says take the whole sentence, d01 says clip the
-  value out. The contradiction resolves cleanly on the data — g01's own trigger_guidance exempts
-  the date categories, which is exactly d01's scope — but then d01 adds nothing g01's exemption
-  did not already say.
+  string", so it can only ever be applicable where the model has nothing to learn. On the g01
+  clash Tyler flagged: it is not a real contradiction. g01's own trigger_guidance exempts the
+  date categories, which is exactly d01's scope, and the parallel cross-source check
+  (`reviews/`, commit 7ffe250) confirms the split in gold — yes/no-category spans are
+  sentence-shaped 80.9% of the time against 1.3% for Agreement Date. So the objection to d01 is
+  not that it is wrong but that its checker cannot be scored: applicability is the answer.
 - **d08** fires on 22 of 40 Minimum Commitment decisions, **all 22 gold-absent**, because
   applicability requires `is_impossible`. Its phi of −0.72 is definitional. What the footprint
   does show: 22 of the 28 MC-absent contracts (79%) contain an unquantified undertaking, so the
@@ -229,9 +230,9 @@ Tyler decides. On the evidence I would:
 - **g02** — unimplementable, rate identically 0, and no future model run can change that.
 - **d07** — 0 firings, and D-20 already refuted its main clause.
 - **d06** — 1 firing in 480; the proposer flagged it as effectively n=1 and dev agrees.
-- **d01** — tautological applicability, contradicts g01, and adds nothing over g01's own
-  date-category exemption. (Tyler deferred this one on exactly the contradiction; the footprint
-  says resolve it by deleting d01, not by reconciling.)
+- **d01** — tautological applicability, and it adds nothing over g01's own date-category
+  exemption. (Tyler deferred this one on the apparent g01 contradiction. The contradiction is
+  not real; the tautology is, and it is the better reason to drop it.)
 
 **Merge (1):** **g03 and d02** are the same principle with the same 12-decision footprint. Keep
 one — I would keep **g03**, because the Handbook provenance is stronger and d02's own defect
@@ -276,8 +277,18 @@ uv run python -m checkers.run_footprints   # writes footprints.json
 uv run --with pytest python -m pytest checkers/tests/test_checkers.py -q
 ```
 
-`footprints.json` is the machine-readable artifact for the round-2 review app, keyed by
-principle id, carrying rate, per-category and per-length-bucket distribution, the discrimination
-2×2, every stability variant, and the g05/g06 hand-score blocks. Nothing outside
+Two machine-readable artifacts are written, both keyed by principle id:
+
+- `checkers/footprints.json` — the full record: rate over all decisions and in scope,
+  per-category and per-length-bucket distribution, the discrimination 2×2 with phi, every
+  stability variant with its own 2×2, and the g05/g06 hand-score blocks.
+- `checkers/footprint.yaml` — the same measurements shaped to the review app's footprint sidecar
+  schema (`status` / `applicability` / `distribution` / `discrimination` / `examples` / `note`),
+  so round 2 can be launched with
+  `--footprint principles/pilot/checkers/footprint.yaml`. Applicability there is stated over
+  **in-scope** decisions, since that is the denominator the app's degeneracy flag reads; the
+  all-decision rate is repeated in each note.
+
+Nothing outside
 `principles/pilot/checkers/` and this file was written; no dataset was modified; holdout was not
 loaded.
