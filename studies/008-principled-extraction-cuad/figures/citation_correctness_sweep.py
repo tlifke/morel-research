@@ -16,10 +16,10 @@ HERE = Path(__file__).resolve().parent
 DEFAULT_SWEEP = HERE / "data" / "citation_sweep_fixture.json"
 
 CELLS = [
-    ("right_answer_wrong_citation", "Right answer, wrong reason", "terracotta", 4.0),
-    ("right_answer_right_citation", "Right answer, right reason", "forest_green", 2.0),
-    ("wrong_answer_right_citation", "Wrong answer, right reason", "mustard", 2.0),
-    ("wrong_answer_wrong_citation", "Wrong answer, wrong reason", "muted_text", 2.0),
+    ("right_answer_wrong_citation", "Right answer \u2192 wrong reason", "terracotta", 4.0),
+    ("right_answer_right_citation", "Right answer \u2192 right reason", "forest_green", 2.0),
+    ("wrong_answer_right_citation", "Wrong answer \u2192 right reason", "mustard", 2.0),
+    ("wrong_answer_wrong_citation", "Wrong answer \u2192 wrong reason", "muted_text", 2.0),
 ]
 
 ATTRIBUTION = "studies/008-principled-extraction-cuad / WS5 harness"
@@ -100,9 +100,18 @@ def build_curve_figure(sweep: dict, as_rate: bool = False) -> go.Figure:
         attribution=ATTRIBUTION,
     )
     fig.update_layout(
-        legend=dict(orientation="h", y=-0.22, x=0.5, xanchor="center"),
-        width=980,
-        height=560,
+        legend=dict(
+            orientation="h",
+            y=-0.24,
+            x=0.5,
+            xanchor="center",
+            font=dict(size=12),
+            entrywidthmode="fraction",
+            entrywidth=0.42,
+        ),
+        margin=dict(l=80, r=40, t=110, b=150),
+        width=1120,
+        height=620,
     )
     return fig
 
