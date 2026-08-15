@@ -230,6 +230,29 @@ Assumptions and open calls from the WS1 build, for review at G1:
   pool; FT-train is the pool of record for Phase 2. The ≤4k bucket in particular
   draws 15 of 119 available short contracts, so its effective diversity is
   narrower than 15 independent draws from official-train would suggest.
+- **Splits are disjoint by `contract_id` but NOT by content — the splits are not
+  safe as built.** CUAD files the same contract more than once under different
+  titles, which defeats the `contract_id` disjointness assertion in
+  `build_dataset.py`. An exhaustive all-pairs near-duplicate scan over all 510
+  contracts (`scripts/scan_split_contamination.py`, full report in
+  `reviews/split-contamination-check.md`) found **2 ft_train × holdout pairs**,
+  one of which is a *verbatim substring* — a holdout contract appears in full
+  inside an ft_train compound filing (containment 1.000, Jaccard 0.214). As
+  built, Phase 2 fine-tuning would train on the sealed evaluation set. Also 2
+  dev × ft_train pairs (including the only byte-identical pair in the corpus)
+  and 5 ft_train-internal clusters. dev × holdout, holdout × holdout and
+  dev × dev are clean. Proposed minimal fix — drop 4 contracts from ft_train
+  (368 → 364), leaving holdout, dev, the seed and the D-13 length profile
+  untouched — is written up in the review but **not executed**; splits are
+  frozen pending G1 and this is Tyler's call. Recommended follow-on regardless:
+  a content-hash + containment assertion in `build_dataset.py`, since
+  title-based disjointness cannot catch this class of error.
+- **Byte-identical contracts carry disagreeing gold labels.** The ADURO pair is
+  byte-identical at 12,020 chars yet labeled differently on Anti-Assignment and
+  Exclusivity; the WOMENSGOLF and NETGEAR near-twins likewise. This is a direct
+  measurement of CUAD annotation noise on categories the study scores, and it
+  bounds achievable agreement independently of model or prompt. For inv 003's
+  reliability section and the study's limitations.
 - **The two rare categories are near-degenerate for extraction on holdout.**
   Source Code Escrow has 1 positive in holdout and 1 in dev; Most Favored Nation
   has 3 and 4. They are excellent absence-calibration targets and give almost no

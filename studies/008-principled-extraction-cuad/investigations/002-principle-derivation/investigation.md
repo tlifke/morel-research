@@ -85,6 +85,17 @@ are recorded in `principles/mining_config.yaml` and are part of the reported
 method. Dev stays clean because P0 and Phase-1 iteration run on it; holdout is
 sealed under G4.
 
+**Why `invocation` and `harness` are separate from `model`.** The same model
+reached through an API call, a Claude Code subagent, an interactive session, or
+a programmatic script is not the same experimental condition — temperature and
+sampling controls differ, and in the subagent case may not be settable at all.
+The pilot's data-mined arm ran as a subagent precisely because no API key was
+available, and `temperature: 1.0` was consequently **not settable and no token
+usage was captured**. That is a real deviation from the pinned method and it is
+recorded on the records rather than in a footnote. Future runs may vary the
+model, the harness, or both; the block is designed so those are separable
+afterwards.
+
 **Proposer.** Claude Opus 5, model id `claude-opus-5`, temperature 1.0,
 one prompt version pinned in `principles/prompts/proposer_vN.md`. Exact model
 id, prompt version, and pair-batch composition are stamped into every
@@ -111,10 +122,18 @@ conventions are recoverable from data.
   statement: A role designator naming no entity still counts as a party.
   provenance: data_mined            # atticus_guidelines | savelka_confusion
                                     # | data_mined | authored
-  proposer:
-    model: claude-opus-5
-    prompt_version: proposer_v1
-    batch_id: cm-003
+  proposer:                       # present on EVERY model-produced candidate,
+                                  # including guideline-derived ones — the
+                                  # source document is `provenance`, this block
+                                  # is how the record was produced
+    model: claude-opus-5          # exact model id
+    prompt_version: proposer_v1   # pinned prompt, or null if none
+    batch_id: cm-003              # or null
+    invocation: subagent          # api | subagent | interactive | programmatic
+    harness: claude-code          # claude-code | anthropic-sdk | script:<name>
+                                  # | none
+    source_document: null         # set when the record was read off a document
+                                  # rather than mined, e.g. the Handbook
   evidence: [pair-0412, pair-0455]
   checker_sketch: "gold parties list non-empty AND matched span has no
                    named entity → applicable"

@@ -270,6 +270,46 @@ Format:
 > Agreement 1 vs 3) — ready-made instances for D-15 and the near-duplicate
 > defect class.
 
+> **D-20 — Three pilot-principle claims verified before curation**
+> (2026-08-15, `reviews/principle-claim-checks.md`)
+> Candidates whose factual basis was an unverified inference were checked
+> against gold before Tyler spent judgement on them.
+>
+> **d02 (dual labelling) — CONFIRMED.** 1,010 of 9,997 distinct gold character
+> ranges (10.1%) carry ≥2 categories, across 79% of contracts; within the
+> 12-category subset, 90 of 3,995 ranges (2.3%). Driven by documented CUAD
+> Datasheet §II-D groups. **This settles `cross_category_overlap`**: it is a
+> *documented convention*, not gold corruption, and should not count toward the
+> defect rate. It also makes the D-14 interaction live — the same text
+> legitimately appears in two decisions, which the per-target decision model
+> handles correctly and which nothing in scoring needs to change to accommodate.
+>
+> **d04 (a floor binds whichever party) — CONFIRMED, and understated.** Across
+> all 336 Minimum Commitment gold spans: purchase-by-this-party 25.0%,
+> payment/fee/royalty floor 24.1%, supply-by-counterparty 17.6%,
+> performance/effort/revenue floor 16.4%, administrative 11.6%.
+> **98 of 133 MC-positive contracts (73.7%) contain no purchase-obligation span
+> at all.** A model applying CUAD's printed one-line definition literally
+> returns `AbsenceClaim` on roughly three quarters of the contracts gold marks
+> present. This is the study's thesis in miniature: the task definition is not
+> merely terse but *wrong*, and the gap is exactly what a principle supplies.
+> d04's own checker regex misses the second-largest class (performance/effort
+> floors) and needs widening before it enters the scored set.
+>
+> **d07 (page furniture) — MIXED; its main clause is REFUTED.** The "furniture
+> stays inside the span" half holds (25 spans, 20 contracts) and the
+> complementary half is clean (0 of 11,180 spans are pure furniture). But the
+> opposite behaviour dominates: **204 same-category adjacent span pairs are
+> separated by nothing but furniture, 127 of them splitting mid-sentence.**
+> d07 as written calls that a violation, so its checker would penalise the
+> majority case ~5:1. The defensible restatement is disjunctive: furniture is
+> never a span alone, and an interrupted passage is annotated *either* swallowed
+> *or* split — a scorer must accept both shapes.
+> **The two derivation arms disagree here and the guidelines arm was right**
+> (g07 already refers to spans split around embedded furniture). That
+> disagreement is a result about the derivation method, not a defect to patch
+> away: data mining generalised from a single pair, documentation did not.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing
