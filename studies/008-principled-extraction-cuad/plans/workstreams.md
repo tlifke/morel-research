@@ -34,6 +34,13 @@ Each gate is a stop-and-check with Tyler, not a self-certified pass.
 
 - **G1 (after WS1)** — category subset provisional, split files frozen and
   seeded. Nothing downstream may resample splits.
+  **Scope note (2026-08-15):** inv 001 raised open calls that would *change* the
+  splits — chiefly whether dev should be re-stratified to holdout's length
+  profile rather than its own pool's. Those are decided **at** G1, before the
+  freeze, not after it. G1 is the last moment splits are cheap to change; every
+  other question inv 001 raised (rare-category redundancy, the Uncapped
+  Liability alternate) belongs to the G2 subset decision and does not require
+  unfreezing anything, because the manifest carries all 41 categories.
 - **G2 (after WS2)** — Tyler curates the principle set. Nothing enters the
   scored set without a feasible checker/labeling plan. Locked before WS3
   implements checkers.
@@ -97,8 +104,14 @@ the locked set may grow before inv 005.
   model's context is recorded as `infeasible_at_length` — a first-class result
   for H5, never a silent truncation or a dropped row.
 - **All primary metrics reported by length bucket.** Reference distribution
-  (official test set): median ~25.7k chars ≈ 6.4k tokens; 27 contracts ≤4k
-  tokens, 63 ≤8k, 79 ≤16k, max ~75k.
+  (official test set, **measured** by inv 001 with the Qwen3 tokenizer):
+  median 25,657 chars / 5,440 tokens; 37 contracts ≤4k tokens, 66 ≤8k, 83 ≤16k,
+  max 64,640.
+  The earlier planning figures (≈6.4k median tokens; 27 / 63 / 79; max ~75k)
+  came from a 4-chars-per-token heuristic and are **retired** — CUAD contract
+  text runs at 4.70 chars/token, so the heuristic overstated length by ~18%.
+  Character figures were correct. Re-derive any feasibility planning against a
+  context window from the measured column.
 - **≥30–50 instances per cell where feasible; ≥3 sampled runs per instance at
   temp ~0.7; report CIs.**
 - **No LLM judge anywhere in the scoring path.** Programmatic or hand-labeled.

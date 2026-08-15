@@ -1,0 +1,118 @@
+# SAMPLE / FIXTURE DATA — NOT the real principle set.
+# Invented by Claude Code to exercise the review app before investigation 002
+# produces real candidates. Statements, evidence pair ids, and batch ids are
+# fabricated. Never copy this file into principles/.
+- id: sp01
+  statement: A role designator naming no entity still counts as a party.
+  trigger_guidance: Consider whenever the Parties category is decided and the
+    candidate span uses a defined-term role ("Licensor", "the Supplier") without
+    an accompanying legal name.
+  type: disambiguation
+  scope: [parties]
+  provenance: data_mined
+  proposer:
+    model: claude-opus-5
+    prompt_version: proposer_v1
+    batch_id: cm-sample-001
+  evidence: [pair-0412, pair-0455]
+  checker_sketch: gold parties list non-empty AND matched span contains no named
+    entity per the NER pass -> applicable
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: sp02
+  statement: A floor on purchase quantity is Minimum Commitment, not Volume
+    Restriction, even when the same sentence also caps volume.
+  trigger_guidance: Consider whenever a span states a quantity or spend threshold
+    with "at least", "no less than", or a stated annual minimum.
+  type: disambiguation
+  scope: [minimum_commitment, volume_restriction]
+  provenance: savelka_confusion
+  proposer:
+    model: claude-opus-5
+    prompt_version: proposer_v1
+    batch_id: cm-sample-001
+  evidence: [pair-0031, pair-0044, pair-0102]
+  checker_sketch: span matched by the minimum-threshold lexicon AND gold label in
+    {minimum_commitment, volume_restriction} -> applicable
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: sp03
+  statement: Revenue or profit splits are Revenue-Profit Sharing only when the
+    payment is computed from the counterparty's proceeds, not from a fixed fee
+    schedule.
+  trigger_guidance: Consider on any payment-terms span mentioning percentages,
+    royalties, or a share of receipts.
+  type: disambiguation
+  scope: [revenue_profit_sharing, minimum_commitment]
+  provenance: savelka_confusion
+  proposer:
+    model: claude-opus-5
+    prompt_version: proposer_v1
+    batch_id: cm-sample-002
+  evidence: [pair-0087]
+  checker_sketch: span contains a percentage token AND a proceeds-referring noun
+    from the fixed lexicon -> applicable
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: sp04
+  statement: Quote the operative clause verbatim and do not extend the span into
+    the surrounding recitals or defined-term block.
+  trigger_guidance: Consider on every extraction decision.
+  type: procedure
+  scope: []
+  provenance: atticus_guidelines
+  evidence: [guideline-p14]
+  checker_sketch: extracted span is a contiguous substring of the contract AND its
+    character offsets fall inside a single gold-annotated clause boundary ->
+    applicable to every extraction
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: sp05
+  statement: A category is absent when the contract is silent, not when the
+    contract explicitly disclaims it; an explicit disclaimer is an extraction.
+  trigger_guidance: Consider before emitting any absence claim, especially where
+    the contract says a right is "not granted" or "expressly excluded".
+  type: absence
+  scope: []
+  provenance: atticus_guidelines
+  evidence: [guideline-p07]
+  checker_sketch: gold has no annotation for the category AND no negation-of-right
+    pattern matches anywhere in the contract -> absence claim is correct;
+    applicable on every absence decision
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: sp06
+  statement: A change-of-control clause that only requires notice, with no consent
+    or termination right, is not an Anti-Assignment provision.
+  trigger_guidance: Rare. Consider only when a change-of-control sentence appears
+    with notice-only language and no consent verb.
+  type: constraint
+  scope: [anti_assignment, change_of_control]
+  provenance: data_mined
+  proposer:
+    model: claude-opus-5
+    prompt_version: proposer_v1
+    batch_id: cm-sample-003
+  evidence: [pair-0518]
+  checker_sketch: change-of-control lexicon hit AND no consent/termination verb in
+    the same sentence -> applicable
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null

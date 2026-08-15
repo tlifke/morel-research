@@ -1,0 +1,164 @@
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from . import record_types, yaml_io
+from .store import Store
+
+
+@dataclass
+class Config:
+    source: Path
+    db: Path
+    record_type: str
+    reviewer: str
+    export_path: Path
+
+    @property
+    def queue_id(self) -> str:
+        return str(self.source.resolve())
+
+
+class Service:
+    def __init__(self, config: Config):
+        self.config = config
+        self.rt = record_types.get(config.record_type)
+        self.store = Store(config.db)
+        self.store.upsert_queue(
+            config.queue_id, self.rt.name, str(config.source.resolve())
+        )
+
+    def sync_from_disk(self) -> dict[str, int]:
+        records = [
+            yaml_io.normalize_review(r, self.rt)
+            for r in yaml_io.load_records(self.config.source)
+        ]
+        return self.store.import_records(
+            self.config.queue_id, records, self.rt.id_key
+        )
+
+    def state(self) -> dict[str, Any]:
+        rows = self.store.records(self.config.queue_id)
+        for row in rows:
+            row["merged"] = yaml_io.build_export_record(
+                row["source"], row["edits"], None, self.rt
+            )
+            if row["review"]:
+                row["review"]["edited_from"] = (
+                    self._edited_from(row["source"], row["edits"])
+                    if row["review"]["decision"] == self.rt.edit_decision
+                    else None
+                )
+        return {
+            "queue_id": self.config.queue_id,
+            "source": str(self.config.source),
+            "export_path": str(self.config.export_path),
+            "reviewer": self.config.reviewer,
+            "schema": self.rt.as_json(),
+            "records": rows,
+        }
+
+    def save_review(self, payload: dict[str, Any]) -> dict[str, Any]:
+        record_id = payload["record_id"]
+        decision = payload["decision"]
+        rationale = (payload.get("rationale") or "").strip()
+        if decision not in self.rt.decision_names():
+            raise ValueError(f"unknown decision {decision!r}")
+        if self.rt.required_rationale and not rationale:
+            raise ValueError("rationale is required on every decision")
+        edits = {
+            k: v
+            for k, v in (payload.get("edits") or {}).items()
+            if k in self.rt.editable_keys()
+        }
+        row = self._row(record_id)
+        edited_from = None
+        if decision != self.rt.edit_decision:
+            edits = {}
+        else:
+            edits = {k: v for k, v in edits.items()
+                     if v != record_types.dotted(row["source"], k)}
+            if not edits:
+                raise ValueError(
+                    f"decision {decision!r} requires at least one changed field"
+                )
+            edited_from = json.dumps(
+                self._edited_from(row["source"], edits), sort_keys=True
+            )
+        self.store.save_review(
+            self.config.queue_id,
+            record_id,
+            decision,
+            rationale,
+            payload.get("reviewer") or self.config.reviewer,
+            edits,
+            edited_from,
+        )
+        return {"ok": True, "record_id": record_id}
+
+    def save_draft(self, payload: dict[str, Any]) -> dict[str, Any]:
+        self.store.save_draft(
+            self.config.queue_id,
+            payload["record_id"],
+            {
+                "rationale": payload.get("rationale") or "",
+                "decision": payload.get("decision"),
+                "edits": payload.get("edits") or {},
+            },
+        )
+        return {"ok": True}
+
+    def _edited_from(
+        self, source: dict[str, Any], edits: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        prior = {
+            key: record_types.dotted(source, key)
+            for key in self.rt.editable_keys()
+            if key in edits
+            and edits[key] != record_types.dotted(source, key)
+        }
+        return prior or None
+
+    def export_records(self) -> list[dict[str, Any]]:
+        out = []
+        for row in self.store.records(self.config.queue_id):
+            review = None
+            if row["review"]:
+                edited_from = None
+                if row["review"]["decision"] == self.rt.edit_decision:
+                    edited_from = self._edited_from(row["source"], row["edits"])
+                review = {
+                    "decision": row["review"]["decision"],
+                    "reviewer": row["review"]["reviewer"],
+                    "date": row["review"]["date"],
+                    "rationale": row["review"]["rationale"],
+                    "edited_from": edited_from,
+                }
+            out.append(
+                yaml_io.build_export_record(row["source"], row["edits"], review, self.rt)
+            )
+        return out
+
+    def export(self, path: str | None = None) -> dict[str, Any]:
+        target = Path(path) if path else self.config.export_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        records = self.export_records()
+        target.write_text(yaml_io.dump_yaml(records, self.rt), encoding="utf-8")
+        counts: dict[str, int] = {}
+        for record in records:
+            block = record.get(self.rt.review_key) or {}
+            key = block.get("decision") or "unreviewed"
+            counts[key] = counts.get(key, 0) + 1
+        return {"path": str(target.resolve()), "n": len(records), "counts": counts}
+
+    def history(self, record_id: str) -> list[dict[str, Any]]:
+        return self.store.history(self.config.queue_id, record_id)
+
+    def _row(self, record_id: str) -> dict[str, Any]:
+        for row in self.store.records(self.config.queue_id):
+            if row["record_id"] == record_id:
+                return row
+        raise KeyError(f"no record {record_id!r} in queue")

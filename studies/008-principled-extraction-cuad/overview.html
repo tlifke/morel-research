@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study 008 — Principled extraction (CUAD): how the pieces fit</title>
+<style>
+  :root {
+    --bg:        #FAFAF8;
+    --surface:   #FFFFFF;
+    --band:      #F5E6D3;
+    --band-soft: #FBF3E8;
+    --line:      #E8D5BF;
+    --line-soft: #F0E4D5;
+    --text:      #3B2F2F;
+    --muted:     #6B5E5E;
+    --accent:    #C1694F;
+    --accent-dk: #A3523A;
+    --green:     #2D5016;
+    --green-lt:  #4A7A2E;
+    --blue:      #3D6478;
+    --mustard:   #B8821C;
+    --red:       #C14F4F;
+    --mushroom:  #9C7676;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.62;
+    overflow-x: hidden;
+  }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 28px; }
+  .wide { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+
+  header.masthead {
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    padding: 56px 0 38px;
+    margin-bottom: 46px;
+  }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin: 0 0 14px;
+  }
+  h1 {
+    font-size: 34px; line-height: 1.2; margin: 0 0 14px;
+    font-weight: 640; letter-spacing: -0.015em;
+  }
+  .subtitle { font-size: 18px; color: var(--muted); margin: 0 0 26px; max-width: 62ch; }
+
+  .metaline {
+    display: flex; flex-wrap: wrap; gap: 10px 26px;
+    font-size: 13.5px; color: var(--muted);
+    border-top: 1px solid var(--line-soft); padding-top: 18px;
+  }
+  .metaline b { color: var(--text); font-weight: 600; }
+
+  .statusbar {
+    margin-top: 24px;
+    border-left: 3px solid var(--mustard);
+    background: #FDF6E7;
+    padding: 14px 18px;
+    font-size: 14.5px;
+    color: var(--text);
+    border-radius: 0 5px 5px 0;
+  }
+
+  h2 {
+    font-size: 23px; margin: 62px 0 6px; font-weight: 640; letter-spacing: -0.01em;
+    padding-top: 20px; border-top: 1px solid var(--line);
+  }
+  h2 .num { color: var(--accent); font-variant-numeric: tabular-nums; margin-right: 10px; font-weight: 700; }
+  h3 { font-size: 16.5px; margin: 34px 0 8px; font-weight: 660; letter-spacing: 0.005em; }
+  .deck { color: var(--muted); font-size: 15.5px; margin: 0 0 22px; }
+
+  p { margin: 0 0 16px; }
+  ul, ol { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 7px; }
+
+  code, .mono { font-family: var(--mono); font-size: 0.87em; }
+  code {
+    background: var(--band-soft); border: 1px solid var(--line-soft);
+    padding: 1px 5px; border-radius: 4px; color: var(--accent-dk);
+  }
+
+  .scroll { overflow-x: auto; margin: 26px 0; padding-bottom: 4px; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th, td { text-align: left; padding: 9px 13px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  thead th {
+    font-size: 12px; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--muted); font-weight: 700; border-bottom: 1.5px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  table.boxed { background: var(--surface); border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+
+  .yes { color: var(--green); font-weight: 650; }
+  .no  { color: var(--mushroom); }
+
+  .fig {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 8px; padding: 22px 20px 16px; margin: 28px 0;
+  }
+  .fig svg { display: block; }
+  .figcap {
+    font-size: 13px; color: var(--muted); margin-top: 14px;
+    padding-top: 12px; border-top: 1px solid var(--line-soft);
+  }
+  .figcap b { color: var(--text); }
+
+  .note {
+    border-left: 3px solid var(--line); background: var(--band-soft);
+    padding: 13px 18px; margin: 22px 0; font-size: 14.5px; border-radius: 0 5px 5px 0;
+  }
+  .note.open { border-left-color: var(--red); background: #FBEEEE; }
+  .note.locked { border-left-color: var(--green-lt); background: #F1F5EC; }
+
+  .pill {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 20px;
+    border: 1px solid currentColor; white-space: nowrap;
+  }
+  .pill.planned { color: var(--mushroom); }
+  .pill.open    { color: var(--red); }
+  .pill.locked  { color: var(--green-lt); }
+  .pill.blocking{ color: var(--accent-dk); }
+  .pill.batch   { color: var(--blue); }
+
+  .hyp {
+    display: grid; grid-template-columns: 62px 1fr; gap: 0 18px;
+    padding: 15px 0; border-bottom: 1px solid var(--line-soft);
+  }
+  .hyp:last-of-type { border-bottom: none; }
+  .hyp .tag {
+    font-weight: 720; color: var(--accent); font-size: 15px; padding-top: 1px;
+  }
+  .hyp .claim { margin: 0 0 6px; }
+  .hyp .ev { font-size: 13.5px; color: var(--muted); margin: 0; }
+  .hyp .ev b { color: var(--text); font-weight: 620; }
+
+  .store { display: grid; grid-template-columns: 1fr; gap: 0; margin: 26px 0; }
+  @media (min-width: 820px) { .store { grid-template-columns: 1fr 54px 1fr; align-items: start; } }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .card h4 {
+    margin: 0 0 4px; font-family: var(--mono); font-size: 14px; color: var(--accent-dk);
+    font-weight: 700;
+  }
+  .card .grain { font-size: 12.5px; color: var(--muted); margin: 0 0 14px; }
+  .card dl { margin: 0; font-size: 13.5px; }
+  .card dt { font-family: var(--mono); font-size: 12.5px; color: var(--text); font-weight: 600; margin-top: 10px; }
+  .card dd { margin: 1px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .joiner {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 11px; text-align: center; padding: 24px 0;
+  }
+  .joiner .key { font-family: var(--mono); font-size: 10.5px; color: var(--accent-dk); margin-top: 6px; }
+
+  ol.dec { list-style: none; padding: 0; margin: 22px 0; counter-reset: none; }
+  ol.dec li {
+    background: var(--surface); border: 1px solid var(--line-soft);
+    border-left: 3px solid var(--green-lt);
+    border-radius: 0 6px 6px 0; padding: 12px 16px; margin-bottom: 9px; font-size: 14.5px;
+  }
+  ol.dec li b { color: var(--text); }
+  ol.dec li .dnum {
+    font-family: var(--mono); font-weight: 700; color: var(--green);
+    margin-right: 8px; font-size: 13px;
+  }
+
+  .coda {
+    background: var(--band-soft); border: 1px dashed var(--mushroom);
+    border-radius: 8px; padding: 4px 26px 22px; margin: 34px 0 0;
+  }
+  .coda h2 { border-top: none; margin-top: 26px; }
+
+  footer {
+    margin-top: 72px; border-top: 1px solid var(--line);
+    background: var(--surface); padding: 30px 0 44px;
+    font-size: 13px; color: var(--muted);
+  }
+  footer p { margin: 0 0 9px; }
+  footer .cite { font-family: var(--mono); font-size: 12px; }
+
+  .toc {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 16px 22px; margin: 0 0 10px; font-size: 14px; columns: 2; column-gap: 34px;
+  }
+  @media (max-width: 640px) { .toc { columns: 1; } }
+  .toc a { color: var(--text); text-decoration: none; display: block; padding: 3px 0; break-inside: avoid; }
+  .toc a:hover { color: var(--accent); }
+  .toc a .n { color: var(--accent); font-weight: 700; margin-right: 8px; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">morel-research · studies/008-principled-extraction-cuad</p>
+    <h1>Principled extraction (CUAD)<br>How the pieces of this study fit together</h1>
+    <p class="subtitle">
+      Does requiring principle citation in structured agent outputs improve task
+      performance? This page is a structural map of the plan — what depends on
+      what, what is decided, what is still open.
+    </p>
+    <div class="metaline">
+      <span><b>Study status</b> planned</span>
+      <span><b>Investigations</b> 5 — inv 001 complete, 4 planned</span>
+      <span><b>Created</b> 2026-08-15</span>
+      <span><b>Branch</b> study-008-principled-extraction-cuad</span>
+    </div>
+    <div class="statusbar">
+      <b>There are no condition-comparison results yet.</b> Only WS1 (inv 001,
+      dataset and splits) has run; its build results are reported in §3. The
+      other four investigations are at status <code>planned</code> and their
+      <em>Results</em> sections read “to be populated.” Nothing on this page
+      speaks to H1–H5. Everything else below describes plan structure, design
+      commitments, and open questions.
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="toc">
+    <a href="#s1"><span class="n">1</span>The question and the three conditions</a>
+    <a href="#s2"><span class="n">2</span>The five hypotheses</a>
+    <a href="#s3"><span class="n">3</span>Workstream dependencies</a>
+    <a href="#s4"><span class="n">4</span>The measurement chain</a>
+    <a href="#s5"><span class="n">5</span>The two-level results store</a>
+    <a href="#s6"><span class="n">6</span>Where the human is needed</a>
+    <a href="#s7"><span class="n">7</span>Decisions locked and open</a>
+    <a href="#s8"><span class="n">8</span>Phase 2 (not scheduled)</a>
+  </nav>
+</div>
+
+<!-- ==================== 1 ==================== -->
+<div class="wrap">
+  <h2 id="s1"><span class="num">1</span>The question and the three conditions</h2>
+  <p class="deck">
+    An agent performs a task governed by an explicit set of principles
+    (“business logic”). Phase 1 asks whether giving it those principles helps,
+    and whether making it <em>cite</em> them helps further.
+  </p>
+
+  <p>
+    The study question, verbatim from <code>study.md</code>: <b>does requiring
+    principle citation in structured agent outputs improve task
+    performance?</b> The working framing carried over from the reference plan
+    is <em>making process supervision verifiable by constraining the process
+    vocabulary</em>. Phase 1 compares three inference-time conditions on CUAD
+    clause extraction; Phase 2 (unscheduled) would fine-tune on Tinker with a
+    composite reward over answer correctness and citation correctness.
+  </p>
+
+  <h3>Three ingredients, only one of which is manipulated</h3>
+  <p>
+    The conceptual frame that makes the comparison clean is the separation of
+    three things that are easy to conflate:
+  </p>
+  <ul>
+    <li>
+      <b>Task definition</b> — decision kinds, targets, and one-line target
+      definitions. Present in <b>all</b> conditions. This is decision
+      <b>D-1</b>: an alternative bare “C0” with neither task definition nor
+      principles was rejected, because without the task definition the task is
+      undefined and C1 stops being a fair baseline for “does business logic
+      help”.
+    </li>
+    <li>
+      <b>Principles</b> — the manipulated variable. The explicit business logic
+      governing the hard calls, supplied as data (never hardcoded) from the
+      locked principle set.
+    </li>
+    <li>
+      <b>Citation</b> — the requirement. Whether each emitted decision must
+      name the principle ids that governed it.
+    </li>
+  </ul>
+  <p>
+    Conditions differ <em>only</em> in these three switches, assembled from a
+    single source of truth in the harness:
+  </p>
+
+  <div class="scroll">
+    <table class="boxed">
+      <thead>
+        <tr>
+          <th>Condition</th><th>Task definition</th><th>Principles</th>
+          <th>Citation required</th><th>What it isolates</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>C1</b> baseline</td>
+          <td class="yes">yes</td><td class="no">no</td><td class="no">no</td>
+          <td>Task performance with the task defined but no business logic supplied.</td>
+        </tr>
+        <tr>
+          <td><b>C2</b> principles</td>
+          <td class="yes">yes</td><td class="yes">yes</td><td class="no">no</td>
+          <td>The effect of <em>provision</em>: principles are in the prompt, nothing is required of the output.</td>
+        </tr>
+        <tr>
+          <td><b>C3</b> cite</td>
+          <td class="yes">yes</td><td class="yes">yes</td><td class="yes">yes</td>
+          <td>The effect of the <em>citation requirement</em>, over and above provision.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note open">
+    <b>A fourth axis, deliberately not a condition.</b> Whether the
+    <code>principles_cited</code> field is present in the C1/C2 output schema is
+    a separate axis, not a condition. It is <b>open</b>, and is resolved from
+    data by pilot P0 (inv 004) at gate G3. The two competing risks are
+    contamination (models populate a present-but-instructed-empty field, so
+    C1/C2 stop being clean no-citation conditions) and confound (a
+    field-<em>absent</em> schema changes format burden across conditions, so any
+    C3 effect is partly a schema effect). There is no free option.
+  </div>
+</div>
+
+<!-- ==================== 2 ==================== -->
+<div class="wrap">
+  <h2 id="s2"><span class="num">2</span>The five hypotheses, and who produces the evidence</h2>
+  <p class="deck">
+    Verbatim from the reference plan (v2, 2026-08-15), each annotated with the
+    workstream that would supply its evidence.
+  </p>
+
+  <div class="hyp">
+    <div class="tag">H1</div>
+    <div>
+      <p class="claim"><b>Performance.</b> Providing principles improves task
+      success; requiring citation improves it further by forcing deliberation at
+      decision points.</p>
+      <p class="ev">Evidence from <b>inv 005</b> (Phase 1 condition grid) — this
+      is the investigation that answers H1. Reads trial-level rows.</p>
+    </div>
+  </div>
+
+  <div class="hyp">
+    <div class="tag">H2</div>
+    <div>
+      <p class="claim"><b>Generalizability (Phase 2).</b> Composite-reward
+      fine-tuning generalizes better than answer-only reward, including to
+      held-out / edited principles.</p>
+      <p class="ev">Evidence from <b>Phase 2</b> only — <span class="pill open">not scheduled</span>
+      Phase 2 opens after inv 005 returns results. The β=0 ablation is the key
+      comparison.</p>
+    </div>
+  </div>
+
+  <div class="hyp">
+    <div class="tag">H3</div>
+    <div>
+      <p class="claim"><b>Small-model leverage.</b> Explicit principles +
+      citation lets small models match or beat frontier models on
+      business-logic-dominated tasks.</p>
+      <p class="ev">Evidence from <b>inv 005</b>’s model axis (~8B open, ~32B
+      open, one frontier API model — exact picks open), extended by Phase 2’s
+      post-FT size grid.</p>
+    </div>
+  </div>
+
+  <div class="hyp">
+    <div class="tag">H4</div>
+    <div>
+      <p class="claim"><b>Diagnostics.</b> Citation errors form an interpretable
+      confusion structure over principles, enabling maintenance of the principle
+      set itself.</p>
+      <p class="ev">Evidence from <b>inv 005</b>’s confusion matrix over
+      principle ids, which must be derivable from <code>decisions.jsonl</code>
+      alone. Depends on <b>WS2</b> (the principle set, including 3–5
+      deliberately rare principles so the structure isn’t dominated by a few
+      high-frequency rules) and <b>WS3</b> (gold applicability).</p>
+    </div>
+  </div>
+
+  <div class="hyp">
+    <div class="tag">H5</div>
+    <div>
+      <p class="claim"><b>Failure characterization.</b> System failure modes are
+      measurable and attributable, notably small-model degradation with contract
+      length.</p>
+      <p class="ev">Evidence from <b>inv 005</b>, length-stratified, resting on
+      <b>WS1</b>’s length distribution and on the standing rule that
+      <code>infeasible_at_length</code> is a reported outcome and never a dropped
+      row.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 3 ==================== -->
+<div class="wide">
+  <h2 id="s3"><span class="num">3</span>How the workstreams depend on each other</h2>
+</div>
+<div class="wrap">
+  <p class="deck">
+    Three tracks run in parallel, join at the P0 pilot, and pass through four
+    human gates before the main grid touches the holdout.
+  </p>
+</div>
+
+<div class="wide">
+  <div class="fig">
+    <div class="scroll">
+      <svg viewBox="0 0 1400 470" width="1400" style="min-width:1120px; max-width:100%; height:auto;" role="img" aria-label="Workstream dependency diagram for study 008">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#6B5E5E"/>
+          </marker>
+          <marker id="ahd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#9C7676"/>
+          </marker>
+        </defs>
+
+        <!-- lane bands -->
+        <rect x="0" y="40"  width="1400" height="76" fill="#F7F1F4" />
+        <rect x="0" y="120" width="1400" height="76" fill="#F1F5EC" />
+        <rect x="0" y="200" width="1400" height="76" fill="#FBF3E8" />
+        <rect x="0" y="284" width="1400" height="94" fill="#FFFFFF" stroke="#E8D5BF" stroke-dasharray="3 4"/>
+
+        <!-- lane labels -->
+        <text x="14" y="72"  font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#3D6478" letter-spacing="0.06em">TRACK A</text>
+        <text x="14" y="88"  font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">data</text>
+        <text x="14" y="152" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#2D5016" letter-spacing="0.06em">TRACK B</text>
+        <text x="14" y="168" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">code</text>
+        <text x="14" y="232" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#C1694F" letter-spacing="0.06em">TRACK C</text>
+        <text x="14" y="248" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">principles</text>
+        <text x="14" y="322" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#3B2F2F" letter-spacing="0.06em">JOINED</text>
+        <text x="14" y="338" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">A + B + C</text>
+
+        <!-- edges (drawn under boxes) -->
+        <g fill="none" stroke="#6B5E5E" stroke-width="1.6">
+          <!-- WS1 -> collector -->
+          <path d="M310,78 H376 V324 H640" marker-end="url(#ah)"/>
+          <!-- WS5 -> collector -->
+          <path d="M340,158 H376"/>
+          <!-- WS2 -> join corridor -->
+          <path d="M480,264 V324"/>
+          <!-- WS2 -> WS3 -->
+          <path d="M570,238 H640" marker-end="url(#ah)"/>
+          <!-- P0 -> inv005 -->
+          <path d="M820,324 H940" marker-end="url(#ah)"/>
+          <!-- WS3 -> inv005 -->
+          <path d="M820,238 H1060 V296" marker-end="url(#ah)"/>
+        </g>
+        <!-- WS5 long-lived dashed feed to inv005 -->
+        <g fill="none" stroke="#9C7676" stroke-width="1.4" stroke-dasharray="5 4">
+          <path d="M340,172 H1000 V296" marker-end="url(#ahd)"/>
+          <path d="M1120,324 H1210" marker-end="url(#ahd)"/>
+        </g>
+
+        <!-- WS1 -->
+        <g>
+          <rect x="130" y="52" width="180" height="52" rx="6" fill="#F1F5EC" stroke="#2D5016" stroke-width="2.2"/>
+          <text x="142" y="72" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13" font-weight="680" fill="#3B2F2F">WS1 · Dataset &amp; splits</text>
+          <text x="142" y="89" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#6B5E5E">inv 001 · blocks everything</text>
+          <text x="286" y="70" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#2D5016">✓</text>
+        </g>
+
+        <!-- WS5 -->
+        <g>
+          <rect x="130" y="132" width="210" height="52" rx="6" fill="#FFFFFF" stroke="#2D5016" stroke-width="1.6"/>
+          <text x="142" y="152" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13" font-weight="680" fill="#3B2F2F">WS5 · Harness</text>
+          <text x="142" y="169" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#6B5E5E">harness/ · study-level, NOT an inv</text>
+        </g>
+
+        <!-- WS2 -->
+        <g>
+          <rect x="390" y="212" width="180" height="52" rx="6" fill="#FFFFFF" stroke="#C1694F" stroke-width="1.6"/>
+          <text x="402" y="232" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13" font-weight="680" fill="#3B2F2F">WS2 · Principles</text>
+          <text x="402" y="249" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#6B5E5E">inv 002 · 15–25 candidates</text>
+        </g>
+
+        <!-- WS3 -->
+        <g>
+          <rect x="640" y="212" width="180" height="52" rx="6" fill="#FFFFFF" stroke="#C1694F" stroke-width="1.6"/>
+          <text x="652" y="232" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13" font-weight="680" fill="#3B2F2F">WS3 · Applicability GT</text>
+          <text x="652" y="249" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#6B5E5E">inv 003 · checkers + manual</text>
+        </g>
+
+        <!-- P0 -->
+        <g>
+          <rect x="640" y="296" width="180" height="56" rx="6" fill="#FDF6E7" stroke="#A3523A" stroke-width="2.2"/>
+          <text x="652" y="317" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13" font-weight="720" fill="#3B2F2F">WS4 · Pilot P0</text>
+          <text x="652" y="333" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#6B5E5E">inv 004 · schema leakage</text>
+          <text x="652" y="346" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="10.5" font-style="italic" fill="#A3523A">the join point</text>
+        </g>
+
+        <!-- inv 005 -->
+        <g>
+          <rect x="940" y="296" width="180" height="56" rx="6" fill="#FFFFFF" stroke="#3B2F2F" stroke-width="1.9"/>
+          <text x="952" y="317" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#3B2F2F">Phase 1 grid</text>
+          <text x="952" y="333" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#6B5E5E">inv 005 · C1/C2/C3 × model</text>
+          <text x="952" y="346" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#6B5E5E">× official test split</text>
+        </g>
+
+        <!-- Phase 2 -->
+        <g>
+          <rect x="1210" y="296" width="176" height="56" rx="6" fill="#FBF3E8" stroke="#9C7676" stroke-width="1.6" stroke-dasharray="6 4"/>
+          <text x="1222" y="317" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13" font-weight="680" fill="#6B5E5E">Phase 2 · Tinker</text>
+          <text x="1222" y="333" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#9C7676">SFT + RL</text>
+          <text x="1222" y="346" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="10.5" font-style="italic" fill="#C14F4F">not scheduled</text>
+        </g>
+
+        <!-- gates -->
+        <g font-family="ui-monospace, Menlo, monospace" font-size="11" font-weight="700">
+          <g>
+            <rect x="322" y="66" width="34" height="24" rx="12" fill="#B8821C"/>
+            <text x="330" y="82" fill="#FFFFFF">G1</text>
+            <text x="322" y="105" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#6B5E5E">splits frozen</text>
+          </g>
+          <g>
+            <rect x="583" y="226" width="34" height="24" rx="12" fill="#B8821C"/>
+            <text x="591" y="242" fill="#FFFFFF">G2</text>
+            <text x="558" y="265" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#6B5E5E">Tyler curates</text>
+          </g>
+          <g>
+            <line x1="880" y1="308" x2="880" y2="324" stroke="#B8821C" stroke-width="1.2"/>
+            <rect x="863" y="284" width="34" height="24" rx="12" fill="#B8821C"/>
+            <text x="871" y="300" fill="#FFFFFF">G3</text>
+            <text x="836" y="278" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#6B5E5E">schema decision</text>
+          </g>
+          <g>
+            <line x1="880" y1="324" x2="880" y2="342" stroke="#B8821C" stroke-width="1.2"/>
+            <rect x="863" y="342" width="34" height="24" rx="12" fill="#B8821C"/>
+            <text x="871" y="358" fill="#FFFFFF">G4</text>
+            <text x="828" y="380" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#6B5E5E">open the holdout</text>
+          </g>
+        </g>
+
+        <!-- legend -->
+        <g transform="translate(130,412)" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">
+          <line x1="0" y1="-4" x2="26" y2="-4" stroke="#6B5E5E" stroke-width="1.6"/>
+          <text x="34" y="0">hard dependency</text>
+          <line x1="168" y1="-4" x2="194" y2="-4" stroke="#9C7676" stroke-width="1.4" stroke-dasharray="5 4"/>
+          <text x="202" y="0">consumed-by / unscheduled</text>
+          <rect x="410" y="-13" width="30" height="18" rx="9" fill="#B8821C"/>
+          <text x="448" y="0">gate — stop-and-check with Tyler, not self-certified</text>
+          <text x="0" y="22" font-size="11">Current state: WS1 <tspan font-weight="700" fill="#2D5016">complete</tspan> (green fill, ✓) and awaiting G1. Every other box is at status <tspan font-weight="700">planned</tspan>.</text>
+        </g>
+      </svg>
+    </div>
+    <p class="figcap">
+      <b>Figure 1 — Workstream dependency map.</b> Track A (data) and Track B
+      (code) are fully independent and should start together; Track B is
+      buildable against the interface spec with a fake environment and does not
+      need real CUAD data to exist. Track C’s guidelines-reading half is
+      independent of everything and can start immediately, but its pair-mining
+      half needs the FT-train split from A. All three converge at pilot P0,
+      which needs A (dev contracts) + B (a working runner) + a <em>draft</em> of
+      C. WS3 then runs alongside WS4 — P0 needs no applicability labels, only
+      inv 005 does. WS5 is study-level code at <code>harness/</code>, not an
+      investigation (D-5), consumed by inv 004, inv 005, and any later
+      environment.
+    </p>
+  </div>
+</div>
+
+<div class="wrap">
+  <h3>What each unit blocks</h3>
+  <div class="scroll">
+    <table class="boxed">
+      <thead><tr><th>WS</th><th>Repo unit</th><th>Blocks</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>WS1 dataset</td><td><code>investigations/001-dataset-and-splits</code></td><td>everything</td><td><span class="pill locked">complete</span></td></tr>
+        <tr><td>WS2 principles</td><td><code>investigations/002-principle-derivation</code></td><td>WS3, WS4, WS5 prompts</td><td><span class="pill planned">planned</span></td></tr>
+        <tr><td>WS3 applicability GT</td><td><code>investigations/003-applicability-ground-truth</code></td><td>WS5 grid scoring</td><td><span class="pill planned">planned</span></td></tr>
+        <tr><td>WS4 pilot P0</td><td><code>investigations/004-schema-leakage-pilot</code></td><td>main grid</td><td><span class="pill planned">planned</span></td></tr>
+        <tr><td>WS5 harness</td><td><code>harness/</code> + <code>plans/component-contracts.md</code></td><td>WS4, main grid</td><td><span class="pill planned">planned</span></td></tr>
+        <tr><td>main grid</td><td><code>investigations/005-phase1-condition-grid</code></td><td>Phase 2</td><td><span class="pill planned">planned</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>What WS1 has already delivered <span class="pill locked">complete</span></h3>
+  <p>
+    WS1 is the one unit that has run. It is reported here because everything
+    downstream is sized against it — not as evidence for any hypothesis.
+  </p>
+  <ul>
+    <li><b>Splits are built and frozen.</b> Seed <code>20260815</code>. Holdout = the 102 official test contracts; dev = 40 drawn from the 408 official-train contracts, stratified on <code>length_bucket × positive-count tercile</code>; FT-train = the remaining 368. Disjoint, union 510, written to files and read back by id, never recomputed.</li>
+    <li><b>Source of record is <code>CUADv1.json</code></b>, all 510 contracts and all 41 categories; <code>test.json</code> supplies only the holdout titles. The manifest carries all 41 categories so a subset change at G2 is a config edit, not a dataset rebuild.</li>
+    <li><b>Provisional 12-category subset</b> is picked, including the Savelka trio; selection criteria are in <code>scripts/config/category_subset.yaml</code>, which is the source of truth. Still provisional until inv 002.</li>
+    <li><b>Deterministic rebuild</b> via <code>scripts/rebuild.sh</code>; a second run reproduces every output byte-identically apart from <code>built_at</code>. The loader <code>scripts/cuad_dataset.py</code> satisfies env-interface (a) and (d).</li>
+  </ul>
+
+  <div class="note open">
+    <b>WS1 corrected the reference length distribution, and this propagates.</b>
+    The character figure reproduces exactly (holdout median 25,657 chars vs the
+    stated ~25.7k), but the reference <em>token</em> figures do not: they were
+    produced by a 4-chars-per-token heuristic. CUAD contract text runs at
+    <b>4.70 chars/token</b> under the pinned <code>Qwen/Qwen3-8B</code>
+    tokenizer, so the heuristic overstates length by ~18%. Holdout, tokenizer-derived:
+    median <b>5,440</b> tokens, <b>37</b> contracts ≤4k, <b>66</b> ≤8k,
+    <b>83</b> ≤16k, max <b>64,640</b> — against the reference’s ~6.4k / 27 / 63
+    / 79 / ~75k. The tokenizer column is carried forward and the reference token
+    figures should be retired. Every downstream use of “27 contracts ≤4k tokens”,
+    <em>including feasibility planning against an 8B context window</em>, needs
+    re-deriving.
+  </div>
+
+  <div class="note open">
+    <b>Open calls raised by WS1, flagged for G1.</b>
+    Dev is systematically longer than holdout (median 8,248 vs 5,440 tokens) —
+    not a sampling bug, but a consequence of stratifying dev to mirror its own
+    pool rather than holdout’s length profile; flagged as a deliberate choice
+    needing a decision. The two rare categories are near-degenerate for
+    extraction on holdout (Source Code Escrow: 1 positive; Most Favored Nation:
+    3), excellent for absence calibration but giving almost no extraction
+    signal — keeping both may be redundant.
+    <code>train_separate_questions.json</code> is fetched but unused.
+    <code>contract_id</code> is the CUAD title string and is not
+    filesystem-safe. The tokenizer is pinned by model id, not file digest.
+  </div>
+
+  <h3>The four gates</h3>
+  <ul>
+    <li><b>G1 (after WS1)</b> — category subset provisional, split files frozen and seeded. Nothing downstream may resample splits.</li>
+    <li><b>G2 (after WS2)</b> — Tyler curates the principle set. Nothing enters the scored set without a feasible checker/labeling plan. Locked before WS3 implements checkers.</li>
+    <li><b>G3 (after WS4)</b> — the schema decision, made from data per the P0 decision rule, written into <code>plans/decisions.md</code>.</li>
+    <li><b>G4 (before inv 005 touches holdout)</b> — the official test split (102 contracts) is untouched until this gate. Dev-set iteration only before it.</li>
+  </ul>
+
+  <div class="note">
+    <b>Sequencing risk called out in the plan.</b> WS5’s prompt templates encode
+    the principle set’s <em>shape</em> and WS3’s checkers encode its
+    <em>content</em>. If G2 slips, both stall. The mitigation is to have WS5
+    take the principle set as data (never hardcoded) and to have WS2 lock a
+    <em>small</em> provisional set early enough to unblock P0, accepting that the
+    locked set may grow before inv 005. Changing the locked set after inv 003 has
+    labeled against it means re-labeling — the lock is expensive.
+  </div>
+
+  <h3>Two backends, tested separately</h3>
+  <p>
+    Track B’s deliverable is the interface; two working implementations are the
+    proof it generalizes. Both must work before the harness is considered done,
+    and they must be tested separately because they exercise different failure
+    modes: <b>qwen3.5:8b via ollama on the desktop RTX 3080</b> (watch the
+    <code>format</code>/JSON-schema path and the context window actually
+    configured on the served model — a silently-truncating <code>num_ctx</code>
+    would corrupt every <code>infeasible_at_length</code> determination in the
+    study) and <b>inkling-small via Tinker</b> (watch availability and real
+    context window, still open, and whether structured output comes from a
+    schema-constrained decode or from prompt-plus-parse, since the repair-policy
+    accounting differs). A third backend — the frontier API arm — is expected but
+    <span class="pill open">not yet chosen</span>.
+  </p>
+</div>
+
+<!-- ==================== 4 ==================== -->
+<div class="wrap">
+  <h2 id="s4"><span class="num">4</span>The measurement chain, and why it is a chain</h2>
+  <p class="deck">
+    The study does not just compare endpoint scores across conditions. It
+    reports a mediation path: principles change compliance, and compliance is
+    what should change success.
+  </p>
+</div>
+
+<div class="wide">
+  <div class="fig">
+    <div class="scroll">
+      <svg viewBox="0 0 1080 320" width="1080" style="min-width:860px; max-width:100%; height:auto;" role="img" aria-label="Measurement chain diagram">
+        <defs>
+          <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#3B2F2F"/>
+          </marker>
+          <marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#C1694F"/>
+          </marker>
+        </defs>
+
+        <!-- primary chain -->
+        <text x="40" y="42" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#6B5E5E" letter-spacing="0.07em">CHAIN 1 — PROVISION (C1 → C2)</text>
+
+        <rect x="40" y="58" width="250" height="72" rx="7" fill="#FFFFFF" stroke="#3D6478" stroke-width="1.6"/>
+        <text x="56" y="82" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13.5" font-weight="700" fill="#3B2F2F">Principles provided</text>
+        <text x="56" y="101" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">the manipulated variable</text>
+        <text x="56" y="118" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#6B5E5E">C2 and C3 vs C1</text>
+
+        <path d="M290,94 H382" fill="none" stroke="#3B2F2F" stroke-width="1.8" marker-end="url(#ah2)"/>
+
+        <rect x="392" y="52" width="270" height="84" rx="7" fill="#F1F5EC" stroke="#2D5016" stroke-width="2.2"/>
+        <text x="408" y="76" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13.5" font-weight="700" fill="#3B2F2F">Behavioral compliance</text>
+        <text x="408" y="95" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#2D5016" font-weight="600">the mediation variable</text>
+        <text x="408" y="112" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">checker pass-rate over applicable</text>
+        <text x="408" y="128" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">principles — measured in ALL conditions</text>
+
+        <path d="M662,94 H754" fill="none" stroke="#3B2F2F" stroke-width="1.8" marker-end="url(#ah2)"/>
+
+        <rect x="764" y="58" width="270" height="72" rx="7" fill="#FFFFFF" stroke="#3B2F2F" stroke-width="1.8"/>
+        <text x="780" y="82" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13.5" font-weight="700" fill="#3B2F2F">Task success</text>
+        <text x="780" y="101" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">programmatic; primary</text>
+        <text x="780" y="118" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">span F1 + category match + absence acc.</text>
+
+        <!-- secondary chain -->
+        <text x="40" y="196" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#A3523A" letter-spacing="0.07em">CHAIN 2 — THE REQUIREMENT (C2 → C3)</text>
+
+        <rect x="40" y="212" width="250" height="66" rx="7" fill="#FDF6E7" stroke="#C1694F" stroke-width="1.8"/>
+        <text x="56" y="236" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13.5" font-weight="700" fill="#3B2F2F">Citation required</text>
+        <text x="56" y="255" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">C3 only</text>
+        <text x="56" y="271" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#6B5E5E">per-decision principle ids</text>
+
+        <path d="M290,245 H382" fill="none" stroke="#C1694F" stroke-width="1.8" marker-end="url(#ah3)"/>
+
+        <rect x="392" y="212" width="270" height="66" rx="7" fill="#FFFFFF" stroke="#C1694F" stroke-width="1.8"/>
+        <text x="408" y="236" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13.5" font-weight="700" fill="#3B2F2F">Δ compliance</text>
+        <text x="408" y="255" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">beyond mere provision — i.e. C3 vs C2,</text>
+        <text x="408" y="271" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">not C3 vs C1</text>
+
+        <path d="M662,245 H754" fill="none" stroke="#C1694F" stroke-width="1.8" marker-end="url(#ah3)"/>
+
+        <rect x="764" y="212" width="270" height="66" rx="7" fill="#FFFFFF" stroke="#C1694F" stroke-width="1.8"/>
+        <text x="780" y="236" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="13.5" font-weight="700" fill="#3B2F2F">Δ success</text>
+        <text x="780" y="255" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11.5" fill="#6B5E5E">the H1 second clause</text>
+
+        <!-- vertical link -->
+        <path d="M527,212 V150" fill="none" stroke="#9C7676" stroke-width="1.3" stroke-dasharray="4 4"/>
+        <text x="537" y="176" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="11" fill="#9C7676">same checkers, same instrument</text>
+      </svg>
+    </div>
+    <p class="figcap">
+      <b>Figure 2 — Why compliance sits in the middle.</b> Compliance is checked
+      independently of citation and is measured in <b>all</b> conditions,
+      including C1 where no principles were supplied at all. That is what makes
+      it a mediation variable rather than a manipulation check: a model can
+      satisfy a principle it was never shown, and the study needs to know how
+      often. The citation effect is defined as Δcompliance <em>beyond</em>
+      provision, which is only computable because C2 exists as a middle rung.
+    </p>
+  </div>
+</div>
+
+<div class="wrap">
+  <p>The three metric families, per the harness metrics module:</p>
+  <ul>
+    <li><b>Answer</b> — token-level span F1 (Jaccard-style, per the LLM-era CUAD literature) + exact category match + absence accuracy. Reported per-category and length-stratified.</li>
+    <li><b>Compliance</b> — checker pass-rate over applicable principles. All conditions.</li>
+    <li><b>Citation (C3 only)</b> — per-decision precision / recall / F1 of cited ids against the <em>scope-relevant slice</em> of gold applicability, plus a confusion matrix over principle ids (this feeds H4).</li>
+  </ul>
+  <p>
+    Length stratification is a property of the metrics module, not of individual
+    analyses — every primary metric comes out bucketed. Buckets are token-based
+    (≤4k / 4k–8k / 8k–16k / &gt;16k). The plan’s reference distribution for the
+    official test set was median ~25.7k chars ≈ 6.4k tokens with 27 contracts
+    ≤4k tokens, 63 ≤8k, 79 ≤16k, max ~75k; WS1 reproduced the character figure
+    and superseded the token figures (see §3) with median 5,440 tokens, 37 ≤4k,
+    66 ≤8k, 83 ≤16k, max 64,640.
+  </p>
+
+  <div class="note locked">
+    <b>Two structural commitments that make the chain measurable.</b>
+    <br>(1) <b>No LLM judge anywhere in the scoring path</b> (D-4) — every Phase-1
+    and Phase-2 metric is programmatic or hand-labeled. A judge in the loop would
+    contaminate the Phase-2 reward story, and the point is programmatic
+    verifiability of the process.
+    <br>(2) <b>Gold applicability is held outside the prompt</b> — a checker
+    <code>(instance, gold_annotations) -&gt; bool</code>, per decision point
+    where the principle is decision-scoped. A principle without a feasible
+    checker or labeling plan does not enter the scored set.
+  </div>
+
+  <div class="note">
+    <b>Contamination caveat travels with every result table.</b> CUAD is public
+    and present in pretraining corpora. Condition <em>comparisons</em> are valid
+    under shared contamination; absolute numbers are not leaderboard-comparable.
+  </div>
+</div>
+
+<!-- ==================== 5 ==================== -->
+<div class="wrap">
+  <h2 id="s5"><span class="num">5</span>The two-level results store</h2>
+  <p class="deck">
+    Two append-only JSONL files per run, both in git (D-10). The split is not
+    tidiness — it is the difference between quantities that exist per trial and
+    quantities that exist per decision.
+  </p>
+
+  <p>
+    Trial-level rows answer “did this trial run, and how well did it do
+    overall” — H1, H5, parse failures, feasibility. Decision-level rows are what
+    citation P/R/F1, the H4 confusion matrix, and Phase-2 reward extraction
+    actually consume. Those are per-decision quantities, and flattening them into
+    the trial row would destroy them. The rejected alternative was a single trial
+    row with nested decisions: nesting makes those computations awkward and
+    impossible to stream.
+  </p>
+
+  <div class="store">
+    <div class="card">
+      <h4>trials.jsonl</h4>
+      <p class="grain">one row per trial key</p>
+      <dl>
+        <dt>key</dt>
+        <dd>contract_id · condition (C1/C2/C3) · model · seed · schema_variant</dd>
+        <dt>provenance</dt>
+        <dd>run_id, prompt_template_version, principle_set_version, harness_git_sha, temperature, response_sha256, token counts, latency</dd>
+        <dt>outcome</dt>
+        <dd><code>ok</code> | <code>parse_failure</code> | <code>infeasible_at_length</code> | <code>api_error</code>, plus bounded n_repair_attempts</dd>
+        <dt>instance context</dt>
+        <dd>n_contract_tokens, length_bucket, split — denormalized so analysis needs no join</dd>
+        <dt>answer / compliance / citation / leakage</dt>
+        <dd>trial-level score blocks; compliance present in <b>all</b> conditions incl. C1; citation null outside C3; leakage is the P0 instrument, cheap and always on</dd>
+      </dl>
+    </div>
+    <div class="joiner">
+      <div>joined on</div>
+      <div class="key">trial_id</div>
+      <div style="font-size:22px; line-height:1; margin-top:8px; color:var(--accent);">↔</div>
+      <div class="key" style="margin-top:8px;">response_sha256<br>→ local raw</div>
+    </div>
+    <div class="card">
+      <h4>decisions.jsonl</h4>
+      <p class="grain">one row per decision within a trial</p>
+      <dl>
+        <dt>identity</dt>
+        <dd>trial_id + decision_idx (order from the TaskOutput iterator); the pair is unique</dd>
+        <dt>decision_kind · target</dt>
+        <dd><code>extraction</code> | <code>absence</code>; target is the category id, null in target-less environments</dd>
+        <dt>predicted / gold</dt>
+        <dd>emitted span (null for absence) against gold spans + <code>is_impossible</code></dd>
+        <dt>principles_cited vs gold_applicable</dt>
+        <dd>as emitted, against the <b>scope-relevant slice</b> — not the instance-wide applicability set</dd>
+        <dt>citation_eval · compliance_eval</dt>
+        <dd>tp / fp / fn plus P/R/F1 (null outside C3); per-principle compliance booleans</dd>
+      </dl>
+    </div>
+  </div>
+
+  <h3>Invariants that the two-level shape exists to protect</h3>
+  <ul>
+    <li><code>gold_applicable</code> is the scope-relevant slice for <em>this</em> decision. Otherwise citation precision is unfair to any model that doesn’t cite globally-scoped principles everywhere.</li>
+    <li>Every category not extracted produces an <code>absence</code> decision row. Absence is an explicit decision, never an empty slot.</li>
+    <li>Rows are written for non-<code>ok</code> trials too, with score fields null. Dropping them would silently bias H5.</li>
+    <li>Both files are append-only and rebuildable from raw responses + the principle set version.</li>
+    <li>The H4 confusion matrix is built by pairing <code>fp</code> against <code>fn</code> <em>within</em> a decision row — “cited p03 where p11 applied” — so it must be derivable from <code>decisions.jsonl</code> alone.</li>
+  </ul>
+
+  <p>
+    Raw model responses stay local per the study’s repository policy;
+    <code>response_sha256</code> is the join key back to them. What goes in git
+    is the deterministic build script, the instance manifest (no full contract
+    text), the principle set and checkers, the per-trial scored records, prompt
+    templates, config, and figures with their source scripts. Rationale: H5
+    claims are length-stratified and must be auditable from the repo alone,
+    which the scored records give us.
+  </p>
+</div>
+
+<!-- ==================== 6 ==================== -->
+<div class="wrap">
+  <h2 id="s6"><span class="num">6</span>Where the human is on the critical path</h2>
+  <p class="deck">
+    Two kinds of dependency, and they behave differently. <b>Blocking</b> means
+    work stops until Tyler acts. <b>Unblocking-later</b> means Claude proceeds on
+    an assumption and Tyler’s answer lands before the artifact is used
+    downstream.
+  </p>
+
+  <div class="scroll">
+    <table class="boxed">
+      <thead>
+        <tr><th>#</th><th>Ask</th><th>Kind</th><th>Blocks</th><th>Rough size</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>H1</b></td>
+          <td>Confirm inkling-small on Tinker (availability + context window); name the ~8B / ~32B / frontier picks</td>
+          <td><span class="pill blocking">blocking</span> for WS4 only</td>
+          <td>inv 004</td>
+          <td>minutes, but needs Tinker access</td>
+        </tr>
+        <tr>
+          <td><b>H2</b></td>
+          <td>Sign off on the provisional ~12-category subset (G1)</td>
+          <td><span class="pill batch">batchable</span></td>
+          <td>freezes at G2</td>
+          <td>~30 min</td>
+        </tr>
+        <tr style="background:#FDF6E7;">
+          <td><b>H3</b></td>
+          <td>Read + curate the candidate principle set (G2)</td>
+          <td><span class="pill blocking">blocking — the big one</span></td>
+          <td>WS3 entirely, WS5 prompts</td>
+          <td>hours; 15–25 records with rationales</td>
+        </tr>
+        <tr style="background:#FDF6E7;">
+          <td><b>H4</b></td>
+          <td>Adjudicate the manual applicability residual (WS3)</td>
+          <td><span class="pill blocking">blocking — the long one</span></td>
+          <td>inv 005 scoring</td>
+          <td>the study’s largest human cost — size it before committing</td>
+        </tr>
+        <tr>
+          <td><b>H5</b></td>
+          <td>Ratify the P0 schema decision (G3)</td>
+          <td><span class="pill blocking">blocking</span></td>
+          <td>main grid</td>
+          <td>~15 min, rule is pre-written</td>
+        </tr>
+        <tr>
+          <td><b>H6</b></td>
+          <td>Open the holdout (G4)</td>
+          <td><span class="pill blocking">blocking</span></td>
+          <td>inv 005</td>
+          <td>a deliberate go/no-go</td>
+        </tr>
+        <tr>
+          <td><b>H7</b></td>
+          <td>One-pager prose</td>
+          <td><span class="pill blocking">blocking by policy</span></td>
+          <td>publication</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note open">
+    <b>The two large ones are H3 and H4</b> — highlighted above. H3 is gate G2:
+    Tyler curates before anything is locked; Claude proposes, Claude does not
+    lock. H4 is the WS3 manual residual, and it scales with (n principles × n
+    instances × decisions per instance). Because of that, the plan requires that
+    the <b>first thing inv 003 produces is a cost estimate on a 3-contract
+    sample</b>, before the full labeling flow is committed to. WS3 is also the
+    workstream most likely to reshape the principle set — a checker that
+    disagrees with human judgment is a defect in the <em>principle</em>, routed
+    back to inv 002 — so the plan says to budget for the set shrinking.
+  </div>
+
+  <p>
+    Every gate is a stop-and-check with Tyler, not a self-certified pass. The
+    one-pager is human prose by repo policy; Claude scaffolds and gives feedback
+    only.
+  </p>
+</div>
+
+<!-- ==================== 7 ==================== -->
+<div class="wrap">
+  <h2 id="s7"><span class="num">7</span>Decided, and still open</h2>
+  <p class="deck">
+    Eleven study-level decisions were logged on 2026-08-15. They outlive any one
+    investigation.
+  </p>
+
+  <ol class="dec">
+    <li><span class="dnum">D-1</span><b>Task definition is present in all conditions.</b> C1 gets decision kinds, targets, and one-line target definitions but no principles. A bare C0 with neither was rejected — without the task definition the task is undefined.</li>
+    <li><span class="dnum">D-2</span><b>Full dataset, no length filtering or chunking.</b> Long contracts stay in; over-context trials are recorded as <code>infeasible_at_length</code>. Filtering would assume away H5.</li>
+    <li><span class="dnum">D-3</span><b>Official CUAD test split (102 contracts) is the final hold-out.</b> Touched only for headline results, in both phases. Dev ≈ 40 contracts sampled from official train, stratified by length and positive-category count, seeded and persisted. Remaining official-train reserved for Phase 2. No contract in more than one of {dev, FT-train, holdout}.</li>
+    <li><span class="dnum">D-4</span><b>No LLM judge in the scoring path.</b> Every metric programmatic or hand-labeled. A judge would contaminate the Phase-2 reward story.</li>
+    <li><span class="dnum">D-5</span><b>Harness is study-level, not an investigation.</b> <code>harness/</code> + <code>plans/component-contracts.md</code>. An investigation is a bounded unit with a definite end; the harness is cross-cutting and outlives Phase 1.</li>
+    <li><span class="dnum">D-6</span><b>Repository policy: manifests + scored records, not raw.</b> Contract text and raw model responses stay out of git; instance manifest and per-trial scored records go in.</li>
+    <li><span class="dnum">D-7</span><b>Study-007 orchestration machinery is not inherited.</b> No ticket system, no drain, no agent-trace / three-tier renderers. This is a deterministic trial grid, not an autonomous researcher loop.</li>
+    <li><span class="dnum">D-8</span><b>Verbatim CUAD text is usable, with attribution.</b> CC BY 4.0; category definitions and guideline text may be quoted verbatim in prompt templates and checked-in artifacts, and the paraphrase fallback is dropped. Attribution to The Atticus Project is a standing obligation on every derivative in git.</li>
+    <li><span class="dnum">D-9</span><b>Model-assisted principle proposal is logged, not ambient.</b> Contrastive-pair mining is deterministic and runs on FT-train only; proposals come from a pinned frontier model (<code>claude-opus-5</code>) with a pinned prompt version; every candidate carries evidence pointers, a checker sketch, and a Tyler <code>review</code> block with a required rationale. Rejected candidates are retained — the rejection set is itself a finding.</li>
+    <li><span class="dnum">D-10</span><b>Two-level results store.</b> <code>trials.jsonl</code> + <code>decisions.jsonl</code>. A single nested trial row was rejected.</li>
+    <li><span class="dnum">D-11</span><b>CUAD citation.</b> <code>hendrycks2021cuad</code> (arXiv:2103.06268), in <code>literature/references.bib</code>. Cited in the one-pager; pairs with the D-8 attribution obligation.</li>
+  </ol>
+
+  <h3>Open questions <span class="pill open">unresolved</span></h3>
+  <ul>
+    <li><b>G3 schema decision</b> (pending, from inv 004 / pilot P0) — field-present everywhere vs field-absent for C1/C2 vs field-present with post-hoc filtering. The decision rule is written into inv 004’s <code>investigation.md</code> <em>before</em> the pilot runs and must not be amended after seeing data.</li>
+    <li><b>Final ~12-category subset</b> (pending, from inv 002) — provisional in inv 001, decided after 002 reads the Atticus guidelines. Must include the Savelka confusable trio (Minimum Commitment / Volume Restriction / Revenue-Profit Sharing).</li>
+    <li><b>Model axis</b> — inkling-small availability and context window on Tinker (this blocks the P0 model choice); the ~8B and ~32B open picks (Qwen family likely; confirm the current Tinker model list); the frontier API model.</li>
+    <li><b>Annotation-guidelines licensing</b> — the broad question was resolved on 2026-08-15 (CUAD is CC BY 4.0, verbatim reuse permitted with attribution). The remaining narrow question: confirm the annotation-guidelines PDF is covered by the same release and not licensed separately from the dataset.</li>
+    <li><b>AbstentionBench programmatic-vs-judge scoring split</b> — deferred to environment #2.</li>
+    <li><b>Dev length profile</b> (raised by WS1, for G1) — dev currently mirrors the official-train pool’s length distribution, not holdout’s. If dev is meant to <em>predict</em> holdout behaviour at length, it should be re-stratified. Flagged as a deliberate choice, not yet decided.</li>
+    <li><b>Whether to keep both near-degenerate rare categories</b> (raised by WS1, for G1) — Source Code Escrow and Most Favored Nation may be redundant with each other for extraction; the final call folds into the inv 002 subset decision.</li>
+  </ul>
+  <p style="font-size:14.5px; color:var(--muted);">
+    Note that inv 001 also logged six investigation-local decisions (its own
+    D1–D6: source of record, tokenizer choice, all-41 manifest, subset
+    selection criteria, split construction, stratification keys). Those live in
+    the investigation, not in the study-level log, and are numbered
+    independently of D-1…D-11 above.
+  </p>
+
+  <p>
+    The study also records which repo machinery it <em>keeps</em> (scaffolds and
+    frontmatter, the one-pager template at the end of inv 005, Morel-branded
+    Plotly figures) and which it cuts. The capability map is mostly out of scope
+    here — it plots <em>our research activities</em>, not the prompts under
+    study; two candidate entries (“derive a principle set from annotation
+    guidelines”, “build applicability checkers”) are to be proposed later, not
+    auto-logged.
+  </p>
+</div>
+
+<!-- ==================== 8 ==================== -->
+<div class="wrap">
+  <div class="coda">
+    <h2 id="s8"><span class="num">8</span>Phase 2 — Tinker fine-tuning <span class="pill open" style="vertical-align:middle; margin-left:8px;">not scheduled</span></h2>
+    <p class="deck" style="margin-bottom:16px;">
+      Carried forward unchanged from the reference plan and recorded only so
+      Phase-1 design choices stay compatible with it. It opens <em>only</em>
+      after inv 005 returns Phase-1 results.
+    </p>
+
+    <h3 style="margin-top:18px;">Shape</h3>
+    <ol>
+      <li><b>SFT bootstrap</b> — deliberative-alignment pattern: principles in prompt → generate → filter by grader → chat-SFT recipe.</li>
+      <li><b>RL</b> — composite reward <code>α·answer + β·citation_F1</code> via a custom cookbook Env, with <code>rl_basic.py</code>’s loop as the reference implementation. The <b>β=0 ablation is the key comparison</b>. F1, not recall, so cite-everything doesn’t win. Fully programmatic reward; no judge.</li>
+      <li><b>Faithfulness check</b> — ablate a cited principle from the prompt-time set and verify behavior changes (TTS-adjacent).</li>
+    </ol>
+
+    <h3>Headline experiments</h3>
+    <ul>
+      <li>Composite vs answer-only reward at matched compute.</li>
+      <li>OOD: held-out and edited principles.</li>
+      <li>Post-FT size grid vs frontier (H3).</li>
+      <li>Rule-ablation faithfulness.</li>
+    </ul>
+    <p>
+      FT training data comes from the official-train remainder only. The official
+      test split stays untouched until final results.
+    </p>
+
+    <h3>Two obligations this places on Phase 1</h3>
+    <ul>
+      <li>The results store must retain enough <b>per-decision structure</b> to build SFT targets and compute citation F1 as a <em>reward</em>, not just as an analysis metric. (This is part of why D-10 splits the store.)</li>
+      <li>The principle set must support <b>“held-out” and “edited” variants</b> — so <code>Principle</code> records need stable ids, and the prompt assembler needs to take a principle subset as a parameter.</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <b>Attribution.</b> This study derives from CUAD (the Contract
+      Understanding Atticus Dataset), released by <b>The Atticus Project</b>
+      under <b>CC BY 4.0</b>. Attribution is a license obligation on every
+      checked-in derivative — the instance manifest, category definitions quoted
+      in prompt templates, and principle statements traced to the guidelines —
+      not a courtesy.
+    </p>
+    <p class="cite">
+      Hendrycks, D., Burns, C., Chen, A., &amp; Ball, S. (2021).
+      <i>CUAD: An Expert-Annotated NLP Dataset for Legal Contract Review.</i>
+      arXiv:2103.06268. — <code>hendrycks2021cuad</code>, in
+      <code>literature/references.bib</code> (D-11).
+    </p>
+    <p style="margin-top:18px;">
+      Source of truth for everything on this page:
+      <code>studies/008-principled-extraction-cuad/</code> —
+      <code>study.md</code>, <code>plans/workstreams.md</code>,
+      <code>plans/component-contracts.md</code>, <code>plans/decisions.md</code>,
+      <code>plans/phase2-outline.md</code>, and the five
+      <code>investigations/*/investigation.md</code>. Where those documents mark
+      something provisional, pending, or open, this page marks it the same way.
+      Generated 2026-08-15. AI Assistant Used: Claude Code.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

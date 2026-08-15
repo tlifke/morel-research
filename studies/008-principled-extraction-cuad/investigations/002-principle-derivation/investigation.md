@@ -87,12 +87,18 @@ conventions are recoverable from data.
     reviewer: tyler
     date: 2026-08-__
     rationale: "one line — why, in your words"
-    edited_from: "verbatim prior statement, present only when decision: edit"
+    edited_from:                  # present only when decision: edit
+      statement: "verbatim prior value"
+      checker_sketch: "verbatim prior value"
+      # one key per field actually changed
 ```
 
 Rules: `rationale` is required on every decision including `accept` — a bare
-accept tells the writeup nothing. `edit` preserves the original text so the
-human-vs-model delta is measurable. `reject` records the reason; rejected
+accept tells the writeup nothing. `edit` preserves the original value of
+**every** field changed, keyed by field name, not just `statement` — a model
+that proposes a sound rule with an infeasible `checker_sketch` is a distinct
+and reportable failure mode from one that gets the rule itself wrong, and a
+statement-only `edited_from` would erase that distinction. `reject` records the reason; rejected
 candidates stay in the file rather than being deleted, because the rejection
 set is itself a finding about what the model gets wrong.
 
@@ -114,6 +120,17 @@ informative rather than dominated by a few high-frequency rules.
 
 **Hard constraint.** No feasible checker or labeling plan → not in the scored
 set. Sketch the checker at proposal time, not afterwards.
+
+**Second hard constraint — a principle the schema already enforces is
+unmeasurable.** The harness guarantees output coverage (exactly one decision
+per target, D-14) and validates structure before scoring. Any candidate that
+merely restates a schema guarantee — "emit a decision for every category",
+"cite at least one principle" — will show 100% compliance in every condition by
+construction, contributing nothing to the mediation analysis and quietly
+inflating the compliance pass-rate. Compliance can only measure what the schema
+does not already make impossible. Screen candidates for this at curation time:
+if you cannot describe an output that is schema-valid yet violates the
+principle, the principle is not scoreable.
 
 **Portability constraint.** Nothing CUAD-specific enters the `Principle` model
 itself. The set must generalize as a framework to domains without categories

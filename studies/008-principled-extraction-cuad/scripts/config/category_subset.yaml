@@ -1,0 +1,89 @@
+version: provisional-2026-08-15
+status: provisional
+note: >
+  Provisional subset for WS1. The final pick lands after investigation 002
+  reads the Atticus annotation guidelines (gate G2). Names are the exact
+  category ids used in the CUAD SQuAD JSONs (the qa-id suffix after "__"),
+  which differ in casing from category_descriptions.csv.
+
+selection_criteria:
+  - id: c1_mandatory_trio
+    rule: >
+      Must contain the Savelka (2023) confusable trio, which is the study's
+      pre-registered source of citation-confusion structure for H4.
+    categories:
+      - Minimum Commitment
+      - Volume Restriction
+      - Revenue/Profit Sharing
+  - id: c2_frequency_spread
+    rule: >
+      Cover the full frequency range so answer scores are not dominated by one
+      base rate: near-universal (>400/510), frequent (250-400), mid (150-250),
+      uncommon (50-150), rare (<50). Rare categories are what make the absence
+      decision kind non-trivial; a subset of only frequent categories would
+      make "absent" almost never correct.
+  - id: c3_answer_format_spread
+    rule: >
+      Mix answer formats from category_descriptions.csv: date extraction,
+      jurisdiction name, and yes/no-with-span clause detection. Span-shape
+      variety keeps the span-F1 metric from measuring one skill.
+  - id: c4_confusable_pairs_beyond_the_trio
+    rule: >
+      Include at least one further pair whose boundaries are decided by a rule
+      rather than by lexical cues, so principle citation has something to do
+      outside the trio. Here: Exclusivity (vs Non-Compete / No-Solicit) and
+      Expiration Date (vs Effective Date / Renewal Term).
+  - id: c5_structural_coverage
+    rule: >
+      Include categories that are properties of the contract as a whole
+      (Governing Law, Anti-Assignment, Cap On Liability) alongside categories
+      that are properties of a specific clause, since the two impose different
+      search behaviour over a long document.
+  - id: c6_size
+    rule: Target ~12 categories, per the study plan.
+
+categories:
+  - name: Agreement Date
+    role: near_universal_date
+  - name: Governing Law
+    role: near_universal_jurisdiction
+  - name: Expiration Date
+    role: near_universal_date_confusable
+  - name: Anti-Assignment
+    role: frequent_structural
+  - name: Cap On Liability
+    role: frequent_structural
+  - name: License Grant
+    role: frequent_clause
+  - name: Exclusivity
+    role: mid_confusable
+  - name: Revenue/Profit Sharing
+    role: savelka_trio
+  - name: Minimum Commitment
+    role: savelka_trio
+  - name: Volume Restriction
+    role: savelka_trio
+  - name: Most Favored Nation
+    role: rare_absence_heavy
+  - name: Source Code Escrow
+    role: rare_absence_heavy
+
+alternates:
+  note: >
+    Ranked candidates if inv 002 wants to grow or swap the set. Uncapped
+    Liability is the strongest single addition (it pairs with Cap On Liability
+    the way Volume Restriction pairs with Minimum Commitment).
+  categories:
+    - Uncapped Liability
+    - Audit Rights
+    - Termination For Convenience
+    - Post-Termination Services
+    - Non-Compete
+    - Insurance
+    - Price Restrictions
+
+deliberately_excluded:
+  - name: Document Name
+    reason: Present in 510/510 contracts and answered by the first line of text.
+  - name: Parties
+    reason: Present in 509/510 and multi-span by construction; inflates span counts.

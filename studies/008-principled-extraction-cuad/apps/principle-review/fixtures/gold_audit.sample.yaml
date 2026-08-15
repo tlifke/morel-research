@@ -1,0 +1,412 @@
+# SAMPLE / FIXTURE DATA for the gold_audit record type.
+# Six real CUAD gold spans drawn by scripts/sample_gold.py (seed 20260815, n=6,
+# context 400) purely so the app and its tests have something to run against.
+# This is NOT the audit sample; draw that with sample_gold.py at the real n.
+# Gold spans from CUAD v1, The Atticus Project, CC BY 4.0.
+sampling:
+  sampler_version: gold-audit-sampler-v1
+  seed: 20260815
+  drawn_at: '2026-08-15T16:50:12+00:00'
+  splits:
+  - dev
+  - holdout
+  split_file_sha256_16:
+    dev: 401a15a0e2fc043c
+    holdout: 8a6b7e0614c1b790
+  context_chars: 400
+  requested_n: 6
+  drawn_n: 6
+  population_n: 1288
+  categories:
+  - Agreement Date
+  - Governing Law
+  - Expiration Date
+  - Anti-Assignment
+  - Cap On Liability
+  - License Grant
+  - Exclusivity
+  - Revenue/Profit Sharing
+  - Minimum Commitment
+  - Volume Restriction
+  - Most Favored Nation
+  - Source Code Escrow
+  allocation:
+    Agreement Date: 1
+    Governing Law: 1
+    Expiration Date: 1
+    Anti-Assignment: 1
+    Cap On Liability: 1
+    License Grant: 0
+    Exclusivity: 1
+    Revenue/Profit Sharing: 0
+    Minimum Commitment: 0
+    Volume Restriction: 0
+    Most Favored Nation: 0
+    Source Code Escrow: 0
+  population_by_category:
+    Agreement Date: 131
+    Governing Law: 124
+    Expiration Date: 118
+    Anti-Assignment: 173
+    Cap On Liability: 154
+    License Grant: 196
+    Exclusivity: 101
+    Revenue/Profit Sharing: 111
+    Minimum Commitment: 120
+    Volume Restriction: 41
+    Most Favored Nation: 7
+    Source Code Escrow: 12
+  attribution: Gold spans from the Contract Understanding Atticus Dataset (CUAD) v1, The Atticus Project,
+    licensed CC BY 4.0.
+records:
+- id: dev/NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT/Agreement Date/0
+  contract_id: NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT
+  title: NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT
+  split: dev
+  category: Agreement Date
+  span_index: 0
+  n_spans_in_category: 1
+  start: 67
+  end: 83
+  n_chars: 16
+  offsets: 67-83
+  span_text: October 24, 2005
+  context_before: 'Exhibit 99.1   DISTRIBUTOR AGREEMENT   THIS AGREEMENT, dated as of '
+  context_after: ' is between JOHNSON MATTHEY CATALOG COMPANY, INC., a Delaware corporation, d/b/a ALFA
+    AESAR (hereinafter referred to as "ALFA AESAR"), having a mailing address of 30 Bond Street, Ward
+    Hill, MA 01835-8099 and Nanophase Technologies Corporation, a Delaware corporation ("NTC"), having
+    its principal offices at 1319 Marquette Drive, Romeoville, IL 60446.   Whereas NTC is in the business
+    of manufacturin'
+  siblings: []
+  overlaps: []
+  sample:
+    seed: 20260815
+    sampler_version: gold-audit-sampler-v1
+    stratum: Agreement Date
+    context_chars: 400
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: holdout/PAXMEDICA,INC_07_02_2020-EX-10.12-Master Service Agreement/Anti-Assignment/1
+  contract_id: PAXMEDICA,INC_07_02_2020-EX-10.12-Master Service Agreement
+  title: PAXMEDICA,INC_07_02_2020-EX-10.12-Master Service Agreement
+  split: holdout
+  category: Anti-Assignment
+  span_index: 1
+  n_spans_in_category: 3
+  start: 14042
+  end: 14164
+  n_chars: 122
+  offsets: 14042-14164
+  span_text: CRO will not assign any right or delegate any obligation under this Agreement without the
+    prior written consent of Client.
+  context_before: 'iately terminate this Agreement without liability to CRO. 11.0 Notices 11.1. Any notice
+    will be in writing and will be given by registered mail, return receipt requested, or hand delivered
+    to the other party at the address given on this agreement or to such other address as may be substituted
+    by notice. If sent by mail, notice will be effective on the date of receipt. 12.0 General Provisions
+    12.1 '
+  context_after: ' Any attempted assignment or delegation without such consent will be void. 12.2 The
+    headings in this Agreement are for reference purposes only; they will not affect the meaning or construction
+    of the terms of this Agreement. 12.3 If any parts or part of this Agreement are held to be invalid,
+    the remaining parts of the Agreement will continue to be valid and enforceable. 12.4. The provisions
+    of thi'
+  siblings:
+  - span_index: 0
+    offsets: 1909-2072
+    n_chars: 163
+    gap_chars: 11970
+    text: CRO may not subcontract any parts of the Services to a third party without the prior written
+      approval of Client, which approval shall not unreasonably be withheld.
+  - span_index: 2
+    offsets: 14165-14238
+    n_chars: 73
+    gap_chars: 1
+    text: Any attempted assignment or delegation without such consent will be void.
+  overlaps: []
+  sample:
+    seed: 20260815
+    sampler_version: gold-audit-sampler-v1
+    stratum: Anti-Assignment
+    context_chars: 400
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: holdout/WEBHELPCOMINC_03_22_2000-EX-10.8-HOSTING AGREEMENT/Cap On Liability/1
+  contract_id: WEBHELPCOMINC_03_22_2000-EX-10.8-HOSTING AGREEMENT
+  title: WEBHELPCOMINC_03_22_2000-EX-10.8-HOSTING AGREEMENT
+  split: holdout
+  category: Cap On Liability
+  span_index: 1
+  n_spans_in_category: 5
+  start: 8007
+  end: 8251
+  n_chars: 244
+  offsets: 8007-8251
+  span_text: In the event of a breach (other than Downtime) of the warranty set forth in Section 6.1(i)
+    above, Customer's sole and exclusive remedy, and eGain's sole and exclusive liability shall be, at
+    eGain's option, repair or replacement of the Software.
+  context_before: 'irectly with an eGain customer service representative or recording a voice mail message
+    in the eGain customer service voice mail box, and continues until the availability of the Hosting
+    Services is restored to the Customer. For purposes of this Agreement, "Normal Business Hours" shall
+    mean between the hours of 6:00 a.m to 6:00 p.m. Pacific time, Monday through Friday excluding national
+    holidays.
+
+
+    '
+  context_after: '
+
+
+    THE FOREGOING CONSTITUTES CUSTOMER''S SOLE AND EXCLUSIVE REMEDY, AND eGAIN''S ENTIRE LIABILITY, FOR
+    DOWNTIME AND FOR BREACH OF THE HOSTING SERVICES WARRANTY PROVIDED IN THIS SECTION 6.1.
+
+
+    6.2 eGain represents and warrants that, prior to, during and after the calendar year 2000 A.D., the
+    Software and the eGain System will process, calculate, manipulate, sort, store and transfer date data
+    without ma'
+  siblings:
+  - span_index: 0
+    offsets: 6408-7068
+    n_chars: 660
+    gap_chars: 939
+    text: 'In the event of Downtime (as defined in this Section 6.1 below), as Customer''s sole and exclusive
+      remedy and eGain''s sole and exclusive liability, the monthly fee payable for the Hosting Services
+      shall be reduced as follows:
+
+
+      a) For the first sixty (60) minutes of Downtime during Normal Business       Hours or the first
+      four (4) hours of Downtime outside of Normal Business       Hours ("Initial Downtime"), eGain will
+      credit Customer''s account for one       (1) day of service.
+
+
+      b) For each eight (8) hour period of Downtime per day in addition to the       Initial Downtime,
+      eGain will credit Customer''s account for one (1)       additional day of service.'
+  - span_index: 2
+    offsets: 8253-8437
+    n_chars: 184
+    gap_chars: 2
+    text: THE FOREGOING CONSTITUTES CUSTOMER'S SOLE AND EXCLUSIVE REMEDY, AND eGAIN'S ENTIRE LIABILITY,
+      FOR DOWNTIME AND FOR BREACH OF THE HOSTING SERVICES WARRANTY PROVIDED IN THIS SECTION 6.1.
+  - span_index: 3
+    offsets: 8895-9215
+    n_chars: 320
+    gap_chars: 644
+    text: In the event that the Software or eGain System is not Year 2000 Compliant, Customer's sole and
+      exclusive remedy and eGain's sole and exclusive liability shall be for eGain, at no additional cost
+      to Customer, to promptly modify the Software or the eGain System so that the Software or eGain System
+      is Year 2000 Compliant.
+  - span_index: 4
+    offsets: 11065-11714
+    n_chars: 649
+    gap_chars: 2814
+    text: EXCLUDING LIABILITY FOR INFRINGEMENT CLAIMS AS DISCUSSED IN SECTION 9 OF THIS AGREEMENT, IN
+      NO EVENT SHALL eGAIN BE LIABLE TO CUSTOMER FOR CONSEQUENTIAL, EXEMPLARY, INDIRECT, SPECIAL OR INCIDENTAL
+      DAMAGES (INCLUDING, WITHOUT LIMITATION, LOST PROFITS), OR BE LIABLE TO ANY THIRD PARTY FOR ANY DAMAGES
+      WHATSOEVER, EVEN IF eGAIN HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. eGain's entire liability
+      under this Agreement for any damages from any cause whatsoever, regardless of form or action, whether
+      in contract, negligence or otherwise, shall in no event exceed an amount equal to the price paid
+      for the Services out of which the claim arose.
+  overlaps: []
+  sample:
+    seed: 20260815
+    sampler_version: gold-audit-sampler-v1
+    stratum: Cap On Liability
+    context_chars: 400
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: holdout/HarpoonTherapeuticsInc_20200312_10-K_EX-10.18_12051356_EX-10.18_Development Agreement/Exclusivity/2
+  contract_id: HarpoonTherapeuticsInc_20200312_10-K_EX-10.18_12051356_EX-10.18_Development Agreement
+  title: HarpoonTherapeuticsInc_20200312_10-K_EX-10.18_12051356_EX-10.18_Development Agreement
+  split: holdout
+  category: Exclusivity
+  span_index: 2
+  n_spans_in_category: 4
+  start: 97045
+  end: 97530
+  n_chars: 485
+  offsets: 97045-97530
+  span_text: Upon the [***], Harpoon (on behalf of itself and its Affiliates) hereby grants to AbbVie
+    a co-exclusive (with Harpoon), royalty-free (subject to [***] [***]) license, with the right to grant
+    sublicenses in accordance with Section 5.3, under the Harpoon Patents, the Harpoon Know-How, and Harpoon's
+    interests in the Joint Patents and the Joint Know- How, to Develop and Manufacture the Licensed Compounds
+    and Licensed Products solely to the extent necessary for AbbVie to perform [***].
+  context_before: ' AbbVie a co- exclusive (with Harpoon), royalty-free license, with the right to grant
+    sublicenses in accordance with Section 5.3, under the Harpoon Patents, the Harpoon Know-How, and Harpoon''s
+    interests in the Joint Patents and the Joint Know-How, solely to the extent necessary for AbbVie to
+    conduct Initial Development Activities assumed by AbbVie in accordance with Section 3.1.2 (if any).
+
+
+    5.1.2 '
+  context_after: ' For clarity, with respect [***], AbbVie acknowledges and agrees that [***]. AbbVie
+    further acknowledges and agrees that no sublicense is granted to AbbVie under certain intellectual
+    property rights licensed from [***].
+
+
+    5.1.3 Upon the License Option Exercise Closing Date, Harpoon (on behalf of itself and its Affiliates)
+    hereby grants to AbbVie:
+
+
+    (a) an exclusive (including with regard to Harpoon '
+  siblings:
+  - span_index: 0
+    offsets: 69281-69456
+    n_chars: 175
+    gap_chars: 27589
+    text: Upon the Effective Date, Harpoon hereby grants to AbbVie the exclusive right, but not the obligation,
+      to obtain the licenses set forth in Section 5.1.3 (the "License Option").
+  - span_index: 1
+    offsets: 96452-97037
+    n_chars: 585
+    gap_chars: 8
+    text: Effective upon the date that AbbVie commences performing Initial Development Activities pursuant
+      to Section 3.1.2, Harpoon (on behalf of itself and its Affiliates) shall grant and hereby grants
+      AbbVie a co- exclusive (with Harpoon), royalty-free license, with the right to grant sublicenses
+      in accordance with Section 5.3, under the Harpoon Patents, the Harpoon Know-How, and Harpoon's interests
+      in the Joint Patents and the Joint Know-How, solely to the extent necessary for AbbVie to conduct
+      Initial Development Activities assumed by AbbVie in accordance with Section 3.1.2 (if any).
+  - span_index: 3
+    offsets: 97757-98804
+    n_chars: 1047
+    gap_chars: 227
+    text: 'Upon the License Option Exercise Closing Date, Harpoon (on behalf of itself and its Affiliates)
+      hereby grants to AbbVie:
+
+
+      (a) an exclusive (including with regard to Harpoon and its Affiliates, except as provided in Section
+      5.6) license (or sublicense), with the right to grant sublicenses in accordance with Section 5.3,
+      under the Harpoon Patents, the Harpoon Know-How, and Harpoon''s interests in the Joint Patents and
+      the Joint Know-How, to Exploit the Licensed Compounds and Licensed Products in the Field in the
+      Territory;
+
+
+      (b) an exclusive (including with regard to Harpoon and its Affiliates, except as provided in Section
+      5.6) license and right of reference, with the right to grant sublicenses and further rights of reference
+      in accordance with Section 5.3, under the Regulatory Approvals and any other Regulatory Documentation
+      that Harpoon or its Affiliates may Control with respect to the Licensed Compounds or Licensed Products
+      solely for purposes of Exploiting the Licensed Compounds and Licensed Products in the Field in the
+      Territory.'
+  overlaps:
+  - category: License Grant
+    relation: identical
+    offsets: 97045-97530
+    text: Upon the [***], Harpoon (on behalf of itself and its Affiliates) hereby grants to AbbVie a co-exclusive
+      (with Harpoon), royalty-free (subject to [***] [***]) license, with the right to grant sublicenses
+      in accordance with Section 5.3, under the Harpoon Patents, the Harpoon Know-How, and Harpoon's interests
+      in the Joint Patents and the Joint Know- How, to Develop and Manufacture the Licensed Compounds
+      and Licensed Products solely to the extent necessary for AbbVie to perform [***].
+  sample:
+    seed: 20260815
+    sampler_version: gold-audit-sampler-v1
+    stratum: Exclusivity
+    context_chars: 400
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: holdout/Reinsurance Group of America, Incorporated - A_R REMARKETING  AGREEMENT/Expiration Date/1
+  contract_id: Reinsurance Group of America, Incorporated - A_R REMARKETING  AGREEMENT
+  title: Reinsurance Group of America, Incorporated - A_R REMARKETING  AGREEMENT
+  split: holdout
+  category: Expiration Date
+  span_index: 1
+  n_spans_in_category: 2
+  start: 89709
+  end: 90027
+  n_chars: 318
+  offsets: 89709-90027
+  span_text: In addition, the obligations of the Remarketing Agent  hereunder may be terminated by it
+    by notice given to the Company prior to 5:00 p.m. (New York City time) on the date immediately preceding
+    the  Commencement Date if, prior to that time, any of the events described in Sections 6(i), (j) or
+    (k) shall have occurred.
+  context_before: 'Value or Discount.
+
+
+    Section 11. Termination. This Agreement shall terminate (i) the Business Day immediately following
+    the Remarketing Settlement Date, (ii) at 5:00  p.m., New York City time, on the last date of the Remarketing
+    if the Remarketing is not successful or (iii) on the effective date of the resignation or  removal
+    of the Remarketing Agent and the appointment of a new Remarketing Agent. '
+  context_after: '
+
+
+    If this Agreement is terminated pursuant to any of the provisions hereof, except as otherwise provided
+    herein, the Company shall not be under any  liability to the Remarketing Agent and the Remarketing
+    Agent shall not be under any liability to the Company, except that:
+
+
+    (x) if this Agreement is terminated by the Remarketing Agent because of any failure or refusal on
+    the part of the Company to co'
+  siblings:
+  - span_index: 0
+    offsets: 89354-89708
+    n_chars: 354
+    gap_chars: 1
+    text: This Agreement shall terminate (i) the Business Day immediately following the Remarketing Settlement
+      Date, (ii) at 5:00  p.m., New York City time, on the last date of the Remarketing if the Remarketing
+      is not successful or (iii) on the effective date of the resignation or  removal of the Remarketing
+      Agent and the appointment of a new Remarketing Agent.
+  overlaps: []
+  sample:
+    seed: 20260815
+    sampler_version: gold-audit-sampler-v1
+    stratum: Expiration Date
+    context_chars: 400
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+- id: dev/AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement/Governing
+    Law/0
+  contract_id: AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement
+  title: AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement
+  split: dev
+  category: Governing Law
+  span_index: 0
+  n_spans_in_category: 1
+  start: 33549
+  end: 33718
+  n_chars: 169
+  offsets: 33549-33718
+  span_text: Without reference to choice or conflict of law principles, this Agreement shall be governed
+    by and construed in accordance with the laws of the State of California, USA.
+  context_before: 'e sender, ten (10) working days after the date of posting. If sent by facsimile or
+    electronic transmission, notice shall be deemed received upon confirmation of complete receipt being
+    given by the intended receiving Party. If couriered, notice will be deemed to have been received on
+    delivery.
+
+
+    8
+
+
+    Source: ALLIED ESPORTS ENTERTAINMENT, INC., 8-K, 8/15/2019
+
+
+
+
+
+
+    15.10 Governing Law and Jurisdiction. '
+  context_after: ' The Parties unconditionally submit to exclusive jurisdiction of and accept as the exclusive
+    venue for any legal proceeding involving this Agreement the state and federal courts located in the
+    County of Los Angeles, California. Before any Party (the "Complaining Party") may bring any legal
+    proceeding against the other (the "Non Complaining Party"), the Complaining Party shall first make
+    a reasonab'
+  siblings: []
+  overlaps: []
+  sample:
+    seed: 20260815
+    sampler_version: gold-audit-sampler-v1
+    stratum: Governing Law
+    context_chars: 400
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null

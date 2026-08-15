@@ -1,0 +1,54 @@
+version: frozen-2026-08-15
+
+tokenizer:
+  id: Qwen/Qwen3-8B
+  rationale: >
+    n_tokens must come from a real tokenizer because every
+    infeasible_at_length determination and every length bucket in the study
+    depends on it. The Qwen3 BPE tokenizer is shared across the Qwen3 family,
+    so it is the tokenizer of the study's ~8B arm (qwen3.5:8b served by
+    ollama) and a reasonable common yardstick for the other arms. Counts are
+    without special tokens: they measure the contract, not a prompt.
+  add_special_tokens: false
+
+splits:
+  seed: 20260815
+  holdout:
+    source: official test.json
+    n: 102
+    note: 102 official test contracts, untouched until gate G4.
+  dev:
+    source: official train (CUADv1 minus test.json titles)
+    n: 40
+    stratify:
+      - key: length_bucket
+        priority: primary
+        match: holdout
+        note: >
+          Dev's length-bucket proportions are matched to the HOLDOUT split's,
+          not to the official-train pool dev is drawn from. Rationale in
+          plans/decisions.md D-13. Bucket targets are holdout proportions
+          scaled to n, with largest-remainder rounding.
+      - key: positive_count_tercile
+        priority: secondary
+        match: train_pool_within_bucket
+        note: >
+          Balanced WITHIN each length bucket, proportional to that bucket's
+          tercile composition in the official-train pool, largest-remainder
+          rounding.
+    priority_rule: >
+      With n=40 the two keys cannot both be satisfied exactly. Length bucket
+      wins: length is the axis H5 rests on, positive-count is not.
+    note: >
+      Tercile edges are computed over all 41 CUAD categories, not over the
+      provisional 12-category subset, so the dev split stays valid if inv 002
+      changes the subset. Sampling within a (bucket, tercile) cell is uniform
+      without replacement under the seed above.
+  ft_train:
+    source: official train minus dev
+    note: Reserved for Phase 2. Not read by Phase 1.
+
+length_buckets:
+  unit: tokens
+  edges: [4000, 8000, 16000]
+  labels: ["<=4k", "4k-8k", "8k-16k", ">16k"]

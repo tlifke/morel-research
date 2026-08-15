@@ -1,0 +1,141 @@
+{
+  "attribution": "Derived from the Contract Understanding Atticus Dataset (CUAD) v1, The Atticus Project, licensed CC BY 4.0.",
+  "built_at": "2026-08-15T16:30:54+00:00",
+  "category_subset_version": "provisional-2026-08-15",
+  "dataset_config_version": "frozen-2026-08-15",
+  "length_distribution": [
+    {
+      "chars_per_token": 4.722,
+      "max_tokens": 41703,
+      "median_chars": 28237,
+      "median_tokens": 6424,
+      "min_tokens": 357,
+      "n": 40,
+      "n_gt_16k_tokens": 7,
+      "n_le_16k_tokens": 33,
+      "n_le_4k_tokens": 15,
+      "n_le_8k_tokens": 26,
+      "split": "dev"
+    },
+    {
+      "chars_per_token": 4.699,
+      "max_tokens": 64640,
+      "median_chars": 25657,
+      "median_tokens": 5440,
+      "min_tokens": 200,
+      "n": 102,
+      "n_gt_16k_tokens": 19,
+      "n_le_16k_tokens": 83,
+      "n_le_4k_tokens": 37,
+      "n_le_8k_tokens": 66,
+      "split": "holdout"
+    },
+    {
+      "chars_per_token": 4.736,
+      "max_tokens": 82345,
+      "median_chars": 36820,
+      "median_tokens": 7580,
+      "min_tokens": 244,
+      "n": 368,
+      "n_gt_16k_tokens": 77,
+      "n_le_16k_tokens": 291,
+      "n_le_4k_tokens": 104,
+      "n_le_8k_tokens": 191,
+      "split": "ft_train"
+    },
+    {
+      "chars_per_token": 4.729,
+      "max_tokens": 82345,
+      "median_chars": 33143,
+      "median_tokens": 6852,
+      "min_tokens": 200,
+      "n": 510,
+      "n_gt_16k_tokens": 103,
+      "n_le_16k_tokens": 407,
+      "n_le_4k_tokens": 156,
+      "n_le_8k_tokens": 283,
+      "split": "all"
+    }
+  ],
+  "n_categories": 41,
+  "n_contracts": 510,
+  "source": {
+    "files": {
+      "CUADv1.json": {
+        "bytes": 40128638,
+        "sha256": "ed0b77d85bdf4014d7495800e8e4a70565b48ee6f8a2e5dca9cf8655dbf10eae"
+      },
+      "category_descriptions.csv": {
+        "bytes": 8987,
+        "sha256": "7499950ee04d2ed2841c0f8ec2ef96b91be039bc2ea3c4edcc36334a465b1f36"
+      },
+      "data.zip": {
+        "bytes": 18309308,
+        "sha256": "f8161d18bea4e9c05e78fa6dda61c19c846fb8087ea969c172753bc2f45b999a"
+      },
+      "evaluate.py": {
+        "bytes": 7132,
+        "sha256": "5c56ac9fc82fe56ef77616a1dffba0707e4366ba916f7ab5d3e4434013d0a624"
+      },
+      "test.json": {
+        "bytes": 7378232,
+        "sha256": "007b6a40b0c65247f881627375c3d2e9b6aeeb5dfa89957494feed0765a1a073"
+      },
+      "train_separate_questions.json": {
+        "bytes": 35065844,
+        "sha256": "7de21d2bb741ac939e2a839ef9640634a5e0f9f40ea2b82c6833baf7db33dab4"
+      }
+    },
+    "repo": "https://github.com/TheAtticusProject/cuad"
+  },
+  "splits": {
+    "dev_bucket_shortfall": {},
+    "dev_length_profile_match": {
+      "4k-8k": {
+        "dev_n": 11,
+        "dev_pct": 27.5,
+        "dev_target": 11,
+        "holdout_n": 29,
+        "holdout_pct": 28.4,
+        "train_pool_n": 98
+      },
+      "8k-16k": {
+        "dev_n": 7,
+        "dev_pct": 17.5,
+        "dev_target": 7,
+        "holdout_n": 17,
+        "holdout_pct": 16.7,
+        "train_pool_n": 107
+      },
+      "<=4k": {
+        "dev_n": 15,
+        "dev_pct": 37.5,
+        "dev_target": 15,
+        "holdout_n": 37,
+        "holdout_pct": 36.3,
+        "train_pool_n": 119
+      },
+      ">16k": {
+        "dev_n": 7,
+        "dev_pct": 17.5,
+        "dev_target": 7,
+        "holdout_n": 19,
+        "holdout_pct": 18.6,
+        "train_pool_n": 84
+      }
+    },
+    "dev_stratification": "length_bucket primary matched to holdout; positive_count_tercile secondary within bucket (D-13)",
+    "seed": 20260815,
+    "sizes": {
+      "dev": 40,
+      "ft_train": 368,
+      "holdout": 102
+    }
+  },
+  "tokenizer": {
+    "add_special_tokens": false,
+    "class": "Qwen2Tokenizer",
+    "id": "Qwen/Qwen3-8B",
+    "vocab_size": 151643
+  }
+}

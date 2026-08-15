@@ -1,0 +1,30 @@
+[project]
+name = "principle-review"
+version = "0.1.0"
+description = "Local-only adjudication queue for LLM-proposed records awaiting human review."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "pyyaml>=6.0",
+    "pydantic>=2.13.4",
+]
+
+[project.scripts]
+principle-review = "review_app.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["review_app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

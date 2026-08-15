@@ -1,7 +1,8 @@
 # Decision log — study 008
 
-Study-level decisions that outlive any one investigation. Investigation-local
-decisions stay in their own `investigation.md`.
+Study-level decisions that outlive any one investigation, numbered `D-N`.
+Investigation-local decisions stay in their own `investigation.md` and are
+numbered `INV<n>-D<m>` (e.g. `INV1-D5`) so they never collide with these.
 
 Format:
 
@@ -81,6 +82,84 @@ Format:
 > `hendrycks2021cuad` (arXiv:2103.06268), in
 > `literature/references.bib`. Cited in the one-pager; pairs with the CC BY 4.0
 > attribution obligation in D-8.
+
+> **D-12 — Length is measured with a real tokenizer; the 4-chars/token
+> planning figures are retired** (2026-08-15)
+> inv 001 measured CUAD contract text at 4.70 chars/token under the Qwen3
+> tokenizer (`Qwen/Qwen3-8B`, the family of the ~8B arm). The planning-time
+> token figures came from `n_chars / 4` and overstated length by ~18%. Char
+> figures were correct. `n_tokens` in the manifest is tokenizer-derived; any
+> context-window feasibility claim must use it. Open sub-check: confirm
+> `qwen3.5:8b` shares the Qwen3 tokenizer before inv 005 leans on it.
+
+> **D-13 — Dev is stratified to holdout's length profile, not to its own pool's**
+> (2026-08-15, at gate G1, before the split freeze)
+> The first build stratified dev to mirror the official-train pool it is drawn
+> from, which left dev systematically longer than holdout (median 8,248 vs
+> 5,440 tokens). Changed: dev now matches the **holdout** length distribution.
+>
+> Why. Dev has exactly one job in this study — to predict how the system will
+> behave on holdout before holdout is opened at G4. Every use of dev is a
+> forecast: the P0 schema decision, prompt iteration, and the feasibility
+> planning behind `infeasible_at_length`. All of those are length-sensitive, and
+> H5 is *specifically* a claim about degradation with contract length. A dev set
+> 50% longer than holdout would have biased every one of those forecasts in the
+> same direction — pessimistic on feasibility, pessimistic on long-context
+> failure — and we would not have found out until the holdout was already open.
+> Being representative of the training pool buys us nothing we need; being
+> representative of the evaluation target buys us the entire purpose of a dev
+> set.
+>
+> What it costs, stated plainly. Dev is now a deliberately **non-representative**
+> sample of official-train. It cannot be used to characterize the training pool,
+> which matters for Phase 2, where FT-train — not dev — is the pool of record.
+> Matching holdout's profile also means drawing more heavily from the short end
+> of official-train, so the short buckets sample a smaller effective pool and
+> may show less contract diversity than their count suggests.
+>
+> Stratification priority is now explicit: **length bucket first** (matched to
+> holdout's proportions), positive-category count balanced **within** each
+> length bucket as a secondary key. With n=40 the two keys cannot both be
+> satisfied exactly; length wins, because length is the axis a hypothesis rests
+> on and positive-count is not.
+>
+> Made at G1 by design — this is the last point at which splits are cheap to
+> change. After the freeze, this decision is not revisited.
+
+> **D-14 — One decision per category, not per span** (2026-08-15)
+> A contract yields exactly **12 decisions**, one per subset category: an
+> `Extraction` carrying a **list** of spans, or an `AbsenceClaim`. Alternative:
+> one decision per span. Rejected on three grounds found by inspecting real
+> gold (see `reviews/sample-contracts.html`): (1) CUAD marks each copy of
+> repeated verbatim boilerplate, and since `Extraction` carries text rather
+> than offsets, a model emitting the passage once is indistinguishable from one
+> that missed a duplicate — unscoreable at span granularity; (2) the citation
+> P/R/F1 denominator would move with the model's own output, making C3 numbers
+> non-comparable across models; (3) absence is inherently category-level, so
+> span-level extraction would make the two decision kinds asymmetric — and the
+> symmetry is the point, since absence rulings are where principles bite
+> hardest.
+> Consequence: `Extraction.text: str` becomes a span list, and span-F1
+> aggregates *within* a decision (soft precision/recall over the span sets).
+> Citations attach to the category-level decision.
+
+> **D-15 — Gold is left untouched; the noise floor is measured and reported**
+> (2026-08-15)
+> Inspection found demonstrably bad gold: at least one plain mislabel
+> (`"Business."`, nine characters), spans labeled by neighbourhood rather than
+> content, and — worst — gold spans **split around embedded OCR page furniture**,
+> so one legal thought becomes two spans and a model emitting the coherent
+> passage is penalised while one reproducing the scanning artifact is rewarded.
+> We do **not** correct gold and do **not** normalize the text before scoring.
+> Instead: hand-audit a sample, estimate the fraction of spans affected, and
+> report it as a **ceiling on achievable span-F1** in limitations.
+> Why. Every condition sees the same corrupted gold, so condition *contrasts* —
+> which is what H1 actually claims — remain valid. Correcting gold would fork us
+> from the CUAD literature and make our absolute numbers incomparable, and
+> normalizing text would shift every offset in the manifest. The noise is a
+> constant added to all arms, not a confound between them. It does mean no arm
+> can reach F1 = 1.0, and the writeup must say so rather than let a reader read
+> the ceiling as model failure.
 
 ## Pending
 
