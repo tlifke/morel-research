@@ -180,7 +180,7 @@ population:                       # optional
   n_contracts: 61
 principles:                       # required key; maps principle id -> footprint
   d05:
-    status: ok                    # ok | not_implementable | error   (default ok)
+    status: discriminating        # free string; `ok` (the default) shows no pill
     note: free text, one or two lines          # optional
     applicability:                # optional
       n_applicable: 143
@@ -210,16 +210,31 @@ Rules the producer can rely on:
 
 - Every key except the top-level `principles` map is optional, and every
   principle entry may carry any subset of the three blocks. A principle that
-  could not be implemented is a legitimate footprint: `{status:
-  not_implementable, note: ...}` renders as a red status pill plus the note.
-- Rates are fractions in `[0, 1]`, not percentages; the UI formats them.
+  could not be implemented is a legitimate footprint: `{status: unimplementable,
+  note: ...}` renders as a status pill plus the note, and nothing else is
+  required.
+- `status` is a free string, not an enum — the producer names its own verdicts.
+  `ok` is the only reserved value and renders no pill. Colour is a display
+  heuristic on the string: `unimplement|error|infeasible` red,
+  `degenerate|tautolog|fail` amber, `discriminat` green, anything else grey.
+  A new verdict word therefore renders correctly-shaped but grey, never wrong.
+- Rates are fractions in `[0, 1]`, not percentages; the UI formats them. State
+  the denominator you used in `applicability.n_units` and say in `note` if the
+  headline denominator differs from the whole population.
 - Ids must match the candidates file exactly. Unmatched ids are ignored
   silently; principles with no entry render the "none measured" block.
-- Unrecognised keys inside a principle entry are dumped verbatim under
-  "other keys" rather than dropped, so an extra measurement is visible before
-  the renderer knows about it.
+- Unrecognised keys inside a principle entry are kept and rendered as collapsed
+  `<details>` blocks under "further measurements" rather than dropped, so an
+  extra measurement is visible before the renderer knows about it. The round-2
+  artifact uses this for `hand_score`, `length_buckets` and `stability`.
 - A top-level mapping of `id -> footprint` with no `principles:` wrapper is also
   accepted and normalised on load.
+
+The live artifact this consumes is
+`principles/pilot/checkers/footprint.yaml`, written by
+`principles/pilot/checkers/run_footprints.py`; it is found by auto-discovery
+(the search covers the source directory plus its `checkers/` and `footprints/`
+subdirectories), so no flag is needed when reviewing the pilot set.
 
 `fixtures/footprint.yaml` and `fixtures/mined_pairs.jsonl` are demo sidecars for
 `fixtures/candidates.sample.yaml`; they are auto-discovered when the app is

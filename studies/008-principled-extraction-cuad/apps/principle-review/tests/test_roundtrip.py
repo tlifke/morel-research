@@ -335,3 +335,31 @@ def test_round_one_pilot_decisions_survive_reimport(tmp_path):
         r["id"]: (r.get("review") or {}).get("decision") for r in before
     }
     assert set(reviews.values()) <= set(service.rt.decision_names()) | {None}
+
+
+def test_live_footprint_artifact_matches_the_contract(tmp_path):
+    live = sidecars.discover(
+        PILOT.parent, sidecars.FOOTPRINT_NAMES
+    ) if PILOT.exists() else None
+    if live is None:
+        pytest.skip("no footprint artifact produced yet")
+    doc = sidecars.load_footprint(live)
+    assert isinstance(doc.get("principles"), dict) and doc["principles"]
+    ids = {r["id"] for r in yaml_io.load_records(PILOT)}
+    assert set(doc["principles"]) <= ids
+    for pid, entry in doc["principles"].items():
+        assert isinstance(entry, dict), pid
+        ap = entry.get("applicability")
+        if ap is not None:
+            assert 0 <= float(ap.get("rate", 0)) <= 1, pid
+            assert ap["n_applicable"] <= ap["n_units"], pid
+        dist = entry.get("distribution")
+        if dist is not None:
+            for row in dist.get("rows", []):
+                assert "key" in row, pid
+                assert 0 <= float(row.get("rate", 0)) <= 1, pid
+        di = entry.get("discrimination")
+        if di is not None:
+            for key in ("pass_rate_positive", "pass_rate_negative"):
+                if di.get(key) is not None:
+                    assert 0 <= float(di[key]) <= 1, (pid, key)
