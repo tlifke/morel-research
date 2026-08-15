@@ -1,0 +1,727 @@
+- id: g01
+  statement: Each extracted span is one complete sentence, period to period, and where the
+    responsive text is a numbered subsection it includes the lead-in clause needed to make
+    that subsection read as a complete sentence.
+  trigger_guidance: Whenever choosing span boundaries for any category whose decision is yes/no-shaped
+    (all three of the confusable trio); does not govern the date and party categories, which
+    the Handbook exempts.
+  type: constraint
+  scope: []
+  provenance: atticus_guidelines
+  proposer:
+    batch_id: null
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: null
+    source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+  - Handbook ch.1, 'Label one sentence at a time' (p.4) — sentence defined as period-to-period;
+    worked example 19.3 / 19.3.1 shows a subsection with its own terminal period is not a
+    sentence on its own
+  - CUAD Datasheet II-F — annotators select full sentences for yes/no categories, instructed
+    'from period to period' (CC BY 4.0, quotable)
+  checker_sketch: 'Applicability: decision is an extraction, target is a yes/no-answer category
+    (i.e. not Agreement Date / Effective Date / Expiration Date / Parties / Document Name
+    / Governing Law-answer categories), and gold has at least one span. Compliance: locate
+    each predicted span in the contract by exact-then-normalised match (the matcher already
+    built for verbatim fidelity); a span passes if its start offset is preceded only by whitespace,
+    a terminal punctuation mark, or a section-number token, and its end offset lands on terminal
+    punctuation or a semicolon. Spans that cannot be located fail this check and are also
+    already counted as not-found by the verbatim metric — report the overlap so the two are
+    not double-read. Feasible with offsets we already compute. The section-number allowance
+    is the fuzzy part.'
+  review:
+    decision: defer
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: Clearly true from the atticus guidelines. However this will likely trigger
+      on every span -- expect to see it as once of the most common principles.
+- id: g02
+  statement: When the responsive material is not contiguous in the contract — a lead-in plus
+    one of several subsections, a clause plus the definition it needs, or two clauses that
+    must be read together — the span concatenates only the responsive fragments, in document
+    order, separated by the marker "<omitted>", and drops the intervening non-responsive text.
+  trigger_guidance: Consider whenever the responsive text sits inside an enumerated list,
+    or depends on a defined term or on a date stated elsewhere in the contract.
+  type: procedure
+  scope: []
+  provenance: atticus_guidelines
+  proposer:
+    batch_id: null
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: null
+    source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+  - Handbook ch.1, subsection rule (p.5) — worked example labels 14.2 and 14.2.10 with the
+    marker between them, dropping 14.2.1-14.2.9
+  - Handbook ch.1, definitions rule (p.6) — a needed definition is appended after the marker;
+    self-evident defined terms are not labelled
+  - CUAD Datasheet II-F — same convention, described as manual deletion of the non-responsive
+    portion (CC BY 4.0, quotable)
+  checker_sketch: 'Applicability: the gold span set for this decision contains at least one
+    span containing the literal marker "<omitted>". Compliance: the predicted span set for
+    that decision contains at least one span with the marker, AND no predicted span is a contiguous
+    substring of the contract that spans both fragments (which would be the "just take the
+    whole block" failure). Both halves are pure string work over data we already hold. Cheap
+    and unambiguous. Caveat: the marker must appear in the prompt''s task definition or no
+    model will ever emit it, which makes this principle a partial test of instruction-following
+    rather than of legal judgement.'
+  review:
+    decision: accept
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: Another clear principle direct from the guidelines
+- id: g03
+  statement: A sentence responsive to more than one category is extracted under every category
+    it is responsive to; assigning it to one category does not remove it from the others.
+  trigger_guidance: Consider when a single passage does two jobs at once — e.g. a purchase
+    obligation that also fixes a percentage payment, or a payment schedule that also sets
+    a volume threshold.
+  type: procedure
+  scope: []
+  provenance: atticus_guidelines
+  proposer:
+    batch_id: null
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: null
+    source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+  - Handbook ch.1, 'If one sentence is responsive to multiple labels' (p.5) — label it under
+    each
+  - CUAD Datasheet II-D — categories are independent except within a Group, where the same
+    text context may serve two or more categories (CC BY 4.0, quotable)
+  checker_sketch: 'Applicability: after normalisation, the same gold span text appears under
+    two or more in-scope targets for this instance; the principle is applicable to each of
+    those decisions. Compliance: the predicted span sets for those targets each contain a
+    span whose normalised token overlap with the shared gold passage exceeds a fixed threshold
+    (use the same soft-match already in Level B, threshold recorded as a parameter). Fully
+    programmatic. Rare by construction, which is a feature — it is one of the deliberately
+    rare principles H4 needs.'
+  review:
+    decision: accept
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: Clear from the guidelines
+- id: g04
+  statement: Governing Law covers only a clause designating the substantive law that governs
+    the contract as a whole; venue, forum, jurisdiction-consent and arbitration clauses are
+    not responsive, and neither is a law that governs only one section of the contract.
+  trigger_guidance: Consider whenever a dispute-resolution or miscellaneous section is being
+    read — these clauses frequently sit in the same paragraph as the true governing-law sentence,
+    or replace it entirely.
+  type: disambiguation
+  scope:
+  - Governing Law
+  provenance: atticus_guidelines
+  proposer:
+    batch_id: null
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: null
+    source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+  - Handbook, Governing Law, IS-NOT list (p.12) — venue and arbitration clauses excluded,
+    with four worked counter-examples (submission to exclusive jurisdiction, inconvenient-forum
+    waiver, People's Court jurisdiction, consent to Denver courts)
+  - Handbook, Governing Law, IS-NOT list (p.12) — law governing the interpretation of a single
+    section is excluded; CUAD treats the label as whole-contract only
+  - Handbook, Governing Law, IS list (p.12) — a cross-reference to another agreement's governing-law
+    provision IS responsive (span only, no answer)
+  checker_sketch: 'Applicability: the contract contains at least one sentence matching a venue
+    pattern (exclusive jurisdiction | submits? to the jurisdiction | venue | inconvenient
+    forum | arbitration | courts located in | courts situated in) — computed from instance
+    text alone, no gold needed. Compliance: no predicted Governing Law span overlaps such
+    a sentence unless that same sentence also matches the governing-law pattern (govern |
+    construed | interpreted, near "law"). Sentence segmentation on contract text is the only
+    moving part and it is already needed for g01. High confidence: this is the single most
+    explicitly documented rule for any pilot category, and it is exactly the confusion the
+    study predicted.'
+  review:
+    decision: accept
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: From the guidelines, I don't have domain expertise to say whether this should
+      be false. Lean towards accept.
+- id: g05
+  statement: A payment obligation is Revenue/Profit Sharing only when the amount varies with
+    the counterparty's revenue, profit, sales, margin or units sold; fixed amounts, milestone
+    payments, fixed-amount tiered schedules, cost-based or reimbursement payments are not,
+    however they are labelled in the contract.
+  trigger_guidance: Consider whenever a payment, royalty, commission or fee clause is a candidate
+    — the word "royalty" is not evidence either way, the arithmetic is.
+  type: disambiguation
+  scope:
+  - Revenue/Profit Sharing
+  provenance: atticus_guidelines
+  proposer:
+    batch_id: null
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: null
+    source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+  - Handbook, Revenue/Profit Sharing, IS list (pp.87-88) — amount must be a percentage of
+    the other party's revenue/profit rather than a fixed sum; percentage-of-gross-revenue
+    tier table given as responsive; per-unit fees responsive because the total fluctuates
+    with units sold; equity/warrant consideration responsive by a stated CUAD-specific extension
+  - Handbook, Revenue/Profit Sharing, IS-NOT list (pp.88-89) — fixed-amount milestone and
+    fixed-amount tier schedules, bare references to royalty or commission, cost/reimbursement-based
+    payments, spend caps, and a percentage applied to a fixed amount are all excluded
+  checker_sketch: 'Applicability: the contract contains at least one sentence matching a payment
+    pattern (royalty | commission | revenue | profit | margin | fee) together with either
+    a percentage token or a currency amount — instance only. Compliance: every predicted Revenue/Profit
+    Sharing span either (a) contains a percentage token adjacent to a revenue/profit/sales/margin
+    term, or (b) matches a per-unit pattern (per unit | for each ... sold | based on the number
+    of), or (c) matches an equity pattern (shares | warrant | equity interest); a span containing
+    only a fixed currency amount with no (a)/(b)/(c) signal fails. Honest limitation: this
+    is a lexical proxy for an arithmetic property. It will misjudge the Handbook''s own hardest
+    negative — a percentage applied to a fixed amount — because that string contains a percentage
+    token. Expect a small, one-directional false-pass rate; measure it on a hand-scored sample
+    of ~20 spans before this is locked, and if it exceeds ~15% either narrow the rule to the
+    percentage-of-revenue case or move this principle to hand labelling.'
+  review:
+    decision: accept
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: clear principle from the guidelines
+- id: g06
+  statement: A clause must show on its own that a revenue or profit share exists to be responsive;
+    machinery that merely administers one — reporting obligations, report timing, objection
+    and audit process, dispute resolution — is not Revenue/Profit Sharing.
+  trigger_guidance: Consider when a candidate sentence is about a revenue share but describes
+    process rather than entitlement, or when the sentence only makes sense given a percentage
+    stated elsewhere.
+  type: constraint
+  scope:
+  - Revenue/Profit Sharing
+  provenance: atticus_guidelines
+  proposer:
+    batch_id: null
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: null
+    source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+  - Handbook, Revenue/Profit Sharing, IS-NOT list (p.89) — standalone-basis rule, with administration,
+    dispute resolution, reporting obligations, report preparation time and audit/objection
+    process listed as non-responsive because they recur in contracts with no revenue share
+  - 'Handbook, Revenue/Profit Sharing, IS list (p.88) — the converse: a clause stating that
+    one party''s compensation is based on the other''s revenue IS responsive even when the
+    percentage lives in a different clause'
+  - CUAD Datasheet III-B — the dataset labels only clauses that are responsive on a standalone
+    basis (CC BY 4.0, quotable)
+  checker_sketch: 'Applicability: the contract contains a sentence matching an administration
+    pattern (report | statement of account | within N days of the end of each | audit | object
+    | dispute) in the same sentence as a revenue/profit/royalty term — instance only. Compliance:
+    no predicted Revenue/Profit Sharing span is such a sentence when it lacks the g05 entitlement
+    signals (percentage-of-revenue, per-unit, equity). Programmatic but a proxy; it shares
+    g05''s lexical weakness and the two should be audited on the same hand-scored sample.
+    Distinct from g05 in the error it catches: g05 catches wrong-arithmetic, g06 catches right-topic-wrong-function,
+    and the H4 confusion matrix can tell them apart only if they are separate ids.'
+  review:
+    decision: accept
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: Again I don't have the domain expertise to disprove this. Accepted.
+- id: g07
+  statement: Exactly one Agreement Date is extracted per contract and the span is the date
+    text alone, excluding the surrounding execution wording and excluding any date appearing
+    in a header, a footer, or a recital.
+  trigger_guidance: Consider once the introductory paragraph has been read; the competing
+    candidates are the recital dates, the running-header date, and the two signature-page
+    dates.
+  type: constraint
+  scope:
+  - Agreement Date
+  provenance: atticus_guidelines
+  proposer:
+    batch_id: null
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: null
+    source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+  - Handbook, Agreement Date, IS list (p.7) — search order is introductory paragraph, then
+    cover page, then the later of the signature-page dates, with an explicit instruction not
+    to label both signature dates
+  - Handbook, Agreement Date, IS-NOT list (p.8) — the execution wording (dated / as of / entered
+    into) is excluded from the span, as are dates in headers, footers, recitals and preliminary
+    statements
+  checker_sketch: 'Applicability: the Agreement Date decision, whenever gold marks the category
+    present. Compliance, three conjunctive tests, all programmatic: (1) the predicted span
+    list has length 1; (2) the span text does not contain dated / as of / entered into / made
+    this; (3) the span''s located character offset does not fall inside a line matching a
+    page-furniture pattern (page number, confidential-treatment legend, SEC exhibit header)
+    nor inside a sentence beginning with WHEREAS or within a recitals block. Test (3) leans
+    on the same furniture patterns D-15 already forces us to characterise, so it costs nothing
+    extra. Note the interaction with D-15: gold spans that were split around embedded furniture
+    may make test (3) fire on a span that matches gold, so report test (3) separately from
+    (1) and (2) rather than collapsing to one boolean.'
+  review:
+    decision: accept
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: Concur, this one is clear from the guidelines
+- id: g08
+  statement: A partially redacted or blank agreement date is still an Agreement Date extraction,
+    recorded with the unknown components bracketed rather than ruled absent; absence is claimed
+    only when no agreement date appears in the introductory paragraph, on the cover page,
+    or on the signature page.
+  trigger_guidance: Consider when the date position exists but the value is missing — blanks,
+    underscores, asterisks, an empty day slot, or a date phrase interrupted by a redaction
+    marker.
+  type: absence
+  scope:
+  - Agreement Date
+  provenance: atticus_guidelines
+  proposer:
+    batch_id: null
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: null
+    source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+  - Handbook, Agreement Date, IS list (p.7) — a redacted date takes the bracketed answer format
+    rather than no answer, which presupposes the span is still labelled
+  - CUAD Datasheet II-F — redactions appear as asterisks, underscores or blanks and the answers
+    reflect them, with a worked example turning a blank day into a bracketed component (CC
+    BY 4.0, quotable)
+  checker_sketch: 'Applicability: the contract''s first ~3000 characters, or its signature
+    block, contain a date-shaped construction with a missing component — regexes for `this
+    ___ day of`, `\b(19|20)\d\d\b` adjacent to `_{2,}` or `\*{2,}` or `\[\s*\]`, and a bare
+    comma or blank sitting where a date should follow an execution verb. Instance-only, no
+    gold needed. Compliance: the Agreement Date decision is an Extraction rather than an AbsenceClaim.
+    Trivially computable from the decision row. LOUD FLAG FOR TYLER: this principle may disagree
+    with gold. The study plan assumes CUAD marks such contracts gold-absent for Agreement
+    Date (the "signed on , in Hong Kong" case). The Handbook prescribes the opposite. If both
+    are true, then following the documented rule costs answer accuracy, and compliance and
+    correctness point in opposite directions on exactly these instances. That is a real and
+    interesting measurement — it is the documentation-versus-practice divergence the two-arm
+    design exists to find — but it must be a decision Tyler makes knowingly, not a silent
+    scoring conflict. Check the sign of the disagreement on dev before locking.'
+  review:
+    decision: accept
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: Clear from guidelines
+- id: d01
+  statement: 'Extract the minimal expression that answers the target question, clipped out
+    of the sentence that carries it, rather than the whole containing sentence.
+
+    '
+  trigger_guidance: 'Consider whenever the answer to a target is a short self-contained value
+    — a date, a jurisdiction, a named amount — embedded in a longer recital or preamble sentence.
+
+    '
+  type: preference
+  scope:
+  - Agreement Date
+  provenance: data_mined
+  proposer:
+    batch_id: cm-001
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: proposer_v1
+    source_document: null
+  evidence:
+  - pair-0001
+  - pair-0002
+  - pair-0003
+  checker_sketch: 'Applicable when gold has a non-empty Extraction for the target and every
+    gold span is (a) under 40 characters, (b) fully matched by a date regex such as \d{1,2}(st|nd|rd|th)?\s+day\s+of\s+\w+,?\s+\d{4}
+    or \w+\s+\d{1,2},\s+\d{4}, and (c) a proper substring of the sentence containing it, where
+    sentences are cut on /[.;]\s|\n\n/. Compliance: the emitted span set matches gold under
+    the same length and regex tests rather than reproducing the enclosing sentence.
+
+    '
+  review:
+    decision: defer
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: This is in direct contradiction to g01 -- how do we consolidate these two?
+  defect_argument: 'Three gold spans, three different contracts, lengths 22 / 19 / 21 characters,
+    all clipped identically out of an execution recital. A single over-tight span would be
+    a plausible annotation slip; three independent contracts converging on the same boundary
+    is a convention. The Revenue/Profit Sharing side of these three pairs is mining noise
+    (all three share one promiscuous span whose only common material is "day of"); this principle
+    is read off the A sides only.
+
+    '
+  n_supporting_pairs: 3
+- id: d02
+  statement: 'A passage that independently satisfies more than one target''s definition is
+    extracted under each of them; targets are not mutually exclusive.
+
+    '
+  trigger_guidance: 'Consider whenever a single clause has already been assigned to one target
+    and would also answer a second target''s question on its own terms — resist the pull to
+    spend the passage once.
+
+    '
+  type: constraint
+  scope: []
+  provenance: data_mined
+  proposer:
+    batch_id: cm-002
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: proposer_v1
+    source_document: null
+  evidence:
+  - pair-0004
+  - pair-0005
+  checker_sketch: 'Over gold_annotations for one contract, build the interval set per category
+    and test for character-range overlap across category pairs; applicable to a decision when
+    its category''s gold spans overlap the gold spans of at least one other in-scope category.
+    Compliance: the model''s output assigns the overlapping passage to both categories rather
+    than to one, with the other receiving an AbsenceClaim or an unrelated span.
+
+    '
+  review:
+    decision: accept
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: Aligned perfectly with g03, concur
+  defect_argument: 'pair-0004 and pair-0005 present the same two spans in both directions,
+    so each span carries both gold labels inside its own contract: IHSI [3736:4373] is Minimum
+    Commitment in 0004-A and Revenue/Profit Sharing in 0005-B, and SIBANNAC [3753:4384] mirrors
+    it. The symmetry is internal to each document, so this is not the twin-document inconsistency
+    defect — it is the deliberate multi-label annotation that mining_config.yaml excludes
+    from same-contract mining by design. Independently corroborated in batch cm-003, where
+    six pairs show one contract carrying both a floor and a ceiling extraction; the per-batch
+    evidence rule prevents citing them here.
+
+    '
+  n_supporting_pairs: 2
+- id: d03
+  statement: 'An obligation stated purely as a proportion of an outcome answers the sharing
+    target, while the same obligation answers the minimum-commitment target once it also guarantees
+    a fixed floor.
+
+    '
+  trigger_guidance: 'Consider on any royalty, fee or revenue-share clause: check whether it
+    names a guaranteed amount or a "minimum"/"at least" qualifier alongside the percentage.
+
+    '
+  type: disambiguation
+  scope:
+  - Minimum Commitment
+  - Revenue/Profit Sharing
+  provenance: data_mined
+  proposer:
+    batch_id: cm-002
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: proposer_v1
+    source_document: null
+  evidence:
+  - pair-0009
+  - pair-0010
+  - pair-0012
+  - pair-0013
+  checker_sketch: 'For each gold span, compute two booleans over the span text: HAS_SHARE
+    = match of /\d+(\.\d+)?\s*%|percent/ near /revenue|sales|profit|royalt/, and HAS_FLOOR
+    = match of /\bminimum\b|\bat least\b|\bno less than\b|\bguarantee/ or a currency literal
+    /\$\s?[\d,]+/ in the same span. Applicable to a Minimum Commitment or Revenue/Profit Sharing
+    decision when the contract contains at least one span with HAS_SHARE true. Compliance:
+    spans with HAS_FLOOR true appear in the Minimum Commitment decision; spans with HAS_SHARE
+    true and HAS_FLOOR false appear in the Revenue/Profit Sharing decision.
+
+    '
+  review:
+    decision: accept
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: Not sure how to approach this one, I don't have the domain experience. because
+      it's derived, I lean towards accepting unless it's in contradiction with the guidelines.
+  defect_argument: 'Four pairs across three contracts point the same way, and two of them
+    (pair-0012 Pacificap, pair-0010 / pair-0013 Virtuoso) are same-contract near-verbatim
+    contrasts where the annotator made both calls on adjacent sentences — "agrees to share
+    a minimum of $50,000.00 annually" against "agrees to share 10% of the net revenue", and
+    "minimum annual royalties" against "a running royalty ... based upon NET SALES". A mislabel
+    does not reproduce itself in that pattern in three unrelated documents. Excluded deliberately:
+    pair-0006, where the same amount is annotated under both categories in two places in one
+    contract, and pair-0007, where near-identical guarantee language receives two labels —
+    those are the weak side of this boundary and support nothing.
+
+    '
+  n_supporting_pairs: 4
+- id: d04
+  statement: 'A guaranteed floor qualifies for the minimum-commitment target whichever party
+    it binds, and whatever it is a floor on — supply, payment or access — not only a buyer''s
+    purchase obligation.
+
+    '
+  trigger_guidance: 'Consider whenever a clause states a guaranteed minimum quantity or amount
+    but the obligated party is the supplier rather than the buyer, or the thing guaranteed
+    is not a purchase; the target''s one-line definition reads narrower than the convention.
+
+    '
+  type: constraint
+  scope:
+  - Minimum Commitment
+  provenance: data_mined
+  proposer:
+    batch_id: cm-002
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: proposer_v1
+    source_document: null
+  evidence:
+  - pair-0008
+  - pair-0011
+  - pair-0012
+  checker_sketch: 'Applicable to a Minimum Commitment decision when the contract contains
+    a sentence matching /\b(minimum|at least|no less than)\b/ within 200 characters of a quantity
+    token (/\d|\*{3,}|\[\*+\]/) AND the subject of the obligation is not the purchasing party
+    — approximated by testing whether the sentence matches /\b(supply|deliver|provide|share|allocate|
+    make available)\b/ rather than /\b(buy|purchase|order)\b/. Compliance: the decision is
+    an Extraction covering that sentence rather than an AbsenceClaim.
+
+    '
+  review:
+    decision: accept
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: again accepting -- I don't see a reason not to, but I don't have the domain
+      expertise I'd need.
+  defect_argument: 'Three spans across two contracts label a floor that runs the wrong way
+    for the literal definition: Excite@Home "will supply to e-centives a minimum of *****
+    records" (pair-0008), the same construction for General Program Members (pair-0011), and
+    a payer-side "agrees to share a minimum of $50,000.00 annually" (pair-0012). Corroborated
+    outside this batch by pair-0022, where "New Shippers will have access to a minimum of
+    ten percent (10%) of the Available Capacity" is Minimum Commitment — an access right,
+    not a purchase at all. This is the highest-leverage candidate in the set because a reader
+    applying the printed definition literally would return an AbsenceClaim on every one of
+    these contracts.
+
+    '
+  n_supporting_pairs: 3
+- id: d05
+  statement: 'When two targets differ only in the direction of a threshold, assign a clause
+    by which side of the threshold it binds on — a lower bound the obligated party must meet,
+    or an upper bound above which supply is capped, conditioned or repriced.
+
+    '
+  trigger_guidance: 'Consider on any clause naming a quantity threshold, especially where
+    the same quantity, forecast or capacity is bounded in two places in one contract.
+
+    '
+  type: disambiguation
+  scope:
+  - Minimum Commitment
+  - Volume Restriction
+  provenance: data_mined
+  proposer:
+    batch_id: cm-003
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: proposer_v1
+    source_document: null
+  evidence:
+  - pair-0014
+  - pair-0015
+  - pair-0016
+  - pair-0018
+  - pair-0019
+  - pair-0020
+  - pair-0022
+  - pair-0023
+  checker_sketch: 'Applicable to a Minimum Commitment or Volume Restriction decision when
+    the contract contains a sentence with a quantity token (/\d|\*{3,}|\[\*+\]/) and a bound
+    cue. LOWER cues: /\bminimum\b|\bat least\b|\bno less than\b| \bwithin\b.{0,40}%/. UPPER
+    cues: /\bmaximum\b|\bup to\b|\bin excess of\b| \bexceed(ing|s)?\b|\bnot required to.{0,40}more
+    than\b|\bno more than\b/. Compliance: spans carrying LOWER cues land in the Minimum Commitment
+    decision and spans carrying UPPER cues land in the Volume Restriction decision; a span
+    whose cue class contradicts the decision it appears in is a violation. Strengthen by also
+    requiring, when both cue classes fire in one contract, that both decisions be Extractions.
+
+    '
+  review:
+    decision: accept
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: Again no domain expertise so accepting based on having evidence
+  defect_argument: 'Eight pairs across four contracts, six of them same-contract contrasts,
+    and four of those near-verbatim: an identical content list headed "A minimum of:" against
+    "Up to:" (pair-0014, pair-0016, pair-0018), and adjacent definitions of "Minimum Quantity"
+    and "Maximum Quantity" differing by one word (pair-0015). The mechanism pairs (pair-0019
+    Vericel, pair-0020 MediWound) and the capacity-allocation pairs (pair-0022, pair-0023
+    Range Resources) reproduce the same split on clauses that share no vocabulary with the
+    list pairs. This is the most strongly evidenced convention in the pilot and the only one
+    that survives on within-contract minimal pairs alone. Excluded: pair-0017 and pair-0021,
+    where three adjacent sentences of one DTMF performance specification are split across
+    the two categories on the presence of the token "minimum" in a parenthetical — neither
+    span matches either definition and the labels look keyword-driven.
+
+    '
+  n_supporting_pairs: 8
+- id: d06
+  statement: 'Claim absence when the document does not state the specific fact the target
+    asks for, even where it states a neighbouring fact that plausibly stands in for it.
+
+    '
+  trigger_guidance: 'Consider whenever the document supplies something adjacent to the requested
+    value — an effective date where an execution date is asked for, a venue where a governing
+    law is asked for — and the temptation is to answer with the near miss rather than claim
+    absence.
+
+    '
+  type: absence
+  scope:
+  - Agreement Date
+  provenance: data_mined
+  proposer:
+    batch_id: cm-005
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: proposer_v1
+    source_document: null
+  evidence:
+  - pair-0026
+  - pair-0027
+  checker_sketch: 'Applicable to an Agreement Date decision when gold is_impossible is true
+    for that category AND the contract''s first 2,000 characters contain a date literal (/\w+\s+\d{1,2},\s+\d{4}|\d{1,2}\/\d{1,2}\/\d{2,4}/)
+    that is NOT preceded within 60 characters by an execution cue (/\bmade\b|\bentered into\b|\bexecuted\b|\bdated\b|\bday
+    of\b/) — i.e. a date is present but not as a signing date. Compliance: the decision is
+    an AbsenceClaim rather than an Extraction of the near-miss date.
+
+    '
+  review:
+    decision: defer
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: genuinely unsure how to approach this. Seems we have some weak evidence for
+      this one, but since I can't see the actual pairs it's tough to say for sure.
+  defect_argument: 'WEAKLY SUPPORTED — flagged for Tyler rather than asserted. pair-0026 is
+    the real evidence: the Iovance strategic alliance agreement prints "Effective Date: April
+    17, 2017" in its opening line and defines itself as entered into "as of the date set forth
+    above", yet Agreement Date is gold-absent for that whole contract, while the structurally
+    identical Adaptimmune preamble yields a "23rd day of September, 2016" extraction. pair-0027
+    adds only the weaker half (a cover page with no date at all, also gold-absent). Effective
+    support is n=1 for the informative claim. It is proposed because absence rulings are the
+    decision type this study cares most about and Agreement Date produced no cross-label pairs
+    at all, so this is the only absence candidate its evidence offers; rejecting it is a legitimate
+    outcome and would itself record that the mining recovered no Agreement Date convention.
+    Deliberately excluded: pair-0025, where the identical blank signing frame is annotated
+    in Leju and gold-absent in ChinaRealEstate — a near-duplicate-document contradiction (D-15),
+    not a convention.
+
+    '
+  n_supporting_pairs: 2
+- id: d07
+  statement: 'Document furniture interrupting a passage is carried along inside the extracted
+    span, but furniture standing on its own is never extracted.
+
+    '
+  trigger_guidance: 'Consider whenever a page footer, redaction legend, filing-provenance
+    line or page number falls in the middle of the passage being extracted, and the tidy instinct
+    is to drop it or to split the passage in two.
+
+    '
+  type: procedure
+  scope: []
+  provenance: data_mined
+  proposer:
+    batch_id: cm-007
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: proposer_v1
+    source_document: null
+  evidence:
+  - pair-0033
+  checker_sketch: 'Define a furniture regex F = /omitted portions of this exhibit|request
+    for confidential treatment|^\s*Source:\s.+,\s\d{1,2}\/\d{1,2}\/\d{4}|^\s*Page \d+/m. Applicable
+    to a decision when at least one gold span contains a match of F strictly inside it (match
+    start > span start and match end < span end). Compliance: the emitted span reproduces
+    the furniture in place; violations are (a) emitting the passage with the furniture stripped,
+    or (b) emitting two spans split at the furniture boundary. A second, complementary check:
+    no emitted span is wholly matched by F.
+
+    '
+  review:
+    decision: defer
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: Need more support on this one, either from guidelines or evidence.
+  defect_argument: 'ONE PAIR, and stated as such. It qualifies under the minimal-pair exception
+    in a stronger form than a within-contract contrast: the gold-absent B text is a VERBATIM
+    SUBSTRING of the A gold span. GluMobile Content License Agreement2 [5349:6056] swallows
+    an SEC confidential-treatment legend and a "Source: GLU MOBILE INC, S-1/A, 3/19/2007"
+    line mid-clause and keeps them inside the Minimum Commitment span; the same characters
+    standing alone in sibling exhibit 3 are unannotated. The identical characters are inside
+    a span in one place and outside every span in another, which is the tightest contrast
+    the present-absent mining can produce. Flagged for Tyler as the record most in need of
+    a second confirming instance before it is locked — it is cheap to test by grepping the
+    manifest for gold spans containing F internally.
+
+    '
+  n_supporting_pairs: 1
+- id: d08
+  statement: 'An obligation carrying no quantified threshold does not satisfy a target that
+    asks for one, however emphatic the commitment language.
+
+    '
+  trigger_guidance: 'Consider whenever a clause reads as a strong undertaking — "commits to",
+    "shall use commercially reasonable efforts", "agrees that" — but names no number, quantity
+    or rate.
+
+    '
+  type: absence
+  scope:
+  - Minimum Commitment
+  provenance: data_mined
+  proposer:
+    batch_id: cm-007
+    harness: claude-code
+    invocation: subagent
+    model: claude-opus-5
+    prompt_version: proposer_v1
+    source_document: null
+  evidence:
+  - pair-0036
+  - pair-0037
+  - pair-0038
+  checker_sketch: 'Applicable to a Minimum Commitment decision when gold is_impossible is
+    true for that category AND the contract contains at least one sentence matching an undertaking
+    cue — the alternation of "commits to", "agrees that", "agrees to", "undertakes", and "shall
+    use" followed within 40 characters by "efforts" — with NO quantity token (/\d|\*{3,}|\[\*+\]/)
+    in the same sentence. Compliance: the decision is an AbsenceClaim rather than an Extraction
+    of the unquantified undertaking.
+
+    '
+  review:
+    decision: defer
+    reviewer: tyler
+    date: '2026-08-15'
+    rationale: I have no idea what this means. Really struggling with questions requiring
+      domain expertise.
+  defect_argument: 'Read off the ABSENT sides, which is what makes it safe here. is_impossible
+    is a contract-level gold flag rather than a span judgement, so the three B contracts —
+    Xybernaut (a termination right), MacroGenics ("shall use Commercially Reasonable Efforts
+    to Commercialize"), Mrs Fields (a use-restriction covenant) — are three independent contract-level
+    rulings that unquantified undertakings do not make a minimum commitment. The A sides of
+    these same pairs are junk (colon-terminated list heads of 15, 35 and 144 characters, neighbourhood-labelled)
+    and are NOT used as positive evidence; the principle would be unsupported if it depended
+    on them. Violable in an obvious way: a model reading "commits to" or "Commercially Reasonable
+    Efforts" as a commitment emits a schema-valid Extraction where gold says absent.
+
+    '
+  n_supporting_pairs: 3

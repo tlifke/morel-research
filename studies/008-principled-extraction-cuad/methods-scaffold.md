@@ -169,6 +169,85 @@ This is the section a reader would reuse in another domain. Give it room.
   the surviving set is a joint artifact. Resist both overclaiming ("automated
   principle discovery") and underclaiming ("hand-authored").
 
+### §4a The curation gate is itself a measured object — **write this up**
+
+The derivation method was **iterated across rounds, and the iteration is part
+of the result.** Report round 1 as run, including what it exposed, rather than
+presenting only the final procedure. A methods section that shows the gate
+being tested is stronger than one that asserts a gate existed.
+
+**Round 1, measured (2026-08-15).** 16 candidates (8 guideline-derived,
+8 data-mined), one curator, five pilot categories.
+
+- **11 accept, 5 defer, 0 reject, 0 edit.**
+- By source: guidelines **7/8 accepted**, data-mined **4/8 accepted**.
+- **[human]** The zero rejects and zero edits is the headline: the gate never
+  exercised its negative power at all.
+
+**The mechanism, in the curator's own rationales.** Accept-by-default under
+uncertainty — *"I don't have the domain expertise to disprove this. Accepted."*
+Absence of disconfirming knowledge was being read as support.
+
+**But the gate was not uniformly non-discriminating, and where it worked is the
+design lesson.** Every confident decision was a **cross-source comparison**:
+`d01` deferred as directly contradicting `g01`; `d02` accepted as aligning with
+`g03`. Both a contradiction and a corroboration were detected **without domain
+expertise**, because a relation between two sources is checkable where the
+truth of a proposition is not. Every low-confidence decision was single-source.
+
+**And the defers were correct on the merits.** `d07` was deferred asking for
+more support — independent verification later found its main clause refuted
+(204 counterexamples to 25). `d06` was deferred — the proposer had already
+conceded it sat below its own evidence bar. Two genuinely weak candidates were
+caught by a curator with no contract-law background.
+
+So the finding is not "the human gate is worthless" but a sharper claim worth
+stating precisely: **the gate has discriminating power over *structural*
+properties — contradiction, corroboration, evidence strength, comprehensibility
+— and close to none over *substantive* ones.** `d08` drew *"I have no idea what
+this means,"* which is a comprehensibility failure of the principle rather than
+of the curator, and a legitimate rejection criterion in its own right.
+
+**The expertise limitation, stated plainly.** The protocol assumes an expert
+curator (D-9 describes curation as expert-derived or expert-curated in the
+general case). This study substituted a **non-expert curator**, and the
+mitigations below are the designed response to that constraint rather than a
+post-hoc excuse. **[human]** Say so directly; it is the most contestable part
+of the method and pre-empting it is stronger than defending it later.
+
+**Round 2 design changes, each traceable to a round-1 observation:**
+
+1. **Checkers are implemented and run against gold *before* curation, not
+   after.** Each principle arrives with an empirical footprint — how often it
+   fires, and whether violations correlate with wrong answers. This converts
+   "is this a good principle?" (needs expertise) into "does this checker
+   discriminate?" (needs none). A principle firing on 0% or 100% of decisions
+   is useless however authoritative its source.
+2. **Cross-source validation is structural.** Derive in one source, check for
+   corroboration in the other; outcomes are *corroborated / contradicted /
+   silent*. Directly generalises the only mechanism that produced curator
+   confidence in round 1. Note "silent" will be common and is not evidence
+   against: mining is blind to positional categories, and the guidelines are
+   silent on two-thirds of the Savelka trio.
+3. **Adversarial critique.** A second model argues *against* each principle,
+   citing gold; the curator adjudicates a disagreement rather than judging a
+   proposition in a vacuum — the same lower expertise bar that made the
+   cross-source calls easy.
+4. **Calibration controls.** Deliberately bad principles — plausible-sounding,
+   contradicted by gold — are seeded into the queue. The curator knows controls
+   exist but not which they are. **[human]** This turns rubber-stamping from an
+   intuition into a measured rate, and makes "the curation gate discriminates"
+   a claim with evidence rather than an assumption. Report the catch rate.
+5. **Instrument fixes.** Evidence pair ids were opaque in the review UI, so
+   single-source judgement was harder than it needed to be; the underlying
+   spans are now shown inline. A distinct "I don't understand this" decision is
+   separated from defer, since they are diagnostically different.
+
+**[human]** The five deferred records are the highest-information output of
+round 1 and should not be presented as a backlog that was cleared. In
+particular the `d01`-vs-`g01` contradiction is a disagreement *between our two
+derivation methods* and belongs in the results, not in a tidy-up.
+
 ## §5 Applicability ground truth
 
 - **[locked]** `gold_applicability` is held **outside** the prompt: a checker
