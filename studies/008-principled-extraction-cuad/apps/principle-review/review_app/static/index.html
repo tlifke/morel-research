@@ -164,6 +164,51 @@ table.tbl td{padding:3px 8px 3px 0; border-bottom:1px solid var(--line); vertica
 .fp-more{font-size:12px; border:1px solid var(--line); border-radius:3px; margin-bottom:4px; background:var(--bg)}
 .fp-more>summary{cursor:pointer; padding:3px 8px; color:var(--dim)}
 .fp-more>.body{max-height:220px; overflow:auto; padding:4px 10px 8px; font-size:11.5px; color:var(--dim)}
+.xs,.cr{border:1px solid var(--line); background:var(--panel); border-radius:3px;
+  padding:9px 12px 11px; margin:12px 0 2px}
+.xs{border-left:3px solid var(--info)}
+.cr{border-left:3px solid var(--alt)}
+.xs.st-corroborated{border-left-color:var(--ok)}
+.xs.st-contradicted{border-left-color:var(--bad)}
+.xs.st-silent{border-left-color:var(--neutral)}
+.xs.empty,.cr.empty{border-left-color:var(--bad)}
+.blk{margin-top:10px}
+.blk h4{margin:0 0 4px; font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--faint); font-weight:700}
+.blk .t{font-size:12.5px; line-height:1.55; white-space:pre-wrap; color:var(--fg)}
+.blk.claim .t{background:var(--panel2); border:1px solid var(--line); border-left:3px solid var(--accent);
+  border-radius:3px; padding:7px 9px}
+.blk.quant .t{background:var(--panel2); border:1px solid var(--line); border-left:3px solid var(--info);
+  border-radius:3px; padding:7px 9px; font-variant-numeric:tabular-nums}
+.blk.silence .t{background:var(--panel2); border:1px solid var(--neutral); border-left:3px solid var(--neutral);
+  border-radius:3px; padding:7px 9px}
+.blk .lead{font-size:11.5px; color:var(--dim); line-height:1.5; margin-bottom:5px}
+.cr-cols{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px;
+  margin-top:10px; align-items:start}
+@media (max-width:1180px){.cr-cols{grid-template-columns:minmax(0,1fr)}}
+.col{background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:8px 10px;
+  min-width:0}
+.col.att{border-left:3px solid var(--bad)}
+.col.def{border-left:3px solid var(--ok)}
+.col h4{margin:0 0 3px; font-size:11.5px; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--fg); font-weight:700}
+.col .lead{font-size:11px; color:var(--faint); line-height:1.5; margin-bottom:8px}
+.obj{border:1px solid var(--line); border-left:3px solid var(--neutral); border-radius:3px;
+  background:var(--panel); padding:6px 9px 8px; margin-bottom:8px}
+.obj.c-strong{border-left-color:var(--bad); background:#241a1a}
+.obj.c-moderate{border-left-color:var(--warn)}
+.obj.c-weak{border-left-color:var(--neutral); opacity:.78}
+.obj.c-could_not_break{border-left-color:var(--ok)}
+.obj-head{display:flex; flex-wrap:wrap; gap:5px 8px; align-items:center}
+.obj-head .axis{color:var(--fg); font-weight:700; font-size:12px}
+.obj .claim{font-size:12.5px; line-height:1.5; margin-top:5px; white-space:pre-wrap}
+.obj .q{font-size:11.5px; color:var(--dim); margin-top:6px; line-height:1.5;
+  border-left:2px solid var(--line); padding-left:8px; white-space:pre-wrap;
+  font-variant-numeric:tabular-nums}
+.obj .cx{margin-top:6px}
+.obj .cx h5{margin:0 0 3px; font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--faint); font-weight:700}
+.def-text{font-size:13px; line-height:1.6; white-space:pre-wrap; color:var(--fg)}
 .card .body{font-size:13px; line-height:1.5; white-space:pre-wrap}
 .card .hint{color:var(--faint); font-size:11px; margin-top:5px}
 .chips{display:flex; flex-wrap:wrap; gap:5px}
@@ -547,8 +592,162 @@ function renderFootprint(f,val,r){
     "</div>";
 }
 
+function sidecarDoc(name){
+  const doc=sidecar(name);
+  return {header:(doc&&doc.header&&typeof doc.header==="object")?doc.header:{},
+    records:(doc&&doc.records&&typeof doc.records==="object")?doc.records:{}};
+}
+
+function helpFor(f,id){
+  return {btn:f.help?`<button class="helpbtn" data-help="${id}">what is this?</button>`:"",
+    box:f.help?`<div class="helptext" id="${id}">${esc(f.help)}</div>`:""};
+}
+
+function missingBlock(cls,title,rid,pathKey,flag,help){
+  const path=S.state.sidecar_paths?S.state.sidecar_paths[pathKey]:null;
+  const msg="nothing recorded for <b>"+esc(rid)+"</b>. Every other record in this round carries "+
+    "this block, so treat it as a gap in the evidence, not as a neutral or negative finding. "+
+    (path?"file searched: "+esc(path):"no file loaded ("+esc(flag)+")");
+  return `<div class="${cls} empty"><div class="fp-head"><h3>${esc(title)}</h3>`+
+    `<span class="pill t-bad">no entry</span><span style="flex:1"></span>${help.btn}</div>`+
+    `${help.box}<div class="fp-note">${msg}</div></div>`;
+}
+
+function blk(label,text,cls,lead){
+  if(text==null||String(text).trim()==="")return "";
+  return `<div class="blk ${cls||""}"><h4>${esc(label)}</h4>`+
+    (lead?`<div class="lead">${esc(lead)}</div>`:"")+
+    `<div class="t">${esc(String(text).trim())}</div></div>`;
+}
+
+function extraDetails(obj,known){
+  const extra=Object.keys(obj).filter(k=>!known.has(k));
+  if(!extra.length)return "";
+  return `<div class="blk"><h4>further fields</h4>`+
+    extra.map(k=>`<details class="fp-more"><summary>${esc(k)}</summary><div class="body">${
+      esc(JSON.stringify(obj[k],null,1))}</div></details>`).join("")+"</div>";
+}
+
+const XS_STATUS={
+  corroborated:{tone:"t-ok",gloss:"the other source independently agrees with this claim"},
+  contradicted:{tone:"t-bad",gloss:"the other source states something different"},
+  silent:{tone:"t-neutral",
+    gloss:"the other source says nothing about this claim — neutral, not disagreement"}
+};
+const XS_DIRECTION={
+  guidelines_to_data:"guidelines → data · a Handbook-derived claim checked against CUAD gold",
+  data_to_guidelines:"data → guidelines · a mined claim checked against the Atticus Handbook"
+};
+
+function renderCrossSource(f,val,r){
+  const idxName=(f.config&&f.config.index)||"cross_source";
+  const doc=sidecarDoc(idxName);
+  const xs=(val&&typeof val==="object")?val:doc.records[r.record_id];
+  const help=helpFor(f,"help-"+idxName);
+  if(!xs||typeof xs!=="object")
+    return missingBlock("xs","cross-source validation",r.record_id,idxName,"--cross-source",help);
+  const status=String(xs.status||"unstated").toLowerCase();
+  const spec=XS_STATUS[status]||{tone:"t-neutral",gloss:""};
+  const dir=xs.direction?String(xs.direction):"";
+  const dirText=XS_DIRECTION[dir]||dir.replace(/_to_/," → ").replace(/_/g," ");
+  const silent=status==="silent";
+  const head=`<div class="fp-head"><h3>cross-source validation</h3>
+    <span class="pill ${spec.tone}" title="${esc(spec.gloss)}">${esc(status)}</span>
+    ${xs.confidence?`<span class="pill t-neutral">confidence ${esc(xs.confidence)}</span>`:""}
+    <span class="prov">${esc(dirText)}</span><span style="flex:1"></span>${help.btn}</div>${help.box}`;
+  const verdict=`<div class="fp-note">${esc(spec.gloss||"status: "+status)}.${
+    silent?" A silent record is neither supported nor undermined by this check — it is exactly"+
+      " as unvalidated as it was before, and the reason is below.":""}</div>`;
+  const silence=silent
+    ? blk("why the other source is silent",
+        xs.silence_reason||"no reason recorded — the silence is unexplained, which is itself"+
+        " worth weighing.","silence",
+        "Silence is usually structural: the second source has no section that could speak to"+
+        " this claim. It is not evidence against the principle.")
+    : blk("silence reason",xs.silence_reason,"silence");
+  const known=new Set(["direction","status","claim_tested","evidence","quantification",
+    "confidence","note","silence_reason"]);
+  return `<div class="xs st-${esc(status)}">`+head+verdict+silence+
+    blk("claim tested",xs.claim_tested,"claim")+
+    blk("evidence",xs.evidence)+
+    blk("quantification",xs.quantification,"quant")+
+    blk("note",xs.note)+
+    extraDetails(xs,known)+"</div>";
+}
+
+const CRIT_CONF={
+  strong:{tone:"t-bad",gloss:"the objection lands; do not ship as written"},
+  moderate:{tone:"t-warn",gloss:"the objection lands but is survivable with a rewrite"},
+  weak:{tone:"t-neutral",gloss:"the objection is real but small"},
+  could_not_break:{tone:"t-ok",gloss:"the critic attacked it and failed"}
+};
+const CRIT_REC={drop:"t-bad",keep:"t-ok"};
+
+function confPill(value,vocab,prefix){
+  if(value==null||value==="")return "";
+  const key=String(value).toLowerCase();
+  const spec=CRIT_CONF[key]||{tone:"t-neutral",gloss:""};
+  const gloss=(vocab&&vocab[key])?String(vocab[key]).trim():spec.gloss;
+  return `<span class="pill ${spec.tone}" title="${esc(gloss)}">${esc(prefix||"")}${
+    esc(String(value).replace(/_/g," "))}</span>`;
+}
+
+function objectionCard(o,vocab){
+  const conf=String(o.confidence||"").toLowerCase();
+  const cx=Array.isArray(o.counterexamples)?o.counterexamples.filter(x=>x&&typeof x==="object"):[];
+  return `<div class="obj c-${esc(conf||"none")}">
+    <div class="obj-head"><span class="axis">${esc(String(o.axis||"objection").replace(/_/g," "))}</span>
+      <span style="flex:1"></span>${confPill(o.confidence,vocab,"")}</div>
+    <div class="claim">${esc(String(o.claim==null?"—":o.claim).trim())}</div>`+
+    (o.quantification!=null&&String(o.quantification).trim()!==""
+      ?`<div class="q">${esc(String(o.quantification).trim())}</div>`:"")+
+    (cx.length?`<div class="cx"><h5>counterexamples (${cx.length})</h5>`+
+      renderRows({config:{columns:[...new Set(cx.flatMap(x=>Object.keys(x)))]}},cx)+"</div>":"")+
+    "</div>";
+}
+
+function renderCritique(f,val,r){
+  const idxName=(f.config&&f.config.index)||"critiques";
+  const doc=sidecarDoc(idxName);
+  const c=(val&&typeof val==="object")?val:doc.records[r.record_id];
+  const help=helpFor(f,"help-"+idxName);
+  if(!c||typeof c!=="object")
+    return missingBlock("cr","adversarial critique",r.record_id,idxName,"--critiques",help);
+  const meta=doc.header.meta&&typeof doc.header.meta==="object"?doc.header.meta:doc.header;
+  const vocab=(meta&&meta.confidence_vocabulary&&typeof meta.confidence_vocabulary==="object")
+    ?meta.confidence_vocabulary:{};
+  const rec=c.recommendation?String(c.recommendation):"";
+  const recTone=CRIT_REC[rec]||"t-warn";
+  const objs=Array.isArray(c.objections)?c.objections.filter(o=>o&&typeof o==="object"):[];
+  const head=`<div class="fp-head"><h3>adversarial critique</h3>
+    ${confPill(c.confidence,vocab,"")}
+    ${rec?`<span class="pill ${recTone}">${esc(rec.replace(/_/g," "))}</span>`:""}
+    <span class="prov">${esc(meta&&meta.role?String(meta.role).trim():"")}</span>
+    <span style="flex:1"></span>${help.btn}</div>${help.box}`;
+  const attack=`<div class="col att"><h4>objections (${objs.length})</h4>
+    <div class="lead">Commissioned, not spontaneous: the critic was instructed to argue against
+    every candidate, so every record has some. Weigh the per-objection confidence, not the
+    count.</div>`+
+    (objs.length?objs.map(o=>objectionCard(o,vocab)).join("")
+      :'<div class="def-text" style="color:var(--dim)">no objection recorded.</div>')+"</div>";
+  const defence=`<div class="col def"><h4>strongest defence</h4>
+    <div class="lead">Written by the same critic, after the attack: the best case still standing
+    for this candidate. It carries the same weight as the column beside it.</div>`+
+    (c.strongest_defence&&String(c.strongest_defence).trim()
+      ?`<div class="def-text">${esc(String(c.strongest_defence).trim())}</div>`
+      :'<div class="def-text" style="color:var(--dim)">the critic recorded no defence for this '+
+       'candidate — that absence is itself a finding, not an omission by the tool.</div>')+"</div>";
+  const known=new Set(["verdict","confidence","recommendation","objections","strongest_defence"]);
+  return `<div class="cr">`+head+
+    blk("verdict",c.verdict,"claim")+
+    `<div class="cr-cols">${attack}${defence}</div>`+
+    extraDetails(c,known)+"</div>";
+}
+
 function renderValue(f,val,m,r){
   if(f.kind==="span")return renderSpan(f,m);
+  if(f.kind==="cross_source")return renderCrossSource(f,val,r);
+  if(f.kind==="critique")return renderCritique(f,val,r);
   if(f.kind==="footprint")return renderFootprint(f,val,r);
   if(f.kind==="evidence")return renderEvidence(f,val);
   if(f.kind==="rows")return renderRows(f,val);

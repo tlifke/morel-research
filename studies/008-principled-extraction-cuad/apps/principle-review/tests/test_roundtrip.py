@@ -11,9 +11,9 @@ APP_DIR = Path(__file__).resolve().parent.parent
 FIXTURE = APP_DIR / "fixtures" / "candidates.sample.yaml"
 PAIRS = APP_DIR / "fixtures" / "mined_pairs.jsonl"
 FOOTPRINT = APP_DIR / "fixtures" / "footprint.yaml"
-PILOT = (
-    APP_DIR.parent.parent / "principles" / "pilot" / "candidates_pilot.reviewed.yaml"
-)
+PILOT_DIR = APP_DIR.parent.parent / "principles" / "pilot"
+PILOT = PILOT_DIR / "candidates_pilot.reviewed.yaml"
+ROUND2 = PILOT_DIR / "candidates_round2.yaml"
 
 
 def make_service(
@@ -21,6 +21,8 @@ def make_service(
     source: Path | None = None,
     pairs: Path | None = None,
     footprint: Path | None = None,
+    cross_source: Path | None = None,
+    critiques: Path | None = None,
 ) -> Service:
     src = source or FIXTURE
     config = Config(
@@ -31,6 +33,8 @@ def make_service(
         export_path=tmp_path / "out.yaml",
         pairs_path=pairs,
         footprint_path=footprint,
+        cross_source_path=cross_source,
+        critiques_path=critiques,
     )
     service = Service(config)
     service.sync_from_disk()
@@ -297,8 +301,102 @@ def test_footprint_sidecar_shape(tmp_path):
 def test_sidecars_absent_degrade_to_empty(tmp_path):
     service = make_service(tmp_path)
     state = service.state()
-    assert state["sidecars"] == {"pairs": {}, "footprint": {}}
-    assert state["sidecar_paths"] == {"pairs": None, "footprint": None}
+    assert state["sidecars"] == {
+        "pairs": {},
+        "footprint": {},
+        "cross_source": {},
+        "critiques": {},
+    }
+    assert state["sidecar_paths"] == {
+        "pairs": None,
+        "footprint": None,
+        "cross_source": None,
+        "critiques": None,
+    }
+
+
+def test_keyed_sidecar_splits_header_from_records(tmp_path):
+    path = tmp_path / "critiques.yaml"
+    path.write_text(
+        "meta:\n  role: critic\np01:\n  verdict: ok\n  objections: []\n",
+        encoding="utf-8",
+    )
+    loaded = sidecars.load_keyed(path)
+    assert loaded["header"]["meta"]["role"] == "critic"
+    assert list(loaded["records"]) == ["p01"]
+    assert sidecars.load_keyed(tmp_path / "nope.yaml") == {}
+
+
+def test_keyed_sidecar_accepts_a_records_wrapper(tmp_path):
+    path = tmp_path / "cross_source_validation.yaml"
+    path.write_text(
+        "version: v2\nrecords:\n  p01:\n    status: silent\n",
+        encoding="utf-8",
+    )
+    loaded = sidecars.load_keyed(path)
+    assert loaded["header"] == {"version": "v2"}
+    assert loaded["records"]["p01"]["status"] == "silent"
+
+
+@pytest.mark.skipif(not ROUND2.exists(), reason="round-2 candidates not present")
+def test_round2_sidecars_are_discovered_from_the_round_subdir():
+    prefer = sidecars.round_subdirs(ROUND2)
+    assert prefer == ("round2",)
+    found = {
+        "footprint": sidecars.discover(
+            ROUND2.parent, sidecars.FOOTPRINT_NAMES, prefer
+        ),
+        "cross_source": sidecars.discover(
+            ROUND2.parent, sidecars.CROSS_SOURCE_NAMES, prefer
+        ),
+        "critiques": sidecars.discover(
+            ROUND2.parent, sidecars.CRITIQUE_NAMES, prefer
+        ),
+    }
+    for name, path in found.items():
+        assert path is not None, name
+        assert path.parent.name == "round2", name
+    assert sidecars.round_subdirs(PILOT) == ()
+
+
+@pytest.mark.skipif(not ROUND2.exists(), reason="round-2 candidates not present")
+def test_round2_evidence_covers_every_candidate_in_the_same_shape(tmp_path):
+    prefer = sidecars.round_subdirs(ROUND2)
+    service = make_service(
+        tmp_path,
+        source=ROUND2,
+        footprint=sidecars.discover(ROUND2.parent, sidecars.FOOTPRINT_NAMES, prefer),
+        cross_source=sidecars.discover(
+            ROUND2.parent, sidecars.CROSS_SOURCE_NAMES, prefer
+        ),
+        critiques=sidecars.discover(ROUND2.parent, sidecars.CRITIQUE_NAMES, prefer),
+    )
+    state = service.state()
+    ids = [r["record_id"] for r in state["records"]]
+    assert len(ids) == 23
+    side = state["sidecars"]
+    assert set(side["footprint"]["principles"]) >= set(ids)
+    assert set(side["cross_source"]["records"]) == set(ids)
+    assert set(side["critiques"]["records"]) == set(ids)
+    for rid in ids:
+        xs = side["cross_source"]["records"][rid]
+        assert xs["status"] in {"corroborated", "contradicted", "silent"}
+        for key in ("direction", "claim_tested", "evidence", "quantification",
+                    "confidence"):
+            assert str(xs.get(key, "")).strip(), (rid, key)
+        if xs["status"] == "silent":
+            assert str(xs.get("silence_reason", "")).strip(), rid
+        crit = side["critiques"]["records"][rid]
+        assert str(crit.get("verdict", "")).strip(), rid
+        assert str(crit.get("strongest_defence", "")).strip(), rid
+        assert crit.get("recommendation"), rid
+        assert isinstance(crit.get("objections"), list)
+        for obj in crit["objections"]:
+            assert str(obj.get("axis", "")).strip(), rid
+            assert str(obj.get("claim", "")).strip(), rid
+            assert obj.get("confidence") in {
+                "strong", "moderate", "weak", "could_not_break"
+            }, (rid, obj.get("confidence"))
 
 
 def test_footprint_accepts_a_bare_id_keyed_mapping(tmp_path):

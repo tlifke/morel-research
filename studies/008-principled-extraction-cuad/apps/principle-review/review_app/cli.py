@@ -26,20 +26,35 @@ def build_config(args: argparse.Namespace) -> Config:
         if args.export
         else source.with_name(source.stem + ".reviewed.yaml")
     )
+    prefer = sidecars.round_subdirs(source)
     pairs = (
         Path(args.pairs).expanduser().resolve()
         if args.pairs
-        else sidecars.discover(source.parent, sidecars.PAIR_NAMES)
+        else sidecars.discover(source.parent, sidecars.PAIR_NAMES, prefer)
     )
     footprint = (
         Path(args.footprint).expanduser().resolve()
         if args.footprint
-        else sidecars.discover(source.parent, sidecars.FOOTPRINT_NAMES)
+        else sidecars.discover(source.parent, sidecars.FOOTPRINT_NAMES, prefer)
+    )
+    cross_source = (
+        Path(args.cross_source).expanduser().resolve()
+        if args.cross_source
+        else sidecars.discover(source.parent, sidecars.CROSS_SOURCE_NAMES, prefer)
+    )
+    critiques = (
+        Path(args.critiques).expanduser().resolve()
+        if args.critiques
+        else sidecars.discover(source.parent, sidecars.CRITIQUE_NAMES, prefer)
     )
     if args.pairs and not pairs.exists():
         sys.exit(f"pairs file not found: {pairs}")
     if args.footprint and not footprint.exists():
         sys.exit(f"footprint file not found: {footprint}")
+    if args.cross_source and not cross_source.exists():
+        sys.exit(f"cross-source file not found: {cross_source}")
+    if args.critiques and not critiques.exists():
+        sys.exit(f"critiques file not found: {critiques}")
     return Config(
         source=source,
         db=db,
@@ -48,6 +63,8 @@ def build_config(args: argparse.Namespace) -> Config:
         export_path=export,
         pairs_path=pairs,
         footprint_path=footprint,
+        cross_source_path=cross_source,
+        critiques_path=critiques,
     )
 
 
@@ -61,6 +78,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--export", default=None)
     parser.add_argument("--pairs", default=None)
     parser.add_argument("--footprint", default=None)
+    parser.add_argument("--cross-source", default=None)
+    parser.add_argument("--critiques", default=None)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8823)
     parser.add_argument("--no-browser", action="store_true")

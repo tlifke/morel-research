@@ -103,6 +103,39 @@ PRINCIPLE = RecordType(
                    "non-conforming material. These numbers outrank the proposer's "
                    "argument: a principle that reads well and measures flat is not a "
                    "principle. Absent means round 2 has not measured this one yet."),
+        Field("cross_source_validation", "Cross-source validation", "cross_source",
+              slot="feature", config={"index": "cross_source"},
+              hint="The principle checked against the source it did NOT come from.",
+              help="Every candidate was derived from one source — either the Atticus "
+                   "Handbook or the mined CUAD data. This block tests it against the "
+                   "OTHER one. CORROBORATED means the second source independently "
+                   "agrees. CONTRADICTED means the second source says something "
+                   "different, and the quantification says how often. SILENT is a "
+                   "third, NEUTRAL outcome and must not be read as disagreement: it "
+                   "means the second source has nothing to say on this claim, usually "
+                   "because it structurally cannot — the Handbook has no chapter for "
+                   "some categories, and its rules are written per-sentence so a "
+                   "document-provenance claim has nowhere to be stated. A silent "
+                   "record is exactly as unvalidated as it was before this check, "
+                   "no worse; the reason for the silence is printed in full. Direction "
+                   "tells you which way the check ran."),
+        Field("critique", "Adversarial critique", "critique",
+              slot="feature", config={"index": "critiques"},
+              hint="A critic instructed to argue AGAINST every candidate, plus the "
+                   "strongest case it could still make for it.",
+              help="A separate blinded pass was told to build the strongest honest "
+                   "case against each candidate, so objections here are commissioned, "
+                   "not spontaneous — every principle has some, including the good "
+                   "ones. Read the per-objection CONFIDENCE, not the count: STRONG "
+                   "means the critic thinks the candidate should not ship as written, "
+                   "MODERATE means survivable with a rewrite, WEAK means real but "
+                   "small, and COULD NOT BREAK means it attacked and failed, which is "
+                   "positive evidence. The STRONGEST DEFENCE is written by the same "
+                   "critic and carries the same weight as the objections — it is the "
+                   "best argument for the candidate that survived the attack. "
+                   "Judging on objection count alone converts this into an argument "
+                   "for rejection, which is the mirror of round 1's accept-by-default "
+                   "and just as wrong."),
         Field("trigger_guidance", "Trigger guidance", "longtext", editable=True, slot="body",
               hint="When to consider it."),
         Field("checker_sketch", "Checker sketch", "longtext", editable=True, slot="body",

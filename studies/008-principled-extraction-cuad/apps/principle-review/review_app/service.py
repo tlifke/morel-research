@@ -24,6 +24,8 @@ class Config:
     export_path: Path
     pairs_path: Path | None = None
     footprint_path: Path | None = None
+    cross_source_path: Path | None = None
+    critiques_path: Path | None = None
 
     @property
     def queue_id(self) -> str:
@@ -34,7 +36,12 @@ class Service:
     def __init__(self, config: Config):
         self.config = config
         self.rt = record_types.get(config.record_type)
-        self.sidecars = Sidecars(config.pairs_path, config.footprint_path)
+        self.sidecars = Sidecars(
+            config.pairs_path,
+            config.footprint_path,
+            config.cross_source_path,
+            config.critiques_path,
+        )
         self.last_sync: dict[str, Any] = {}
         self.store = Store(config.db)
         self.store.upsert_queue(

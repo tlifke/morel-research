@@ -34,13 +34,26 @@ Options:
 | `--record-type` | `principle` | key in `review_app/record_types.py` |
 | `--pairs` | auto-discovered next to the source | mined contrastive pairs, for inline evidence |
 | `--footprint` | auto-discovered next to the source | empirical footprint artifact |
+| `--cross-source` | auto-discovered next to the source | cross-source validation artifact |
+| `--critiques` | auto-discovered next to the source | adversarial critique artifact |
 | `--no-browser` | | do not auto-open a tab |
 
-Both sidecar files are optional and are re-read whenever their mtime changes, so
-a footprint that lands mid-session appears on the next record switch without a
-restart. Auto-discovery looks in the source file's directory for
-`mined_pairs.jsonl` / `pairs.jsonl`, and for `footprint.{yaml,yml,json}`,
-`footprints.*`, `principle_footprint*.*`.
+All four sidecar files are optional and are re-read whenever their mtime
+changes, so a footprint that lands mid-session appears on the next record switch
+without a restart. Auto-discovery looks in the source file's directory, plus its
+`checkers/` and `footprints/` subdirectories, for `mined_pairs.jsonl` /
+`pairs.jsonl`; `footprint.{yaml,yml,json}`, `footprints.*`,
+`principle_footprint*.*`; `cross_source_validation.*` / `cross_source.*`; and
+`critiques.*` / `critique.*`.
+
+**Round-scoped discovery.** A source file whose stem ends in `roundN`
+(`candidates_round2.yaml`) searches a sibling `roundN/` directory *first*, ahead
+of every other location. That is the whole mechanism by which launching against
+`principles/pilot/candidates_round2.yaml` picks up all three round-2 evidence
+artifacts out of `principles/pilot/round2/` with no flags, while
+`candidates_pilot.yaml` in the same directory keeps resolving to the round-1
+artifacts sitting at the top level. Nothing else is round-aware; the rule is
+purely "prefer the subdirectory named after the round in the filename".
 
 Nothing leaves the machine: no auth, no CDN, no fonts, no outbound requests.
 The whole UI is one inlined HTML file.
@@ -240,6 +253,156 @@ subdirectories), so no flag is needed when reviewing the pilot set.
 `fixtures/candidates.sample.yaml`; they are auto-discovered when the app is
 launched with no source argument.
 
+### Cross-source validation
+
+The second piece of round-2 evidence. Every candidate was derived from one
+source — the Atticus Handbook or the mined CUAD data — and this artifact records
+what happened when it was checked against the *other* one. It renders as a
+full-width weighted block directly under the footprint, same treatment: a status
+pill, the direction of the check, then claim tested / evidence / quantification /
+note.
+
+**Status is three-way, and `silent` is neutral.** This is the load-bearing
+display decision in the whole block:
+
+| `status` | left border | how it reads |
+|---|---|---|
+| `corroborated` | green | the other source independently agrees |
+| `contradicted` | red | the other source states something different |
+| `silent` | grey | the other source says nothing — **neutral, not disagreement** |
+
+Silence is almost always structural: the Handbook has no chapter for Minimum
+Commitment or Volume Restriction at all, and its rules are written per-sentence,
+so a claim about document provenance has nowhere in it to be stated. A reviewer
+who reads silence as evidence against would systematically distort the round in
+the reject direction, so a silent record prints, above everything else, that it
+is *neither supported nor undermined* by this check and is exactly as unvalidated
+as it was before — followed by `silence_reason` in full, in a grey box, as the
+first section rather than a footnote. `silence_reason` is required on silents;
+if it is missing the block says so rather than rendering an unexplained silence.
+
+**The contract.** YAML or JSON:
+
+```yaml
+version: cross_source_v2       # header keys are free-form and rendered only as provenance
+created: 2026-08-15
+method: >
+  how the check was run
+counts: {...}
+records:                       # id -> entry; a bare id-keyed mapping also works
+  p01:
+    direction: guidelines_to_data   # or data_to_guidelines; free string
+    status: corroborated            # corroborated | contradicted | silent
+    claim_tested: >
+      the specific claim the other source was asked about
+    evidence: >
+      what the other source actually said
+    quantification: >
+      how often it holds, with denominators
+    confidence: high
+    note: >
+      caveats, including weaknesses independent of the status
+    silence_reason: >
+      required when status is silent: why the other source cannot speak to this
+```
+
+Rules the producer can rely on:
+
+- `status` outside the three names renders grey and neutral, never red — an
+  unrecognised verdict must not default to reading as negative.
+- `direction` is glossed for the two known values and otherwise printed with
+  `_to_` rendered as an arrow, so a new direction is readable without a change
+  here.
+- Every field except `status` is optional; an absent section is simply not
+  drawn. Unrecognised keys render as collapsed `<details>` under "further
+  fields" rather than being dropped.
+- Ids must match the candidates file exactly.
+
+### Adversarial critique
+
+The third piece. A separate blinded pass was instructed to build the strongest
+honest case *against* every candidate, so objections here are commissioned, not
+spontaneous: every principle has some, including the sound ones. Rendering only
+the objections would convert a balanced artifact into an argument for rejection —
+the mirror image of round 1's accept-by-default, and harder to detect because it
+looks like rigour. Two rules follow.
+
+**1. `strongest_defence` renders at equal weight to the objections.** The block
+is a two-column grid, `minmax(0,1fr) minmax(0,1fr)`, objections left and defence
+right, identical header treatment, measured equal at every width above 1180px
+(below that they stack). The defence is written by the same critic after its own
+attack, and the column says so. A record with no `strongest_defence` renders the
+column anyway, saying the critic recorded none and that the absence is a finding
+rather than a tool omission.
+
+**2. Every objection shows its own confidence.** A `weak` objection must not look
+like a `strong` one. Confidence drives the pill colour, the card's left border,
+and the card's opacity:
+
+| objection `confidence` | renders | meaning (from the artifact's own `meta.confidence_vocabulary`) |
+|---|---|---|
+| `strong` | red border, tinted card | the objection lands; do not ship as written |
+| `moderate` | amber border | lands, but survivable with a rewrite |
+| `weak` | grey border, dimmed | real but small |
+| `could_not_break` | green border | the critic attacked it and failed — positive evidence |
+
+The same vocabulary applies to the record-level `confidence`, which renders as a
+pill next to the heading; where the artifact ships a `meta.confidence_vocabulary`
+map its own gloss is used as the pill's tooltip, so the definitions come from the
+producer rather than from this app.
+
+**The contract.** YAML or JSON:
+
+```yaml
+meta:                          # optional header; not a record
+  role: adversarial critic, round 2
+  confidence_vocabulary:       # optional; becomes the tooltip on every confidence pill
+    strong: the objection lands; the principle should not ship as written
+    could_not_break: I attacked it and failed; report it as sound
+p01:                           # id -> entry; a `records:` wrapper also works
+  verdict: >
+    one-paragraph summary of where the candidate stands
+  confidence: weak             # strong | moderate | weak | could_not_break
+  recommendation: keep_with_checker_rewrite   # free string; drop reads red, keep green
+  objections:
+  - axis: counterexample       # free string, rendered as the card title
+    claim: >
+      the objection itself
+    counterexamples:           # optional; list of mappings, rendered as a table
+    - {contract_id: ..., offsets: '[143896:144004]', note: ...}
+    quantification: >
+      how much of the corpus the objection actually covers
+    confidence: weak           # per objection, and required for the display to mean anything
+  strongest_defence: >
+    the best case still standing for this candidate
+```
+
+Rules the producer can rely on:
+
+- `objections` may be empty; the column then says no objection was recorded, and
+  the defence column is unaffected.
+- `counterexamples` columns are the union of keys across the list, so a new
+  column appears without a change here.
+- An unrecognised `confidence` renders grey and undimmed — neutral, not negative.
+- `recommendation` is a free string: `drop` reads red, `keep` green, anything
+  else amber.
+- Unrecognised top-level keys render under "further fields" rather than being
+  dropped.
+
+### Uniformity
+
+All three round-2 blocks render for all 23 round-2 records in the same shape and
+depth; that uniformity is a measurement requirement, not a nicety, because a
+reviewer who sees deeper evidence on some records than others is being nudged by
+the tool. A record with no entry in a sidecar therefore renders an **explicit
+gap** — a `no entry` pill and a line naming the record and the exact file that
+was searched (or the flag that would load one, when no file is loaded at all) —
+never a silent omission. Uniformity is pinned by
+`test_round2_evidence_covers_every_candidate_in_the_same_shape`, which asserts
+all 23 ids are present in all three artifacts with their required fields
+populated, every `silent` carries a `silence_reason`, every record carries a
+`strongest_defence`, and every objection carries an in-vocabulary `confidence`.
+
 Filters: decision state, plus one dropdown per declared facet (principles:
 provenance, type, proposer model; gold audit: category, split, stratum) and a free-text search. Header shows
 `n reviewed / n total` with an accept/edit/reject/defer breakdown; the bar
@@ -275,7 +438,11 @@ Deliberately **not** implemented, as biased or unmeasurable:
   for rejection with a mechanism the writeup cannot describe. Side-by-side pair
   rendering already puts the disconfirming half of every contrast on screen; the
   footprint block is the honest version of this, because it can contradict the
-  proposer's argument with a measurement rather than with emphasis.
+  proposer's argument with a measurement rather than with emphasis. The round-2
+  critique sidecar is the other honest version: the counter-evidence is written
+  and rated by a named adversarial pass, not selected by the UI, and it ships
+  with the critic's own strongest defence rendered beside it at equal weight
+  precisely so that surfacing counter-evidence does not become advocacy.
 - *A running accept-rate readout framed as a rate.* The raw counts are already
   in the header. Rendering them as "you have accepted 92%" adds no information
   and converts a tally into a target — the reviewer starts managing the number.
@@ -635,11 +802,13 @@ adds one entry:
   list of mappings as a table; `config.columns` picks the columns), `span`
   (a highlighted substring shown inside surrounding context named by
   `config.before` / `config.after`), `evidence` (a list of ids resolved against
-  a sidecar named by `config.index` and rendered as contrastive pairs), and
+  a sidecar named by `config.index` and rendered as contrastive pairs),
   `footprint` (an external artifact keyed by record id, from the sidecar named
-  by `config.index`). Slots are `headline | meta | feature | body`; `feature`
+  by `config.index`), `cross_source` and `critique` (the two round-2 evidence
+  artifacts above, keyed by record id from the sidecar named by
+  `config.index`). Slots are `headline | meta | feature | body`; `feature`
   renders full width between the meta chips and the body grid, and is where the
-  footprint lives. A field may also declare `help`, longer prose shown behind a
+  footprint, cross-source and critique blocks live, in that declaration order. A field may also declare `help`, longer prose shown behind a
   `what is this?` toggle next to its label
 - `facets` — which fields become filter dropdowns
 - `list_keys` — which fields label a row in the queue list
@@ -675,8 +844,12 @@ up new records. It also covers the round-2 additions: `unclear` surviving
 export and re-import as itself, export counts naming every declared decision
 including the zeros, the pairs sidecar indexing by `pair_id` and matching the
 ids the candidates actually cite, the footprint contract above (including the
-bare id-keyed variant and mtime-driven reload), graceful degradation when
-neither sidecar is present, and a re-import of the real round-1 file
+bare id-keyed variant and mtime-driven reload), graceful degradation when no
+sidecar at all is present, the keyed-sidecar loader's header/records split in
+both the `meta:`-header and `records:`-wrapper forms, round-scoped
+auto-discovery resolving all three round-2 artifacts into `round2/` while round
+1 stays at the top level, the uniformity assertions above over the live round-2
+cross-source and critique artifacts, and a re-import of the real round-1 file
 (`principles/pilot/candidates_pilot.reviewed.yaml`, read-only) reproducing all
 16 decisions byte-for-byte.
 
