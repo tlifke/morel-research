@@ -675,6 +675,69 @@ Format:
 > and should not be reported as a number. `spot_check` in the artifact is `{}` —
 > unavailable, not zero.
 
+> **D-28 — C2 vs C3 on answer metrics is a clean null, with two real side
+> effects** (2026-08-16, `reviews/c2-vs-c3-answer-metrics.md`)
+> First real experimental result of the study. 240 trials on `harness_val`,
+> Qwen3.5-9B, paired over the 38-contract intersection.
+>
+> **Requiring citation does not change what the model extracts.** Every accuracy
+> CI contains zero: presence F1 +0.0029 [−0.0048, +0.0121], span F1 −0.0075
+> [−0.0406, +0.0252], exact-match −0.0027. **The manipulation demonstrably
+> took** — C2 cited on 0 of 1,260 decisions, C3 on 1,077 of 1,200 (89.8%), zero
+> leakage either way — so this is a null *effect*, not a null treatment.
+>
+> **Two things did move, neither an accuracy gain:**
+> - **Verbatim exact rate −2.5 pts** [−0.0462, −0.0050], 17 of 23 moving
+>   contracts down, while span F1 stayed flat. Spans remain as *correct*;
+>   slightly fewer are literal substrings.
+> - **+627 completion tokens** [+219, +1039] for a **+48-token** prompt delta.
+>   The citation requirement costs ~13× its prompt cost in reasoning.
+>
+> **A near-significant result was chased down and killed**, which is the part
+> worth imitating. Pooled presence F1 came out +0.0169 [+0.0004, +0.0340],
+> clearing zero by 0.0004 — but C3 lost more trials to parse failure, so the
+> pooled figure is survivorship. On the 18 contracts with a full 3/3 in **both**
+> arms the sign reverses to −0.0022 [−0.0172, +0.0117]. The null is reported.
+>
+> **The most actionable defect: truncation is condition-dependent and
+> counter-intuitive.** 4 of 240 trials truncated, **all C3, three on the
+> *shortest* contracts** — the citation requirement tips reasoning past budget
+> precisely where the document gives least to reason about. This is the
+> mechanism behind C3's conformance deficit (89.3% vs 92.1%). The budget was not
+> changed (`max_output_tokens=16384`, recorded per D-16); note the earlier
+> 12-trial probe showed 0 truncations and did **not** generalise.
+>
+> **Feasibility.** One contract was infeasible identically in C2 and C3, so it
+> introduces no asymmetry — and is probably an estimator artifact, since the
+> gate's 4-chars/token heuristic overstates by 13.9% against a fit on the
+> contracts that ran. Reported, not fixed. The feasible sets still differ for a
+> different reason (one contract lost all 3 C3 trials to `json_decode`), so all
+> paired stats use the intersection with the excluded contract reported apart.
+>
+> **Two findings that outrank the null:**
+> 1. **Citation frequency is not principle quality.** `w06` — whose checker
+>    fires on 1 of 480 decisions — drew **368 citations**; `w10`, which has *no
+>    measured footprint at all*, drew 91. Same pattern as the smoke run citing
+>    fabricated calibration controls. Models cite what sounds apt.
+> 2. **Two categories lose to a trivial baseline in both arms.** Expiration Date
+>    scores 0.317/0.337 presence F1 against an **always-present baseline of
+>    0.895** — the model claims absent on 69 of 85 present decisions. Worst cell
+>    in the study, and a task-definition problem rather than a principle one.
+>    Volume Restriction is 0.100/0.000 against 0.158. **Two thirds of the
+>    Savelka trio sit at or below trivial.**
+>
+> Also flagged rather than silently handled: 8 trials died on transient
+> connection resets and were not retried, because deleting store rows to re-roll
+> them is exactly the kind of thing that biases a result.
+>
+> Cost: 5.26M tokens (3.19M prompt / 2.07M completion), 6.55 model-hours of
+> summed latency, ~5h wall clock. Parallelism bought nothing — Tinker capped
+> aggregate throughput at ~1.4 trials/min regardless of shard count.
+>
+> **Scope, stated in the write-up itself**: with 9 of 10 principles carrying
+> `needs_rebuild` or `not_yet_specified` checkers, this tests the **citation
+> requirement**, not whether the principles are good.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing
