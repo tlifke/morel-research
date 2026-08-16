@@ -28,7 +28,7 @@ def load_labels():
 def gold_span_agreement(dataset, labels):
     index = {(row["contract"], row["index"]): row for row in labels["spans"]}
     rows = []
-    for contract_id in dataset.contract_ids("dev"):
+    for contract_id in dataset.contract_ids("harness_val"):
         for i, span in enumerate(dataset.gold(contract_id)[CATEGORY].spans):
             hand = index[(contract_id, i)]
             rows.append(
@@ -78,7 +78,7 @@ def gold_span_agreement(dataset, labels):
 def negative_sentence_scan(dataset):
     negatives = [
         cid
-        for cid in dataset.contract_ids("dev")
+        for cid in dataset.contract_ids("harness_val")
         if dataset.gold(cid)[CATEGORY].is_impossible
     ]
     as_written = {}
@@ -113,7 +113,7 @@ def negative_sentence_scan(dataset):
 def g06_trigger_agreement(dataset, labels):
     hand = labels["g06_trigger_sentences"]["items"]
     fired = []
-    for contract_id in dataset.contract_ids("dev"):
+    for contract_id in dataset.contract_ids("harness_val"):
         gold = dataset.gold(contract_id)[CATEGORY]
         for start, end, sentence in cached_sentences(dataset.texts[contract_id]):
             body = " ".join(sentence.split())

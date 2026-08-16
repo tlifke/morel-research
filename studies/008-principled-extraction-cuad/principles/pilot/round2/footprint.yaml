@@ -3,20 +3,20 @@ generated: '2026-08-15'
 generator:
   script: studies/008-principled-extraction-cuad/principles/pilot/round2/checkers/run_footprints2.py
   version: '1.0'
-split: dev
+split: harness_val
 population:
   unit: decision (contract x category)
   n_units: 480
   n_contracts: 40
   n_categories: 12
-note: Headline applicability rate and denominator are over the full 12-category dev decision set (480
+note: Headline applicability rate and denominator are over the full 12-category harness_val decision set (480
   decisions). The rate restricted to a principle's declared scope is under scope_and_faithfulness.in_scope_applicability,
-  and the discrimination 2x2 is computed on that in-scope subset. holdout was never loaded; ft_train was
+  and the discrimination 2x2 is computed on that in-scope subset. test was never loaded; the training pool was
   not used.
 principles:
   p01:
     status: discriminating-but-rare
-    note: 'Fires on 5/480 decisions (1.0%) over the 12-category dev set; 5/40 (12.5%) within its declared
+    note: 'Fires on 5/480 decisions (1.0%) over the 12-category harness_val set; 5/40 (12.5%) within its declared
       scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
       with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
       Phi against gold presence, in scope: 0.3833.'
@@ -89,7 +89,7 @@ principles:
       n_positive: 5
       n_negative: 35
       phi: 0.3833
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -180,7 +180,7 @@ principles:
         no later than […***…] following the close of each calendar quarter, pay tiered Royalties
   p02:
     status: tautological-applicability
-    note: 'Fires on 1/480 decisions (0.2%) over the 12-category dev set; 1/40 (2.5%) within its declared
+    note: 'Fires on 1/480 decisions (0.2%) over the 12-category harness_val set; 1/40 (2.5%) within its declared
       scope. Separability: fail — Applicability requires gold is_impossible, so the applicable x gold-present
       cell is empty by construction and the principle can only ever be scored on absences. Phi against
       gold presence, in scope: -0.698.'
@@ -253,7 +253,7 @@ principles:
       n_positive: 1
       n_negative: 39
       phi: -0.698
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -332,17 +332,17 @@ principles:
       gold_present: true
       text: this ___ day of _________, 2004
   p03:
-    status: never-fires-in-dev
-    note: 'Fires on 0/480 decisions (0.0%) over the 12-category dev set. Separability: pass — Applicability
+    status: never-fires-in-harness_val
+    note: 'Fires on 0/480 decisions (0.0%) over the 12-category harness_val set. Separability: pass — Applicability
       reads contract text plus a cross-contract text-overlap property; no gold field is consulted. Phi
       against gold presence is undefined (a margin is zero). Unstable: a lexicon or threshold variant
       moves the rate by up to 22.5% of all decisions. Sketch names a 400+ character substring shared with
       ''another contract'' and points at scan_split_contamination.py. Implemented as an exact 400-character
-      shared-window test against the other 39 dev contracts on whitespace-normalised text, since the sketch''s
+      shared-window test against the other 39 harness_val contracts on whitespace-normalised text, since the sketch''s
       containment-score artifact is not part of this deliverable. The derivative cue alone fires on 4
-      of 40 dev contracts (48 decisions), but none of those four shares a 400-character window with any
-      other dev contract, so the sketch as written is empty on dev. The shared-text half was computed
-      within dev only; a wider corpus would likely find twins, which makes this a split-size artefact
+      of 40 harness_val contracts (48 decisions), but none of those four shares a 400-character window with any
+      other harness_val contract, so the sketch as written is empty on harness_val. The shared-text half was computed
+      within harness_val only; a wider corpus would likely find twins, which makes this a split-size artefact
       rather than a settled zero.'
     applicability:
       n_applicable: 0
@@ -413,7 +413,7 @@ principles:
       n_positive: 0
       n_negative: 480
       phi: null
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -458,7 +458,7 @@ principles:
       faithfulness: closest_faithful
       faithfulness_note: Sketch names a 400+ character substring shared with 'another contract' and points
         at scan_split_contamination.py. Implemented as an exact 400-character shared-window test against
-        the other 39 dev contracts on whitespace-normalised text, since the sketch's containment-score
+        the other 39 harness_val contracts on whitespace-normalised text, since the sketch's containment-score
         artifact is not part of this deliverable.
       reused_existing_checker: null
       in_scope_applicability:
@@ -519,7 +519,7 @@ principles:
       text: this ___ day of _________, 2004
   p04:
     status: discriminating-but-rare
-    note: 'Fires on 5/480 decisions (1.0%) over the 12-category dev set; 5/40 (12.5%) within its declared
+    note: 'Fires on 5/480 decisions (1.0%) over the 12-category harness_val set; 5/40 (12.5%) within its declared
       scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
       with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
       Phi against gold presence, in scope: 0.0867. Sketch asks for first ~3000 characters or the signature
@@ -594,7 +594,7 @@ principles:
       n_positive: 5
       n_negative: 35
       phi: 0.0867
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -690,7 +690,7 @@ principles:
       text: June 1, 2020
   p05:
     status: degenerate-universal
-    note: 'Fires on 480/480 decisions (100.0%) over the 12-category dev set. Separability: pass-but-vacuous
+    note: 'Fires on 480/480 decisions (100.0%) over the 12-category harness_val set. Separability: pass-but-vacuous
       — Applicability consults nothing at all, so it cannot leak the answer — and cannot select anything
       either. Phi against gold presence is undefined (a margin is zero). Applicable to every decision
       by construction. It cannot select, cannot discriminate, and will dominate any citation-frequency
@@ -764,7 +764,7 @@ principles:
       n_positive: 480
       n_negative: 0
       phi: null
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -856,7 +856,7 @@ principles:
       text: The term of this Agreement shall commence on the Effective Date and continue for six (6) months.
   p06:
     status: discriminating
-    note: 'Fires on 21/480 decisions (4.4%) over the 12-category dev set; 21/40 (52.5%) within its declared
+    note: 'Fires on 21/480 decisions (4.4%) over the 12-category harness_val set; 21/40 (52.5%) within its declared
       scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
       with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
       Phi against gold presence, in scope: 0.4005.'
@@ -929,7 +929,7 @@ principles:
       n_positive: 21
       n_negative: 19
       phi: 0.4005
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -1020,7 +1020,7 @@ principles:
         California, without regard to the conflict of law principles of California or any other j
   p07:
     status: tautological-applicability
-    note: 'Fires on 38/480 decisions (7.9%) over the 12-category dev set; 38/40 (95.0%) within its declared
+    note: 'Fires on 38/480 decisions (7.9%) over the 12-category harness_val set; 38/40 (95.0%) within its declared
       scope. Separability: fail — Applicability is defined as the category being gold-present, so the
       applicable x gold-absent cell is empty by construction and any compliance rate computed on the applicable
       set is conditioned on the answer. Phi against gold presence, in scope: 1.0.'
@@ -1093,7 +1093,7 @@ principles:
       n_positive: 38
       n_negative: 2
       phi: 1.0
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -1173,11 +1173,11 @@ principles:
       text: December 12, 2014
   p08:
     status: unimplementable
-    note: 'Fires on 0/480 decisions (0.0%) over the 12-category dev set. Separability: fail — Applicability
+    note: 'Fires on 0/480 decisions (0.0%) over the 12-category harness_val set. Separability: fail — Applicability
       is computed from the category''s own gold span text, which requires the category to be present;
       the applicable x gold-absent cell is empty by construction. Phi against gold presence is undefined
-      (a margin is zero). The literal marker ''<omitted>'' occurs 0 times in dev contract text and 0 times
-      in dev gold spans. The checker cannot fire on this corpus at all, which disqualifies the principle
+      (a margin is zero). The literal marker ''<omitted>'' occurs 0 times in harness_val contract text and 0 times
+      in harness_val gold spans. The checker cannot fire on this corpus at all, which disqualifies the principle
       as a measurable rule here regardless of whether the Handbook prescribes it.'
     applicability:
       n_applicable: 0
@@ -1248,7 +1248,7 @@ principles:
       n_positive: 0
       n_negative: 480
       phi: null
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -1334,7 +1334,7 @@ principles:
       text: this ___ day of _________, 2004
   p09:
     status: discriminating
-    note: 'Fires on 21/480 decisions (4.4%) over the 12-category dev set; 21/40 (52.5%) within its declared
+    note: 'Fires on 21/480 decisions (4.4%) over the 12-category harness_val set; 21/40 (52.5%) within its declared
       scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
       with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
       Phi against gold presence, in scope: 0.1502.'
@@ -1407,7 +1407,7 @@ principles:
       n_positive: 21
       n_negative: 19
       phi: 0.1502
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -1504,7 +1504,7 @@ principles:
         operation, it shall be charged of the energy saving service fee at 0.40 RMB/KWH.
   p10:
     status: tautological-applicability
-    note: 'Fires on 28/480 decisions (5.8%) over the 12-category dev set; 28/40 (70.0%) within its declared
+    note: 'Fires on 28/480 decisions (5.8%) over the 12-category harness_val set; 28/40 (70.0%) within its declared
       scope. Separability: fail — Applicability is computed from the category''s own gold span text, which
       requires the category to be present; the applicable x gold-absent cell is empty by construction.
       Phi against gold presence, in scope: 0.3504.'
@@ -1577,7 +1577,7 @@ principles:
       n_positive: 28
       n_negative: 12
       phi: 0.3504
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -1665,7 +1665,7 @@ principles:
       text: this ___ day of _________, 2004
   p11:
     status: discriminating
-    note: 'Fires on 23/480 decisions (4.8%) over the 12-category dev set; 23/40 (57.5%) within its declared
+    note: 'Fires on 23/480 decisions (4.8%) over the 12-category harness_val set; 23/40 (57.5%) within its declared
       scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
       with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
       Phi against gold presence, in scope: 0.2726.'
@@ -1738,7 +1738,7 @@ principles:
       n_positive: 23
       n_negative: 17
       phi: 0.2726
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -1823,7 +1823,7 @@ principles:
         (including its affiliates) to ALFA AESAR to purchase a prior sample of the Product '
   p12:
     status: tautological-applicability
-    note: 'Fires on 103/480 decisions (21.5%) over the 12-category dev set; 103/120 (85.8%) within its
+    note: 'Fires on 103/480 decisions (21.5%) over the 12-category harness_val set; 103/120 (85.8%) within its
       declared scope. Separability: fail — Applicability is defined as the category being gold-present,
       so the applicable x gold-absent cell is empty by construction and any compliance rate computed on
       the applicable set is conditioned on the answer. Phi against gold presence, in scope: 1.0. Unstable:
@@ -1897,7 +1897,7 @@ principles:
       n_positive: 103
       n_negative: 17
       phi: 1.0
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -1985,7 +1985,7 @@ principles:
       text: The term of this Agreement shall commence on the Effective Date and continue for six (6) months.
   p13:
     status: near-degenerate-frequency
-    note: 'Fires on 60/480 decisions (12.5%) over the 12-category dev set; 60/80 (75.0%) within its declared
+    note: 'Fires on 60/480 decisions (12.5%) over the 12-category harness_val set; 60/80 (75.0%) within its declared
       scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
       with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
       Phi against gold presence, in scope: 0.2887. A quantity token plus a bound cue is ambient contract
@@ -2060,7 +2060,7 @@ principles:
       n_positive: 60
       n_negative: 20
       phi: 0.2887
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -2153,7 +2153,7 @@ principles:
         12, 2014, is by and among the persons and entities listed on Schedule A (collectivel
   p14:
     status: discriminating
-    note: 'Fires on 14/480 decisions (2.9%) over the 12-category dev set; 14/40 (35.0%) within its declared
+    note: 'Fires on 14/480 decisions (2.9%) over the 12-category harness_val set; 14/40 (35.0%) within its declared
       scope. Separability: pass — Applicability reads contract text only; a decision can be applicable
       with the category gold-present or gold-absent, so compliance is not a restatement of the answer.
       Phi against gold presence, in scope: 0.2059.'
@@ -2226,7 +2226,7 @@ principles:
       n_positive: 14
       n_negative: 26
       phi: 0.2059
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -2323,7 +2323,7 @@ principles:
         100 pixels at 72 dpi.'
   p15:
     status: discriminating
-    note: 'Fires on 12/480 decisions (2.5%) over the 12-category dev set; 12/80 (15.0%) within its declared
+    note: 'Fires on 12/480 decisions (2.5%) over the 12-category harness_val set; 12/80 (15.0%) within its declared
       scope. Separability: partial — Applicability reads gold span text, but of sibling categories rather
       than the decision''s own, so both gold-present and gold-absent decisions can be applicable; the
       leak is indirect but real. Phi against gold presence, in scope: 0.472. Applicability reads gold
@@ -2398,7 +2398,7 @@ principles:
       n_positive: 12
       n_negative: 68
       phi: 0.472
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -2490,7 +2490,7 @@ principles:
         100 pixels at 72 dpi.'
   p16:
     status: tautological-applicability
-    note: 'Fires on 22/480 decisions (4.6%) over the 12-category dev set; 22/40 (55.0%) within its declared
+    note: 'Fires on 22/480 decisions (4.6%) over the 12-category harness_val set; 22/40 (55.0%) within its declared
       scope. Separability: fail — Applicability requires gold is_impossible, so the applicable x gold-present
       cell is empty by construction and the principle can only ever be scored on absences. Phi against
       gold presence, in scope: -0.7237.'
@@ -2563,7 +2563,7 @@ principles:
       n_positive: 22
       n_negative: 18
       phi: -0.7237
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -2649,7 +2649,7 @@ principles:
         100 pixels at 72 dpi.'
   p17:
     status: tautological-applicability
-    note: 'Fires on 3/480 decisions (0.6%) over the 12-category dev set; 3/40 (7.5%) within its declared
+    note: 'Fires on 3/480 decisions (0.6%) over the 12-category harness_val set; 3/40 (7.5%) within its declared
       scope. Separability: fail — Applicability requires the category to be gold-present before any text
       test runs, so the applicable x gold-absent cell is empty by construction. Phi against gold presence,
       in scope: 0.1424. Sketch''s ''within 200 characters of a governing-law cue'' is implemented as a
@@ -2726,7 +2726,7 @@ principles:
       n_positive: 3
       n_negative: 37
       phi: 0.1424
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -2835,7 +2835,7 @@ principles:
         excluding conflict of laws provisions and excluding the 1980 United Nations Convention '
   p18:
     status: tautological-applicability
-    note: 'Fires on 12/480 decisions (2.5%) over the 12-category dev set. Separability: fail — Applicability
+    note: 'Fires on 12/480 decisions (2.5%) over the 12-category harness_val set. Separability: fail — Applicability
       is computed from the category''s own gold span text, which requires the category to be present;
       the applicable x gold-absent cell is empty by construction. Phi against gold presence, in scope:
       0.1808.'
@@ -2908,7 +2908,7 @@ principles:
       n_positive: 12
       n_negative: 468
       phi: 0.1808
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -3015,12 +3015,12 @@ principles:
       gold_present: true
       text: this ___ day of _________, 2004
   p19:
-    status: never-fires-in-dev
-    note: 'Fires on 0/480 decisions (0.0%) over the 12-category dev set. Separability: fail — Applicability
+    status: never-fires-in-harness_val
+    note: 'Fires on 0/480 decisions (0.0%) over the 12-category harness_val set. Separability: fail — Applicability
       is computed from the category''s own gold span text, which requires the category to be present;
       the applicable x gold-absent cell is empty by construction. Phi against gold presence is undefined
-      (a margin is zero). Furniture is not rare in dev — the regex matches 219 times across 12 of 40 contracts
-      — but no 12-category dev gold span contains a match strictly inside it, so applicability is 0. The
+      (a margin is zero). Furniture is not rare in harness_val — the regex matches 219 times across 12 of 40 contracts
+      — but no 12-category harness_val gold span contains a match strictly inside it, so applicability is 0. The
       complementary half of the sketch (no span is wholly furniture) is trivially satisfied and carries
       no signal.'
     applicability:
@@ -3092,7 +3092,7 @@ principles:
       n_positive: 0
       n_negative: 480
       phi: null
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -3177,7 +3177,7 @@ principles:
       text: this ___ day of _________, 2004
   p20:
     status: tautological-applicability
-    note: 'Fires on 40/480 decisions (8.3%) over the 12-category dev set. Separability: fail — Applicability
+    note: 'Fires on 40/480 decisions (8.3%) over the 12-category harness_val set. Separability: fail — Applicability
       is computed from the category''s own gold span text, which requires the category to be present;
       the applicable x gold-absent cell is empty by construction. Phi against gold presence, in scope:
       0.3404. Sketch requires the attachment heading search to start at the execution block; implemented
@@ -3254,7 +3254,7 @@ principles:
       n_positive: 40
       n_negative: 440
       phi: 0.3404
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -3363,7 +3363,7 @@ principles:
       text: this ___ day of _________, 2004
   p21:
     status: tautological-applicability
-    note: 'Fires on 19/480 decisions (4.0%) over the 12-category dev set; 19/40 (47.5%) within its declared
+    note: 'Fires on 19/480 decisions (4.0%) over the 12-category harness_val set; 19/40 (47.5%) within its declared
       scope. Separability: fail — Applicability requires the category to be gold-present before any text
       test runs, so the applicable x gold-absent cell is empty by construction. Phi against gold presence,
       in scope: 0.2182. Sketch''s compliance half needs a date normaliser across corpus formats. Applicability
@@ -3439,7 +3439,7 @@ principles:
       n_positive: 19
       n_negative: 21
       phi: 0.2182
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -3530,7 +3530,7 @@ principles:
       text: this ___ day of _________, 2004
   p22:
     status: tautological-applicability
-    note: 'Fires on 108/480 decisions (22.5%) over the 12-category dev set; 108/360 (30.0%) within its
+    note: 'Fires on 108/480 decisions (22.5%) over the 12-category harness_val set; 108/360 (30.0%) within its
       declared scope. Separability: fail — Applicability is defined as the category being gold-present,
       so the applicable x gold-absent cell is empty by construction and any compliance rate computed on
       the applicable set is conditioned on the answer. Phi against gold presence, in scope: 1.0. Unstable:
@@ -3604,7 +3604,7 @@ principles:
       n_positive: 108
       n_negative: 252
       phi: 1.0
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does
@@ -3700,7 +3700,7 @@ principles:
         exclusive license to distribute PivX's Qwik-Fix Pro and any documentation sup
   p23:
     status: tautological-applicability
-    note: 'Fires on 12/480 decisions (2.5%) over the 12-category dev set. Separability: fail — Applicability
+    note: 'Fires on 12/480 decisions (2.5%) over the 12-category harness_val set. Separability: fail — Applicability
       is computed from the category''s own gold span text, which requires the category to be present;
       the applicable x gold-absent cell is empty by construction. Phi against gold presence, in scope:
       0.1808.'
@@ -3773,7 +3773,7 @@ principles:
       n_positive: 12
       n_negative: 468
       phi: 0.1808
-      what_this_can_show: Only whether applicability co-varies with the gold answer on dev. No model outputs
+      what_this_can_show: Only whether applicability co-varies with the gold answer on harness_val. No model outputs
         exist yet, so this is not compliance, not accuracy, and not evidence that following the principle
         improves extraction.
       what_this_cannot_show: Whether a model that obeys the principle answers better than one that does

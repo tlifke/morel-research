@@ -43,7 +43,7 @@ def env():
 
 @pytest.fixture
 def instance(env):
-    return {i.contract_id: i for i in env.load_instances("dev")}["FAKE_0002"]
+    return {i.contract_id: i for i in env.load_instances("harness_val")}["FAKE_0002"]
 
 
 def _config(tmp_path, **kw):
@@ -129,7 +129,7 @@ def test_traces_are_written_compressed_and_read_back(env, tmp_path):
     run_grid(
         env=env,
         backend=FakeBackend(lambda m, i: json.dumps(PAYLOAD), context_limit=100000),
-        instances=env.load_instances("dev"),
+        instances=env.load_instances("harness_val"),
         conditions=["C3"],
         seeds=[0],
         schema_variants=["field_present"],
@@ -156,7 +156,7 @@ def test_reader_joins_traces_to_trials_and_verifies_sha(env, tmp_path):
     run_grid(
         env=env,
         backend=FakeBackend(lambda m, i: json.dumps(PAYLOAD), context_limit=100000),
-        instances=env.load_instances("dev"),
+        instances=env.load_instances("harness_val"),
         conditions=["C1"],
         seeds=[0],
         schema_variants=["field_present"],

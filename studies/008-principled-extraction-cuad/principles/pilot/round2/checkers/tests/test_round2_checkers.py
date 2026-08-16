@@ -218,7 +218,7 @@ def test_sidecar_is_complete_and_conforms():
         pytest.skip("footprint.yaml not generated yet")
     data = yaml.safe_load(path.read_text())
     assert data["schema_version"] == 1
-    assert data["split"] == "dev"
+    assert data["split"] == "harness_val"
     assert sorted(data["principles"]) == sorted(IDS)
     for pid, entry in data["principles"].items():
         assert entry["status"]

@@ -70,7 +70,7 @@ class Corpus:
 
     def exclusion_of(self, contract_id: str) -> str:
         record = self.dataset.record(contract_id) or {}
-        if record.get("split") != "excluded":
+        if record.get("split") != "scratch":
             return ""
         reason = record.get("exclusion_reason") or "excluded"
         twin = record.get("exclusion_twin_split")

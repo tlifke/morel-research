@@ -413,7 +413,7 @@
 <div class="wrap">
   <p class="deck">
     Three tracks run in parallel, join at the P0 pilot, and pass through four
-    human gates before the main grid touches the holdout.
+    human gates before the main grid touches the test.
   </p>
 </div>
 
@@ -542,7 +542,7 @@
             <line x1="880" y1="324" x2="880" y2="342" stroke="#B8821C" stroke-width="1.2"/>
             <rect x="863" y="342" width="34" height="24" rx="12" fill="#B8821C"/>
             <text x="871" y="358" fill="#FFFFFF">G4</text>
-            <text x="828" y="380" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#6B5E5E">open the holdout</text>
+            <text x="828" y="380" font-family="-apple-system, Segoe UI, Helvetica, sans-serif" font-size="10" font-weight="400" fill="#6B5E5E">open the test</text>
           </g>
         </g>
 
@@ -564,8 +564,8 @@
       buildable against the interface spec with a fake environment and does not
       need real CUAD data to exist. Track C’s guidelines-reading half is
       independent of everything and can start immediately, but its pair-mining
-      half needs the FT-train split from A. All three converge at pilot P0,
-      which needs A (dev contracts) + B (a working runner) + a <em>draft</em> of
+      half needs the model_train split from A. All three converge at pilot P0,
+      which needs A (harness_val contracts) + B (a working runner) + a <em>draft</em> of
       C. WS3 then runs alongside WS4 — P0 needs no applicability labels, only
       inv 005 does. WS5 is study-level code at <code>harness/</code>, not an
       investigation (D-5), consumed by inv 004, inv 005, and any later
@@ -596,19 +596,19 @@
     downstream is sized against it — not as evidence for any hypothesis.
   </p>
   <ul>
-    <li><b>Splits are built and frozen.</b> Seed <code>20260815</code>. Holdout = the 102 official test contracts; dev = 40 drawn from the 408 official-train contracts, stratified on <code>length_bucket × positive-count tercile</code>; FT-train = the remaining 368. Disjoint, union 510, written to files and read back by id, never recomputed.</li>
-    <li><b>Source of record is <code>CUADv1.json</code></b>, all 510 contracts and all 41 categories; <code>test.json</code> supplies only the holdout titles. The manifest carries all 41 categories so a subset change at G2 is a config edit, not a dataset rebuild.</li>
+    <li><b>Splits are built and frozen.</b> Seed <code>20260815</code>. test = the 102 official test contracts; harness_val = 40 drawn from the 408 official-train contracts, stratified on <code>length_bucket × positive-count tercile</code>; the training pool = the remaining 368 (INV1-D7 later moved 4 to <code>scratch</code> and INV1-D8 carved <code>principle_train</code> 60 and <code>principle_val</code> 40 out of the rest, leaving <code>model_train</code> 264). Disjoint, union 510, written to files and read back by id, never recomputed.</li>
+    <li><b>Source of record is <code>CUADv1.json</code></b>, all 510 contracts and all 41 categories; <code>test.json</code> supplies only the test titles. The manifest carries all 41 categories so a subset change at G2 is a config edit, not a dataset rebuild.</li>
     <li><b>Provisional 12-category subset</b> is picked, including the Savelka trio; selection criteria are in <code>scripts/config/category_subset.yaml</code>, which is the source of truth. Still provisional until inv 002.</li>
     <li><b>Deterministic rebuild</b> via <code>scripts/rebuild.sh</code>; a second run reproduces every output byte-identically apart from <code>built_at</code>. The loader <code>scripts/cuad_dataset.py</code> satisfies env-interface (a) and (d).</li>
   </ul>
 
   <div class="note open">
     <b>WS1 corrected the reference length distribution, and this propagates.</b>
-    The character figure reproduces exactly (holdout median 25,657 chars vs the
+    The character figure reproduces exactly (test median 25,657 chars vs the
     stated ~25.7k), but the reference <em>token</em> figures do not: they were
     produced by a 4-chars-per-token heuristic. CUAD contract text runs at
     <b>4.70 chars/token</b> under the pinned <code>Qwen/Qwen3-8B</code>
-    tokenizer, so the heuristic overstates length by ~18%. Holdout, tokenizer-derived:
+    tokenizer, so the heuristic overstates length by ~18%. test, tokenizer-derived:
     median <b>5,440</b> tokens, <b>37</b> contracts ≤4k, <b>66</b> ≤8k,
     <b>83</b> ≤16k, max <b>64,640</b> — against the reference’s ~6.4k / 27 / 63
     / 79 / ~75k. The tokenizer column is carried forward and the reference token
@@ -619,11 +619,11 @@
 
   <div class="note open">
     <b>Open calls raised by WS1, flagged for G1.</b>
-    Dev is systematically longer than holdout (median 8,248 vs 5,440 tokens) —
-    not a sampling bug, but a consequence of stratifying dev to mirror its own
-    pool rather than holdout’s length profile; flagged as a deliberate choice
+    harness_val is systematically longer than test (median 8,248 vs 5,440 tokens) —
+    not a sampling bug, but a consequence of stratifying harness_val to mirror its own
+    pool rather than test’s length profile; flagged as a deliberate choice
     needing a decision. The two rare categories are near-degenerate for
-    extraction on holdout (Source Code Escrow: 1 positive; Most Favored Nation:
+    extraction on test (Source Code Escrow: 1 positive; Most Favored Nation:
     3), excellent for absence calibration but giving almost no extraction
     signal — keeping both may be redundant.
     <code>train_separate_questions.json</code> is fetched but unused.
@@ -636,7 +636,7 @@
     <li><b>G1 (after WS1)</b> — category subset provisional, split files frozen and seeded. Nothing downstream may resample splits.</li>
     <li><b>G2 (after WS2)</b> — Tyler curates the principle set. Nothing enters the scored set without a feasible checker/labeling plan. Locked before WS3 implements checkers.</li>
     <li><b>G3 (after WS4)</b> — the schema decision, made from data per the P0 decision rule, written into <code>plans/decisions.md</code>.</li>
-    <li><b>G4 (before inv 005 touches holdout)</b> — the official test split (102 contracts) is untouched until this gate. Dev-set iteration only before it.</li>
+    <li><b>G4 (before inv 005 touches test)</b> — the official test split (102 contracts) is untouched until this gate. harness_val-set iteration only before it.</li>
   </ul>
 
   <div class="note">
@@ -919,7 +919,7 @@
         </tr>
         <tr>
           <td><b>H6</b></td>
-          <td>Open the holdout (G4)</td>
+          <td>Open the test (G4)</td>
           <td><span class="pill blocking">blocking</span></td>
           <td>inv 005</td>
           <td>a deliberate go/no-go</td>
@@ -965,13 +965,13 @@
   <ol class="dec">
     <li><span class="dnum">D-1</span><b>Task definition is present in all conditions.</b> C1 gets decision kinds, targets, and one-line target definitions but no principles. A bare C0 with neither was rejected — without the task definition the task is undefined.</li>
     <li><span class="dnum">D-2</span><b>Full dataset, no length filtering or chunking.</b> Long contracts stay in; over-context trials are recorded as <code>infeasible_at_length</code>. Filtering would assume away H5.</li>
-    <li><span class="dnum">D-3</span><b>Official CUAD test split (102 contracts) is the final hold-out.</b> Touched only for headline results, in both phases. Dev ≈ 40 contracts sampled from official train, stratified by length and positive-category count, seeded and persisted. Remaining official-train reserved for Phase 2. No contract in more than one of {dev, FT-train, holdout}.</li>
+    <li><span class="dnum">D-3</span><b>Official CUAD test split (102 contracts) is the final hold-out.</b> Touched only for headline results, in both phases. harness_val ≈ 40 contracts sampled from official train, stratified by length and positive-category count, seeded and persisted. Remaining official-train reserved for Phase 2. No contract in more than one of {harness_val, model_train, test}.</li>
     <li><span class="dnum">D-4</span><b>No LLM judge in the scoring path.</b> Every metric programmatic or hand-labeled. A judge would contaminate the Phase-2 reward story.</li>
     <li><span class="dnum">D-5</span><b>Harness is study-level, not an investigation.</b> <code>harness/</code> + <code>plans/component-contracts.md</code>. An investigation is a bounded unit with a definite end; the harness is cross-cutting and outlives Phase 1.</li>
     <li><span class="dnum">D-6</span><b>Repository policy: manifests + scored records, not raw.</b> Contract text and raw model responses stay out of git; instance manifest and per-trial scored records go in.</li>
     <li><span class="dnum">D-7</span><b>Study-007 orchestration machinery is not inherited.</b> No ticket system, no drain, no agent-trace / three-tier renderers. This is a deterministic trial grid, not an autonomous researcher loop.</li>
     <li><span class="dnum">D-8</span><b>Verbatim CUAD text is usable, with attribution.</b> CC BY 4.0; category definitions and guideline text may be quoted verbatim in prompt templates and checked-in artifacts, and the paraphrase fallback is dropped. Attribution to The Atticus Project is a standing obligation on every derivative in git.</li>
-    <li><span class="dnum">D-9</span><b>Model-assisted principle proposal is logged, not ambient.</b> Contrastive-pair mining is deterministic and runs on FT-train only; proposals come from a pinned frontier model (<code>claude-opus-5</code>) with a pinned prompt version; every candidate carries evidence pointers, a checker sketch, and a Tyler <code>review</code> block with a required rationale. Rejected candidates are retained — the rejection set is itself a finding.</li>
+    <li><span class="dnum">D-9</span><b>Model-assisted principle proposal is logged, not ambient.</b> Contrastive-pair mining is deterministic and ran on the pre-carve training pool only (the split then called <code>ft_train</code>); proposals come from a pinned frontier model (<code>claude-opus-5</code>) with a pinned prompt version; every candidate carries evidence pointers, a checker sketch, and a Tyler <code>review</code> block with a required rationale. Rejected candidates are retained — the rejection set is itself a finding.</li>
     <li><span class="dnum">D-10</span><b>Two-level results store.</b> <code>trials.jsonl</code> + <code>decisions.jsonl</code>. A single nested trial row was rejected.</li>
     <li><span class="dnum">D-11</span><b>CUAD citation.</b> <code>hendrycks2021cuad</code> (arXiv:2103.06268), in <code>literature/references.bib</code>. Cited in the one-pager; pairs with the D-8 attribution obligation.</li>
   </ol>
@@ -983,7 +983,7 @@
     <li><b>Model axis</b> — inkling-small availability and context window on Tinker (this blocks the P0 model choice); the ~8B and ~32B open picks (Qwen family likely; confirm the current Tinker model list); the frontier API model.</li>
     <li><b>Annotation-guidelines licensing</b> — the broad question was resolved on 2026-08-15 (CUAD is CC BY 4.0, verbatim reuse permitted with attribution). The remaining narrow question: confirm the annotation-guidelines PDF is covered by the same release and not licensed separately from the dataset.</li>
     <li><b>AbstentionBench programmatic-vs-judge scoring split</b> — deferred to environment #2.</li>
-    <li><b>Dev length profile</b> (raised by WS1, for G1) — dev currently mirrors the official-train pool’s length distribution, not holdout’s. If dev is meant to <em>predict</em> holdout behaviour at length, it should be re-stratified. Flagged as a deliberate choice, not yet decided.</li>
+    <li><b>harness_val length profile</b> (raised by WS1, for G1) — harness_val currently mirrors the official-train pool’s length distribution, not test’s. If harness_val is meant to <em>predict</em> test behaviour at length, it should be re-stratified. Flagged as a deliberate choice, not yet decided.</li>
     <li><b>Whether to keep both near-degenerate rare categories</b> (raised by WS1, for G1) — Source Code Escrow and Most Favored Nation may be redundant with each other for extraction; the final call folds into the inv 002 subset decision.</li>
   </ul>
   <p style="font-size:14.5px; color:var(--muted);">

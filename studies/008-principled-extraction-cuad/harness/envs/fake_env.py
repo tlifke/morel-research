@@ -161,17 +161,17 @@ class FakeEnvironment(Environment):
 
     def load_instances(self, split: str) -> list[Instance]:
         specs = [
-            ("FAKE_0001", "Alpha Supply Agreement", TARGETS, 4, "dev", ("Governing Law",)),
-            ("FAKE_0002", "Beta Distribution Agreement", ["Governing Law"], 40, "dev", ()),
+            ("FAKE_0001", "Alpha Supply Agreement", TARGETS, 4, "harness_val", ("Governing Law",)),
+            ("FAKE_0002", "Beta Distribution Agreement", ["Governing Law"], 40, "harness_val", ()),
             (
                 "FAKE_0003",
                 "Gamma Master Services Agreement",
                 ["Agreement Date", "Volume Restriction"],
                 400,
-                "dev",
+                "harness_val",
                 (),
             ),
-            ("FAKE_0004", "Delta Reseller Agreement", [], 4000, "holdout", ()),
+            ("FAKE_0004", "Delta Reseller Agreement", [], 4000, "test", ()),
         ]
         return [
             _build_instance(cid, title, present, filler, isplit, repeated)

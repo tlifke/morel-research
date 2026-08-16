@@ -1,8 +1,17 @@
 # Principle claim checks — d02, d04, d07
 
+> **Split names.** Renamed on 2026-08-16 (`../plans/splits.md`); membership did
+> not change, so `harness_val` here is exactly the old `dev` and `test` the old
+> `holdout`. **`model_train` in this report means the pre-carve training pool it
+> was run over** — 368 contracts before INV1-D7, 364 after — not today's
+> 264-contract `model_train`. INV1-D8 later carved `principle_train` (60) and
+> `principle_val` (40) out of that pool, so every count below stated over
+> `harness_val` + `model_train` is over a pool that no longer corresponds to any
+> pair of split names.
+
 Empirical verification of three factual claims underlying `principles/pilot/candidates_data_mined.yaml`,
-run before Tyler's hand-review at gate G2. Read-only over `dev` + `ft_train` (408 contracts, 11,180 gold
-spans across all 41 CUAD categories) via `scripts/cuad_dataset.py`. HOLDOUT was not loaded.
+run before Tyler's hand-review at gate G2. Read-only over `harness_val` + `model_train` (408 contracts, 11,180 gold
+spans across all 41 CUAD categories) via `scripts/cuad_dataset.py`. test was not loaded.
 Date: 2026-08-15. AI Assistant Used: Claude Code.
 
 ## Verdicts
@@ -34,7 +43,7 @@ Both cited ranges carry two gold labels *inside their own contract*:
 | `INTELLIGENTHIGHWAYSOLUTIONS,INC_01_18_2018-EX-10.1-Strategic Alliance Agreement` | `[3736:4373]` | Minimum Commitment **and** Revenue/Profit Sharing |
 | `SIBANNAC,INC_12_04_2017-EX-2.1-Strategic Alliance Agreement` | `[3753:4384]` | Minimum Commitment **and** Revenue/Profit Sharing |
 
-Both are ft_train. Note that pair-0004 and pair-0005 are recorded with `same_contract: false` — they are
+Both are model_train. Note that pair-0004 and pair-0005 are recorded with `same_contract: false` — they are
 cross-document pairs — so the proposer's reading was an inference from the symmetry, not from the pair
 records. The inference was nonetheless correct: each span is independently double-labelled within its own
 document. (The two contracts *are* near-twins, but here they agree, so this is not a twin-document defect
@@ -42,7 +51,7 @@ in either direction.)
 
 ### Corpus count
 
-Over dev + ft_train, all 41 CUAD categories:
+Over harness_val + model_train, all 41 CUAD categories:
 
 | measure | count | rate |
 |---|---|---|
@@ -97,7 +106,7 @@ smaller but still present, so a checker must accept multi-assignment rather than
 
 ### Method
 
-All 336 Minimum Commitment gold spans in dev + ft_train (133 of 408 contracts have MC present) were read
+All 336 Minimum Commitment gold spans in harness_val + model_train (133 of 408 contracts have MC present) were read
 and hand-classified by the obligation each span encodes. Fragments (bare section headers, cross-reference
 tails) were bucketed separately rather than forced into a type.
 
@@ -171,7 +180,7 @@ noise, not convention, and worth flagging separately from d04.
 
 ## Claim 3 — d07, page furniture inside spans
 
-### Counts (dev + ft_train, all 41 categories)
+### Counts (harness_val + model_train, all 41 categories)
 
 Furniture patterns searched: SEC `Source: …, M/D/YYYY` lines, confidential-treatment / "omitted portions
 of this exhibit" legends, `Page N of M` lines, and bare page numbers alone on a line.
@@ -256,7 +265,7 @@ what the corpus supports.
 ## Reproduction
 
 Analysis scripts were scratch-only and are not checked in (constraint: no dataset writes, no edits under
-`principles/`). All numbers come from `scripts/cuad_dataset.py` over `dev` + `ft_train`; the Minimum
+`principles/`). All numbers come from `scripts/cuad_dataset.py` over `harness_val` + `model_train`; the Minimum
 Commitment classification in Claim 2 is a hand labelling of all 336 spans and is the only non-mechanical
 number in this report.
 
@@ -265,8 +274,8 @@ number in this report.
 ## Correction — 2026-08-15, after the split-contamination fix (INV1-D7)
 
 Evidence item 7 under d07 cites `ARMSTRONGFLOORING,INC_01_07_2019-EX-10.2…` at
-`[51376:51423]`. That contract has since been **excluded from ft_train** as a
-cross-split duplicate of its dev twin (`ArmstrongFlooringInc_20190107_8-K_EX-10.2…`,
+`[51376:51423]`. That contract has since been **excluded from model_train** as a
+cross-split duplicate of its harness_val twin (`ArmstrongFlooringInc_20190107_8-K_EX-10.2…`,
 containment 0.975). The twin almost certainly carries the same passage, but the
 two documents differ in length by ~13k characters so **the offsets do not
 transfer** — treat that one citation as unverified pending re-location.
@@ -274,5 +283,5 @@ transfer** — treat that one citation as unverified pending re-location.
 The d07 verdict does not rest on it: the refutation is carried by the 204
 furniture-split adjacent pairs against 25 furniture-swallowing spans, none of
 which involve an excluded contract. Counts elsewhere in this report that ranged
-over dev + ft_train are computed over the pre-exclusion 408; the four removals
+over harness_val + model_train are computed over the pre-exclusion 408; the four removals
 do not affect any stated verdict.

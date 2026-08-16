@@ -3,7 +3,7 @@ generated: '2026-08-15'
 generator:
   script: studies/008-principled-extraction-cuad/principles/pilot/checkers/run_footprints.py
   version: '1.0'
-split: dev
+split: harness_val
 population:
   unit: decision (contract x category)
   n_units: 480
@@ -218,7 +218,7 @@ principles:
       text: this ___ day of _________, 2004
   g03:
     status: discriminating-but-rare
-    note: '2.5% of decisions; a genuine multi-label partition, but duplicated exactly by d02 on dev. Rate
+    note: '2.5% of decisions; a genuine multi-label partition, but duplicated exactly by d02 on harness_val. Rate
       over all 480 decisions: 2.5%. Applicability is computed from gold span content; the discrimination
       number is therefore arithmetic, not evidence.'
     applicability:
@@ -517,7 +517,7 @@ principles:
           passing sentence is a candidate false pass
   g06:
     status: discriminating-but-rare
-    note: '12.5% of Revenue/Profit Sharing decisions, 6 trigger sentences in dev, 2 of 6 hand-judged not
+    note: '12.5% of Revenue/Profit Sharing decisions, 6 trigger sentences in harness_val, 2 of 6 hand-judged not
       administration at all. Rate over all 480 decisions: 1.0%. Applicability is computed from instance
       only; the discrimination number is a real association.'
     applicability:
@@ -815,7 +815,7 @@ principles:
       text: this ___ day of _________, 2004
   d02:
     status: discriminating-but-rare
-    note: 'Identical firing set to g03 on dev (12 decisions); the two are the same principle reached from
+    note: 'Identical firing set to g03 on harness_val (12 decisions); the two are the same principle reached from
       two sources. Rate over all 480 decisions: 2.5%. Applicability is computed from gold span content;
       the discrimination number is therefore arithmetic, not evidence.'
     applicability:
@@ -1198,7 +1198,7 @@ principles:
         12, 2014, is by and among the persons and entities listed on Schedule A (collectivel
   d06:
     status: degenerate
-    note: 'One firing in 480 decisions; the evidence base was already n=1 and dev does not enlarge it.
+    note: 'One firing in 480 decisions; the evidence base was already n=1 and harness_val does not enlarge it.
       Rate over all 480 decisions: 0.2%. Applicability is computed from gold presence; the discrimination
       number is therefore arithmetic, not evidence.'
     applicability:
@@ -1262,7 +1262,7 @@ principles:
       text: this ___ day of _________, 2004
   d07:
     status: degenerate
-    note: 'Zero firings on dev; only 10 gold spans in the whole 12-category dev+ft_train pool contain
+    note: 'Zero firings on harness_val; only 10 gold spans in the whole 12-category harness_val + the pre-carve ft_train pool contain
       furniture strictly inside. Rate over all 480 decisions: 0.0%. Applicability is computed from gold
       span content; the discrimination number is therefore arithmetic, not evidence.'
     applicability:

@@ -34,7 +34,7 @@ Two competing risks, no free option:
 ## Design
 
 2 schema variants (field-present / field-absent) × 2 conditions (C1, C2) ×
-~12 dev contracts spanning the length range × 3 seeds. Pilot model:
+~12 harness_val contracts spanning the length range × 3 seeds. Pilot model:
 **inkling-small** (confirm Tinker availability + context window first — it is
 an open question in `plans/decisions.md`).
 

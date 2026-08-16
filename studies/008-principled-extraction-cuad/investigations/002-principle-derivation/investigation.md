@@ -77,12 +77,12 @@ neither source produced, but the default path is curation over proposals.
 
 This is a methods-section artifact. Every number and name here gets reported.
 
-**Pair mining (deterministic, no model).** Over the **FT-train remainder
-only** — never dev, never holdout — retrieve span pairs with high surface
+**Pair mining (deterministic, no model).** Over the **model_train remainder
+only** — never harness_val, never test — retrieve span pairs with high surface
 similarity and different gold category labels (or present-vs-absent
 disagreement). Similarity metric, threshold, and the number of pairs surfaced
 are recorded in `principles/mining_config.yaml` and are part of the reported
-method. Dev stays clean because P0 and Phase-1 iteration run on it; holdout is
+method. harness_val stays clean because P0 and Phase-1 iteration run on it; test is
 sealed under G4.
 
 **Why `invocation` and `harness` are separate from `model`.** The same model
@@ -190,7 +190,7 @@ compliance as emitting the gold answer. Every one of them looked reasonable as
 prose. The defect lives entirely in the checker, which is why checkers must be
 implemented and inspected **before** curation, not after.
 
-Screening test, to be run mechanically per principle over dev: populate the
+Screening test, to be run mechanically per principle over harness_val: populate the
 2×2 of {passes checker, fails checker} × {answer right, answer wrong}. If
 either off-diagonal cell is structurally empty, the principle is excluded.
 

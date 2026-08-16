@@ -40,7 +40,7 @@ def _base_trial(trial_id="t1"):
         "outcome": "ok",
         "n_contract_tokens": 100,
         "length_bucket": "0-4k",
-        "split": "dev",
+        "split": "harness_val",
     }
 
 
@@ -109,7 +109,7 @@ def test_rows_are_json_lines_matching_the_schema(tmp_path):
 
 def test_run_grid_writes_both_files_and_skips_existing(tmp_path):
     env = FakeEnvironment()
-    instances = env.load_instances("dev")
+    instances = env.load_instances("harness_val")
     backend = FakeBackend(lambda messages, idx: json.dumps(PAYLOAD), context_limit=100000)
     store = ResultsStore(tmp_path)
     config = RunConfig(run_id="grid-test", max_output_tokens=256, principle_set_version="fake-v1")
@@ -145,7 +145,7 @@ def test_run_grid_writes_both_files_and_skips_existing(tmp_path):
 
 def test_non_ok_trials_still_write_rows_through_the_grid(tmp_path):
     env = FakeEnvironment()
-    instances = env.load_instances("dev")
+    instances = env.load_instances("harness_val")
     backend = FakeBackend(lambda messages, idx: "not json", context_limit=100000)
     store = ResultsStore(tmp_path)
     config = RunConfig(run_id="fail-test", max_output_tokens=256, max_repair_attempts=1)
@@ -171,7 +171,7 @@ def test_non_ok_trials_still_write_rows_through_the_grid(tmp_path):
 def test_exactly_one_decision_row_per_target_for_every_trial_outcome(tmp_path):
     env = FakeEnvironment()
     targets = env.task_definition().targets
-    instances = env.load_instances("dev")
+    instances = env.load_instances("harness_val")
 
     scripts = {
         "ok": lambda messages, idx: json.dumps(PAYLOAD),
@@ -209,7 +209,7 @@ def test_infeasible_trials_also_write_one_row_per_target(tmp_path):
     run_grid(
         env=env,
         backend=FakeBackend(lambda messages, idx: json.dumps(PAYLOAD), context_limit=32),
-        instances=env.load_instances("dev"),
+        instances=env.load_instances("harness_val"),
         conditions=["C1"],
         seeds=[0],
         schema_variants=["field_present"],

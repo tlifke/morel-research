@@ -32,7 +32,7 @@ field_notes:
     round2/critiques.yaml. "needs_rebuild" covers both separability failures
     (D-21) and lexical-proxy failures (D-24).
   evidence_summary: >
-    applicability is over the 480-decision dev set (40 contracts x 12
+    applicability is over the 480-decision harness_val set (40 contracts x 12
     categories); in_scope is restricted to the record's declared scope. phi is
     the applicability-x-gold-presence correlation on the in-scope subset and is
     a pre-model diagnostic only — it is not compliance, not accuracy, and not
@@ -138,7 +138,7 @@ principles:
       largely through the same furniture-splitting artefact that sinks d07/p19.
       p10's applicability is gated on the content of the very decision's own gold
       spans. p22 is also the least stable record in the round-2 set: including
-      the value categories moves its firing rate from 22.5% to 44.0% of dev
+      the value categories moves its firing rate from 22.5% to 44.0% of harness_val
       decisions. A rebuilt checker needs an instance-only applicability test
       (which category kind is this, does the contract contain a candidate
       sentence) with compliance read off span offsets.
@@ -184,7 +184,7 @@ principles:
     validation file. The two derivation arms — guidelines reading and
     contrastive data mining — produced the same rule without seeing each other
     (the proposer never sees the guidelines-derived candidates), and the
-    checkers built from the two sketches fire on a byte-identical set of dev
+    checkers built from the two sketches fire on a byte-identical set of harness_val
     decisions (12 of 480, phi 0.1808 for both). The Handbook states it outright
     (ch.1 p.5, plus at least three worked examples); gold shows 118 overlapping
     span pairs on 76 of 404 contracts.
@@ -317,7 +317,7 @@ principles:
     what_is_wrong: >
       Nothing disqualifying. Applicability is instance-only (does the contract
       contain a venue/arbitration sentence), so it passes D-21 separability, and
-      it is the best-footprinted record in the set: 21 of 480 dev decisions,
+      it is the best-footprinted record in the set: 21 of 480 harness_val decisions,
       52.5% within scope, phi 0.4005. Optional improvement, not a rebuild: the
       wide_venue variant lifts phi to 0.4551 and the firing rate to 23 of 480,
       a 0.4-point rate swing. Sentence segmentation is the only moving part and
@@ -541,7 +541,7 @@ principles:
       Applicability is gated on gold is_impossible — the checker asks the answer
       — so the off-diagonal is structurally empty and it fails D-21 outright
       (phi -0.698, the signature of an absence gate). It also fires on 1 of 480
-      dev decisions, which is too rare to measure anything on dev even if the
+      harness_val decisions, which is too rare to measure anything on harness_val even if the
       gate were removed.
   evidence_summary:
     applicability:
@@ -615,7 +615,7 @@ principles:
       supply/deliver/provide/share/allocate alternation and misses the
       second-largest class, performance/effort/revenue floors. Widening it is
       measurably better — the widened_floor_and_verbs variant moves the record
-      from 14 to 19 of 480 dev decisions, 35% to 47.5% in scope, and phi from
+      from 14 to 19 of 480 harness_val decisions, 35% to 47.5% in scope, and phi from
       0.2059 to 0.4698. (2) The compliance rule demands an Extraction on 41% of
       applicable contracts that gold marks absent, so as built it would score
       correct abstention as a violation. Separability itself passes
@@ -692,7 +692,7 @@ principles:
   checker_status:
     status: needs_rebuild
     what_is_wrong: >
-      The trigger is too loose to discriminate: it fires on 60 of 480 dev
+      The trigger is too loose to discriminate: it fires on 60 of 480 harness_val
       decisions and 75% of in-scope decisions, which footprint classes as
       near-degenerate frequency — a principle applying to three quarters of its
       scope cannot localise an effect. The single-direction variants are barely
@@ -977,7 +977,7 @@ dropped:
       derivation arms disagreed here and the GUIDELINES arm was right — a result
       about the derivation method, not a defect to patch.
     evidence:
-      applicability: {n_applicable: 0, n_units: 480, rate: 0.0, footprint_status: never-fires-in-dev, wide_furniture_variant: {n_applicable: 1, phi_in_scope: 0.0516}}
+      applicability: {n_applicable: 0, n_units: 480, rate: 0.0, footprint_status: never-fires-in-harness_val, wide_furniture_variant: {n_applicable: 1, phi_in_scope: 0.0516}}
       separability: {verdict: fail, gold_dependency: gold_span_content_own}
       cross_source: {status: silent, confidence: high, silence_reason: 'structural — the Handbook describes annotating contracts, not the EDGAR text dumps CUAD was built from'}
       critic: {verdict: 'the second half is confirmed and the first half is refuted', confidence: strong, recommendation: rewrite_statement}

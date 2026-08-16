@@ -22,12 +22,12 @@ CONTAINMENT_THRESHOLD = 0.80
 REPORT_FLOOR = 0.30
 
 PAIR_ORDER = [
-    ("ft_train", "holdout"),
-    ("dev", "holdout"),
-    ("dev", "ft_train"),
-    ("holdout", "holdout"),
-    ("ft_train", "ft_train"),
-    ("dev", "dev"),
+    ("model_train", "test"),
+    ("harness_val", "test"),
+    ("harness_val", "model_train"),
+    ("test", "test"),
+    ("model_train", "model_train"),
+    ("harness_val", "harness_val"),
 ]
 
 

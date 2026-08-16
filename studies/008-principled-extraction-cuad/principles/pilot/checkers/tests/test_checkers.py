@@ -236,7 +236,7 @@ def test_dev_footprint_regression():
     from checkers.run_footprints import evaluate, footprint
 
     dataset = CuadDataset()
-    rows, categories = evaluate(dataset, "dev")
+    rows, categories = evaluate(dataset, "harness_val")
     assert len(rows) == 480
     expected = {
         "g01": 108,

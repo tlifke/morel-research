@@ -9,11 +9,16 @@ note: >
   any value below is a new mining version, not an edit.
 
 split:
-  name: ft_train
+  name: model_train
   n_contracts: 368
+  name_note: >
+    Recorded when this split was called `ft_train` and held 368 contracts. INV1-D7
+    later moved 4 to `scratch` and INV1-D8 carved `principle_train` (60) and
+    `principle_val` (40) out of the remaining 364, so today's `model_train` is 264
+    and this run's scope is not reproducible from the split name alone.
   rationale: >
-    FT-train only. Dev is reserved for P0 and Phase-1 iteration and must stay
-    clean; holdout is sealed until G4. No dev or holdout contract is read by the
+    Training pool only. harness_val is reserved for P0 and Phase-1 iteration and must stay
+    clean; test is sealed until G4. No harness_val or test contract is read by the
     miner or reaches any mined pair.
 
 pilot_categories:

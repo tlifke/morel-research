@@ -35,9 +35,9 @@ most common mode:
 | defect-derived | does he notice a generalisation from a documented gold defect (D-15) presented as a convention |
 | circular | does he notice a restatement of the printed category definition, which every arm already receives |
 
-Each control was disproved against gold in `dev` + `ft_train` before it entered
+Each control was disproved against gold in `harness_val` + `model_train` before it entered
 the set — contract ids, offsets and counts are recorded in the answer key.
-Holdout was never loaded. Candidates that could not be disproved were discarded
+test was never loaded. Candidates that could not be disproved were discarded
 during authoring rather than kept as "probably wrong", because a control whose
 wrongness cannot be demonstrated is indistinguishable from a real principle that
 happens to be wrong, and would corrupt the measurement in the direction that

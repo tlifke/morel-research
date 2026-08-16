@@ -289,7 +289,7 @@ def test_pairs_sidecar_is_indexed_by_pair_id(tmp_path):
 def test_footprint_sidecar_shape(tmp_path):
     service = make_service(tmp_path, pairs=PAIRS, footprint=FOOTPRINT)
     fp = service.state()["sidecars"]["footprint"]
-    assert fp["split"] == "dev"
+    assert fp["split"] == "harness_val"
     assert fp["population"]["n_units"] == 732
     entry = fp["principles"]["sp01"]
     assert entry["applicability"]["n_applicable"] == 143

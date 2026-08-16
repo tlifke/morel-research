@@ -1,8 +1,17 @@
 # Agreement Date: documented rule vs. actual gold
 
+> **Split names.** Renamed on 2026-08-16 (`../plans/splits.md`); membership did
+> not change, so `harness_val` here is exactly the old `dev` and `test` the old
+> `holdout`. **`model_train` in this report means the pre-carve training pool it
+> was run over** — 368 contracts before INV1-D7, 364 after — not today's
+> 264-contract `model_train`. INV1-D8 later carved `principle_train` (60) and
+> `principle_val` (40) out of that pool, so every count below stated over
+> `harness_val` + `model_train` is over a pool that no longer corresponds to any
+> pair of split names.
+
 **VERDICT: the gold follows the Handbook, not our plan's assumption.** A blank or redacted
 agreement date in the document's own execution/introductory wording is labelled *present* in
-CUAD, with the blank text itself as the gold span — 30 such contracts in dev+ft_train, and zero
+CUAD, with the blank text itself as the gold span — 30 such contracts in harness_val+model_train, and zero
 clean counterexamples where such a construct was left gold-absent.
 
 **Our plan's assumption ("blank signing date ⇒ gold-absent") is contradicted and should be
@@ -10,7 +19,7 @@ dropped.** g08 as written is directionally correct and does *not* create a compl
 inversion — but it needs one refinement (below), because gold draws a line g08 currently does not:
 a bare `Date:` slot with no date-shaped text is *not* a redacted date, and is gold-absent.
 
-Scope: dev (40) + ft_train (368) = 408 contracts. Holdout untouched. Loader-only, read-only.
+Scope: harness_val (40) + model_train (368) = 408 contracts. test untouched. Loader-only, read-only.
 
 ---
 
@@ -55,40 +64,40 @@ i.e. in the signature block. The operative distinction is **is there a date-shap
 
 ## Inspected cases
 
-**1. `UsioInc_20040428_SB-2_EX-10.11_..._Affiliate Agreement 2`** (dev) — **PRESENT**,
+**1. `UsioInc_20040428_SB-2_EX-10.11_..._Affiliate Agreement 2`** (harness_val) — **PRESENT**,
 span `________ day of ______________________, in the year ____________` at relpos 0.989.
 Context: "…supersede all prior agreements… EXECUTED this ________ day of
 ______________________, in the year ____________. Network 1 Affiliate By: ______".
 The intro paragraph carries no date at all. The *only* date in the document is a fully blank
-signature-block execution line — and it is the gold answer. Handbook behaviour, in dev,
+signature-block execution line — and it is the gold answer. Handbook behaviour, in harness_val,
 directly against our plan's assumption.
 
-**2. `AULAMERICANUNITTRUST_04_24_2020-EX-99.8.77-SERVICING AGREEMENT`** (ft_train) —
+**2. `AULAMERICANUNITTRUST_04_24_2020-EX-99.8.77-SERVICING AGREEMENT`** (model_train) —
 **PRESENT**, span `this day of , 20` at offset 79. Context: "SERVICING AGREEMENT NATIONWIDE
 MUTUAL FUNDS Agreement, made as of this day of , 20 between Nationwide Fund Management LLC…".
 This is the exact shape of the motivating LOHAS example — an execution phrase with the date
 literally missing — and CUAD labels it, span = the empty construct including the truncated
 `20`. This single case is the cleanest refutation of the plan's assumption.
 
-**3. `StaarSurgicalCompany_20180801_10-Q_EX-10.37_..._Distributor Agreement`** (ft_train) —
+**3. `StaarSurgicalCompany_20180801_10-Q_EX-10.37_..._Distributor Agreement`** (model_train) —
 **PRESENT**, span `____________`. Context: "…is entered into and made effective as of
 ____________ (the "Effective Date"), by and between STAAR SURGICAL AG…". A bare underscore run
 is a valid gold span when it sits in the date position of the execution phrase.
 
-**4. `LUCIDINC_04_15_2011-EX-10.9-DISTRIBUTOR AGREEMENT`** (ft_train) — **PRESENT**, span `[*]`.
+**4. `LUCIDINC_04_15_2011-EX-10.9-DISTRIBUTOR AGREEMENT`** (model_train) — **PRESENT**, span `[*]`.
 Context: "This Distributor Agreement (the 'Agreement') dated [*] is between Lucid Inc.…".
 Redaction marker as the answer. Note the span is `[*]` alone — the execution verb `dated` is
 excluded, consistent with g07's IS-NOT list.
 
 **5. `InnerscopeHearingTechnologiesInc_20181109_8-K_EX-10.6_..._Distributor Agreement`**
-(ft_train) — **ABSENT**. Context: "…being herein merged. Dated: . Erchonia Medical Corporation.
+(model_train) — **ABSENT**. Context: "…being herein merged. Dated: . Erchonia Medical Corporation.
 By _____________________ Its _____________________ Distributor: ________________". The intro
 paragraph names the parties but carries no date. The only date position is a bare `Dated: .`
 This is the closest thing in the corpus to the LOHAS "signed on , in Hong Kong" case, and it is
 gold-absent — but note the difference from case 2: no month, no year, no `day of`. There is no
 date-shaped construct, only an empty label.
 
-**6. `FUSIONPHARMACEUTICALSINC_06_05_2020-EX-10.17-Supply Agreement - FUSION`** (ft_train) —
+**6. `FUSIONPHARMACEUTICALSINC_06_05_2020-EX-10.17-Supply Agreement - FUSION`** (model_train) —
 **ABSENT**. Intro: "SUPPLY AGREEMENT … effective as of the date of last signing ("Effective
 Date")". Signature block: "…Title Title Date Date [SIGNATURE PAGE]" — both date fields empty.
 Same shape as case 5. Also gold-absent. `Cardlytics… Maintenance Agreement2` and
@@ -97,8 +106,8 @@ Same shape as case 5. Also gold-absent. `Cardlytics… Maintenance Agreement2` a
 independent contracts treat the empty signature-block slot the same way, so this is a rule, not
 noise.
 
-**7. `PfHospitalityGroupInc_20150923_10-12G_EX-10.1_..._Franchise Agreement1`** (ft_train) —
-**ABSENT**, vs. **`…Franchise Agreement3`** (ft_train) — **PRESENT**, span
+**7. `PfHospitalityGroupInc_20150923_10-12G_EX-10.1_..._Franchise Agreement1`** (model_train) —
+**ABSENT**, vs. **`…Franchise Agreement3`** (model_train) — **PRESENT**, span
 `this  _____ day of _________, 20___`. Same SEC filing, same franchise package, opposite gold.
 Doc 1's cover page reads "Location of the Premises: Agreement Date Franchisee Business
 Address…" — a form field *label* with no value and no date-shaped text, and the body says
@@ -107,7 +116,7 @@ NDA whose own opening is "…is made this  _____ day of _________, 20___". Under
 rule these are consistent; under a naive "cover page is a search location, so a blank cover-page
 date counts" reading of the Handbook, doc 1 is a miss. **Borderline case #1.**
 
-**8. `SoupmanInc_20150814_8-K_EX-10.1_..._Franchise Agreement2`** (ft_train) — **ABSENT**.
+**8. `SoupmanInc_20150814_8-K_EX-10.1_..._Franchise Agreement2`** (model_train) — **ABSENT**.
 Intro: "As an inducement to Kiosk Concepts, Inc. ("Franchisor") to enter into a Master Franchise
 Agreement with __N/A____________________ ("Master Franchisee") dated __________________, 20____
 (the "Master Franchise Agreement")…". A date-shaped blank construct (`dated ______, 20____`)
@@ -117,8 +126,8 @@ g07's other-agreement rule, but it is the one instance where an intro-position d
 blank is unlabelled. **Borderline case #2 — the only real ambiguity in the absent set.**
 
 **9. `ChinaRealEstateInformationCorp_20090929_F-1_EX-10.32_..._Content License Agreement`**
-(ft_train) — **ABSENT** — vs.
-**`LejuHoldingsLtd_20140121_DRS (on F-1)_EX-10.26_..._Content License Agreement2`** (ft_train) —
+(model_train) — **ABSENT** — vs.
+**`LejuHoldingsLtd_20140121_DRS (on F-1)_EX-10.26_..._Content License Agreement2`** (model_train) —
 **PRESENT**, span `day of , 2009`. The same SINA/Leju document, filed twice. In the China Real
 Estate filing the whole agreement plus Exhibit B is one file; its main agreement is "made
 effective as of the Effective Date (defined below)" (no date), and Exhibit B's "THIS MUTUAL
@@ -181,7 +190,7 @@ near-duplicate-inconsistency cases for the noise-floor estimate.
 ## Caveats
 
 - The LOHAS contract that motivated the whole question **is not in CUAD v1** — no title matches
-  and the string `signed on ,` appears in zero dev/ft_train contracts. The motivating example is
+  and the string `signed on ,` appears in zero contracts in harness_val or the pre-carve ft_train pool. The motivating example is
   external to the corpus; case 2 (AUL American Unit Trust) is its in-corpus analogue.
 - Classification of the 31 absent contracts into "no construct" vs. "other agreement's date" is
   my hand judgement over the head-4000/tail-8000 window of each; a date-shaped blank buried in
@@ -192,10 +201,10 @@ near-duplicate-inconsistency cases for the noise-floor estimate.
 
 ## Correction — 2026-08-15, after the split-contamination fix (INV1-D7)
 
-Four contracts were excluded from ft_train to remove cross-split content
+Four contracts were excluded from model_train to remove cross-split content
 duplication. The denominators in this report shift accordingly:
 
-- scope: dev + ft_train **408 → 404** contracts
+- scope: harness_val + model_train **408 → 404** contracts
 - Agreement Date positives: **377 → 374**
 
 **No finding changes.** None of the four excluded contracts is cited as a case

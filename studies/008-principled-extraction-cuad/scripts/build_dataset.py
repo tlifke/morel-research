@@ -301,7 +301,7 @@ def main():
 
     descriptions = load_category_descriptions()
     full = parse_articles(RAW / "CUADv1.json")
-    test = parse_articles(RAW / "test.json")
+    official_test = parse_articles(RAW / "test.json")
 
     categories = list(next(iter(full.values()))["gold"])
     for cid, rec in full.items():
@@ -311,7 +311,7 @@ def main():
     missing_subset = [c for c in subset if c not in categories]
     assert not missing_subset, missing_subset
 
-    for cid, rec in test.items():
+    for cid, rec in official_test.items():
         assert full[cid]["context"] == rec["context"], cid
         assert full[cid]["gold"] == rec["gold"], cid
 
@@ -338,8 +338,8 @@ def main():
             "gold": gold,
         }
 
-    holdout = sorted(test)
-    train_pool = sorted(set(full) - set(test))
+    test = sorted(official_test)
+    train_pool = sorted(set(full) - set(official_test))
     lo, hi = tercile_edges([instances[c]["n_positive_all"] for c in train_pool])
 
     def tercile(n):
@@ -351,11 +351,11 @@ def main():
     pool_by_bucket = {b: dict(v) for b, v in pool_by_bucket.items()}
     stratum_sizes = {f"{b}|{t}": len(v) for b, cells in pool_by_bucket.items() for t, v in cells.items()}
 
-    n_dev = dataset_cfg["splits"]["dev"]["n"]
-    holdout_bucket_counts = Counter(instances[c]["length_bucket"] for c in holdout)
+    n_harness_val = dataset_cfg["splits"]["harness_val"]["n"]
+    test_bucket_counts = Counter(instances[c]["length_bucket"] for c in test)
     pool_bucket_capacity = {lab: sum(len(v) for v in pool_by_bucket.get(lab, {}).values()) for lab in labels}
     bucket_targets = largest_remainder(
-        {lab: holdout_bucket_counts.get(lab, 0) for lab in labels}, n_dev, pool_bucket_capacity
+        {lab: test_bucket_counts.get(lab, 0) for lab in labels}, n_harness_val, pool_bucket_capacity
     )
     bucket_shortfall = {
         lab: {"target": bucket_targets[lab], "pool": pool_bucket_capacity[lab]}
@@ -364,54 +364,54 @@ def main():
     }
 
     seed = dataset_cfg["splits"]["seed"]
-    dev, alloc = stratified_sample(pool_by_bucket, bucket_targets, seed)
+    harness_val, alloc = stratified_sample(pool_by_bucket, bucket_targets, seed)
 
     exclusions = {e["id"]: e for e in dataset_cfg["exclusions"]["contract_ids"]}
     unknown = [cid for cid in exclusions if cid not in full]
     assert not unknown, unknown
-    assert not (set(exclusions) & set(holdout)), "exclusion targets holdout"
-    assert not (set(exclusions) & set(dev)), "exclusion targets dev"
-    excluded = sorted(exclusions)
-    ft_pool = sorted(set(train_pool) - set(dev) - set(exclusions))
+    assert not (set(exclusions) & set(test)), "exclusion targets test"
+    assert not (set(exclusions) & set(harness_val)), "exclusion targets harness_val"
+    scratch = sorted(exclusions)
+    model_train_pool = sorted(set(train_pool) - set(harness_val) - set(exclusions))
 
-    ft_bucket_weights = {lab: 0 for lab in labels}
-    for cid in ft_pool:
-        ft_bucket_weights[instances[cid]["length_bucket"]] += 1
+    model_train_bucket_weights = {lab: 0 for lab in labels}
+    for cid in model_train_pool:
+        model_train_bucket_weights[instances[cid]["length_bucket"]] += 1
 
     clusters, cluster_edges = near_duplicate_clusters(
-        {cid: full[cid]["context"] for cid in ft_pool}, ft_pool, dataset_cfg["split_clustering"]
+        {cid: full[cid]["context"] for cid in model_train_pool}, model_train_pool, dataset_cfg["split_clustering"]
     )
-    bound_to_ft_train = sorted({cid for group in clusters for cid in group})
-    eligible = sorted(set(ft_pool) - set(bound_to_ft_train))
+    bound_to_model_train = sorted({cid for group in clusters for cid in group})
+    eligible = sorted(set(model_train_pool) - set(bound_to_model_train))
 
-    sel_cfg = dataset_cfg["splits"]["selection"]
-    con_cfg = dataset_cfg["splits"]["confirmation"]
-    selection, selection_floor_trace, selection_fill = carve_by_category_floor(
-        eligible, instances, subset, sel_cfg["category_floor"], sel_cfg["n"], ft_bucket_weights, sel_cfg["seed"]
+    sel_cfg = dataset_cfg["splits"]["principle_train"]
+    con_cfg = dataset_cfg["splits"]["principle_val"]
+    principle_train, principle_train_floor_trace, principle_train_fill = carve_by_category_floor(
+        eligible, instances, subset, sel_cfg["category_floor"], sel_cfg["n"], model_train_bucket_weights, sel_cfg["seed"]
     )
-    confirmation, confirmation_floor_trace, confirmation_fill = carve_by_category_floor(
-        sorted(set(eligible) - set(selection)),
+    principle_val, principle_val_floor_trace, principle_val_fill = carve_by_category_floor(
+        sorted(set(eligible) - set(principle_train)),
         instances,
         subset,
         con_cfg["category_floor"],
         con_cfg["n"],
-        ft_bucket_weights,
+        model_train_bucket_weights,
         con_cfg["seed"],
     )
-    ft_train = sorted(set(ft_pool) - set(selection) - set(confirmation))
+    model_train = sorted(set(model_train_pool) - set(principle_train) - set(principle_val))
 
-    assert len(holdout) == dataset_cfg["splits"]["holdout"]["n"]
-    assert len(dev) == dataset_cfg["splits"]["dev"]["n"]
-    assert len(selection) == sel_cfg["n"]
-    assert len(confirmation) == con_cfg["n"]
+    assert len(test) == dataset_cfg["splits"]["test"]["n"]
+    assert len(harness_val) == dataset_cfg["splits"]["harness_val"]["n"]
+    assert len(principle_train) == sel_cfg["n"]
+    assert len(principle_val) == con_cfg["n"]
 
     named = {
-        "holdout": holdout,
-        "dev": dev,
-        "selection": selection,
-        "confirmation": confirmation,
-        "ft_train": ft_train,
-        "excluded": excluded,
+        "test": test,
+        "harness_val": harness_val,
+        "principle_train": principle_train,
+        "principle_val": principle_val,
+        "model_train": model_train,
+        "scratch": scratch,
     }
     for a, b in combinations(sorted(named), 2):
         assert not (set(named[a]) & set(named[b])), (a, b)
@@ -424,8 +424,8 @@ def main():
             split_of[cid] = name
 
     guard = assert_no_cross_split_duplicates(
-        {cid: full[cid]["context"] for cid in split_of if split_of[cid] != "excluded"},
-        {cid: s for cid, s in split_of.items() if s != "excluded"},
+        {cid: full[cid]["context"] for cid in split_of if split_of[cid] != "scratch"},
+        {cid: s for cid, s in split_of.items() if s != "scratch"},
         dataset_cfg["contamination_guard"],
     )
 
@@ -446,12 +446,12 @@ def main():
         (OUT / "splits" / f"{name}.txt").write_text("\n".join(members) + "\n")
 
     reported = [
-        ("dev", dev),
-        ("holdout", holdout),
-        ("selection", selection),
-        ("confirmation", confirmation),
-        ("ft_train", ft_train),
-        ("excluded", excluded),
+        ("harness_val", harness_val),
+        ("test", test),
+        ("principle_train", principle_train),
+        ("principle_val", principle_val),
+        ("model_train", model_train),
+        ("scratch", scratch),
         ("all", sorted(full)),
     ]
 
@@ -523,22 +523,22 @@ def main():
         writer.writeheader()
         writer.writerows(cat_rows)
 
-    dev_bucket_counts = Counter(instances[c]["length_bucket"] for c in dev)
+    harness_val_bucket_counts = Counter(instances[c]["length_bucket"] for c in harness_val)
     length_profile_match = {
         lab: {
-            "holdout_n": holdout_bucket_counts.get(lab, 0),
-            "holdout_pct": round(100 * holdout_bucket_counts.get(lab, 0) / len(holdout), 1),
-            "dev_target": bucket_targets[lab],
-            "dev_n": dev_bucket_counts.get(lab, 0),
-            "dev_pct": round(100 * dev_bucket_counts.get(lab, 0) / len(dev), 1),
+            "test_n": test_bucket_counts.get(lab, 0),
+            "test_pct": round(100 * test_bucket_counts.get(lab, 0) / len(test), 1),
+            "harness_val_target": bucket_targets[lab],
+            "harness_val_n": harness_val_bucket_counts.get(lab, 0),
+            "harness_val_pct": round(100 * harness_val_bucket_counts.get(lab, 0) / len(harness_val), 1),
             "train_pool_n": pool_bucket_capacity[lab],
         }
         for lab in labels
     }
-    with open(OUT / "stats" / "dev_strata.json", "w") as fh:
+    with open(OUT / "stats" / "harness_val_strata.json", "w") as fh:
         json.dump(
             {
-                "stratification": "length_bucket primary (matched to holdout), positive_count_tercile secondary within bucket; see plans/decisions.md D-13",
+                "stratification": "length_bucket primary (matched to test), positive_count_tercile secondary within bucket; see plans/decisions.md D-13",
                 "positive_count_tercile_edges": {"lo": lo, "hi": hi},
                 "stratum_pool_sizes": stratum_sizes,
                 "stratum_allocation": alloc,
@@ -553,49 +553,49 @@ def main():
     def positives(members, cat):
         return sum(1 for c in members if not instances[c]["gold"][cat]["is_impossible"])
 
-    power_splits = {"selection": selection, "confirmation": confirmation, "ft_train_after": ft_train}
+    power_splits = {"principle_train": principle_train, "principle_val": principle_val, "model_train_after": model_train}
     category_coverage = {
         cat: {
-            "ft_pool_before": positives(ft_pool, cat),
+            "model_train_pool_before": positives(model_train_pool, cat),
             **{name: positives(members, cat) for name, members in power_splits.items()},
         }
         for cat in subset
     }
-    floors = {"selection": sel_cfg["category_floor"], "confirmation": con_cfg["category_floor"]}
+    floors = {"principle_train": sel_cfg["category_floor"], "principle_val": con_cfg["category_floor"]}
     floor_violations = {
         name: sorted(c for c in subset if positives(power_splits[name], c) < floors[name])
         for name in floors
     }
-    selection_strata = {
+    principle_train_strata = {
         "stratification": "subset-category positive floor primary, length_bucket secondary; see plans/splits.md and INV1-D8",
         "floors": floors,
-        "seeds": {"selection": sel_cfg["seed"], "confirmation": con_cfg["seed"]},
+        "seeds": {"principle_train": sel_cfg["seed"], "principle_val": con_cfg["seed"]},
         "sizes": {name: len(members) for name, members in power_splits.items()},
         "category_positive_coverage": category_coverage,
         "floor_violations": floor_violations,
-        "ft_pool_clustering": {
+        "model_train_pool_clustering": {
             "thresholds": dataset_cfg["split_clustering"],
-            "n_pool": len(ft_pool),
+            "n_pool": len(model_train_pool),
             "n_clusters": len(clusters),
-            "n_bound_to_ft_train": len(bound_to_ft_train),
+            "n_bound_to_model_train": len(bound_to_model_train),
             "n_eligible": len(eligible),
             "clusters": clusters,
             "edges": cluster_edges,
         },
         "floor_draw_trace": {
-            "selection": selection_floor_trace,
-            "confirmation": confirmation_floor_trace,
+            "principle_train": principle_train_floor_trace,
+            "principle_val": principle_val_floor_trace,
         },
-        "length_fill_allocation": {"selection": selection_fill, "confirmation": confirmation_fill},
+        "length_fill_allocation": {"principle_train": principle_train_fill, "principle_val": principle_val_fill},
         "length_bucket_profile": {
             name: {
                 lab: Counter(instances[c]["length_bucket"] for c in members).get(lab, 0) for lab in labels
             }
-            for name, members in [("ft_pool_before", ft_pool), *power_splits.items()]
+            for name, members in [("model_train_pool_before", model_train_pool), *power_splits.items()]
         },
     }
-    with open(OUT / "stats" / "selection_strata.json", "w") as fh:
-        json.dump(selection_strata, fh, indent=2, sort_keys=True)
+    with open(OUT / "stats" / "principle_train_strata.json", "w") as fh:
+        json.dump(principle_train_strata, fh, indent=2, sort_keys=True)
 
     manifest = {
         "attribution": ATTRIBUTION,
@@ -626,18 +626,18 @@ def main():
         "n_categories": len(categories),
         "splits": {
             "seed": seed,
-            "dev_stratification": "length_bucket primary matched to holdout; positive_count_tercile secondary within bucket (D-13)",
-            "selection_stratification": "subset-category positive floor primary, length_bucket secondary (INV1-D8)",
+            "harness_val_stratification": "length_bucket primary matched to test; positive_count_tercile secondary within bucket (D-13)",
+            "principle_train_stratification": "subset-category positive floor primary, length_bucket secondary (INV1-D8)",
             "sizes": {name: len(members) for name, members in sorted(named.items())},
-            "dev_length_profile_match": length_profile_match,
-            "dev_bucket_shortfall": bucket_shortfall,
-            "selection_strata": selection_strata,
+            "harness_val_length_profile_match": length_profile_match,
+            "harness_val_bucket_shortfall": bucket_shortfall,
+            "principle_train_strata": principle_train_strata,
         },
         "exclusions": {
-            "applied_after_dev_sampling": True,
+            "applied_after_harness_val_sampling": True,
             "contracts": [
                 {"contract_id": cid, "reason": exclusions[cid]["reason"], "twin_split": exclusions[cid]["twin_split"]}
-                for cid in excluded
+                for cid in scratch
             ],
         },
         "contamination_guard": guard,

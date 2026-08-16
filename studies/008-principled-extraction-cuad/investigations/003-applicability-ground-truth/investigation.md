@@ -18,7 +18,7 @@ updated: 2026-08-15
 
 ## Scope
 
-Give every scored principle a `gold_applicability` label over dev and holdout
+Give every scored principle a `gold_applicability` label over harness_val and test
 instances, with documented reliability — the ground truth citation quality
 (C3) and compliance (all conditions) are scored against.
 
@@ -30,7 +30,7 @@ instances, with documented reliability — the ground truth citation quality
 2. **Classify each checker** as fully-programmatic / heuristic-needs-spot-check
    / manual.
 3. **Manual residual**: a minimal labeling flow — contract excerpt + principle
-   + yes/no per decision point — over dev + holdout instances.
+   + yes/no per decision point — over harness_val + test instances.
 4. **Reliability**: measure spot-check agreement on a sample of the
    programmatic checkers. A checker that disagrees with human judgment is a
    defect in the principle, not just in the code — route it back to inv 002.
@@ -40,7 +40,7 @@ principle set. Budget for the set shrinking.
 
 ## Acceptance
 
-- Every scored principle has applicability labels over dev + holdout.
+- Every scored principle has applicability labels over harness_val + test.
 - Checker classification recorded per principle.
 - Spot-check agreement measured and documented.
 

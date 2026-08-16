@@ -9,11 +9,11 @@ sampling:
   seed: 20260815
   drawn_at: '2026-08-15T18:56:36+00:00'
   splits:
-  - dev
-  - holdout
+  - harness_val
+  - test
   split_file_sha256_16:
-    dev: 401a15a0e2fc043c
-    holdout: 8a6b7e0614c1b790
+    harness_val: 401a15a0e2fc043c
+    test: 8a6b7e0614c1b790
   context_chars: 400
   requested_n: 6
   drawn_n: 12
@@ -59,7 +59,7 @@ sampling:
     Source Code Escrow: 12
   duplicate_search:
     enabled: true
-    scope: all 510 CUAD contracts, including ft_train
+    scope: all 510 CUAD contracts, including model_train
     method: exact whitespace-normalized passage match of the gold span in another contract; counterparts
       ranked by document containment over 8-gram sketches; a passage shorter than 60 normalized characters
       is not searched
@@ -128,10 +128,10 @@ sampling:
   attribution: Gold spans from the Contract Understanding Atticus Dataset (CUAD) v1, The Atticus Project,
     licensed CC BY 4.0.
 records:
-- id: dev/NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT/Agreement Date/0
+- id: harness_val/NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT/Agreement Date/0
   contract_id: NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT
   title: NANOPHASETECHNOLOGIESCORP_11_01_2005-EX-99.1-DISTRIBUTOR AGREEMENT
-  split: dev
+  split: harness_val
   category: Agreement Date
   span_index: 0
   n_spans_in_category: 1
@@ -164,10 +164,10 @@ records:
     reviewer: null
     date: null
     rationale: null
-- id: holdout/PAXMEDICA,INC_07_02_2020-EX-10.12-Master Service Agreement/Anti-Assignment/1
+- id: test/PAXMEDICA,INC_07_02_2020-EX-10.12-Master Service Agreement/Anti-Assignment/1
   contract_id: PAXMEDICA,INC_07_02_2020-EX-10.12-Master Service Agreement
   title: PAXMEDICA,INC_07_02_2020-EX-10.12-Master Service Agreement
-  split: holdout
+  split: test
   category: Anti-Assignment
   span_index: 1
   n_spans_in_category: 3
@@ -216,10 +216,10 @@ records:
     reviewer: null
     date: null
     rationale: null
-- id: holdout/WEBHELPCOMINC_03_22_2000-EX-10.8-HOSTING AGREEMENT/Cap On Liability/1
+- id: test/WEBHELPCOMINC_03_22_2000-EX-10.8-HOSTING AGREEMENT/Cap On Liability/1
   contract_id: WEBHELPCOMINC_03_22_2000-EX-10.8-HOSTING AGREEMENT
   title: WEBHELPCOMINC_03_22_2000-EX-10.8-HOSTING AGREEMENT
-  split: holdout
+  split: test
   category: Cap On Liability
   span_index: 1
   n_spans_in_category: 5
@@ -307,10 +307,10 @@ records:
     reviewer: null
     date: null
     rationale: null
-- id: holdout/HarpoonTherapeuticsInc_20200312_10-K_EX-10.18_12051356_EX-10.18_Development Agreement/Exclusivity/2
+- id: test/HarpoonTherapeuticsInc_20200312_10-K_EX-10.18_12051356_EX-10.18_Development Agreement/Exclusivity/2
   contract_id: HarpoonTherapeuticsInc_20200312_10-K_EX-10.18_12051356_EX-10.18_Development Agreement
   title: HarpoonTherapeuticsInc_20200312_10-K_EX-10.18_12051356_EX-10.18_Development Agreement
-  split: holdout
+  split: test
   category: Exclusivity
   span_index: 2
   n_spans_in_category: 4
@@ -403,10 +403,10 @@ records:
     reviewer: null
     date: null
     rationale: null
-- id: holdout/Reinsurance Group of America, Incorporated - A_R REMARKETING  AGREEMENT/Expiration Date/1
+- id: test/Reinsurance Group of America, Incorporated - A_R REMARKETING  AGREEMENT/Expiration Date/1
   contract_id: Reinsurance Group of America, Incorporated - A_R REMARKETING  AGREEMENT
   title: Reinsurance Group of America, Incorporated - A_R REMARKETING  AGREEMENT
-  split: holdout
+  split: test
   category: Expiration Date
   span_index: 1
   n_spans_in_category: 2
@@ -461,11 +461,11 @@ records:
     reviewer: null
     date: null
     rationale: null
-- id: dev/AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement/Governing
+- id: harness_val/AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement/Governing
     Law/0
   contract_id: AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement
   title: AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement
-  split: dev
+  split: harness_val
   category: Governing Law
   span_index: 0
   n_spans_in_category: 1
@@ -515,10 +515,10 @@ records:
     reviewer: null
     date: null
     rationale: null
-- id: dev/ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)/Exclusivity/0
+- id: harness_val/ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)/Exclusivity/0
   contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
   title: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
-  split: dev
+  split: harness_val
   category: Exclusivity
   span_index: 0
   n_spans_in_category: 1
@@ -554,8 +554,8 @@ records:
   overlaps: []
   duplicate_counterparts:
   - contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT
-    split: excluded
-    excluded_as: byte-identical to a dev contract (dev twin)
+    split: scratch
+    excluded_as: byte-identical to a harness_val contract (harness_val twin)
     detector: exact_normalized
     similarity: 1.0
     doc_containment: 1.0
@@ -567,8 +567,8 @@ records:
       agreement either written or oral, that would present a material conflict with any of the provisions
       of this Agreement, or would preclude Consultant from complying with the terms and conditions hereof.
   - contract_id: ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT
-    split: excluded
-    excluded_as: byte-identical to a dev contract (dev twin)
+    split: scratch
+    excluded_as: byte-identical to a harness_val contract (harness_val twin)
     detector: fuzzy_idf_jaccard
     similarity: 0.3738
     doc_containment: 1.0
@@ -601,10 +601,10 @@ records:
     reviewer: null
     date: null
     rationale: null
-- id: dev/PharmagenInc_20120803_8-KA_EX-10.1_7693204_EX-10.1_Endorsement Agreement/Exclusivity/0
+- id: harness_val/PharmagenInc_20120803_8-KA_EX-10.1_7693204_EX-10.1_Endorsement Agreement/Exclusivity/0
   contract_id: PharmagenInc_20120803_8-KA_EX-10.1_7693204_EX-10.1_Endorsement Agreement
   title: PharmagenInc_20120803_8-KA_EX-10.1_7693204_EX-10.1_Endorsement Agreement
-  split: dev
+  split: harness_val
   category: Exclusivity
   span_index: 0
   n_spans_in_category: 1
@@ -637,7 +637,7 @@ records:
   overlaps: []
   duplicate_counterparts:
   - contract_id: EcoScienceSolutionsInc_20171117_8-K_EX-10.1_10956472_EX-10.1_Endorsement Agreement
-    split: ft_train
+    split: model_train
     excluded_as: ''
     detector: fuzzy_idf_jaccard
     similarity: 0.4464
@@ -663,10 +663,10 @@ records:
     reviewer: null
     date: null
     rationale: null
-- id: holdout/GOOSEHEADINSURANCE,INC_04_02_2018-EX-10.6-Franchise Agreement/Minimum Commitment/3
+- id: test/GOOSEHEADINSURANCE,INC_04_02_2018-EX-10.6-Franchise Agreement/Minimum Commitment/3
   contract_id: GOOSEHEADINSURANCE,INC_04_02_2018-EX-10.6-Franchise Agreement
   title: GOOSEHEADINSURANCE,INC_04_02_2018-EX-10.6-Franchise Agreement
-  split: holdout
+  split: test
   category: Minimum Commitment
   span_index: 3
   n_spans_in_category: 6
@@ -746,7 +746,7 @@ records:
   overlaps: []
   duplicate_counterparts:
   - contract_id: PfHospitalityGroupInc_20150923_10-12G_EX-10.1_9266710_EX-10.1_Franchise Agreement1
-    split: ft_train
+    split: model_train
     excluded_as: ''
     detector: exact_normalized
     similarity: 1.0
@@ -770,10 +770,10 @@ records:
     reviewer: null
     date: null
     rationale: null
-- id: holdout/IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement/Governing Law/1
+- id: test/IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement/Governing Law/1
   contract_id: IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement
   title: IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement
-  split: holdout
+  split: test
   category: Governing Law
   span_index: 1
   n_spans_in_category: 2
@@ -802,8 +802,8 @@ records:
   overlaps: []
   duplicate_counterparts:
   - contract_id: IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement
-    split: excluded
-    excluded_as: re-filing of a holdout contract (containment 0.946, gold agrees on all 12) (holdout twin)
+    split: scratch
+    excluded_as: re-filing of a test contract (containment 0.946, gold agrees on all 12) (test twin)
     detector: exact_normalized
     similarity: 1.0
     doc_containment: 0.785
@@ -827,11 +827,11 @@ records:
     reviewer: null
     date: null
     rationale: null
-- id: holdout/IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement/Revenue/Profit
+- id: test/IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement/Revenue/Profit
     Sharing/1
   contract_id: IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement
   title: IdeanomicsInc_20151124_8-K_EX-10.2_9354744_EX-10.2_Content License Agreement
-  split: holdout
+  split: test
   category: Revenue/Profit Sharing
   span_index: 1
   n_spans_in_category: 3
@@ -869,8 +869,8 @@ records:
   overlaps: []
   duplicate_counterparts:
   - contract_id: IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement
-    split: excluded
-    excluded_as: re-filing of a holdout contract (containment 0.946, gold agrees on all 12) (holdout twin)
+    split: scratch
+    excluded_as: re-filing of a test contract (containment 0.946, gold agrees on all 12) (test twin)
     detector: exact_normalized
     similarity: 1.0
     doc_containment: 0.785
@@ -894,10 +894,10 @@ records:
     reviewer: null
     date: null
     rationale: null
-- id: holdout/WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT/Agreement Date/0
+- id: test/WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT/Agreement Date/0
   contract_id: WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT
   title: WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT
-  split: holdout
+  split: test
   category: Agreement Date
   span_index: 0
   n_spans_in_category: 1
@@ -920,8 +920,8 @@ records:
   duplicate_counterparts:
   - contract_id: WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT - Intellectual Property
       Rights                 Confidentiality and Non-Use Obligations Agreement
-    split: excluded
-    excluded_as: contains a holdout contract verbatim (containment 1.000) (holdout twin)
+    split: scratch
+    excluded_as: contains a test contract verbatim (containment 1.000) (test twin)
     detector: fuzzy_idf_jaccard
     similarity: 0.307
     doc_containment: 0.1875

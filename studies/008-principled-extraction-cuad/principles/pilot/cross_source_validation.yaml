@@ -1,7 +1,7 @@
 meta:
   generated: '2026-08-15'
   scope: >-
-    dev (40) + ft_train (364) = 404 contracts; holdout never loaded
+    harness_val (40) + the pre-carve ft_train pool (364) = 404 contracts; test never loaded
   loader: scripts/cuad_dataset.py
   guidelines_source: >-
     CUAD Labeling Handbook (Atticus Project, 2021), paraphrased only — the PDF is
@@ -231,7 +231,7 @@ g08:
   - '30 of 380 Agreement Date gold spans (7.9%) are themselves blank or redacted
     constructs — e.g. AULAMERICANUNITTRUST "this day of , 20" at offset 79, LUCIDINC
     "[*]", StaarSurgical "____________"'
-  - 'zero clean counterexamples: no contract in dev+ft_train leaves a date-shaped blank
+  - 'zero clean counterexamples: no contract in harness_val + the pre-carve ft_train pool leaves a date-shaped blank
     construct belonging to this agreement unlabelled (2 borderline, per
     reviews/agreement-date-check.md)'
   - 'Agreement Date is gold-absent in only 30 of 404 contracts (7.4%), and those are
@@ -438,7 +438,7 @@ d07:
     but furniture standing on its own is never extracted
   evidence:
   - 'MAIN CLAUSE REFUTED BY GOLD, re-derived independently here: 22 gold spans across
-    dev+ft_train contain furniture strictly inside them, against 175 same-category
+    harness_val + the pre-carve ft_train pool contain furniture strictly inside them, against 175 same-category
     adjacent gold span pairs separated by nothing but furniture — 155 of which split
     mid-sentence, ruling out "two separate clauses straddling a page break". The dominant
     convention is to SPLIT at the furniture and exclude it, by roughly 8:1'

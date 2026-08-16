@@ -20,7 +20,7 @@ from harness.models import (
 from harness.principles_io import load_principle_set
 from harness.tests.test_env_interface import REQUIRED
 
-SMOKE_SPLIT = "excluded"
+SMOKE_SPLIT = "scratch"
 
 
 def _principles() -> PrincipleSet:
@@ -97,15 +97,15 @@ def test_category_definitions_cover_the_subset(env):
         assert target.lower() in definitions
 
 
-def test_holdout_is_refused_by_default(env):
+def test_sealed_split_is_refused_by_default(env):
     with pytest.raises(PermissionError):
-        env.load_instances("holdout")
+        env.load_instances("test")
 
 
-def test_holdout_requires_an_explicit_override_and_logs(caplog):
-    env = CuadEnvironment(principle_set=_principles(), allow_holdout=True)
+def test_sealed_split_requires_an_explicit_override_and_logs(caplog):
+    env = CuadEnvironment(principle_set=_principles(), allow_test=True)
     with caplog.at_level("WARNING"):
-        loaded = env.load_instances("holdout")
+        loaded = env.load_instances("test")
     assert loaded
     assert any("SEALED SPLIT LOADED" in r.getMessage() for r in caplog.records)
 

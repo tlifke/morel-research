@@ -25,10 +25,10 @@ Format:
 
 > **D-3 — Official CUAD test split (102 contracts) is the final hold-out**
 > (2026-08-15)
-> Touched only for headline results, in both phases. Dev = ~40 contracts
+> Touched only for headline results, in both phases. harness_val = ~40 contracts
 > sampled from official train, stratified by length and positive-category
 > count, seeded and persisted. Remaining official-train reserved for Phase 2
-> fine-tuning. No contract in more than one of {dev, FT-train, holdout}.
+> fine-tuning. No contract in more than one of {harness_val, model_train, test}.
 
 > **D-4 — No LLM judge in the scoring path** (2026-08-15)
 > Every Phase-1 and Phase-2 metric is programmatic or hand-labeled.
@@ -81,7 +81,7 @@ Format:
 
 > **D-9 — Model-assisted principle proposal is logged, not ambient**
 > (2026-08-15)
-> Contrastive-pair mining is deterministic and runs on FT-train only; proposals
+> Contrastive-pair mining is deterministic and runs on model_train only; proposals
 > come from a pinned frontier model (`claude-opus-5`) with a pinned prompt
 > version; every candidate carries evidence pointers, a checker sketch, and a
 > Tyler `review` block with a required rationale. Rejected candidates are
@@ -110,33 +110,33 @@ Format:
 > context-window feasibility claim must use it. Open sub-check: confirm
 > `qwen3.5:8b` shares the Qwen3 tokenizer before inv 005 leans on it.
 
-> **D-13 — Dev is stratified to holdout's length profile, not to its own pool's**
+> **D-13 — harness_val is stratified to test's length profile, not to its own pool's**
 > (2026-08-15, at gate G1, before the split freeze)
-> The first build stratified dev to mirror the official-train pool it is drawn
-> from, which left dev systematically longer than holdout (median 8,248 vs
-> 5,440 tokens). Changed: dev now matches the **holdout** length distribution.
+> The first build stratified harness_val to mirror the official-train pool it is drawn
+> from, which left harness_val systematically longer than test (median 8,248 vs
+> 5,440 tokens). Changed: harness_val now matches the **test** length distribution.
 >
-> Why. Dev has exactly one job in this study — to predict how the system will
-> behave on holdout before holdout is opened at G4. Every use of dev is a
+> Why. harness_val has exactly one job in this study — to predict how the system will
+> behave on test before test is opened at G4. Every use of harness_val is a
 > forecast: the P0 schema decision, prompt iteration, and the feasibility
 > planning behind `infeasible_at_length`. All of those are length-sensitive, and
-> H5 is *specifically* a claim about degradation with contract length. A dev set
-> 50% longer than holdout would have biased every one of those forecasts in the
+> H5 is *specifically* a claim about degradation with contract length. A harness_val set
+> 50% longer than test would have biased every one of those forecasts in the
 > same direction — pessimistic on feasibility, pessimistic on long-context
-> failure — and we would not have found out until the holdout was already open.
+> failure — and we would not have found out until the test was already open.
 > Being representative of the training pool buys us nothing we need; being
-> representative of the evaluation target buys us the entire purpose of a dev
+> representative of the evaluation target buys us the entire purpose of a harness_val
 > set.
 >
-> What it costs, stated plainly. Dev is now a deliberately **non-representative**
+> What it costs, stated plainly. harness_val is now a deliberately **non-representative**
 > sample of official-train. It cannot be used to characterize the training pool,
-> which matters for Phase 2, where FT-train — not dev — is the pool of record.
-> Matching holdout's profile also means drawing more heavily from the short end
+> which matters for Phase 2, where model_train — not harness_val — is the pool of record.
+> Matching test's profile also means drawing more heavily from the short end
 > of official-train, so the short buckets sample a smaller effective pool and
 > may show less contract diversity than their count suggests.
 >
 > Stratification priority is now explicit: **length bucket first** (matched to
-> holdout's proportions), positive-category count balanced **within** each
+> test's proportions), positive-category count balanced **within** each
 > length bucket as a secondary key. With n=40 the two keys cannot both be
 > satisfied exactly; length wins, because length is the axis a hypothesis rests
 > on and positive-count is not.
@@ -245,8 +245,10 @@ Format:
 > **D-19 — The blank-signing-date assumption is falsified; documented rule and
 > gold agree** (2026-08-15, `reviews/agreement-date-check.md`)
 > The plan assumed CUAD marks a contract gold-absent for Agreement Date when
-> the signing date is literally blank. Measured over dev + ft_train (408
-> contracts, holdout untouched): **30 of 377 positives (8%) have a blank or
+> the signing date is literally blank. Measured over harness_val + the pre-carve
+> training pool (408 contracts, test untouched; that pool has since been carved
+> into model_train 264 / principle_train 60 / principle_val 40, so no current
+> pair of split names names it): **30 of 377 positives (8%) have a blank or
 > redacted date as their gold span**, and **zero** gold-absent contracts have a
 > clean date-shaped blank belonging to the agreement. Gold follows the
 > Handbook.
@@ -315,7 +317,7 @@ Format:
 > Third hard constraint on entry to the scored set: a principle qualifies only
 > if **a model can pass its checker and still be wrong, and fail it while being
 > right.** Screening is mechanical — populate the 2×2 of {passes, fails} ×
-> {right, wrong} over dev; a structurally empty off-diagonal disqualifies.
+> {right, wrong} over harness_val; a structurally empty off-diagonal disqualifies.
 > **Refinement (2026-08-15), important and easy to get wrong.** A checker is
 > *supposed* to read gold — `gold_applicability` is defined as
 > `(instance, gold_annotations) -> bool`. Using gold is not the defect. The
@@ -380,9 +382,11 @@ Format:
 > C2/C3 changes.
 >
 > Consequences that must survive into implementation:
-> - **A new selection split, carved from FT-train.** Selecting on a signal and
->   reporting that signal is artifact, not effect. Dev stays for iteration,
->   holdout stays sealed, and the headline becomes whether an
+> - **A new `principle_train` split, carved from model_train.** (Carved at
+>   INV1-D8 from the then 364-contract pool; model_train is 264 after the carve.)
+>   Selecting on a signal and
+>   reporting that signal is artifact, not effect. harness_val stays for iteration,
+>   test stays sealed, and the headline becomes whether an
 >   empirically-selected set *transfers*.
 > - **Pre-registered effect threshold, fixed seed count, and a confirmation
 >   pass on unseen contracts.** ~25 candidates × revisions × noisy sampling will

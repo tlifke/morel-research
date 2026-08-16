@@ -88,12 +88,13 @@ have been entangled and causing loss.
 **Split discipline is non-negotiable.** Selecting on a signal and then reporting
 that same signal is selection artifact, not effect.
 
-- **Selection split** — carve from FT-train. New; does not exist yet.
-- **Dev** — iteration and validation, as now. Must NOT be the selection signal.
-- **Holdout** — sealed until G4. The headline is *"does an empirically-selected
+- **`principle_train`** — carve from model_train. New; did not exist when this
+  was written (carved at INV1-D8, 60 contracts, out of the then 364-contract pool).
+- **harness_val** — iteration and validation, as now. Must NOT be the selection signal.
+- **test** — sealed until G4. The headline is *"does an empirically-selected
   principle set transfer to held-out contracts?"*, which is a better question
   than the one it replaces.
-- Carving from ft_train reduces the Phase 2 pool; record the size taken and
+- Carving from model_train reduces the Phase 2 pool; record the size taken and
   check it against Phase 2's needs before cutting.
 - Re-run the cross-split contamination guard after any new split
   (`build_dataset.py`, INV1-D7) — content duplication crosses title boundaries.
@@ -138,7 +139,7 @@ regenerated once burnt.
 ## Two constraints inherited from the split carve (INV1-D8)
 
 **1. Derivation overlap.** Mining ran over the pre-carve 364-contract pool, so
-some contracts a principle was read off now sit in `selection`. Testing a
+some contracts a principle was read off now sit in `principle_train`. Testing a
 principle there measures recall of its own evidence. Standing rule 5 in
 `../../plans/splits.md`: exclude each principle's derivation contracts from its
 own A/B and report the excluded count. **Measure the overlap first** — if it is
@@ -189,7 +190,8 @@ _To be populated._
 
 ## Things to flag
 
-- The selection split does not exist yet and comes out of the Phase 2 pool.
+- `principle_train` did not exist when this was written and comes out of the
+  Phase 2 pool (carved at INV1-D8).
 - Effect sizes on ~40-contract slices with noisy sampling may not clear any
   honest threshold. If nothing does, that is itself a reportable result about
   how much a principle can be expected to move extraction performance.

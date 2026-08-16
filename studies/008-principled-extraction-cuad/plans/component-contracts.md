@@ -212,11 +212,11 @@ failure this study cannot tolerate. The truncation guard
 
 **Feasibility against the real manifest** (510 instances, longest 82,345
 tokens, ~1.5k prompt overhead + 4k output reserve): 5/510 infeasible for the
-4B, 6/510 for the 9B. On the **holdout, exactly 1 contract** (64,640 tokens) is
-infeasible for both Qwen arms; **dev has zero**. So the open arms do produce
+4B, 6/510 for the 9B. On the **test, exactly 1 contract** (64,640 tokens) is
+infeasible for both Qwen arms; **harness_val has zero**. So the open arms do produce
 real `infeasible_at_length` trials, but H5's refusal story on the headline
-split rests on a single contract, and dev cannot rehearse that path at all —
-a direct, now-quantified consequence of D-13 (dev max 41,703 vs holdout
+split rests on a single contract, and harness_val cannot rehearse that path at all —
+a direct, now-quantified consequence of D-13 (harness_val max 41,703 vs test
 64,640).
 
 **Reference tokenizer: verified, not assumed.** Qwen3.5 has a much larger vocab
@@ -308,7 +308,7 @@ Derived and reported:
   principle should cut false-present while possibly raising false-absent.
 - **trivial baselines printed alongside, per category**: always-absent and
   always-present. Non-negotiable. Source Code Escrow has 1 positive in 102
-  holdout contracts and Most Favored Nation has 3, so always-absent scores 99%
+  test contracts and Most Favored Nation has 3, so always-absent scores 99%
   and 97% there; without the baseline a reader cannot tell signal from base rate.
 
 Both classes are reported because the informative one **flips with base rate**:
@@ -518,7 +518,7 @@ them into the trial row would destroy them.
   // --- instance context (denormalized so analysis needs no join) ---
   "n_contract_tokens": 6412,
   "length_bucket": "4k-8k",
-  "split": "dev" | "holdout",
+  "split": "harness_val" | "test",
 
   // --- trial-level scores (null when outcome != "ok") ---
   // NOTE: this sketch is illustrative. The Metrics module section above is

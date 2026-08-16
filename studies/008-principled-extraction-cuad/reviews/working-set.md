@@ -15,7 +15,7 @@ measured improvement, not by the judged truth summarised here.
 
 ## The nine at a glance
 
-`appl` is the dev applicability rate (480 decisions = 40 contracts × 12
+`appl` is the harness_val applicability rate (480 decisions = 40 contracts × 12
 categories) with the in-scope rate in brackets; `phi` is the pre-model
 applicability × gold-presence correlation on the in-scope subset. Where a
 record merges several, each contributing round-2 id is shown.

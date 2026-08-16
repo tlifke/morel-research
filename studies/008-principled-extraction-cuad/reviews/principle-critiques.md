@@ -1,10 +1,19 @@
 # Adversarial critique of the 16 pilot principles
 
+> **Split names.** Renamed on 2026-08-16 (`../plans/splits.md`); membership did
+> not change, so `harness_val` here is exactly the old `dev` and `test` the old
+> `holdout`. **`model_train` in this report means the pre-carve training pool it
+> was run over** — 368 contracts before INV1-D7, 364 after — not today's
+> 264-contract `model_train`. INV1-D8 later carved `principle_train` (60) and
+> `principle_val` (40) out of that pool, so every count below stated over
+> `harness_val` + `model_train` is over a pool that no longer corresponds to any
+> pair of split names.
+
 Written to give the curator a disagreement to adjudicate rather than an assertion to
 rubber-stamp. For each candidate I made the strongest case I honestly believe, grounded in
 gold wherever possible, and then said how strong I think that case actually is.
 
-Scope: `dev` + `ft_train`, 404 contracts, via `scripts/cuad_dataset.py`. **Holdout was never
+Scope: `harness_val` + `model_train`, 404 contracts, via `scripts/cuad_dataset.py`. **test was never
 loaded.** The Handbook was not consulted — the guidelines side is another agent's job, so
 everything below is gold-derived or internal-consistency reasoning. Machine-readable twin:
 `principles/pilot/critiques.yaml`. Date: 2026-08-15. AI Assistant Used: Claude Code.
@@ -439,7 +448,7 @@ Three objections, none of which is "it's false":
 
 ## Method and limits
 
-- All counts are over `dev` + `ft_train` (404 contracts) via the public loader. Holdout untouched.
+- All counts are over `harness_val` + `model_train` (404 contracts) via the public loader. test untouched.
 - My furniture, venue, floor and bound regexes are my own, deliberately built to be *generous to
   the principle* where a choice existed (e.g. a ±120-character adjacency window for `g05`, a
   section-number allowance for `g01`). Every rate above is therefore a **lower bound** on the

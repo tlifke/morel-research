@@ -72,12 +72,14 @@ retrofitted from one dataset.
   files; verified byte-identical across two from-scratch runs (modulo a
   build timestamp).
 - **[locked]** INV1-D1 — gold source of record is `CUADv1.json`;
-  `test.json` supplies holdout titles only; `train_separate_questions.json`
+  `test.json` supplies test titles only; `train_separate_questions.json`
   unused (68 questions/contract, does not align to the 41-category axis).
   Verified: test titles ⊂ CUADv1, contexts and gold byte-identical,
   test ∩ train = ∅, test ∪ train = 510.
-- **[locked]** D-3 — splits: holdout = official test (102), dev = 40 sampled
-  from official train, FT-train = remaining 368. Disjoint, asserted in code,
+- **[locked]** D-3 — splits: test = official test (102), harness_val = 40 sampled
+  from official train, training pool = remaining 368 (INV1-D7 dropped 4 to
+  scratch, then INV1-D8 carved principle_train 60 / principle_val 40 out of the
+  remaining 364, leaving model_train 264). Disjoint, asserted in code,
   persisted as id files and read back, never recomputed. Seed 20260815.
 - **[locked]** D-12 — **the tokenizer correction.** Planning-time token figures
   came from a 4-chars/token heuristic. Measured rate on CUAD contract text is
@@ -86,7 +88,7 @@ retrofitted from one dataset.
 
   | quantity | planning figure | n_chars/4 | measured |
   |---|---|---|---|
-  | holdout median tokens | ~6.4k | 6,414 | 5,440 |
+  | test median tokens | ~6.4k | 6,414 | 5,440 |
   | contracts ≤4k tokens | 27 | 27 | 37 |
   | ≤8k / ≤16k | 63 / 79 | 63 / 79 | 66 / 83 |
   | max tokens | ~75k | 75,192 | 64,640 |
@@ -95,25 +97,25 @@ retrofitted from one dataset.
   that silently reports corrected numbers is weaker than one that shows the
   correction — the correction is evidence the measurement was performed rather
   than assumed.
-- **[locked]** D-13 — **dev is stratified to holdout's length profile**, not to
+- **[locked]** D-13 — **harness_val is stratified to test's length profile**, not to
   its own pool's. Length bucket is the primary key; positive-category count is
   secondary, applied within bucket. Achieved match, all buckets within 1.2
-  percentage points of holdout; no bucket capacity-constrained. Dev median
-  6,424 tokens vs holdout 5,440 (gap reduced from 2,808 to 984).
+  percentage points of test; no bucket capacity-constrained. harness_val median
+  6,424 tokens vs test 5,440 (gap reduced from 2,808 to 984).
 
-  | bucket | holdout | dev |
+  | bucket | test | harness_val |
   |---|---|---|
   | ≤4k | 36.3% | 37.5% |
   | 4k–8k | 28.4% | 27.5% |
   | 8k–16k | 16.7% | 17.5% |
   | >16k | 18.6% | 17.5% |
 
-  State the costs, all three: dev is deliberately non-representative of
-  official-train (FT-train is the pool of record for Phase 2); the ≤4k bucket
+  State the costs, all three: harness_val is deliberately non-representative of
+  official-train (model_train is the pool of record for Phase 2); the ≤4k bucket
   draws 15 of 119 available short contracts, so effective diversity is narrower
-  than the count suggests; and **dev's max length is 41,703 tokens against
-  holdout's 64,640** — matching bucket proportions does not match bucket
-  interiors, so dev under-represents the extreme tail.
+  than the count suggests; and **harness_val's max length is 41,703 tokens against
+  test's 64,640** — matching bucket proportions does not match bucket
+  interiors, so harness_val under-represents the extreme tail.
 - **[locked]** Final length distribution table (all four splits) —
   `data/processed/stats/length_distribution.csv`.
 - **[locked]** INV1-D4 — the 12-category subset and its six selection criteria,
@@ -134,8 +136,8 @@ This is the section a reader would reuse in another domain. Give it room.
 - **[locked]** Three sources, priority order: Atticus annotation guidelines PDF;
   literature confusions (Savelka 2023 trio); contrastive data mining.
 - **[locked]** D-9 — the model-assisted proposal protocol:
-  - pair mining is deterministic and runs on **FT-train only** (dev stays clean
-    for P0 and iteration; holdout sealed until G4);
+  - pair mining is deterministic and runs on **model_train only** (harness_val stays clean
+    for P0 and iteration; test sealed until G4);
   - proposer is pinned — model id, prompt version, batch id stamped on every
     candidate;
   - mandatory `evidence` (pair ids) and `checker_sketch`; anything missing
@@ -245,7 +247,7 @@ of the method and pre-empting it is stronger than defending it later.
 
 **Three decouplings measured in the pilot — each one undercuts a heuristic a
 reader would otherwise assume, and together they are the case for the
-round-2 instrumentation.** All from running checkers over the dev split
+round-2 instrumentation.** All from running checkers over the harness_val split
 (40 contracts × 12 categories = 480 decisions) plus independent adversarial
 review.
 
@@ -318,7 +320,7 @@ derivation methods* and belongs in the results, not in a tidy-up.
   judge in the loop would contaminate the Phase-2 reward, and the claim of the
   paper is that constraining the process *vocabulary* makes process supervision
   programmatically verifiable. A judge would concede that point.
-- **[pending: WS3]** Labeling flow description, coverage over dev + holdout,
+- **[pending: WS3]** Labeling flow description, coverage over harness_val + test,
   and measured spot-check agreement on a sample of the programmatic checkers.
 - **[pending: WS3]** The cost estimate from the 3-contract pilot sample, and
   whether it forced the principle set smaller. If it did, say so — it is a
@@ -358,7 +360,7 @@ vulnerable to?*
   false-absent.
 - **[locked]** **Trivial baselines per category** (always-absent,
   always-present), printed alongside. Required, not optional: Source Code
-  Escrow has 1 positive in 102 holdout contracts, so always-absent scores 99%
+  Escrow has 1 positive in 102 test contracts, so always-absent scores 99%
   there. **[human]** The reason both classes are reported is worth a sentence —
   the informative class *flips with base rate*: for rare categories only the
   presence class carries information; for common categories (Agreement Date,
@@ -459,12 +461,12 @@ cited principles match the gold applicable set?*
   documented as load-bearing, not defensive.
 - **[locked]** Feasibility against the real manifest (510 instances, longest
   82,345 tokens; ~1.5k prompt overhead + output reserve): **5/510 infeasible
-  for the 4B, 6/510 for the 9B, 0/510 for inkling-small.** On the **holdout,
-  exactly 1 contract** is infeasible for both Qwen arms; **dev has zero.**
+  for the 4B, 6/510 for the 9B, 0/510 for inkling-small.** On the **test,
+  exactly 1 contract** is infeasible for both Qwen arms; **harness_val has zero.**
   **[human]** Two consequences to state: H5's refusal story on the headline
   split rests on a single contract, so the length result is mostly degradation
-  rather than refusal; and dev cannot rehearse the infeasibility path at all —
-  a direct, now-quantified cost of D-13 (dev max 41,703 vs holdout 64,640).
+  rather than refusal; and harness_val cannot rehearse the infeasibility path at all —
+  a direct, now-quantified cost of D-13 (harness_val max 41,703 vs test 64,640).
 - **[locked]** **Reference tokenizer verified, not assumed.** Qwen3.5's vocab is
   63% larger than Qwen3-8B's (248,077 vs 151,669), but on contract-shaped text
   the two produce **identical** token counts (0.00% delta across legalese, OCR
@@ -583,7 +585,7 @@ cited principles match the gold applicable set?*
   agreement; the clause may live in a sibling record. Absence accuracy should
   not treat them as equivalent. **[human]** decide whether to exclude, flag, or
   merely caveat.
-- **[locked]** Dev is deliberately non-representative of official-train, and
+- **[locked]** harness_val is deliberately non-representative of official-train, and
   under-represents the extreme length tail (see §3).
 - **[locked]** Leakage detection is regex-based over free-text fields and will
   not catch a model that paraphrases a rule without naming it. **[human]** state

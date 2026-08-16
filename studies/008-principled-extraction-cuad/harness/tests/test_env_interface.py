@@ -38,24 +38,24 @@ def test_fake_env_implements_every_abstract_method():
 
 def test_instances_carry_the_loader_contract():
     env = FakeEnvironment()
-    for instance in env.load_instances("dev"):
+    for instance in env.load_instances("harness_val"):
         assert instance.contract_id and instance.title and instance.text
         assert instance.n_tokens > 0
-        assert instance.split == "dev"
+        assert instance.split == "harness_val"
         assert instance.gold.targets
 
 
 def test_splits_are_disjoint_by_contract_id():
     env = FakeEnvironment()
-    dev = {i.contract_id for i in env.load_instances("dev")}
-    holdout = {i.contract_id for i in env.load_instances("holdout")}
-    assert dev and holdout
-    assert not (dev & holdout)
+    harness_val = {i.contract_id for i in env.load_instances("harness_val")}
+    test = {i.contract_id for i in env.load_instances("test")}
+    assert harness_val and test
+    assert not (harness_val & test)
 
 
 def test_decision_iterator_indices_are_dense_and_ordered():
     env = FakeEnvironment()
-    instance = env.load_instances("dev")[0]
+    instance = env.load_instances("harness_val")[0]
     records = env.unrealized_decisions(instance)
     assert [r.idx for r in records] == list(range(len(records)))
 
@@ -63,7 +63,7 @@ def test_decision_iterator_indices_are_dense_and_ordered():
 def test_decision_count_is_fixed_by_the_task_definition_not_the_output():
     env = FakeEnvironment()
     targets = env.task_definition().targets
-    for instance in env.load_instances("dev"):
+    for instance in env.load_instances("harness_val"):
         assert len(env.unrealized_decisions(instance)) == len(targets)
         assert [r.target for r in env.unrealized_decisions(instance)] == targets
 
@@ -100,7 +100,7 @@ def test_no_principle_enters_the_scored_set_without_a_checker():
 def test_principle_scope_matches_declared_applicability():
     env = FakeEnvironment()
     principles = env.principle_set()
-    instance = env.load_instances("dev")[0]
+    instance = env.load_instances("harness_val")[0]
     for target, pids in instance.gold.applicability.items():
         if target.startswith("__"):
             continue

@@ -128,7 +128,7 @@ def build_units(dataset, cats, cfg):
     spans = []
     chunks = []
     absent_by_cat = defaultdict(list)
-    for cid in dataset.contract_ids("ft_train"):
+    for cid in dataset.contract_ids("model_train"):
         inst = dataset.get_instance(cid)
         text = inst.text
         absent_here = []
@@ -375,7 +375,7 @@ def main():
     summary = {
         "mining_version": cfg["version"],
         "split": cfg["split"]["name"],
-        "n_contracts": len(d.contract_ids("ft_train")),
+        "n_contracts": len(d.contract_ids("model_train")),
         "n_gold_spans": len(spans),
         "n_gold_spans_live_bare": int(len(blive)),
         "n_gold_spans_live_context_expanded": int(len(xlive)),

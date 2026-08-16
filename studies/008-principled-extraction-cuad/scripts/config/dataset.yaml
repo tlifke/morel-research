@@ -13,21 +13,21 @@ tokenizer:
 
 splits:
   seed: 20260815
-  holdout:
+  test:
     source: official test.json
     n: 102
     note: 102 official test contracts, untouched until gate G4.
-  dev:
+  harness_val:
     source: official train (CUADv1 minus test.json titles)
     n: 40
     stratify:
       - key: length_bucket
         priority: primary
-        match: holdout
+        match: test
         note: >
-          Dev's length-bucket proportions are matched to the HOLDOUT split's,
-          not to the official-train pool dev is drawn from. Rationale in
-          plans/decisions.md D-13. Bucket targets are holdout proportions
+          harness_val's length-bucket proportions are matched to the TEST split's,
+          not to the official-train pool harness_val is drawn from. Rationale in
+          plans/decisions.md D-13. Bucket targets are test proportions
           scaled to n, with largest-remainder rounding.
       - key: positive_count_tercile
         priority: secondary
@@ -41,11 +41,11 @@ splits:
       wins: length is the axis H5 rests on, positive-count is not.
     note: >
       Tercile edges are computed over all 41 CUAD categories, not over the
-      provisional 12-category subset, so the dev split stays valid if inv 002
+      provisional 12-category subset, so the harness_val split stays valid if inv 002
       changes the subset. Sampling within a (bucket, tercile) cell is uniform
       without replacement under the seed above.
-  selection:
-    source: official train minus dev minus exclusions (the 364-contract ft_train pool)
+  principle_train:
+    source: official train minus harness_val minus exclusions (the 364-contract model_train pool)
     n: 60
     seed: 20260816
     category_floor: 5
@@ -61,81 +61,81 @@ splits:
           detectable-effect consequences are in INV1-D8.
       - key: length_bucket
         priority: secondary
-        match: ft_train_pool
+        match: model_train_pool
         note: >
           Length spread is a secondary key, matched to the 364-contract pool
-          the split is carved from (NOT to holdout — that is dev's job, D-13).
+          the split is carved from (NOT to test — that is harness_val's job, D-13).
           Applied twice: to spread the floor draws across buckets where the
           category's positives allow, and to allocate the remaining slots.
     priority_rule: >
       Floor first, always. Length allocation is computed against the floor
       picks already made and absorbs the imbalance they create.
-  confirmation:
-    source: the ft_train pool minus selection
+  principle_val:
+    source: the model_train pool minus principle_train
     n: 40
     seed: 20260817
     category_floor: 4
-    stratify: same keys and priority as selection, drawn from what selection left
+    stratify: same keys and priority as principle_train, drawn from what principle_train left
     note: >
-      Mirrors selection's coverage so a principle is confirmed on the same kind
+      Mirrors principle_train's coverage so a principle is confirmed on the same kind
       of evidence it was selected on. The floor is 4 rather than 5 because
       Source Code Escrow has only 11 positives in the pool; see INV1-D8 for
       what that costs and what it means for what can be concluded there.
-  ft_train:
-    source: official train minus dev minus exclusions minus selection minus confirmation
+  model_train:
+    source: official train minus harness_val minus exclusions minus principle_train minus principle_val
     note: Reserved for Phase 2. Not read by Phase 1.
 
 exclusions:
   note: >
-    Contracts removed from ft_train because their CONTENT duplicates a contract
-    in holdout or dev under a different title, which title-based disjointness
+    Contracts removed from model_train because their CONTENT duplicates a contract
+    in test or harness_val under a different title, which title-based disjointness
     cannot catch. Evidence and the containment figures are in
-    reviews/split-contamination-check.md. Applied AFTER dev sampling, so the
-    seed, the sampling procedure, the dev membership and the D-13 length
-    profile are all unchanged; only the ft_train pool shrinks.
+    reviews/split-contamination-check.md. Applied AFTER harness_val sampling, so the
+    seed, the sampling procedure, the harness_val membership and the D-13 length
+    profile are all unchanged; only the model_train pool shrinks.
   contract_ids:
     - id: "WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT - Intellectual Property Rights                 Confidentiality and Non-Use Obligations Agreement"
       reason: >-
-        contained verbatim WITHIN a holdout contract (containment 1.000): this
-        excluded entry is the 7,042-char IP/confidentiality annex, a substring
-        of the 32,371-char holdout filing WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT
+        contained verbatim WITHIN a test contract (containment 1.000): this
+        scratch entry is the 7,042-char IP/confidentiality annex, a substring
+        of the 32,371-char test filing WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT
         AGREEMENT; it ends at exhibit marker A-2 and carries no signing date
-      twin_split: holdout
+      twin_split: test
     - id: "IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement"
       reason: >-
-        re-filing of a holdout contract (containment 0.946, gold agrees on all
-        12): this excluded 10-K entry is 40,866 chars against the 35,189-char
-        holdout 8-K entry; neither is a substring of the other
-      twin_split: holdout
+        re-filing of a test contract (containment 0.946, gold agrees on all
+        12): this scratch 10-K entry is 40,866 chars against the 35,189-char
+        test 8-K entry; neither is a substring of the other
+      twin_split: test
     - id: "ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT"
       reason: >-
-        byte-identical to a dev contract (containment 1.000): both entries are
-        12,020 chars and each is a substring of the other; the dev twin is
+        byte-identical to a harness_val contract (containment 1.000): both entries are
+        12,020 chars and each is a substring of the other; the harness_val twin is
         ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)
-      twin_split: dev
+      twin_split: harness_val
     - id: "ARMSTRONGFLOORING,INC_01_07_2019-EX-10.2-INTELLECTUAL PROPERTY AGREEMENT"
       reason: >-
-        re-filing of a dev contract (containment 0.975): this excluded entry is
-        69,759 chars against the 56,858-char dev entry
+        re-filing of a harness_val contract (containment 0.975): this scratch entry is
+        69,759 chars against the 56,858-char harness_val entry
         ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual
         Property Agreement; neither is a substring of the other
-      twin_split: dev
+      twin_split: harness_val
 
 split_clustering:
   shingle_n: 5
   jaccard_threshold: 0.40
   containment_threshold: 0.60
-  scope: ft_train_pool_internal
+  scope: model_train_pool_internal
   note: >
-    Carving selection and confirmation out of ft_train promotes ft_train's
+    Carving principle_train and principle_val out of model_train promotes model_train's
     INTERNAL near-duplicate clusters into cross-split pairs, which the
     contamination guard then fails on (it did, on the
     ChinaRealEstate/Leju Content License cluster at containment 0.989). So
     before carving, the 364-contract pool is clustered by 5-gram
     containment/Jaccard and every contract in a multi-member cluster is bound
-    to ft_train — clusters are indivisible and are assigned wholesale to the
-    Phase-2 pool. Only cluster singletons are eligible for selection and
-    confirmation.
+    to model_train — clusters are indivisible and are assigned wholesale to the
+    Phase-2 pool. Only cluster singletons are eligible for principle_train and
+    principle_val.
 
     These thresholds are deliberately STRICTER than contamination_guard's.
     The guard is a fail condition; this is the preventive rule, and the gap
@@ -150,7 +150,7 @@ contamination_guard:
   containment_threshold: 0.80
   scope: cross_split
   note: >
-    Post-split assertion over the final dev/holdout/ft_train assignment. Fails
+    Post-split assertion over the final harness_val/test/model_train assignment. Fails
     the build if any CROSS-SPLIT pair exceeds either threshold. Thresholds are
     calibrated in reviews/split-contamination-check.md: the highest legitimate
     cross-split pair in CUAD sits at containment 0.529, and nothing in the

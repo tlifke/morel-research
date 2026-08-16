@@ -34,11 +34,12 @@ there.
 
 - **Dataset** (inv 001, complete pending G1). Deterministic rebuild, six
   frozen splits — see `plans/splits.md` for each one's PURPOSE, which is the
-  part that matters: holdout 102 / dev 40 / selection 60 / confirmation 40 /
-  ft_train 264 / excluded 4. A rename to conventional names
-  (`test` / `harness_val` / `principle_train` / `principle_val` /
-  `model_train` / `scratch`) is approved and pending.
-- **Harness** (`harness/`, study-level code, not an investigation). 166 tests.
+  part that matters: test 102 / harness_val 40 / principle_train 60 /
+  principle_val 40 / model_train 264 / scratch 4. These are the conventional
+  names adopted on 2026-08-16; the old ones (`holdout` / `dev` / `selection` /
+  `confirmation` / `ft_train` / `excluded`) still appear in records written
+  before that date — the mapping is in `plans/splits.md`.
+- **Harness** (`harness/`, study-level code, not an investigation). 190 tests.
   Three Tinker backends measured and working; ollama backend built and
   mock-tested, blocked on the desktop being offline. Trace store is tier-1.
 - **Review app** (`apps/principle-review/`). 47 tests. Generic over record
@@ -112,7 +113,7 @@ are deliberately-wrong controls.
   non-redistributable. Gitignored. **Paraphrase only — never quote it
   verbatim** into prompts, principles, or the writeup. CUAD itself is CC BY 4.0
   and quotable; cite `hendrycks2021cuad`.
-- **Never load holdout** outside gate G4. Several agents were given read access
+- **Never load the `test` split** outside gate G4. Several agents were given read access
   for contamination checks only.
 
 ## Traps that already cost time

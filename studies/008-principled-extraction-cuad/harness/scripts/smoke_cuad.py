@@ -23,7 +23,7 @@ OUT_ROOT = STUDY_ROOT / "data" / "traces" / "smoke"
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default="Qwen/Qwen3.5-9B")
-    parser.add_argument("--split", default="excluded")
+    parser.add_argument("--split", default="scratch")
     parser.add_argument("--n-contracts", type=int, default=2)
     parser.add_argument("--conditions", default="C1,C2,C3")
     parser.add_argument("--schema-variant", default="field_present")

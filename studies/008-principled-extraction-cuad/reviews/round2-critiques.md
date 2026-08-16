@@ -1,8 +1,17 @@
 # Round-2 principle critiques — adversarial arm
 
+> **Split names.** Renamed on 2026-08-16 (`../plans/splits.md`); membership did
+> not change, so `harness_val` here is exactly the old `dev` and `test` the old
+> `holdout`. **`model_train` in this report means the pre-carve training pool it
+> was run over** — 368 contracts before INV1-D7, 364 after — not today's
+> 264-contract `model_train`. INV1-D8 later carved `principle_train` (60) and
+> `principle_val` (40) out of that pool, so every count below stated over
+> `harness_val` + `model_train` is over a pool that no longer corresponds to any
+> pair of split names.
+
 Adversarial review of `principles/pilot/candidates_round2.yaml` (23 candidates, p01–p23),
-ordered strongest-worry-first. All evidence is `dev` (40) + `ft_train` (364) = **404 contracts**,
-12-category subset, read-only through `scripts/cuad_dataset.py`. **HOLDOUT was never loaded.**
+ordered strongest-worry-first. All evidence is `harness_val` (40) + `model_train` (364) = **404 contracts**,
+12-category subset, read-only through `scripts/cuad_dataset.py`. **test was never loaded.**
 Date: 2026-08-15. AI Assistant Used: Claude Code.
 
 Machine-readable form: `principles/pilot/round2/critiques.yaml`, keyed by id, uniform fields.
@@ -155,7 +164,7 @@ and a passage interrupted by furniture is annotated either way — so neither sh
 
 ### p03 — amendments carry no responsive text for reproduced clauses — **strong**
 
-**All 25 amendment-shaped contracts in dev+ft_train carry gold-present categories** (86 gold
+**All 25 amendment-shaped contracts in harness_val+model_train carry gold-present categories** (86 gold
 spans in the subset). Agreement Date is present in 24/25 (96%, *higher* than the 92% baseline).
 Governing Law (36% vs 90%) and Expiration Date (32% vs 85%) are genuinely depressed, so the true
 effect is category-specific, not the blanket rule stated.
@@ -423,7 +432,7 @@ directions. My only complaints are that the trigger fires on 63% of contracts an
 ## Reproduction
 
 Analysis was scratch-only (constraint: no writes outside `principles/pilot/round2/` and this file)
-and ran through `scripts/cuad_dataset.py` over `dev` + `ft_train`. Every count above is mechanical
+and ran through `scripts/cuad_dataset.py` over `harness_val` + `model_train`. Every count above is mechanical
 except where it cites `reviews/principle-claim-checks.md` (the 336-span Minimum Commitment hand
 classification and the 204-vs-25 furniture counts) or `reviews/agreement-date-check.md` (the
 blank-date case inspection), which are that report's numbers, not mine.

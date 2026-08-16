@@ -62,7 +62,7 @@ def main() -> int:
     parser.add_argument("--conditions", default="C1,C2,C3")
     parser.add_argument("--variants", default="field_present,field_absent")
     parser.add_argument("--seeds", default="0")
-    parser.add_argument("--split", default="dev")
+    parser.add_argument("--split", default="harness_val")
     parser.add_argument("--max-output-tokens", type=int, default=DEFAULT_MAX_OUTPUT_TOKENS)
     parser.add_argument("--max-instances", type=int, default=0)
     parser.add_argument("--tokenizer-id", default=None)

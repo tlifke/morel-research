@@ -1,9 +1,15 @@
-# Principle footprints — 16 pilot candidates on dev
+# Principle footprints — 16 pilot candidates on harness_val
+
+> **Split names.** Renamed on 2026-08-16 (`../plans/splits.md`); membership did
+> not change, so `harness_val` here is exactly the old `dev` and `test` the old
+> `holdout`. Where `model_train` is mentioned it means the pre-carve
+> 364-contract training pool, not today's 264-contract `model_train`
+> (INV1-D8 carved `principle_train` and `principle_val` out of it).
 
 Empirical footprint for every candidate in `principles/pilot/candidates_pilot.reviewed.yaml`,
-computed by `principles/pilot/checkers/` over the **dev** split only (40 contracts × 12
-categories = **480 decisions**). `ft_train` was read twice, for two named confirmations only
-(g02's marker, d07's furniture rate); `holdout` was never opened.
+computed by `principles/pilot/checkers/` over the **harness_val** split only (40 contracts × 12
+categories = **480 decisions**). `model_train` was read twice, for two named confirmations only
+(g02's marker, d07's furniture rate); `test` was never opened.
 Date: 2026-08-15. AI Assistant Used: Claude Code.
 
 This report answers a different question from round 1. Round 1 asked whether each principle is
@@ -27,7 +33,7 @@ could conceivably govern (its scope categories, or for g01 the nine yes/no categ
 | **d04** | 2.9% | 35.0% | 14/40 | 0.21 → **0.47** widened | no | **discriminating after widening** | as written it misses half the gold-present contracts; widening the verb lexicon fixes it |
 | **d03** | 2.5% | 15.0% | 6/40 | **0.47** | yes | **discriminating** | strongest gold association in the set, but read off gold span text |
 | **g05** | 4.8% | 57.5% | 23/40 | 0.27 | no | **applicability fine, proxy failed** | span-level compliance proxy fails its own pre-registered audit; see §4 |
-| **g06** | 1.0% | 12.5% | 5/40 | 0.38 | no | **discriminating but rare** | 6 trigger sentences in all of dev, 2 of 6 are not administration at all |
+| **g06** | 1.0% | 12.5% | 5/40 | 0.38 | no | **discriminating but rare** | 6 trigger sentences in all of harness_val, 2 of 6 are not administration at all |
 | **g08** | 1.0% | 12.5% | 5/40 | 0.09 | no | **discriminating but rare** | 5 firings, all on gold-present contracts; a narrow real subcase, low phi only because the base rate is 95% |
 | **g03** | 2.5% | 2.5% | 6/40 | 0.18 | yes | **rare, and duplicated by d02** | identical firing set to d02 |
 | **d02** | 2.5% | 2.5% | 6/40 | 0.18 | yes | **rare, and duplicates g03** | identical firing set to g03 |
@@ -37,7 +43,7 @@ could conceivably govern (its scope categories, or for g01 the nine yes/no categ
 | **g07** | 7.9% | **95.0%** | 38/40 | 1.00 | yes | **degenerate** | applicability *is* gold presence for Agreement Date |
 | **d01** | 5.8% | 70.0% | 28/40 | 0.35 | yes | **degenerate** | applicability is "gold already has the clipped shape", so the checker is the answer restated |
 | **d06** | **0.2%** | 2.5% | 1/40 | −0.70 | yes | **degenerate** | one firing in 480 decisions |
-| **d07** | **0.0%** | 0.0% | 0/40 | — | yes | **degenerate** | zero firings; 10 qualifying spans exist in the whole 404-contract dev+ft_train pool |
+| **d07** | **0.0%** | 0.0% | 0/40 | — | yes | **degenerate** | zero firings; 10 qualifying spans exist in the whole 404-contract harness_val+model_train pool |
 | **g02** | **0.0%** | 0.0% | 0/40 | — | — | **unimplementable** | the `<omitted>` marker does not exist in CUAD v1 |
 
 Ordering above is by how much the footprint tells us, not by rate.
@@ -48,7 +54,7 @@ Ordering above is by how much the footprint tells us, not by rate.
 
 **g02 is unimplementable, and this is a disqualifying finding under the study's own rule.**
 The Handbook genuinely prescribes the `<omitted>` convention, and the checker sketch is a
-faithful reading of it. But the literal string `<omitted>` occurs in **0 of 404** dev+ft_train
+faithful reading of it. But the literal string `<omitted>` occurs in **0 of 404** harness_val+model_train
 contract texts and **0 of 4,052** gold spans in the 12-category subset. The convention was a labelling-tool convention that
 did not survive into the released CUAD v1 JSON: non-contiguous responsive material appears there
 as *multiple separate spans*, not one marked-up span. Applicability is therefore identically
@@ -57,9 +63,9 @@ a feasible checker does not enter the scored set" — g02 is out. Note what this
 accepted in round 1 as "another clear principle direct from the guidelines", and it is. Being
 true was never the issue.
 
-**d07 fires zero times on dev.** Widening the furniture regex to catch bare page numbers and
+**d07 fires zero times on harness_val.** Widening the furniture regex to catch bare page numbers and
 looser confidential-treatment legends raises it to exactly 1 of 480. Across the whole
-12-category dev+ft_train pool there are **10** gold spans with furniture strictly inside — about
+12-category harness_val+model_train pool there are **10** gold spans with furniture strictly inside — about
 0.025 per contract. Combined with D-20's finding that d07's *main clause is refuted* (splitting
 at furniture outnumbers swallowing it 5:1 corpus-wide), there is nothing left: the half that is
 true is too rare to measure and the half that is measurable is wrong.
@@ -90,7 +96,7 @@ rather than evidence. The footprint still tells us something, but only about **r
   *trap* d08 describes is real and common. That makes it a candidate for rewriting as an
   instance-only checker, not for keeping as written.
 - **d06** fires **once in 480 decisions**. Its evidence base was already n=1 (the proposer said
-  so); dev does not enlarge it.
+  so); harness_val does not enlarge it.
 - **g03 / d02** fire on the identical 12 decisions in 6 contracts. They are the same principle
   arrived at from the Handbook and from mining. Keeping both double-counts the source-agreement
   claim the study wants to make. Keep one; record the agreement as a finding about the two
@@ -102,7 +108,7 @@ rather than evidence. The footprint still tells us something, but only about **r
 
 D-20 confirmed d04's *claim* and flagged its *regex*: the `supply|deliver|provide|share|allocate|
 make available` alternation cannot see performance/effort floors, the second-largest span class
-at 16.4%. Both footprints, on the 40 Minimum Commitment decisions in dev:
+at 16.4%. Both footprints, on the 40 Minimum Commitment decisions in harness_val:
 
 | variant | fires | applicable & MC present | applicable & MC absent | missed MC present | phi |
 |---|---|---|---|---|---|
@@ -128,8 +134,8 @@ it fires on the right *sentence*. Only model outputs can show that.
 ## 4. g05 and g06 — the hand-scored lexical proxies
 
 Both carried explicit instructions to hand-score ~20 spans before locking, with an abort at
-~15%. That audit was run on **all 24** Revenue/Profit Sharing gold spans in dev, plus a
-false-pass scan over 3,556 sentences in the 27 dev contracts where gold rules the category
+~15%. That audit was run on **all 24** Revenue/Profit Sharing gold spans in harness_val, plus a
+false-pass scan over 3,556 sentences in the 27 harness_val contracts where gold rules the category
 absent. Labels are checked in at `principles/pilot/checkers/handscore_labels.yaml`; the
 arithmetic is `handscore.py`.
 
@@ -164,7 +170,7 @@ percentage/ratio/redaction handling, and **drop the equity clause** or move it t
 Do not lock the checker as sketched.
 
 **g06 passes on its substance and is starved on volume.** Its trigger fired on exactly **6
-sentences in all of dev** (5 contracts). Of those 6, 4 are genuinely share-administering
+sentences in all of harness_val** (5 contracts). Of those 6, 4 are genuinely share-administering
 machinery and **0 of 6 fall inside a gold RPS span** — the principle's claim holds 6/6. The 2
 misfires are a royalty-*free* licence grant (matched on the word "royalty") and a software
 feature list mentioning reports and revenue. Trigger precision 4/6 = 67%.
@@ -172,7 +178,7 @@ feature list mentioning reports and revenue. Trigger precision 4/6 = 67%.
 The sharper problem is a miss. Innoviva span 2 — a quarterly credit/debit true-up with no
 entitlement in it — is pure machinery **and is gold-labelled Revenue/Profit Sharing**. g06 says
 it should not be. g06's own administration regex does not even fire on it. So the one place in
-dev where g06 and gold actually disagree is invisible to g06's checker. That is a 1-in-24
+harness_val where g06 and gold actually disagree is invisible to g06's checker. That is a 1-in-24
 compliance-vs-correctness inversion of the kind D-19 checked for on g08 and did not find.
 
 ---
@@ -217,7 +223,7 @@ not with any behaviour. The strongest positive phi in the set (d03, 0.47) sits o
 reads gold span text, so it is partly circular. Nothing here should be quoted as an effect size.
 
 Denominators are small: 40 contracts, so a scoped principle has at most 40 in-scope decisions and
-a 1-contract move is 2.5 points. Volume Restriction has 4 positives in dev and Source Code Escrow
+a 1-contract move is 2.5 points. Volume Restriction has 4 positives in harness_val and Source Code Escrow
 has 1; any statement about those categories is anecdote.
 
 ---
@@ -229,7 +235,7 @@ Tyler decides. On the evidence I would:
 **Drop outright (4):**
 - **g02** — unimplementable, rate identically 0, and no future model run can change that.
 - **d07** — 0 firings, and D-20 already refuted its main clause.
-- **d06** — 1 firing in 480; the proposer flagged it as effectively n=1 and dev agrees.
+- **d06** — 1 firing in 480; the proposer flagged it as effectively n=1 and harness_val agrees.
 - **d01** — tautological applicability, and it adds nothing over g01's own date-category
   exemption. (Tyler deferred this one on the apparent g01 contradiction. The contradiction is
   not real; the tautology is, and it is the better reason to drop it.)
@@ -290,5 +296,5 @@ Two machine-readable artifacts are written, both keyed by principle id:
   all-decision rate is repeated in each note.
 
 Nothing outside
-`principles/pilot/checkers/` and this file was written; no dataset was modified; holdout was not
+`principles/pilot/checkers/` and this file was written; no dataset was modified; test was not
 loaded.

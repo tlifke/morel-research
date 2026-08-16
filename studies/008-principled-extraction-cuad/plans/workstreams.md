@@ -35,7 +35,7 @@ Each gate is a stop-and-check with Tyler, not a self-certified pass.
 - **G1 (after WS1)** — category subset provisional, split files frozen and
   seeded. Nothing downstream may resample splits.
   **Scope note (2026-08-15):** inv 001 raised open calls that would *change* the
-  splits — chiefly whether dev should be re-stratified to holdout's length
+  splits — chiefly whether harness_val should be re-stratified to test's length
   profile rather than its own pool's. Those are decided **at** G1, before the
   freeze, not after it. G1 is the last moment splits are cheap to change; every
   other question inv 001 raised (rare-category redundancy, the Uncapped
@@ -46,8 +46,8 @@ Each gate is a stop-and-check with Tyler, not a self-certified pass.
   implements checkers.
 - **G3 (after WS4)** — the schema decision, made from data per the P0 decision
   rule. Written into `plans/decisions.md`.
-- **G4 (before inv 005 touches holdout)** — the official test split (102
-  contracts) is untouched until this gate. Dev-set iteration only before it.
+- **G4 (before inv 005 touches test)** — the official test split (102
+  contracts) is untouched until this gate. harness_val-set iteration only before it.
 
 ## Where the human is needed
 
@@ -64,7 +64,7 @@ Two kinds of dependency, and they behave differently:
 | H3 | Read + curate the candidate principle set (G2) | **blocking, the big one** | WS3 entirely, WS5 prompts | hours; 15–25 records with rationales |
 | H4 | Adjudicate the manual applicability residual (WS3) | **blocking, the long one** | inv 005 scoring | the study's largest human cost — size it before committing |
 | H5 | Ratify the P0 schema decision (G3) | blocking | main grid | ~15 min, rule is pre-written |
-| H6 | Open the holdout (G4) | blocking | inv 005 | a deliberate go/no-go |
+| H6 | Open the test (G4) | blocking | inv 005 | a deliberate go/no-go |
 | H7 | One-pager prose | blocking by policy | publication | — |
 
 H3 and H4 are the study's real human cost. H4 in particular scales with
@@ -85,10 +85,10 @@ deliverable, the two implementations are the proof it generalizes.
 then WS3 checkers.
 
 A and B are fully independent and should start together. C starts when A
-lands the FT-train split (pair mining needs it), but the guidelines-reading
+lands the model_train split (pair mining needs it), but the guidelines-reading
 half of C is independent of everything and can start immediately.
 
-The join point is WS4/P0: it needs A (dev contracts) + B (working runner) + a
+The join point is WS4/P0: it needs A (harness_val contracts) + B (working runner) + a
 *draft* of C. WS3 then runs in parallel with WS4 — P0 doesn't need
 applicability labels, only inv 005 does.
 
@@ -126,7 +126,7 @@ the locked set may grow before inv 005.
 ### WS1 — dataset and splits (inv 001)
 Deterministic rebuild from the upstream Atticus repo; per-instance gold
 loadable through the env interface; length-distribution table reproduced;
-dev/FT-train/holdout disjoint and seeded; manifest + summary stats emitted.
+harness_val/model_train/test disjoint and seeded; manifest + summary stats emitted.
 
 ### WS2 — principle derivation (inv 002)
 15–25 candidate `Principle` records including 3–5 deliberately rare ones, each
@@ -136,13 +136,13 @@ priority order: Atticus annotation guidelines PDF, literature confusions
 CUAD-specific leaks into the `Principle` model itself.
 
 ### WS3 — applicability ground truth (inv 003)
-Every scored principle has applicability labels over dev + holdout. Each
+Every scored principle has applicability labels over harness_val + test. Each
 checker classified fully-programmatic / heuristic-needs-spot-check / manual.
 Spot-check agreement measured on a sample of the programmatic ones and
 documented.
 
 ### WS4 — pilot P0 (inv 004)
-2 schema variants × 2 conditions (C1, C2) × ~12 dev contracts spanning the
+2 schema variants × 2 conditions (C1, C2) × ~12 harness_val contracts spanning the
 length range × 3 seeds. Deliverable: leakage rates (including text-field scan
 for migrated principle references), answer-score deltas, and the schema
 decision with the data behind it.

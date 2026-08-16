@@ -1,10 +1,19 @@
 # Round-2 cross-source validation
 
+> **Split names.** Renamed on 2026-08-16 (`../plans/splits.md`); membership did
+> not change, so `harness_val` here is exactly the old `dev` and `test` the old
+> `holdout`. **`model_train` in this report means the pre-carve training pool it
+> was run over** — 368 contracts before INV1-D7, 364 after — not today's
+> 264-contract `model_train`. INV1-D8 later carved `principle_train` (60) and
+> `principle_val` (40) out of that pool, so every count below stated over
+> `harness_val` + `model_train` is over a pool that no longer corresponds to any
+> pair of split names.
+
 Each of the 23 round-2 candidates was checked against the derivation source it did
 *not* come from.
 
-- `atticus_guidelines` candidates (12) were tested against CUAD gold in **dev + ft_train**
-  — 404 contracts, 4,052 gold spans over the 12-category subset. Holdout was never loaded.
+- `atticus_guidelines` candidates (12) were tested against CUAD gold in **harness_val + model_train**
+  — 404 contracts, 4,052 gold spans over the 12-category subset. test was never loaded.
 - `data_mined` candidates (11) were checked against the **Atticus CUAD Labeling Handbook**
   (95 pp., read in full for the relevant chapters) and the **CUAD master clause list**
   shipped with the dataset (`data/raw/category_descriptions.csv`, CC BY 4.0).
@@ -195,7 +204,7 @@ S-1/A, 3/19/2007` line mid-sentence.
 
 ### Guidelines → data (8)
 
-| id | Claim | Rate in dev + ft_train |
+| id | Claim | Rate in harness_val + model_train |
 |---|---|---|
 | p01 | Revenue/Profit Sharing needs entitlement, not administration | 327 / 329 spans (99.4%); administration-only 2 (0.6%) |
 | p04 | A blank/redacted agreement date is still extracted | **17 / 17 contracts (100%)**; 26 gold spans are blank/redacted shells |

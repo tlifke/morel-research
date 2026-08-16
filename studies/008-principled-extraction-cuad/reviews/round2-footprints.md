@@ -1,8 +1,14 @@
 # Round-2 applicability footprints — p01–p23
 
+> **Split names.** Renamed on 2026-08-16 (`../plans/splits.md`); membership did
+> not change, so `harness_val` here is exactly the old `dev` and `test` the old
+> `holdout`. Where `model_train` is mentioned it means the pre-carve
+> 364-contract training pool, not today's 264-contract `model_train`
+> (INV1-D8 carved `principle_train` and `principle_val` out of it).
+
 Every round-2 candidate in `principles/pilot/candidates_round2.yaml` had its `gold_applicability`
-checker implemented and run over the **dev split only** (40 contracts × 12 categories = 480
-decisions). `holdout` was never loaded; `ft_train` was not used for any number here.
+checker implemented and run over the **harness_val split only** (40 contracts × 12 categories = 480
+decisions). `test` was never loaded; `model_train` was not used for any number here.
 
 Artifacts: `principles/pilot/round2/checkers/` (code + 21 tests),
 `principles/pilot/round2/footprint.yaml` (the review-app sidecar, complete for all 23),
@@ -18,7 +24,7 @@ Blinding held: `controls.yaml`, `controls_key.yaml`, `round2_key.yaml`, `round1/
 
 ## The table
 
-`applicability` is the headline rate over all 480 dev decisions. `in scope` is the rate over the
+`applicability` is the headline rate over all 480 harness_val decisions. `in scope` is the rate over the
 categories the record declares (identical to the headline for the seven whole-corpus principles).
 `phi` is the 2×2 correlation between *applicability* and *gold presence*, computed in scope.
 
@@ -26,12 +32,12 @@ categories the record declares (identical to the headline for the seven whole-co
 |---|---|---|---|---|---|
 | p01 | 5/480 = 1.0% | 12.5% | +0.38 | **pass** | Instance-only administration-plus-royalty test; rare but real, 5 contracts. |
 | p02 | 1/480 = 0.2% | 2.5% | −0.70 | **fail** | Applicability requires gold `is_impossible`; one firing in the whole split. |
-| p03 | 0/480 = 0.0% | 0.0% | — | pass | Cue fires on 4 contracts, none shares 400 chars with another dev contract → empty. |
+| p03 | 0/480 = 0.0% | 0.0% | — | pass | Cue fires on 4 contracts, none shares 400 chars with another harness_val contract → empty. |
 | p04 | 5/480 = 1.0% | 12.5% | +0.09 | **pass** | Instance-only blank-date test; fires, but barely moves gold presence. |
 | p05 | 480/480 = 100% | 100% | — | pass-but-vacuous | Applicable to every decision by construction; cannot select anything. |
 | p06 | 21/480 = 4.4% | 52.5% | +0.40 | **pass** | Venue/arbitration text present in half the contracts; strongest clean footprint. |
 | p07 | 38/480 = 7.9% | 95.0% | +1.00 | **fail** | Applicability *is* "gold marks Agreement Date present". |
-| p08 | 0/480 = 0.0% | 0.0% | — | fail | `<omitted>` occurs 0 times in dev text and 0 times in dev gold spans. |
+| p08 | 0/480 = 0.0% | 0.0% | — | fail | `<omitted>` occurs 0 times in harness_val text and 0 times in harness_val gold spans. |
 | p09 | 21/480 = 4.4% | 52.5% | +0.15 | **pass** | Instance-only ceiling test; fires on half of Volume Restriction, weak association. |
 | p10 | 28/480 = 5.8% | 70.0% | +0.35 | **fail** | Applicability is "gold already has the clipped date shape". |
 | p11 | 23/480 = 4.8% | 57.5% | +0.27 | **pass** | Instance-only payment-plus-amount test; healthy rate, real association. |
@@ -42,7 +48,7 @@ categories the record declares (identical to the headline for the seven whole-co
 | p16 | 22/480 = 4.6% | 55.0% | −0.72 | **fail** | Applicability requires gold `is_impossible`; only absences are ever scored. |
 | p17 | 3/480 = 0.6% | 7.5% | +0.14 | **fail** | Gold-presence gated, and the sketch's own regex misses the common phrasing. |
 | p18 | 12/480 = 2.5% | 2.5% | +0.18 | **fail** | Applicability is computed from the category's own gold spans. |
-| p19 | 0/480 = 0.0% | 0.0% | — | fail | Furniture is common (219 matches, 12 contracts) but never *inside* a dev gold span. |
+| p19 | 0/480 = 0.0% | 0.0% | — | fail | Furniture is common (219 matches, 12 contracts) but never *inside* a harness_val gold span. |
 | p20 | 40/480 = 8.3% | 8.3% | +0.34 | **fail** | Real text test, but gated behind "gold has a span"; 40 firings in 6 contracts. |
 | p21 | 19/480 = 4.0% | 47.5% | +0.22 | **fail** | Gold-presence gated before the execution-block text test runs. |
 | p22 | 108/480 = 22.5% | 30.0% | +1.00 | **fail** | Applicability is gold presence on the nine yes/no categories. |
@@ -85,21 +91,21 @@ a later compliance measurement is a fact about the model rather than a re-deriva
 
 ## The three empty footprints
 
-- **p08 (`<omitted>` marker) — disqualifying.** The literal marker appears **0 times** in dev
-  contract text and **0 times** in dev gold spans. The checker is implementable as written and can
+- **p08 (`<omitted>` marker) — disqualifying.** The literal marker appears **0 times** in harness_val
+  contract text and **0 times** in harness_val gold spans. The checker is implementable as written and can
   never fire on this corpus. Status `unimplementable`. The sketch's own caveat is the explanation:
   the marker only exists if the prompt introduces it, which makes the principle a test of
   instruction-following against a convention CUAD v1's released text does not carry.
 - **p19 (furniture inside a span) — empty, but not for a lexicon reason.** The furniture regex
-  matches 219 times across 12 of 40 dev contracts, so the trigger vocabulary is fine; what is
-  absent is any 12-category dev gold span with furniture *strictly inside* it. The widened variant
+  matches 219 times across 12 of 40 harness_val contracts, so the trigger vocabulary is fine; what is
+  absent is any 12-category harness_val gold span with furniture *strictly inside* it. The widened variant
   finds exactly one. This reproduces the earlier corpus finding that CUAD's dominant convention is
   to split at furniture and exclude it, i.e. the principle's main clause describes the minority
   behaviour.
-- **p03 (amendments reproduce earlier text) — empty on dev, and the emptiness is a split artefact.**
+- **p03 (amendments reproduce earlier text) — empty on harness_val, and the emptiness is a split artefact.**
   The derivative cue alone fires on 4 of 40 contracts (48 decisions; the loosened `amend*` cue
   fires on 9 contracts / 108 decisions), but none of those four shares a 400-character window with
-  any other dev contract. The shared-text half was computed *within dev only*, because ft_train was
+  any other harness_val contract. The shared-text half was computed *within harness_val only*, because model_train was
   out of scope for these numbers. This is the one zero that would plausibly move on a larger
   population, and it should not be read as a settled finding.
 
@@ -169,7 +175,7 @@ Faithfulness deviations, all recorded in the sidecar under
 
 - **p03** — the sketch defers the shared-substring computation to
   `scripts/scan_split_contamination.py`; implemented instead as an exact 400-character shared-window
-  test on whitespace-normalised text across the 40 dev contracts.
+  test on whitespace-normalised text across the 40 harness_val contracts.
 - **p04** (reused g08) — "first ~3000 characters or the signature block" implemented as head-3000
   plus trailing-3000; the sketch's "bare comma where a date should follow an execution verb" clause
   was dropped as unimplementable without false-firing on ordinary prose.
@@ -185,7 +191,7 @@ implementable and measures zero, which is a finding about the corpus, not a fail
 
 ## What these numbers can and cannot show
 
-They can show: how often a principle's trigger condition is met on dev, where in the category and
+They can show: how often a principle's trigger condition is met on harness_val, where in the category and
 length space it concentrates, whether its applicability is a function of the gold answer, and how
 much it moves under a plausible lexicon change.
 

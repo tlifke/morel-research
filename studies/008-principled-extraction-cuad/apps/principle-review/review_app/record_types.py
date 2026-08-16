@@ -93,7 +93,7 @@ PRINCIPLE = RecordType(
         Field("footprint", "Empirical footprint", "footprint", slot="feature",
               config={"index": "footprint"},
               hint="Measured, not proposed: the checker sketch implemented and run over "
-                   "the dev split.",
+                   "the harness_val split.",
               help="Someone implemented this principle's checker and ran it. "
                    "APPLICABILITY is how often it fires at all — near 0% means it is "
                    "untestable in practice, near 100% means it fires on everything and "
@@ -257,7 +257,7 @@ GOLD_AUDIT = RecordType(
                    "detector=exact_normalized is byte-identical text; "
                    "fuzzy_idf_jaccard is a similarity match, so read its passage "
                    "before trusting it. A non-empty excluded_as means that contract "
-                   "was removed from ft_train for cross-split duplication (INV1-D7); "
+                   "was removed from model_train for cross-split duplication (INV1-D7); "
                    "it is still valid evidence that the gold disagrees."),
         Field("title", "Contract title", "longtext", slot="body"),
         Field("sample", "Sampling provenance", "kv", slot="body",

@@ -287,7 +287,7 @@
             <div class="t">Two independent arms</div>
             <ul>
               <li><strong>Atticus Labeling Handbook</strong> + CUAD v1 Datasheet → g01–g08</li>
-              <li><strong>Contrastive mining</strong> over ft_train only, deterministic, config
+              <li><strong>Contrastive mining</strong> over model_train only, deterministic, config
                 pinned in <code>mining_config.yaml</code> → d01–d08</li>
               <li>Savelka confusable trio drives category choice</li>
             </ul>
@@ -359,7 +359,7 @@
             <div class="t">Pre-gate measurement band</div>
             <div class="substage">
               <div class="st">1 · Checkers implemented and run</div>
-              <div class="ss">Every candidate's checker is coded and run over <strong>dev</strong>
+              <div class="ss">Every candidate's checker is coded and run over <strong>harness_val</strong>
                 (40 contracts × 12 categories = 480 decisions) before curation. Each candidate
                 arrives with an empirical footprint: rate, in-scope rate, per-category and
                 per-length distribution, a discrimination 2×2, and stability under lexicon
@@ -369,8 +369,8 @@
               <div class="st">2 · Cross-source validation</div>
               <div class="ss">Each principle is tested against the <em>other</em> source —
                 guideline-derived against gold, data-mined against the Handbook — with outcomes
-                <em>corroborated / contradicted / silent</em>. Over dev + ft_train (404 contracts);
-                holdout never loaded. <code>reviews/cross-source-validation.md</code>.</div>
+                <em>corroborated / contradicted / silent</em>. Over harness_val + model_train (404 contracts);
+                test never loaded. <code>reviews/cross-source-validation.md</code>.</div>
             </div>
             <div class="substage">
               <div class="st">3 · Adversarial critique</div>
@@ -647,8 +647,8 @@
     <h2><span class="num">4</span>The three decouplings</h2>
     <p class="lede">Each is stated as <em>X did not predict Y</em>. Each undercuts a heuristic a
       reader would otherwise assume, and together they are the case for the round-2 instrumentation.
-      All measured on the pilot's 16 candidates: checkers over dev (480 decisions), cross-source
-      validation over dev + ft_train (404 contracts), and independent adversarial review. These are
+      All measured on the pilot's 16 candidates: checkers over harness_val (480 decisions), cross-source
+      validation over harness_val + model_train (404 contracts), and independent adversarial review. These are
       the most transferable findings on this page.</p>
 
     <div class="cards">
@@ -758,7 +758,7 @@
       <h4>3 · Compliance must be separable from correctness &nbsp;<span class="pill warn">D-21</span></h4>
       <p>A principle enters the scored set only if <strong>a model can pass its checker and still be
         wrong, and fail it while still being right</strong>. Screening is mechanical: populate the
-        2×2 of {passes checker, fails checker} × {answer right, answer wrong} over dev; a
+        2×2 of {passes checker, fails checker} × {answer right, answer wrong} over harness_val; a
         structurally empty off-diagonal disqualifies.</p>
       <p><strong>Why a tautological checker destroys the analysis.</strong> The chain the study
         reports is <span class="mono">principles → compliance → success</span>, with compliance as
@@ -779,7 +779,7 @@
     <div class="callout">
       <p><strong>Constraint 3 is the reason the pipeline changed shape, not just gained stages.</strong>
         Constraints 1 and 2 can be applied by reading a record. Constraint 3 cannot: it is a
-        measurement over dev, so it forces the checker-implementation stage to sit before the gate
+        measurement over harness_val, so it forces the checker-implementation stage to sit before the gate
         rather than after it. Round 1's ordering made it structurally impossible to enforce.</p>
     </div>
 
@@ -799,10 +799,10 @@
     <p>Principles that are demonstrably wrong against gold are seeded into the round-2 queue in the
       same schema, register, level of detail and evidence style as real candidates, with filled
       proposer blocks, and renumbered so they do not form a contiguous block. Each was
-      <em>disproved</em> against dev + ft_train before entering the set — candidates whose wrongness
+      <em>disproved</em> against harness_val + model_train before entering the set — candidates whose wrongness
       could not be demonstrated were discarded during authoring, because a control whose wrongness
       cannot be shown is indistinguishable from a real principle that happens to be wrong, and would
-      corrupt the measurement in the direction that flatters the gate. Holdout was never loaded.
+      corrupt the measurement in the direction that flatters the gate. test was never loaded.
       Difficulty is tagged per control across an easy / medium / hard spread, deliberately: an
       all-easy set makes a perfect catch rate uninformative, an all-hard set makes a zero
       uninformative.</p>
@@ -880,7 +880,7 @@
         <tbody>
           <tr>
             <td><strong>Checker implementation + empirical footprints</strong><br>
-              <span style="font-size:13px;color:var(--muted)">dev, 480 decisions</span></td>
+              <span style="font-size:13px;color:var(--muted)">harness_val, 480 decisions</span></td>
             <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
             <td class="mono" style="color:var(--mushroom)">— to be filled in</td>
             <td class="mono" style="color:var(--mushroom)">— open</td>

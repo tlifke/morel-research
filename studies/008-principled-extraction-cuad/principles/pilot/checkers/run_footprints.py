@@ -47,7 +47,7 @@ VERDICTS = {
     "g03": (
         "discriminating-but-rare",
         "2.5% of decisions; a genuine multi-label partition, but duplicated "
-        "exactly by d02 on dev.",
+        "exactly by d02 on harness_val.",
     ),
     "g04": (
         "discriminating",
@@ -62,7 +62,7 @@ VERDICTS = {
     ),
     "g06": (
         "discriminating-but-rare",
-        "12.5% of Revenue/Profit Sharing decisions, 6 trigger sentences in dev, "
+        "12.5% of Revenue/Profit Sharing decisions, 6 trigger sentences in harness_val, "
         "2 of 6 hand-judged not administration at all.",
     ),
     "g07": (
@@ -83,7 +83,7 @@ VERDICTS = {
     ),
     "d02": (
         "discriminating-but-rare",
-        "Identical firing set to g03 on dev (12 decisions); the two are the same "
+        "Identical firing set to g03 on harness_val (12 decisions); the two are the same "
         "principle reached from two sources.",
     ),
     "d03": (
@@ -104,13 +104,13 @@ VERDICTS = {
     ),
     "d06": (
         "degenerate",
-        "One firing in 480 decisions; the evidence base was already n=1 and dev "
+        "One firing in 480 decisions; the evidence base was already n=1 and harness_val "
         "does not enlarge it.",
     ),
     "d07": (
         "degenerate",
-        "Zero firings on dev; only 10 gold spans in the whole 12-category "
-        "dev+ft_train pool contain furniture strictly inside.",
+        "Zero firings on harness_val; only 10 gold spans in the whole 12-category "
+        "harness_val + the pre-carve ft_train pool contain furniture strictly inside.",
     ),
     "d08": (
         "degenerate-by-construction",
@@ -137,7 +137,7 @@ def phi(a, b, c, d):
     return (a * d - b * c) / denom
 
 
-def evaluate(dataset, split="dev"):
+def evaluate(dataset, split="harness_val"):
     instances = [dataset.get_instance(cid) for cid in dataset.contract_ids(split)]
     categories = dataset.categories
     rows = []
@@ -401,10 +401,10 @@ def to_app_schema(out, rows):
 
 def main():
     dataset = CuadDataset()
-    rows, categories = evaluate(dataset, "dev")
+    rows, categories = evaluate(dataset, "harness_val")
     out = {
-        "split": "dev",
-        "n_contracts": len(dataset.contract_ids("dev")),
+        "split": "harness_val",
+        "n_contracts": len(dataset.contract_ids("harness_val")),
         "n_categories": len(categories),
         "n_decisions": len(rows),
         "pilot_categories": list(PILOT_CATEGORIES),

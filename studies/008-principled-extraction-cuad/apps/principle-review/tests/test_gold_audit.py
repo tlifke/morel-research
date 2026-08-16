@@ -38,7 +38,7 @@ def test_fixture_matches_declared_schema():
                     "duplicate_counterparts", "has_counterpart",
                     "n_contracts_with_passage", "detected_by"):
             assert key in record
-        assert record["split"] in ("dev", "holdout")
+        assert record["split"] in ("harness_val", "test")
         assert record["span_text"]
         assert record["end"] - record["start"] == record["n_chars"]
         assert record_types.dotted(record, "sample.seed") is not None
@@ -169,7 +169,7 @@ def test_aggregation_artifact(tmp_path):
     assert report["provenance"]["reviewers"] == ["tyler"]
     assert "defer" not in report["per_defect"]
     assert report["per_defect"]["artifact_split"]["n"] == 1
-    assert set(report["per_split"]) <= {"dev", "holdout"}
+    assert set(report["per_split"]) <= {"harness_val", "test"}
 
     def keys(node):
         if isinstance(node, dict):
@@ -407,24 +407,24 @@ def test_two_detector_census_stays_out_of_the_headline_rate(tmp_path):
     assert "inconsistent_across_duplicates" not in report["overall"]["decisions"]
 
 
-def test_excluded_counterparts_are_labeled_not_filtered():
+def test_scratch_counterparts_are_labeled_not_filtered():
     records = yaml_io.load_records(FIXTURE)
     census = [
         r for r in records
         if record_types.dotted(r, "sample.draw") == "duplicate_census"
     ]
-    excluded = [
+    scratch = [
         c for r in census for c in r["duplicate_counterparts"]
-        if c["split"] == "excluded"
+        if c["split"] == "scratch"
     ]
-    assert excluded, "INV1-D7 contracts must still appear as counterpart evidence"
-    for counterpart in excluded:
+    assert scratch, "INV1-D7 contracts must still appear as counterpart evidence"
+    for counterpart in scratch:
         assert counterpart["excluded_as"]
         assert "twin" in counterpart["excluded_as"]
     for counterpart in (c for r in census for c in r["duplicate_counterparts"]):
-        assert counterpart["split"] in ("dev", "holdout", "ft_train", "excluded",
+        assert counterpart["split"] in ("harness_val", "test", "model_train", "scratch",
                                         "unassigned")
-        if counterpart["split"] != "excluded":
+        if counterpart["split"] != "scratch":
             assert counterpart["excluded_as"] == ""
 
 

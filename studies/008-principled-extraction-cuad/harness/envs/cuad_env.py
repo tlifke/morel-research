@@ -34,7 +34,7 @@ from scripts.cuad_dataset import CuadDataset  # noqa: E402
 
 INSTANCE_SCOPE_KEY = "__instance__"
 
-SEALED_SPLITS = ("holdout",)
+SEALED_SPLITS = ("test",)
 
 CATEGORY_SUBSET_CONFIG = STUDY_ROOT / "scripts" / "config" / "category_subset.yaml"
 CATEGORY_DESCRIPTIONS = STUDY_ROOT / "data" / "raw" / "category_descriptions.csv"
@@ -147,14 +147,14 @@ class CuadEnvironment(Environment):
         compliance_checkers: Optional[Mapping[str, ComplianceChecker]] = None,
         categories: Optional[Iterable[str]] = None,
         category_definitions: Optional[Mapping[str, str]] = None,
-        allow_holdout: bool = False,
+        allow_test: bool = False,
     ) -> None:
         self.targets = list(categories) if categories else load_category_subset()
         self._dataset = dataset or CuadDataset(categories=self.targets)
         self._principles = principle_set
         self._applicability = applicability
         self._checkers: dict[str, ComplianceChecker] = dict(compliance_checkers or {})
-        self._allow_holdout = allow_holdout
+        self._allow_test = allow_test
 
         definitions = (
             dict(category_definitions)
@@ -211,7 +211,7 @@ class CuadEnvironment(Environment):
                 "principle_ids": sorted(self._checkers),
                 "note": None if self._checkers else COMPLIANCE_UNAVAILABLE_NOTE,
             },
-            "allow_holdout": self._allow_holdout,
+            "allow_test": self._allow_test,
         }
 
     def assert_ready(self, conditions: Iterable[str]) -> None:
@@ -226,14 +226,14 @@ class CuadEnvironment(Environment):
             )
 
     def load_instances(self, split: str) -> list[Instance]:
-        if split in SEALED_SPLITS and not self._allow_holdout:
+        if split in SEALED_SPLITS and not self._allow_test:
             raise PermissionError(
                 f"split {split!r} is sealed until gate G4 (plans/splits.md standing "
-                f"rule 1); pass allow_holdout=True only with an explicit decision"
+                f"rule 1); pass allow_test=True only with an explicit decision"
             )
         if split in SEALED_SPLITS:
             log.warning(
-                "SEALED SPLIT LOADED: %r was read with allow_holdout=True. This is a "
+                "SEALED SPLIT LOADED: %r was read with allow_test=True. This is a "
                 "gate-G4 action and must be recorded in the decision log.",
                 split,
             )

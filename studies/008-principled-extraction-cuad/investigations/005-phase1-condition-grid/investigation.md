@@ -48,7 +48,7 @@ requirement → Δcompliance beyond provision → Δsuccess.
 
 ## Standing constraints
 
-- Holdout is untouched until gate G4. All iteration happens on dev.
+- test is untouched until gate G4. All iteration happens on harness_val.
 - `infeasible_at_length` is a reported outcome, not a dropped row (H5).
 - Length-stratified reporting is mandatory for every primary metric.
 - Contamination caveat travels with every table.

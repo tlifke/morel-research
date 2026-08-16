@@ -16,7 +16,7 @@ from checkers.run_footprints import examples_for, length_bucket  # noqa: E402
 from cuad_dataset import CuadDataset  # noqa: E402
 from round2.checkers.checkers2 import MATCHED, REGISTRY, set_corpus  # noqa: E402
 
-SPLIT = "dev"
+SPLIT = "harness_val"
 
 GOLD_DEPENDENCY = {
     "p01": "instance_only",
@@ -59,7 +59,7 @@ FAITHFULNESS_NOTE = {
     "p03": (
         "Sketch names a 400+ character substring shared with 'another contract' and points at "
         "scan_split_contamination.py. Implemented as an exact 400-character shared-window test "
-        "against the other 39 dev contracts on whitespace-normalised text, since the sketch's "
+        "against the other 39 harness_val contracts on whitespace-normalised text, since the sketch's "
         "containment-score artifact is not part of this deliverable."
     ),
     "p04": (
@@ -90,19 +90,19 @@ FAITHFULNESS_NOTE = {
 
 MEASUREMENT_NOTE = {
     "p03": (
-        "The derivative cue alone fires on 4 of 40 dev contracts (48 decisions), but none of those "
-        "four shares a 400-character window with any other dev contract, so the sketch as written "
-        "is empty on dev. The shared-text half was computed within dev only; a wider corpus would "
+        "The derivative cue alone fires on 4 of 40 harness_val contracts (48 decisions), but none of those "
+        "four shares a 400-character window with any other harness_val contract, so the sketch as written "
+        "is empty on harness_val. The shared-text half was computed within harness_val only; a wider corpus would "
         "likely find twins, which makes this a split-size artefact rather than a settled zero."
     ),
     "p08": (
-        "The literal marker '<omitted>' occurs 0 times in dev contract text and 0 times in dev gold "
+        "The literal marker '<omitted>' occurs 0 times in harness_val contract text and 0 times in harness_val gold "
         "spans. The checker cannot fire on this corpus at all, which disqualifies the principle as "
         "a measurable rule here regardless of whether the Handbook prescribes it."
     ),
     "p19": (
-        "Furniture is not rare in dev — the regex matches 219 times across 12 of 40 contracts — but "
-        "no 12-category dev gold span contains a match strictly inside it, so applicability is 0. "
+        "Furniture is not rare in harness_val — the regex matches 219 times across 12 of 40 contracts — but "
+        "no 12-category harness_val gold span contains a match strictly inside it, so applicability is 0. "
         "The complementary half of the sketch (no span is wholly furniture) is trivially satisfied "
         "and carries no signal."
     ),
@@ -164,14 +164,14 @@ def two_by_two(fired, rows, index):
 
 ZERO_RATE_STATUS = {
     "p08": "unimplementable",
-    "p03": "never-fires-in-dev",
-    "p19": "never-fires-in-dev",
+    "p03": "never-fires-in-harness_val",
+    "p19": "never-fires-in-harness_val",
 }
 
 
 def status_for(pid, rate_all, rate_scope, ph, dependency):
     if rate_all == 0:
-        return ZERO_RATE_STATUS.get(pid, "never-fires-in-dev")
+        return ZERO_RATE_STATUS.get(pid, "never-fires-in-harness_val")
     if dependency == "universal":
         return "degenerate-universal"
     if dependency in (
@@ -361,7 +361,7 @@ def note_for(fp):
     parts = []
     parts.append(
         f"Fires on {fp['n_applicable']}/{fp['n_decisions']} decisions "
-        f"({fp['rate_all_decisions']:.1%}) over the 12-category dev set"
+        f"({fp['rate_all_decisions']:.1%}) over the 12-category harness_val set"
     )
     if fp["n_decisions_in_scope"] != fp["n_decisions"]:
         parts[-1] += (
@@ -427,7 +427,7 @@ def to_sidecar(measurements, rows, n_contracts, categories):
                 + fp["twobytwo_in_scope"]["notapplicable_absent"],
                 "phi": fp["phi_in_scope"],
                 "what_this_can_show": (
-                    "Only whether applicability co-varies with the gold answer on dev. No model "
+                    "Only whether applicability co-varies with the gold answer on harness_val. No model "
                     "outputs exist yet, so this is not compliance, not accuracy, and not evidence "
                     "that following the principle improves extraction."
                 ),
@@ -488,10 +488,10 @@ def to_sidecar(measurements, rows, n_contracts, categories):
             "n_categories": len(categories),
         },
         "note": (
-            "Headline applicability rate and denominator are over the full 12-category dev "
+            "Headline applicability rate and denominator are over the full 12-category harness_val "
             "decision set (480 decisions). The rate restricted to a principle's declared scope "
             "is under scope_and_faithfulness.in_scope_applicability, and the discrimination 2x2 "
-            "is computed on that in-scope subset. holdout was never loaded; ft_train was not used."
+            "is computed on that in-scope subset. test was never loaded; the training pool was not used."
         ),
         "principles": principles,
     }

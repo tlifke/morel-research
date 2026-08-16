@@ -57,7 +57,7 @@ Verbatim from the reference plan (v2, 2026-08-15):
 ## Investigations
 
 - `001-dataset-and-splits` — WS1. CUAD → instance records, category subset,
-  dev/FT-train/holdout splits. **planned**
+  harness_val/model_train/test splits. **planned**
 - `002-principle-derivation` — WS2. 15–25 candidate `Principle` records with
   checker sketches and provenance. **planned**
 - `003-applicability-ground-truth` — WS3. Implement checkers, label the
@@ -88,7 +88,7 @@ Deviates from the repo default. Decided 2026-08-15:
   (contract_id, title, n_chars, n_tokens, split, per-category gold span
   offsets + `is_impossible` flags). No full contract text.
 - The principle set (`principles/*.yaml`), checker implementations, and the
-  applicability label files over dev + holdout.
+  applicability label files over harness_val + test.
 - Per-trial **scored records** as JSONL: one row per
   (instance, condition, model, seed, schema_variant) with parsed decisions,
   scores, compliance results, citation P/R/F1, and outcome status

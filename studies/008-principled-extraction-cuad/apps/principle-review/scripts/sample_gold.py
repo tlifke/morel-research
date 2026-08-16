@@ -21,7 +21,7 @@ from fuzzy_twins import FuzzyTwins, load_config
 FUZZY_MIN_CONTAINMENT = 0.15
 
 SAMPLER_VERSION = "gold-audit-sampler-v5"
-DEFAULT_SPLITS = ("dev", "holdout")
+DEFAULT_SPLITS = ("harness_val", "test")
 
 
 def allocate(targets: dict[str, int], available: dict[str, int], n: int) -> dict[str, int]:
@@ -190,8 +190,8 @@ def main(argv: list[str] | None = None) -> int:
 
     splits = tuple(s.strip() for s in args.splits.split(",") if s.strip())
     for split in splits:
-        if split not in ("dev", "holdout"):
-            sys.exit(f"refusing to sample from {split!r}: audit draws from dev/holdout only")
+        if split not in ("harness_val", "test"):
+            sys.exit(f"refusing to sample from {split!r}: audit draws from harness_val/test only")
 
     dataset = CuadDataset()
     categories = dataset.categories
@@ -321,7 +321,7 @@ def main(argv: list[str] | None = None) -> int:
             "population_by_category": {c: available[c] for c in categories},
             "duplicate_search": {
                 "enabled": not args.no_duplicates,
-                "scope": "all 510 CUAD contracts, including ft_train",
+                "scope": "all 510 CUAD contracts, including model_train",
                 "method": (
                     "exact whitespace-normalized passage match of the gold span in "
                     "another contract; counterparts ranked by document containment "

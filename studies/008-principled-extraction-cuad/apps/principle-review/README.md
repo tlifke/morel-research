@@ -186,7 +186,7 @@ which file was searched — absence is stated, not hidden.
 schema_version: 1
 generated: '2026-08-16'          # optional
 generator: {script: ..., version: ...}   # optional, free-form
-split: dev                        # optional; population these numbers cover
+split: harness_val                        # optional; population these numbers cover
 population:                       # optional
   unit: gold span                 # what one unit is
   n_units: 732
@@ -583,7 +583,7 @@ and any spans of *other* categories that are identical to, nested in, or
 overlapping it.
 
 Sampling design: population is every gold span of the 12 subset categories in
-**dev + holdout only** — the splits whose scores the noise floor bounds; the
+**harness_val + test only** — the splits whose scores the noise floor bounds; the
 script refuses any other split. Allocation is equal-per-category, capped by
 availability, with the remainder redistributed to categories that still have
 spans, so rare categories (Most Favored Nation has 7 spans in the population,
@@ -616,7 +616,7 @@ agreement and its amendment, two filings of substantially the same document —
 where an identical clause is annotated in one and left unannotated in the
 other. The span is fine; the corpus disagrees with itself, usually in the
 *absence* labels. To make that adjudicable, the sampler searches all 510 CUAD
-contracts (including ft_train, since a twin can live anywhere) for the gold
+contracts (including model_train, since a twin can live anywhere) for the gold
 span's passage, whitespace-normalized and exact, and attaches every contract
 where it recurs together with that contract's label for the same category:
 
@@ -633,10 +633,10 @@ miss from a finer disagreement where both contracts agree the category is
 present but only one annotates a given passage. Collapsing the two would have
 overstated the severity of half the census.
 
-Contracts excluded from ft_train by the INV1-D7 split-contamination fix are
+Contracts excluded from model_train by the INV1-D7 split-contamination fix are
 **not** filtered out of the counterpart search — a twin removed for being a
 duplicate is still evidence that the gold disagrees, which is exactly what this
-class measures. They render with `split: excluded` and an `excluded_as` column
+class measures. They render with `split: scratch` and an `excluded_as` column
 carrying the exclusion reason and which split the twin sits in.
 Counterparts are ranked by document containment over 8-gram sketches, and
 `n_contracts_with_passage` is surfaced so common boilerplate is obvious rather
@@ -675,7 +675,7 @@ evidential weight:
 The miner's threshold answers *"does a passage resembling category C exist
 somewhere C is marked absent"* — a broader and different question than *"is
 there a near-duplicate document with the opposite label"*. Ungated at 0.20 it
-returns 22 candidates over dev+holdout, of which **17 have document containment
+returns 22 candidates over harness_val+test, of which **17 have document containment
 0.0**: unrelated contracts sharing legal boilerplate ("This Agreement may not be
 assigned without prior written consent" matched against "shall be binding upon
 successors and assigns"), and several outright category mismatches (a
@@ -685,7 +685,7 @@ positives is worse than no census, so fuzzy hits must also come from documents
 that are actually similar. The 0.15 containment floor was set by reading all 22
 candidates by hand, not by optimizing a number.
 
-Detector comparison over the full dev+holdout population, emitted into every
+Detector comparison over the full harness_val+test population, emitted into every
 sample file under `sampling.detector_comparison`:
 
 | detector | disagreeing spans found |
@@ -708,7 +708,7 @@ characters is strong on its own and needs no document-similarity corroboration.
 The two fuzzy-only cases were each checked by hand against the source
 contracts, and **one of the two is a false positive**:
 
-- *Confirmed.* Pharmagen (dev) vs EcoScience (ft_train), containment 0.375: two
+- *Confirmed.* Pharmagen (harness_val) vs EcoScience (model_train), containment 0.375: two
   companies' endorsement agreements built from the same template. The
   EcoScience document contains a section literally headed `8. Exclusivity.`
   imposing an exclusivity obligation, yet its gold marks Exclusivity
@@ -731,7 +731,7 @@ false positive and keep the confirmed case — but that is fitting a threshold t
 two data points, so the gate stays at 0.15 and the fragment mode is documented
 instead. The strongest case overall is found by both detectors: two CUAD entries
 for the ADURO consulting agreement that are byte-identical (12020 characters
-each, one in dev and one in ft_train), where Exclusivity is annotated in one and
+each, one in harness_val and one in model_train), where Exclusivity is annotated in one and
 `is_impossible` in the other.
 
 Every counterpart row records its `detector`, `similarity` and
@@ -745,12 +745,12 @@ passage carry the opposite gold label", the other asks "do two contracts
 straddle a split boundary" — and they land on the same contract pairs: all four
 contracts INV1-D7 excluded appear here as counterparts. The census is finer,
 though. INV1-D7 records that the Ideanomics pair's "gold agrees on all 12"
-categories, which is true at category level; the census shows the holdout
+categories, which is true at category level; the census shows the test
 contract annotating two Governing Law spans where its twin annotates one and
 leaves the other's verbatim text unannotated. Category-level agreement,
 span-level disagreement. Both statements are correct at their own granularity.
 
-**The census stratum.** Measured over the whole dev+holdout population: 48 of
+**The census stratum.** Measured over the whole harness_val+test population: 48 of
 1288 gold spans (3.7%) have an exact-passage counterpart, and only **4** of
 those show label disagreement — about 0.3% of spans. A random sample of 120
 would be expected to contain 0.4 of them, so this class is invisible to random

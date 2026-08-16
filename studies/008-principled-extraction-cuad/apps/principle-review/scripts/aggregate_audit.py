@@ -121,7 +121,7 @@ def main(argv: list[str] | None = None) -> int:
                 "independent methods — one asks 'does an identical passage carry the "
                 "opposite gold label', the other asks 'do two contracts straddle a "
                 "split boundary' — and they converge on the same contract pairs. "
-                "Every contract INV1-D7 excluded from ft_train appears in this census "
+                "Every contract INV1-D7 excluded from model_train appears in this census "
                 "as a counterpart. Census records whose counterpart carries a "
                 "non-empty excluded_as are that overlap. Excluded contracts are "
                 "deliberately NOT filtered out of the counterpart search: a twin "

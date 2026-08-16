@@ -1,11 +1,20 @@
 # Cross-source validation of the 16 pilot principles
 
+> **Split names.** Renamed on 2026-08-16 (`../plans/splits.md`); membership did
+> not change, so `harness_val` here is exactly the old `dev` and `test` the old
+> `holdout`. **`model_train` in this report means the pre-carve training pool it
+> was run over** — 368 contracts before INV1-D7, 364 after — not today's
+> 264-contract `model_train`. INV1-D8 later carved `principle_train` (60) and
+> `principle_val` (40) out of that pool, so every count below stated over
+> `harness_val` + `model_train` is over a pool that no longer corresponds to any
+> pair of split names.
+
 Every candidate in `principles/pilot/candidates_pilot.reviewed.yaml` checked against the
 **other** derivation source. Guideline-derived principles (g01–g08) are tested against gold
 annotation; data-mined principles (d01–d08) are tested against the Atticus Labeling Handbook.
 
-Scope: dev (40) + ft_train (364) = **404 contracts**, via `scripts/cuad_dataset.py`.
-**Holdout was never loaded.** Date: 2026-08-15. AI Assistant Used: Claude Code.
+Scope: harness_val (40) + model_train (364) = **404 contracts**, via `scripts/cuad_dataset.py`.
+**test was never loaded.** Date: 2026-08-15. AI Assistant Used: Claude Code.
 Machine-readable companion: `principles/pilot/cross_source_validation.yaml`.
 
 The Handbook is copyrighted, paywalled and non-redistributable. Nothing in this file quotes it;
@@ -175,7 +184,7 @@ pair — pair-0026, `IOVANCEBIOTHERAPEUTICS,INC_08_03_2017-EX-10.1`, which print
 a case where gold departs from that documented rule.
 
 **How rare is that departure?** Gold follows the Handbook rule overwhelmingly: **207 character
-ranges** in dev+ft_train carry both Agreement Date and Effective Date (the single largest
+ranges** in harness_val+model_train carry both Agreement Date and Effective Date (the single largest
 dual-label pair in the corpus). Against that, **6 contracts** have a concrete intro-region date
 labelled Effective Date while Agreement Date is absent:
 
@@ -344,8 +353,8 @@ and its checker needs a far tighter trigger.
 
 ## Methods and caveats
 
-- All counts computed read-only over `dev` + `ft_train` (404 contracts, post-INV1-D7
-  split-contamination exclusion) through `scripts/cuad_dataset.py`. Holdout never loaded. No file
+- All counts computed read-only over `harness_val` + `model_train` (404 contracts, post-INV1-D7
+  split-contamination exclusion) through `scripts/cuad_dataset.py`. test never loaded. No file
   under `principles/` was modified; `cross_source_validation.yaml` is added, not edited into an
   existing record. Analysis scripts were scratch-only and are not checked in.
 - **g01's boundary test** allows a span to start after a section number or a paragraph break as

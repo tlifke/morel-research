@@ -15,7 +15,7 @@ def env():
 
 @pytest.fixture
 def instance(env):
-    return env.load_instances("dev")[0]
+    return env.load_instances("harness_val")[0]
 
 
 def _prompt(env, instance, condition, variant="field_present"):
