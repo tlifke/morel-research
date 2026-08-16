@@ -28,6 +28,49 @@ set + a working harness — P0 tests schema behavior, not principle quality, so 
 non-curated candidate set is acceptable input. WS3 runs alongside WS4 and must
 finish before inv 005 can score compliance or citation.
 
+## Current sequence (decided 2026-08-16)
+
+Supersedes the original WS ordering for everything downstream of the pilot. The
+big change: **C1 is not a separate condition.** It is iteration 0 of the
+escalation ladder in inv 006. Any baseline we hand-write embeds implicit
+choices about answer granularity and format — we measured ourselves accidentally
+instructing the model to answer yes/no on nine of twelve targets — so a tuned
+C1 would be doing by hand the thing this study claims to do by derivation.
+Iteration 0 must be **documented and defensible, deliberately not optimised**;
+what protects it from being a strawman is the external anchor, not tuning.
+
+1. **Fix the smoke defects** (D-25). Citation-rewards-silence is a real bug and
+   is fixed. Answer granularity is **not** patched in the prompt — the
+   answer-format hints come out and `w01` carries granularity, so the principle
+   has something real to do. The title stays and a new principle governs
+   sourcing values from it.
+2. **C2 vs C3 on answer metrics alone.** Runnable without applicability data,
+   because "does requiring citation change what the model extracts?" does not
+   depend on whether the citations are correct. Worth having **before** the
+   ladder: if the citation requirement degrades extraction, the citation half of
+   the study changes shape and the selection budget should be spent knowing that.
+3. **Build applicability** by the D-24 route (LLM-assisted labelling, computed
+   once, frozen, spot-checked). Unlocks citation correctness and H4.
+4. **Pause and interpret** — Tyler's instruction. Consolidate everything to
+   here with intent to close this section of the study.
+
+Then, not yet scheduled: the escalation ladder (inv 006), Phase 2 fine-tuning,
+and the external comparison against the CUAD paper's models on `test`.
+
+**The ladder figure has one non-negotiable property**, agreed in advance: a
+greedy forward-selection curve rises monotonically **on the split it selected
+on, by construction**, so that curve alone is an artifact rather than a result.
+Plot the same principle sequence on `principle_train` *and* `principle_val` on
+the same axes — the gap between them is the overfitting measurement, and where
+the held-out curve turns over is where the ladder should have stopped.
+
+**Open, and being assessed** (`reviews/cuad-baseline-comparability.md`): whether
+an apples-to-apples comparison against the CUAD paper's models is constructible
+at all. Their reported metrics — AUPR and Precision@80%Recall — presuppose
+ranked candidate spans with scores; we produce neither. If it turns out not to
+be meaningfully comparable, that redirects the study's external anchor and is a
+finding rather than a failure.
+
 ## Gates
 
 Each gate is a stop-and-check with Tyler, not a self-certified pass.
