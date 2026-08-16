@@ -15,7 +15,7 @@ if str(STUDY_ROOT) not in sys.path:
 
 from harness.envs.cuad_env import CuadEnvironment
 from harness.model_registry import REFERENCE_TOKENIZER_ID
-from harness.models import Principle, PrincipleSet, TaskOutput
+from harness.models import PrincipleSet, TaskOutput
 from harness.principles_io import load_principle_set
 from harness.prompts import PROMPT_TEMPLATE_VERSION, build_prompt, render_principles
 
@@ -23,7 +23,7 @@ AS_RUN_PRINCIPLES = STUDY_ROOT / "principles" / "pilot" / "candidates_round2.yam
 AS_RUN_VERSION = "pilot-round2-all23"
 WORKING_SET = STUDY_ROOT / "principles" / "working_set.yaml"
 SMOKE_ROOT = STUDY_ROOT / "data" / "traces" / "smoke"
-RUN_ID = "2026-08-16T18-16-01Z-smoke"
+RUN_ID = "2026-08-16T-fixed-smoke"
 SPLIT = "scratch"
 CONTRACT_ID = "ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT"
 SCHEMA_VARIANT = "field_present"
@@ -43,28 +43,11 @@ BLOCK_TITLES = {
 
 def load_working_set() -> tuple[PrincipleSet, dict[str, str]]:
     payload = yaml.safe_load(WORKING_SET.read_text(encoding="utf-8"))
-    rows = payload["principles"]
-    notes: dict[str, str] = {}
-    normalised = []
-    for row in rows:
-        row = dict(row)
-        prov = row.get("provenance")
-        if isinstance(prov, list):
-            notes[row["id"]] = " + ".join(prov)
-            row["provenance"] = prov[0] if prov else "authored"
-        normalised.append(
-            Principle.model_validate(
-                {
-                    "id": row["id"],
-                    "statement": row["statement"],
-                    "trigger_guidance": row["trigger_guidance"],
-                    "type": row["type"],
-                    "scope": row.get("scope") or [],
-                    "provenance": row["provenance"],
-                }
-            )
-        )
-    return PrincipleSet(version="working_set", principles=normalised), notes
+    axes = {
+        row["id"]: str(row.get("provenance_axis", ""))
+        for row in payload["principles"]
+    }
+    return load_principle_set(WORKING_SET, version="working_set"), axes
 
 
 def load_traces() -> dict[tuple[str, str], dict[str, Any]]:
@@ -292,11 +275,12 @@ def main() -> None:
             "n_prompt_tokens": trial["n_prompt_tokens"],
             "latency_ms": trial["latency_ms"],
             "truncated": trial["completion_truncated"],
-            "level_a": trial["answer"]["level_a"]["micro"],
-            "level_b": trial["answer"]["level_b"],
+            "level_a": ((trial.get("answer") or {}).get("level_a") or {}).get("micro"),
+            "level_b": (trial.get("answer") or {}).get("level_b"),
             "citation": trial["citation"],
             "compliance": trial["compliance"],
             "leakage": trial["leakage"],
+            "failure_detail": trial.get("failure_detail"),
             "decisions": [
                 {
                     "target": d["target"],
@@ -344,55 +328,90 @@ def main() -> None:
 ANNOTATIONS = {
     "instance": {
         "id": "A1",
-        "title": "DEFECT A1 &mdash; filename leakage",
+        "title": "FIXED A1 &mdash; the id line is gone, the title stays, w10 governs it",
         "body": (
-            "<code>render_instance()</code> in <code>harness/prompts.py</code> prints "
-            "<code>Title:</code> and <code>Id:</code> above the contract body. CUAD "
-            "contract ids encode the filing date. The id in view here is "
-            "<code>ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT</code> "
-            "&mdash; <code>06_02_2020</code> is a date the model can read without ever "
-            "looking at the contract. In the sibling trial of the same smoke run "
-            "(<code>WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT&hellip;</code>, "
-            "C1) the model returned Agreement Date = <code>03_29_2000</code>, a string "
-            "that appears in the id and <em>nowhere in the contract text</em>. It scored "
-            "as a false positive with <code>invented_language_rate = 1.0</code>. The "
-            "model is being handed an answer channel outside the document."
+            "<code>render_instance()</code> used to print both <code>Title:</code> and "
+            "<code>Id:</code>. In CUAD the contract_id <em>is</em> the title string, so "
+            "the two lines were redundant and the <code>Id:</code> line is now dropped. "
+            "<strong>The title is kept deliberately</strong> &mdash; it is genuinely part "
+            "of the document for identity-shaped categories. That leaves the leakage "
+            "channel open: CUAD titles encode dates and document types, and in the "
+            "first smoke run the model returned Agreement Date = "
+            "<code>03_29_2000</code> on "
+            "<code>WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT&hellip;</code>, "
+            "a string present in the title and <em>nowhere in the contract text</em>, "
+            "scored FP with <code>invented_language_rate = 1.0</code>. The channel is "
+            "governed by a <strong>principle</strong>, not by withholding the line: "
+            "<code>w10</code> in the working set says the title identifies the agreement "
+            "but is not a source for values that must be found in the body. Under C1 the "
+            "model is free to take the title's date; w10 is what C2 and C3 have to stop "
+            "it with, which makes the leakage measurable rather than suppressed. In the "
+            "re-run behind this page the leakage did not recur &mdash; that contract "
+            "scored 12 TN in all three conditions."
         ),
     },
     "task_definition": {
         "id": "A2",
-        "title": "DEFECT A2 &mdash; answer-format hint",
+        "title": "FIXED A2 &mdash; the answer-format hint is out of the task definition",
         "body": (
-            "Every target line ends with <code>(answer format: &hellip;)</code>. That "
-            "text is appended by <code>load_category_definitions()</code> in "
-            "<code>harness/envs/cuad_env.py</code>, which concatenates the CUAD CSV's "
-            "<code>Answer Format</code> column onto the <code>Description</code> column. "
-            "The <code>Answer Format</code> column describes what a human answers, not "
-            "what span to cut. It pushes minimal-value answers: on this contract the "
-            "model returned Governing Law = <code>\"State of California\"</code>, "
-            "verbatim-exact in the text, against a sentence-level gold span &mdash; "
-            "span-F1 <code>0.176</code> in all three conditions. The span was right; the "
-            "granularity was wrong, and the prompt asked for the wrong granularity."
+            "Every target line used to end with <code>(answer format: &hellip;)</code>, "
+            "appended by <code>load_category_definitions()</code> from the CUAD CSV's "
+            "<code>Answer Format</code> column. Nine of the twelve targets carried "
+            "<code>(answer format: Yes/No)</code>, so <strong>the model was told the "
+            "answer was a yes/no while being asked to return spans</strong> against "
+            "sentence-level gold. The annotation is now removed entirely; the one-line "
+            "<code>Description</code> is kept and normalised (non-breaking spaces and "
+            "curly quotes folded). Measured effect on this contract: Governing Law span "
+            "F1 moved from <code>0.176</code> (&ldquo;State of California&rdquo;) to "
+            "<code>0.488</code> in C2 (&ldquo;in accordance with the laws of the State "
+            "of California&rdquo;). Expiration Date is unchanged at <code>0.261</code>."
         ),
     },
     "granularity": {
         "id": "A3",
-        "title": "OPEN QUESTION A3 &mdash; granularity is never specified",
+        "title": "DELIBERATE A3 &mdash; granularity is left to a principle, on purpose",
         "body": (
-            "Nowhere in the prompt is the expected span granularity stated. The framing "
-            "says &ldquo;extract every verbatim span of the contract that the category "
-            "covers&rdquo; &mdash; verbatim-ness is constrained, extent is not. The "
-            "output schema types <code>spans</code> as an array of strings with "
-            "<code>minLength: 1</code> and says nothing about what a span is. The only "
-            "granularity signal reaching the model is the answer-format hint (A2), which "
-            "points the wrong way. The as-run principle block "
-            "(<code>pilot-round2-all23</code>) does not fix it either. "
-            "<strong>The working set does:</strong> <code>w01</code> states the "
-            "sentence-level rule with a carve-out for single-value categories &mdash; but "
-            "the working set was not the set used in this run. Toggle the principle set "
-            "above to read it. This is the open design question: state granularity in the "
-            "task definition, or leave it to a principle and measure whether the "
-            "principle carries it."
+            "Nothing was put in the task definition to replace the answer-format hint. "
+            "That is a decision, not an omission. Answer granularity is exactly the kind "
+            "of business logic principles are supposed to carry, and <code>w01</code> "
+            "already legislates it &mdash; complete sentence, period to period, except "
+            "for the single-value categories where the minimal expression is extracted. "
+            "A task definition that pre-solved granularity would make the principle look "
+            "worthless and would turn any C2 gain into a measure of our own prompt "
+            "repair rather than of business logic. So the task definition stays neutral "
+            "on extent (it constrains verbatim-ness only), and whether the principle "
+            "carries granularity is the thing the C1/C2 comparison measures. Toggle the "
+            "principle set above to read <code>w01</code>; the as-run set "
+            "(<code>pilot-round2-all23</code>) does not state the rule."
+        ),
+    },
+    "output_format": {
+        "id": "A4",
+        "title": "FIXED A4 &mdash; the category enum is stated in the schema",
+        "body": (
+            "<code>category</code> was typed as a bare string with no enum, and exact "
+            "matching against the target names was enforced only afterwards in "
+            "<code>validate_output()</code> &mdash; the model was scored on a constraint "
+            "it was never told. <code>json_schema_for()</code> now takes the target list "
+            "and writes it into the schema as an <code>enum</code> on every "
+            "<code>category</code> property. Note that Tinker does not enforce structured "
+            "output, so this is a prompt-side statement of the constraint, not "
+            "constrained decoding."
+        ),
+    },
+    "citation": {
+        "id": "A5",
+        "title": "FIXED A5 &mdash; the citation exemplar is derived, not hardcoded",
+        "body": (
+            "The example id in the citation block was the literal string "
+            "&ldquo;p03&rdquo;. Harmless under the as-run pilot set; under the "
+            "working set the ids run <code>w01</code>&ndash;<code>w10</code> and the "
+            "example would have named a principle that is not in the prompt. "
+            "<code>render_citation_block()</code> now reads the first id off the loaded "
+            "set. Separately: under <code>field_present</code>, C1 and C2 receive the "
+            "<em>no-citation</em> block, so C1 is not principle-free and C3&minus;C2 is a "
+            "substitution rather than the addition of a citation instruction from zero. "
+            "That is unchanged and must be stated in methods."
         ),
     },
 }
@@ -564,13 +583,13 @@ def build_html(
 
     a('<section class="annidx"><h2>Our annotations on this prompt</h2>')
     a(
-        '<p class="sub">Three callouts appear inline below, anchored to the block where '
+        '<p class="sub">Five callouts appear inline below, anchored to the block where '
         "each originates. They are <strong>our commentary</strong> and are not part of "
         "what the model sees &mdash; annotation cards are outlined in amber, prompt "
         "content is on the dark monospace ground.</p>"
     )
     a("<ul class='annlist'>")
-    for key in ("instance", "task_definition", "granularity"):
+    for key in ("instance", "task_definition", "granularity", "output_format", "citation"):
         ann = ANNOTATIONS[key]
         a(f'<li><span class="annpill">{ann["id"]}</span> {ann["title"]}</li>')
     a("</ul></section>")
@@ -621,6 +640,10 @@ def build_html(
         if blk["key"] == "task_definition":
             a(annotation_card(ANNOTATIONS["task_definition"]))
             a(annotation_card(ANNOTATIONS["granularity"]))
+        if blk["key"] == "output_format":
+            a(annotation_card(ANNOTATIONS["output_format"]))
+        if blk["key"] == "citation" and blk["added"] == "C3":
+            a(annotation_card(ANNOTATIONS["citation"]))
         if blk["key"] == "instance":
             a(annotation_card(ANNOTATIONS["instance"]))
         body_cls = "blkbody scrolly" if collapsible else "blkbody"
@@ -637,30 +660,28 @@ def build_html(
         "<code>render_principles()</code> the runner uses.</p>"
     )
     a('<div class="scrollx"><table class="tbl"><thead><tr><th>id</th><th>type</th>'
-      "<th>scope</th><th>provenance in file</th><th>provenance after normalisation</th>"
+      "<th>scope</th><th>provenance</th><th>provenance axis</th>"
       "</tr></thead><tbody>")
     for p in working_set.principles:
         a(
             f'<tr><td class="mono">{esc(p.id)}</td><td>{esc(p.type)}</td>'
             f'<td class="small">{esc(", ".join(p.scope) or "all targets")}</td>'
-            f'<td class="small">{esc(prov_notes.get(p.id, p.provenance))}</td>'
-            f'<td class="mono small">{esc(p.provenance)}</td></tr>'
+            f'<td class="mono small">{esc(p.provenance_label)}</td>'
+            f'<td class="small">{esc(prov_notes.get(p.id, ""))}</td></tr>'
         )
     a("</tbody></table></div>")
     a(
-        '<p class="warn"><strong>Normalisation applied by the generator, not by the '
-        "harness.</strong> <code>working_set.yaml</code> stores <code>provenance</code> "
-        "as a <em>list</em> (merged records have two source arms), while "
-        "<code>harness/models.Principle.provenance</code> is a single-value "
-        "<code>Literal</code>, so <code>principles_io.load_principle_set()</code> raises "
-        "on this file. The generator reads the YAML directly and keeps only the first "
-        "provenance value, discarding the rest, and drops the bookkeeping fields "
-        "(<code>evidence</code>, <code>lineage</code>, <code>review</code>, &hellip;) "
-        "that are not on the pinned model. <code>render_principles()</code> reads only "
-        "<code>id</code>, <code>type</code>, <code>scope</code>, <code>statement</code> "
-        "and <code>trigger_guidance</code>, so this normalisation is "
-        "<strong>prompt-neutral</strong>: the rendered principle text is byte-identical "
-        "to what a fixed loader would produce. Neither file was modified.</p>"
+        '<p class="warn"><strong>No normalisation is applied any more.</strong> '
+        "<code>working_set.yaml</code> stores <code>provenance</code> as a <em>list</em> "
+        "because merged records genuinely have two source arms, and on 2026-08-16 the "
+        "model was widened to match the file rather than the file flattened to match the "
+        "model &mdash; collapsing <code>w02</code> to one value would have destroyed the "
+        "set's clearest independent cross-source corroboration. A bare string is still "
+        "accepted and coerced to a one-element list, so the pilot files load unchanged. "
+        "This page now loads the working set through "
+        "<code>principles_io.load_principle_set()</code>, the same call the runner makes. "
+        "The set carries a tenth record, <code>w10</code>, added from the smoke "
+        "observation below rather than from either derivation arm.</p>"
     )
     a("</section>")
 
@@ -696,54 +717,68 @@ def build_html(
 
         a("<h4>Scores</h4>")
         la = out["level_a"]
-        lb = out["level_b"]
-        a('<div class="scrollx"><table class="tbl"><tbody>')
-        counts = la["counts"]
-        a(
-            '<tr><th class="k">Level A confusion (12 decisions)</th>'
-            f'<td class="mono">TP {counts["TP"]} / FP {counts["FP"]} / '
-            f'TN {counts["TN"]} / FN {counts["FN"]}</td></tr>'
-        )
-        a(
-            '<tr><th class="k">presence-class P / R / F1</th><td class="mono">'
-            f'{fmt(la["presence_class"]["precision"])} / '
-            f'{fmt(la["presence_class"]["recall"])} / '
-            f'{fmt(la["presence_class"]["f1"])}</td></tr>'
-        )
-        a(
-            '<tr><th class="k">absent-class P / R / F1</th><td class="mono">'
-            f'{fmt(la["absent_class"]["precision"])} / '
-            f'{fmt(la["absent_class"]["recall"])} / '
-            f'{fmt(la["absent_class"]["f1"])}</td></tr>'
-        )
-        a(f'<tr><th class="k">Level B span_f1 (TP cells)</th><td class="mono">{fmt(lb.get("span_f1"))}</td></tr>')
-        a(
-            '<tr><th class="k">verbatim_exact_rate / not_found_rate</th>'
-            f'<td class="mono">{fmt(lb.get("verbatim_exact_rate"))} / '
-            f'{fmt(lb.get("verbatim_not_found_rate"))}</td></tr>'
-        )
-        a(
-            '<tr><th class="k">compliance.pass_rate</th><td class="mono">'
-            f'{fmt((out["compliance"] or {}).get("pass_rate"))} '
-            "<span class='small'>(no checkers injected &rarr; unavailable, not 0)</span></td></tr>"
-        )
-        cit = out["citation"]
-        a(
-            '<tr><th class="k">citation F1</th><td class="mono">'
-            + (
-                fmt(cit.get("f1"))
-                if cit
-                else "&mdash; <span class='small'>no applicability source loaded; "
-                "C3 citation metrics are NOT measurements</span>"
+        lb = out["level_b"] or {}
+        if la is None:
+            a(
+                '<p class="warn">This trial did not produce a scoreable output '
+                f'(<code>{esc(out["outcome"])}</code>'
+                + (
+                    f', stage <code>{esc(str((out.get("failure_detail") or {}).get("stage")))}</code>'
+                    if out.get("failure_detail")
+                    else ""
+                )
+                + "). Repair is disabled, so a nonconforming first sample is terminal "
+                "and no scores exist. Nothing is imputed.</p>"
             )
-            + "</td></tr>"
-        )
-        a(
-            '<tr><th class="k">decisions with non-empty principles_cited</th>'
-            f'<td class="mono">{out["leakage"]["n_decisions_with_nonempty_cited"]} / '
-            f'{out["leakage"]["n_decisions"]}</td></tr>'
-        )
-        a("</tbody></table></div>")
+        else:
+            a('<div class="scrollx"><table class="tbl"><tbody>')
+            counts = la["counts"]
+            a(
+                '<tr><th class="k">Level A confusion (12 decisions)</th>'
+                f'<td class="mono">TP {counts["TP"]} / FP {counts["FP"]} / '
+                f'TN {counts["TN"]} / FN {counts["FN"]}</td></tr>'
+            )
+            a(
+                '<tr><th class="k">presence-class P / R / F1</th><td class="mono">'
+                f'{fmt(la["presence_class"]["precision"])} / '
+                f'{fmt(la["presence_class"]["recall"])} / '
+                f'{fmt(la["presence_class"]["f1"])}</td></tr>'
+            )
+            a(
+                '<tr><th class="k">absent-class P / R / F1</th><td class="mono">'
+                f'{fmt(la["absent_class"]["precision"])} / '
+                f'{fmt(la["absent_class"]["recall"])} / '
+                f'{fmt(la["absent_class"]["f1"])}</td></tr>'
+            )
+            a(f'<tr><th class="k">Level B span_f1 (TP cells)</th><td class="mono">{fmt(lb.get("span_f1"))}</td></tr>')
+            a(
+                '<tr><th class="k">verbatim_exact_rate / not_found_rate</th>'
+                f'<td class="mono">{fmt(lb.get("verbatim_exact_rate"))} / '
+                f'{fmt(lb.get("verbatim_not_found_rate"))}</td></tr>'
+            )
+            a(
+                '<tr><th class="k">compliance.pass_rate</th><td class="mono">'
+                f'{fmt((out["compliance"] or {}).get("pass_rate"))} '
+                "<span class='small'>(no checkers injected &rarr; unavailable, not 0)</span></td></tr>"
+            )
+            cit = out["citation"]
+            a(
+                '<tr><th class="k">citation F1</th><td class="mono">'
+                + (
+                    fmt(cit.get("f1"))
+                    if cit and cit.get("available") is not False
+                    else "<span class='small'>UNAVAILABLE &mdash; "
+                    + esc(str((cit or {}).get("reason", "not a C3 trial")))
+                    + "</span>"
+                )
+                + "</td></tr>"
+            )
+            a(
+                '<tr><th class="k">decisions with non-empty principles_cited</th>'
+                f'<td class="mono">{out["leakage"]["n_decisions_with_nonempty_cited"]} / '
+                f'{out["leakage"]["n_decisions"]}</td></tr>'
+            )
+            a("</tbody></table></div>")
 
         a("<h4>Parsed TaskOutput &mdash; 12 decisions</h4>")
         if out["parse_error"]:
@@ -791,6 +826,14 @@ def build_html(
         "<em>CUAD: An Expert-Annotated NLP Dataset for Legal Contract Review</em>, "
         "NeurIPS 2021 Datasets and Benchmarks "
         "(<code>hendrycks2021cuad</code>, arXiv:2103.06268).</p>"
+    )
+    a(
+        "<p>This notice used to sit <em>inside</em> the task-definition block, spending "
+        "~20 prompt tokens on dataset licensing in the instruction stream. It was moved "
+        "out on 2026-08-16: D-8 requires attribution in checked-in derivatives, which is "
+        "this page and <code>CuadEnvironment.describe()</code>, not in what the model "
+        "reads. The string is still carried on <code>TaskDefinition.attribution</code> "
+        "and is simply not rendered into the prompt.</p>"
     )
     a(
         "<p>Only the <code>scratch</code> split is displayed, per "
