@@ -580,6 +580,34 @@ Format:
 >    run must recover AUPR 42.6 / 48.2 / 47.8 and P@80%R 31.1 / 38.1 / 44.0 from
 >    the released checkpoints. If it does not, everything downstream is void.
 >
+> **Framing corrected 2026-08-16 (Tyler).** The "one-sided claim" reading below
+> answers a question this study is not asking. The CUAD baseline is a
+> **calibration point, not a hypothesis test.** Its job is to tell a reader
+> whether our starting point is reasonable or a strawman — which is precisely
+> what makes an unoptimised iteration 0 defensible.
+>
+> The decisive distinction: **the level is confounded, the delta is not.**
+> Contamination and their training advantage both affect where our absolute
+> numbers sit. Neither affects the *difference* between our own iteration 0 and
+> our own ladder endpoint, which share contamination exactly. The result this
+> study reports is that delta.
+>
+> And contamination probably works **against** us on the delta, which makes the
+> measurement conservative: a model that has effectively seen CUAD's
+> annotations already performs well without principles, leaving *less* headroom
+> for a principle to demonstrate. A measured principle effect under
+> contamination is therefore closer to a lower bound than an inflated one.
+>
+> Two obligations follow. **Preempt the misreading explicitly** — if our number
+> lands above theirs, readers will read "LLM beats CUAD models" whatever the
+> surrounding prose says, so the disclaimer has to sit with the number, not in a
+> limitations section. And note that **Phase 2 is the better-matched
+> comparison**: fine-tuning on `model_train` (264 of their 408 contracts) puts
+> us in the same regime they were in, which is a reason to keep the baseline
+> infrastructure once it is built.
+>
+> The original reasoning, retained because the asymmetry is real and belongs in
+> limitations:
 > **The claim is one-sided, and that is what makes it usable.** They consumed
 > 408 expert-annotated contracts (favours them); their encoders' pretraining
 > predates CUAD's 2021 release so their test exposure is genuinely zero while

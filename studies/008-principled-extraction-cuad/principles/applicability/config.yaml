@@ -1,0 +1,57 @@
+version: app-2026-08-16
+principle_set_version: working-set-2026-08-16
+principle_set_file: principles/working_set.yaml
+
+splits: [harness_val, principle_train]
+
+labeler:
+  kind: llm
+  model: claude-opus-5
+  prompt_version: applicability_v1
+  invocation: subagent
+  harness: claude-code
+  model_alias_requested: opus
+  model_resolution: >
+    Requested as the `opus` alias through the Claude Code Agent tool, because no
+    provider API key is present in this environment. Recorded as claude-opus-5,
+    the same pin the inv-002 proposer carries (scripts/run_proposer.py MODEL).
+    The harness does not return an exact model-id string to the caller, so this
+    stamp is a declaration of the alias requested, not a value read back from an
+    API response. An API-key run through backend `anthropic_api` records the
+    resolved id and should be preferred whenever a key is available.
+  temperature: null
+  gold_visibility: none
+  gold_visibility_note: >
+    The labeler sees contract text and the target definition. It never sees any
+    gold annotation, its own or another category's, and it never sees model
+    output. D-24 permits applicability to read gold; this pipeline declines that
+    permission, so a gold-gated label (the D-21 failure mode that sank 13 of 23
+    pilot checkers) is structurally impossible rather than merely screened for.
+
+text_cap:
+  max_chars: 80000
+  head_chars: 50000
+  tail_chars: 30000
+
+screening:
+  degenerate_low: 0.02
+  degenerate_high: 0.98
+  near_degenerate_high: 0.75
+
+regex_comparison:
+  lineage:
+    w01: [p22, p10]
+    w02: [p18, p23]
+    w03: [p06]
+    w04: [p07]
+    w05: [p04]
+    w06: [p02]
+    w07: [p14]
+    w08: [p13]
+    w09: [p11, p15, p01]
+    w10: []
+
+spot_check:
+  n: 120
+  seed: 8003
+  strata: [principle, label]
