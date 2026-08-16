@@ -53,7 +53,9 @@ def main():
     data = dataset()
     categories = data.categories
     definitions, fold = category_definitions()
-    template = (HERE / "prompts" / "applicability_v1.md").read_text()
+    template = (
+        HERE / "prompts" / (cfg["labeler"]["prompt_version"] + ".md")
+    ).read_text()
     body = template.split("## System", 1)[1]
 
     (WORK / "prompts").mkdir(parents=True, exist_ok=True)

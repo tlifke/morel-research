@@ -1,7 +1,7 @@
 import json
 import math
 
-from common import FROZEN, config, dataset, eligible_categories, principles
+from common import FROZEN, config, dataset, eligible_categories, manifest, principles
 
 DISQUALIFYING = {
     "never_fires": "no decision in scope is labelled applicable; nothing can be scored",
@@ -64,8 +64,14 @@ def verdict_for(cell, cfg):
             warnings.append("near_degenerate_frequency")
         elif rate <= cfg["screening"]["degenerate_low"]:
             warnings.append("degenerate_rarity")
+    empty = [name for name, value in cell.items() if value == 0]
+    if "notapplicable_absent" in empty and "gold_absence_gated" not in reasons:
+        warnings.append("not_applicable_implies_gold_present")
+    if "notapplicable_present" in empty and a + b < n:
+        warnings.append("not_applicable_implies_gold_absent")
     return {
         "verdict": "fail" if reasons else "pass",
+        "observed_empty_cells": empty,
         "reasons": reasons,
         "reason_notes": [DISQUALIFYING[r] for r in reasons],
         "warnings": warnings,
@@ -103,6 +109,11 @@ def screen(labels, cfg=None):
     records = principles()
     categories = data.categories
     rows = build_rows(labels, data, records, categories)
+    truncated = {
+        entry["contract_id"]
+        for entry in manifest()["contracts"]
+        if entry["truncated"]
+    }
 
     out = {"n_decisions_screened": len(rows), "principles": {}}
     for pid in sorted(records):
@@ -118,6 +129,10 @@ def screen(labels, cfg=None):
             block = {"cells": cells(subset)}
             block.update(verdict_for(block["cells"], cfg))
             entry[split] = block
+        untruncated = [r for r in mine if r["contract_id"] not in truncated]
+        block = {"cells": cells(untruncated)}
+        block.update(verdict_for(block["cells"], cfg))
+        entry["untruncated_only"] = block
         entry["splits_agree"] = len(
             {entry[s]["verdict"] for s in cfg["splits"]}
         ) == 1

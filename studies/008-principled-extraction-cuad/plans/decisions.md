@@ -623,6 +623,58 @@ Format:
 > but **must be Ampere** — the pinned 2021 stack supports sm_80/86 and nothing
 > newer. The real bottlenecks are CPU and RAM, not GPU.
 
+> **D-27 — Applicability is labelled without gold visibility, and the D-24
+> premise is supported** (2026-08-16, `reviews/applicability-labelling.md`)
+> 4,498 judgements over `harness_val` + `principle_train` (100 contracts),
+> frozen, loading through `ApplicabilitySource` unchanged. `assert_ready(["C3"])`
+> now passes, so citation metrics are measurable.
+>
+> **The design call that matters: `gold_visibility: none`.** D-24 permits the
+> labeller to read gold; this pipeline declines. That makes the pilot's dominant
+> failure — gold-gated applicability, 13 of 23 round-2 checkers —
+> **structurally impossible rather than screened for afterwards.** Prevention
+> over detection, and it is why the D-21 pass rate inverted.
+>
+> **D-21 screening: 9 of 10 principles pass.** `w04` fails as
+> `degenerate_universal` — applicable on 100% of Agreement Date decisions, both
+> not-applicable cells empty. Note it fails *differently* from its regex
+> counterpart, which was gold-presence-gated at phi = 1.00: same principle, two
+> instruments, two distinct disqualifying defects.
+>
+> **The D-24 test, and it is the headline.** LLM-vs-regex disagreement runs
+> 10–79%, median ~30%, and is **almost entirely one-sided** — in 8 of 13
+> comparisons the regex's applicable set is a near-subset of the LLM's. On the
+> same decisions, **6 of 13 regex checkers are disqualified by D-21 while 9 of 10
+> LLM-labelled principles qualify.** Concrete: `w03`'s regex has no entry for
+> jury-waiver or personal-jurisdiction-consent clauses — the exact confusions the
+> principle exists to resolve; `w07`'s supply-verb alternation misses guaranteed
+> *payment* floors, independently reproducing D-20's d04 finding with a different
+> instrument.
+> **One counter-case keeps this honest**: `w08`'s regex fires too broadly
+> (156/200) and the LLM is the more selective instrument. So lexical triggers
+> fail in **both** directions, and the claim is "regex proxies were the wrong
+> tool", not "regex was always under-inclusive".
+>
+> **Limits, all feeding inv 006's two-tier split.** `w04` is prompt-tier, not
+> scorable. `w03` is low-power. `w01`'s applicability is *intrinsically*
+> presence-correlated (phi +0.655) — the v1 prompt asserted otherwise, the
+> labeller caught the contradiction, and v2's honest consequence is that its
+> citation metrics will track the answer. 19 contracts truncated, so some
+> negatives are missing data rather than measured absence. 23% of `applicable`
+> labels are low-confidence.
+>
+> **Unplanned but important: labeller variance is real and unmeasured.** One
+> contract was labelled twice by concurrent agents and the runs disagreed —
+> 7 vs 10 applicable of 45. A frozen artifact hides this by construction, so
+> repeat-labelling a sample belongs on the list before these labels carry a
+> published number.
+>
+> **Awaiting Tyler**: `reviews/applicability-spot-check.html`, 114 items, model
+> answer hidden behind a disclosure and gold withheld so he decides first. At
+> n=114 the 95% Wilson interval is ±~6.5pp; per principle (n=12) it is ±~20pp
+> and should not be reported as a number. `spot_check` in the artifact is `{}` —
+> unavailable, not zero.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing

@@ -25,8 +25,8 @@ def parse_response(raw):
     raise ValueError("response is not a JSON array")
 
 
-def validate(contract_id, raw, questions, text):
-    body = norm(text)
+def validate(contract_id, raw, questions, text, title=""):
+    body = norm(title + " " + text)
     answers = parse_response(raw)
     by_qid = {}
     problems = []
@@ -99,6 +99,7 @@ def ingest(allow_missing=False):
             json.loads(path.read_text()),
             questions,
             data.texts[contract_id],
+            data.record(contract_id)["title"],
         )
         rows.extend(got)
         for item in bad:

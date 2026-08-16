@@ -1,0 +1,1217 @@
+{
+  "version": "app-2026-08-16",
+  "principles": {
+    "w01": {
+      "round2_checkers": [
+        "p22",
+        "p10"
+      ],
+      "comparisons": {
+        "p22": {
+          "regex_screening_same_decisions": {
+            "verdict": "fail",
+            "observed_empty_cells": [
+              "applicable_absent",
+              "notapplicable_present"
+            ],
+            "reasons": [
+              "gold_presence_gated"
+            ],
+            "reason_notes": [
+              "every applicable decision is gold-present; the applicable x gold-absent cell is empty, so compliance cannot vary independently of correctness (D-21)"
+            ],
+            "warnings": [
+              "not_applicable_implies_gold_absent"
+            ],
+            "rate_in_scope": 0.3344,
+            "phi_in_scope": 1.0,
+            "p_present_given_applicable": 1.0,
+            "p_present_given_not_applicable": 0.0,
+            "cells": {
+              "applicable_present": 301,
+              "applicable_absent": 0,
+              "notapplicable_present": 0,
+              "notapplicable_absent": 599
+            },
+            "declared_gold_dependency": "gold_presence"
+          },
+          "n_decisions_compared": 900,
+          "scope_compared": [
+            "Anti-Assignment",
+            "Cap On Liability",
+            "License Grant",
+            "Exclusivity",
+            "Revenue/Profit Sharing",
+            "Minimum Commitment",
+            "Volume Restriction",
+            "Most Favored Nation",
+            "Source Code Escrow"
+          ],
+          "n_llm_applicable": 448,
+          "n_regex_applicable": 301,
+          "both": 280,
+          "llm_only": 168,
+          "regex_only": 21,
+          "neither": 431,
+          "agreement": 0.79,
+          "disagreement_rate": 0.21,
+          "jaccard": 0.597,
+          "examples_llm_only": [
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Per-unit fee clause is a candidate span in numbered subsection 3.2; boundary choice applies if extracted.",
+              "llm_evidence": "Detto shall pay to PivX for each unit of Qwik-Fix Pro distributed hereunder per copy fees (the \"Per Copy Fees\") as governed by the terms set forth in Exhibit A."
+            },
+            {
+              "contract_id": "AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement",
+              "category": "Minimum Commitment",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "A guaranteed-payment candidate sits inside a very long subsection; boundary choice would be live if extracted.",
+              "llm_evidence": "Newegg shall remain responsible and/or liable for the full payment or, if applicable, the remaining portion of the Sponsorship Fee for Contract Year 1 and Contract Year 2"
+            },
+            {
+              "contract_id": "ArcGroupInc_20171211_8-K_EX-10.1_10976103_EX-10.1_Sponsorship Agreement",
+              "category": "Exclusivity",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Candidate exclusivity-shaped restriction is a fragment of a long sentence; sentence-boundary rule governs.",
+              "llm_evidence": "The rights granted to Sponsor pursuant to this Section 2 may not be used to promote or advertise any products or services of Sponsor other than the Sponsor Business, or any other person or entity"
+            },
+            {
+              "contract_id": "ArcGroupInc_20171211_8-K_EX-10.1_10976103_EX-10.1_Sponsorship Agreement",
+              "category": "Minimum Commitment",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "Guaranteed annual amounts sit in numbered subsections with tabular values; span boundaries are a real choice.",
+              "llm_evidence": "Sponsor shall pay Club the Annual Fee for each Contract Year of this Agreement in six (6) equal installments"
+            }
+          ],
+          "examples_regex_only": [
+            {
+              "contract_id": "ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement",
+              "category": "Minimum Commitment",
+              "llm_label": "not_applicable",
+              "llm_confidence": "high",
+              "llm_reason": "No minimum quantity or amount appears anywhere.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "FuelcellEnergyInc_20191106_8-K_EX-10.1_11868007_EX-10.1_Development Agreement",
+              "category": "Anti-Assignment",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Article 14 assignment text is in the omitted middle; boundaries cannot be judged from what is shown.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "FuelcellEnergyInc_20191106_8-K_EX-10.1_11868007_EX-10.1_Development Agreement",
+              "category": "Cap On Liability",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Liability provisions of Article 11 fall in the omitted middle; no visible cap span to bound.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT",
+              "category": "Cap On Liability",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "No liability cap visible; any such clause would sit in the omitted middle, so I cannot see the material.",
+              "llm_evidence": null
+            }
+          ]
+        },
+        "p10": {
+          "regex_screening_same_decisions": {
+            "verdict": "fail",
+            "observed_empty_cells": [
+              "applicable_absent"
+            ],
+            "reasons": [
+              "gold_presence_gated"
+            ],
+            "reason_notes": [
+              "every applicable decision is gold-present; the applicable x gold-absent cell is empty, so compliance cannot vary independently of correctness (D-21)"
+            ],
+            "warnings": [],
+            "rate_in_scope": 0.63,
+            "phi_in_scope": 0.435,
+            "p_present_given_applicable": 1.0,
+            "p_present_given_not_applicable": 0.7297,
+            "cells": {
+              "applicable_present": 63,
+              "applicable_absent": 0,
+              "notapplicable_present": 27,
+              "notapplicable_absent": 10
+            },
+            "declared_gold_dependency": "gold_span_content_own"
+          },
+          "n_decisions_compared": 100,
+          "scope_compared": [
+            "Agreement Date"
+          ],
+          "n_llm_applicable": 96,
+          "n_regex_applicable": 63,
+          "both": 63,
+          "llm_only": 33,
+          "regex_only": 0,
+          "neither": 4,
+          "agreement": 0.67,
+          "disagreement_rate": 0.33,
+          "jaccard": 0.6562,
+          "examples_llm_only": [
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "The date expression must be clipped out of a long introductory recital naming both parties and addresses.",
+              "llm_evidence": "This Reseller Agreement is entered as of this ___ day of _________, 2004 (\"Effective Date\")"
+            },
+            {
+              "contract_id": "AzulSa_20170303_F-1A_EX-10.3_9943903_EX-10.3_Maintenance Agreement2",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "Date sits inside a carrying sentence; the single-value clipping rule governs where to cut.",
+              "llm_evidence": "This amendment (hereinafter referred to as the \"Amendment\") is entered into on January 6th, 2016."
+            },
+            {
+              "contract_id": "BLUEHILLSBANCORP,INC_05_20_2014-EX-1.1-AGENCY AGREEMENT",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Date stands alone in a letter head block, so the rule decides whether the address block stays outside the span.",
+              "llm_evidence": "AGENCY AGREEMENT May 14, 2014 Keefe, Bruyette & Woods, Inc."
+            },
+            {
+              "contract_id": "CHINARECYCLINGENERGYCORP_11_14_2013-EX-10.6-Cooperation Agreement",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "A date value sits inside a cover-page title block; the minimal-value clipping rule governs where to cut.",
+              "llm_evidence": "Project Cooperation Agreement   July 2013"
+            }
+          ],
+          "examples_regex_only": []
+        }
+      }
+    },
+    "w02": {
+      "round2_checkers": [
+        "p18",
+        "p23"
+      ],
+      "comparisons": {
+        "p18": {
+          "regex_screening_same_decisions": {
+            "verdict": "fail",
+            "observed_empty_cells": [
+              "applicable_absent"
+            ],
+            "reasons": [
+              "gold_presence_gated"
+            ],
+            "reason_notes": [
+              "every applicable decision is gold-present; the applicable x gold-absent cell is empty, so compliance cannot vary independently of correctness (D-21)"
+            ],
+            "warnings": [],
+            "rate_in_scope": 0.02,
+            "phi_in_scope": 0.1537,
+            "p_present_given_applicable": 1.0,
+            "p_present_given_not_applicable": 0.4524,
+            "cells": {
+              "applicable_present": 24,
+              "applicable_absent": 0,
+              "notapplicable_present": 532,
+              "notapplicable_absent": 644
+            },
+            "declared_gold_dependency": "gold_span_content_own"
+          },
+          "n_decisions_compared": 1200,
+          "scope_compared": [
+            "Agreement Date",
+            "Governing Law",
+            "Expiration Date",
+            "Anti-Assignment",
+            "Cap On Liability",
+            "License Grant",
+            "Exclusivity",
+            "Revenue/Profit Sharing",
+            "Minimum Commitment",
+            "Volume Restriction",
+            "Most Favored Nation",
+            "Source Code Escrow"
+          ],
+          "n_llm_applicable": 333,
+          "n_regex_applicable": 24,
+          "both": 24,
+          "llm_only": 309,
+          "regex_only": 0,
+          "neither": 867,
+          "agreement": 0.7425,
+          "disagreement_rate": 0.2575,
+          "jaccard": 0.0721,
+          "examples_llm_only": [
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "One sentence answers agreement date, effective date, document name and both party targets.",
+              "llm_evidence": "This Reseller Agreement is entered as of this ___ day of _________, 2004 (\"Effective Date\") by and between PivX Corporation, a California corporation"
+            },
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Expiration Date",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "One sentence answers both the effective-date and the expiration/initial-term targets independently.",
+              "llm_evidence": "The term of this Agreement shall commence on the Effective Date and continue for six (6) months."
+            },
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Anti-Assignment",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "The operation-of-law wording answers anti-assignment and change-of-control alike; do not spend once.",
+              "llm_evidence": "Detto may not assign any of its rights or delegate any of its obligations hereunder, whether by operation of law or otherwise, without PivX's prior written consent."
+            },
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Cap On Liability",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "Same sentence caps liability and, via its carve-out, leaves indemnity liability uncapped; two targets.",
+              "llm_evidence": "EXCEPT FOR PIVX'S OBLIGATIONS UNDER SECTION 4.2, IN NO EVENT SHALL PIVX'S OR ITS LICENSORS' LIABILITY TO DETTO OR ANY THIRD PARTY ARISING OUT OF THIS AGREEMENT EXCEED THE TOTAL AMOUNT"
+            }
+          ],
+          "examples_regex_only": []
+        },
+        "p23": {
+          "regex_screening_same_decisions": {
+            "verdict": "fail",
+            "observed_empty_cells": [
+              "applicable_absent"
+            ],
+            "reasons": [
+              "gold_presence_gated"
+            ],
+            "reason_notes": [
+              "every applicable decision is gold-present; the applicable x gold-absent cell is empty, so compliance cannot vary independently of correctness (D-21)"
+            ],
+            "warnings": [],
+            "rate_in_scope": 0.02,
+            "phi_in_scope": 0.1537,
+            "p_present_given_applicable": 1.0,
+            "p_present_given_not_applicable": 0.4524,
+            "cells": {
+              "applicable_present": 24,
+              "applicable_absent": 0,
+              "notapplicable_present": 532,
+              "notapplicable_absent": 644
+            },
+            "declared_gold_dependency": "gold_span_content_own"
+          },
+          "n_decisions_compared": 1200,
+          "scope_compared": [
+            "Agreement Date",
+            "Governing Law",
+            "Expiration Date",
+            "Anti-Assignment",
+            "Cap On Liability",
+            "License Grant",
+            "Exclusivity",
+            "Revenue/Profit Sharing",
+            "Minimum Commitment",
+            "Volume Restriction",
+            "Most Favored Nation",
+            "Source Code Escrow"
+          ],
+          "n_llm_applicable": 333,
+          "n_regex_applicable": 24,
+          "both": 24,
+          "llm_only": 309,
+          "regex_only": 0,
+          "neither": 867,
+          "agreement": 0.7425,
+          "disagreement_rate": 0.2575,
+          "jaccard": 0.0721,
+          "examples_llm_only": [
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "One sentence answers agreement date, effective date, document name and both party targets.",
+              "llm_evidence": "This Reseller Agreement is entered as of this ___ day of _________, 2004 (\"Effective Date\") by and between PivX Corporation, a California corporation"
+            },
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Expiration Date",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "One sentence answers both the effective-date and the expiration/initial-term targets independently.",
+              "llm_evidence": "The term of this Agreement shall commence on the Effective Date and continue for six (6) months."
+            },
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Anti-Assignment",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "The operation-of-law wording answers anti-assignment and change-of-control alike; do not spend once.",
+              "llm_evidence": "Detto may not assign any of its rights or delegate any of its obligations hereunder, whether by operation of law or otherwise, without PivX's prior written consent."
+            },
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Cap On Liability",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "Same sentence caps liability and, via its carve-out, leaves indemnity liability uncapped; two targets.",
+              "llm_evidence": "EXCEPT FOR PIVX'S OBLIGATIONS UNDER SECTION 4.2, IN NO EVENT SHALL PIVX'S OR ITS LICENSORS' LIABILITY TO DETTO OR ANY THIRD PARTY ARISING OUT OF THIS AGREEMENT EXCEED THE TOTAL AMOUNT"
+            }
+          ],
+          "examples_regex_only": []
+        }
+      }
+    },
+    "w03": {
+      "round2_checkers": [
+        "p06"
+      ],
+      "comparisons": {
+        "p06": {
+          "regex_screening_same_decisions": {
+            "verdict": "pass",
+            "observed_empty_cells": [],
+            "reasons": [],
+            "reason_notes": [],
+            "warnings": [],
+            "rate_in_scope": 0.57,
+            "phi_in_scope": 0.4673,
+            "p_present_given_applicable": 0.9825,
+            "p_present_given_not_applicable": 0.6279,
+            "cells": {
+              "applicable_present": 56,
+              "applicable_absent": 1,
+              "notapplicable_present": 27,
+              "notapplicable_absent": 16
+            },
+            "declared_gold_dependency": "instance_only"
+          },
+          "n_decisions_compared": 100,
+          "scope_compared": [
+            "Governing Law"
+          ],
+          "n_llm_applicable": 79,
+          "n_regex_applicable": 57,
+          "both": 53,
+          "llm_only": 26,
+          "regex_only": 4,
+          "neither": 17,
+          "agreement": 0.7,
+          "disagreement_rate": 0.3,
+          "jaccard": 0.6386,
+          "examples_llm_only": [
+            {
+              "contract_id": "ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT",
+              "category": "Governing Law",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "Jurisdiction, forum and jury-waiver text sits in the same paragraph as the true governing-law sentence.",
+              "llm_evidence": "consents to submit itself to the personal jurisdiction of the Court of Chancery or other federal or state courts of the State of Delaware"
+            },
+            {
+              "contract_id": "BLUEHILLSBANCORP,INC_05_20_2014-EX-1.1-AGENCY AGREEMENT",
+              "category": "Governing Law",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "A separate dispute-resolution section stands nearby and could be mistaken for the governing-law designation.",
+              "llm_evidence": "Section 20. Waiver of Trial by Jury. Each of the Agent and the Blue Hills Parties waives all right to trial by jury in any action, proceeding, claim or counterclaim"
+            },
+            {
+              "contract_id": "CHINARECYCLINGENERGYCORP_11_14_2013-EX-10.6-Cooperation Agreement",
+              "category": "Governing Law",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "A forum clause stands where governing law would be; the principle forbids treating venue as responsive.",
+              "llm_evidence": "If negotiations fail, either party could take a legal action to the local people's court where Party A is located."
+            },
+            {
+              "contract_id": "HOLIDAYRVSUPERSTORESINC_04_15_2002-EX-10.13-ENDORSEMENT AGREEMENT",
+              "category": "Governing Law",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Place-of-making wording shares the sentence with the true designation; the principle separates them.",
+              "llm_evidence": "This Agreement has been made in the State of California and shall be governed by and construed in accordance with the laws thereof without regard to principles of conflicts of laws."
+            }
+          ],
+          "examples_regex_only": [
+            {
+              "contract_id": "BONTONSTORESINC_04_20_2018-EX-99.3-AGENCY AGREEMENT",
+              "category": "Governing Law",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "No governing-law or dispute-resolution section is visible; it is in the omitted middle.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "GAINSCOINC_01_21_2010-EX-10.41-SPONSORSHIP AGREEMENT",
+              "category": "Governing Law",
+              "llm_label": "not_applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "No venue, forum or arbitration clause competes; the governing-law subsection stands alone and covers the whole agreement.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "IGENEBIOTECHNOLOGYINC_05_13_2003-EX-1-JOINT VENTURE AGREEMENT",
+              "category": "Governing Law",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Article 20 stands alone; the dispute-resolution article designates no forum, venue or arbitration law to confuse it.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "OLDAPIWIND-DOWNLTD_01_08_2016-EX-1.3-AGENCY AGREEMENT1",
+              "category": "Governing Law",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Visible governing-law section stands alone; any venue or arbitration text would sit in the omitted middle.",
+              "llm_evidence": null
+            }
+          ]
+        }
+      }
+    },
+    "w04": {
+      "round2_checkers": [
+        "p07"
+      ],
+      "comparisons": {
+        "p07": {
+          "regex_screening_same_decisions": {
+            "verdict": "fail",
+            "observed_empty_cells": [
+              "applicable_absent",
+              "notapplicable_present"
+            ],
+            "reasons": [
+              "gold_presence_gated"
+            ],
+            "reason_notes": [
+              "every applicable decision is gold-present; the applicable x gold-absent cell is empty, so compliance cannot vary independently of correctness (D-21)"
+            ],
+            "warnings": [
+              "not_applicable_implies_gold_absent"
+            ],
+            "rate_in_scope": 0.9,
+            "phi_in_scope": 1.0,
+            "p_present_given_applicable": 1.0,
+            "p_present_given_not_applicable": 0.0,
+            "cells": {
+              "applicable_present": 90,
+              "applicable_absent": 0,
+              "notapplicable_present": 0,
+              "notapplicable_absent": 10
+            },
+            "declared_gold_dependency": "gold_presence"
+          },
+          "n_decisions_compared": 100,
+          "scope_compared": [
+            "Agreement Date"
+          ],
+          "n_llm_applicable": 100,
+          "n_regex_applicable": 90,
+          "both": 90,
+          "llm_only": 10,
+          "regex_only": 0,
+          "neither": 0,
+          "agreement": 0.9,
+          "disagreement_rate": 0.1,
+          "jaccard": 0.9,
+          "examples_llm_only": [
+            {
+              "contract_id": "NETZEEINC_11_14_2002-EX-10.3-MAINTENANCE AGREEMENT",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "The sole date candidate is a commencement line, not an introductory or signature date; the one-date rule governs.",
+              "llm_evidence": "COMMENCEMENT DATE FOR MAINTENANCE UNDER THIS ADDENDUM:  MARCH 1, 2001"
+            },
+            {
+              "contract_id": "PelicanDeliversInc_20200211_S-1_EX-10.3_11975895_EX-10.3_Development Agreement1",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "A repeated running footer date is the leading false candidate the principle excludes.",
+              "llm_evidence": "Source: PELICAN DELIVERS, INC., S-1, 2/11/2020"
+            },
+            {
+              "contract_id": "HEALTHGATEDATACORP_11_24_1999-EX-10.1-HOSTING AND MANAGEMENT AGREEMENT - Escrow Agreement",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "Repeated initialling header carries dates competing with the blank execution slot and the NCC letter date.",
+              "llm_evidence": "[INITIALS ILLEGIBLE]                                        [INITIALS ILLEGIBLE]       20.3.98                                                     30.4.98"
+            },
+            {
+              "contract_id": "HOSPITALITYINVESTORSTRUST,INC_04_07_2014-EX-10.26-FRANCHISE AGREEMENT",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "A signature-page date competes with exhibit dates and the addendum-referenced effective date.",
+              "llm_evidence": "Title: Authorised Signatory   Title:  Authorized Signatory             3/i4/11 4"
+            }
+          ],
+          "examples_regex_only": []
+        }
+      }
+    },
+    "w05": {
+      "round2_checkers": [
+        "p04"
+      ],
+      "comparisons": {
+        "p04": {
+          "regex_screening_same_decisions": {
+            "verdict": "fail",
+            "observed_empty_cells": [
+              "applicable_absent"
+            ],
+            "reasons": [
+              "gold_presence_gated"
+            ],
+            "reason_notes": [
+              "every applicable decision is gold-present; the applicable x gold-absent cell is empty, so compliance cannot vary independently of correctness (D-21)"
+            ],
+            "warnings": [],
+            "rate_in_scope": 0.1,
+            "phi_in_scope": 0.1111,
+            "p_present_given_applicable": 1.0,
+            "p_present_given_not_applicable": 0.8889,
+            "cells": {
+              "applicable_present": 10,
+              "applicable_absent": 0,
+              "notapplicable_present": 80,
+              "notapplicable_absent": 10
+            },
+            "declared_gold_dependency": "instance_only"
+          },
+          "n_decisions_compared": 100,
+          "scope_compared": [
+            "Agreement Date"
+          ],
+          "n_llm_applicable": 28,
+          "n_regex_applicable": 10,
+          "both": 9,
+          "llm_only": 19,
+          "regex_only": 1,
+          "neither": 71,
+          "agreement": 0.8,
+          "disagreement_rate": 0.2,
+          "jaccard": 0.3103,
+          "examples_llm_only": [
+            {
+              "contract_id": "CHINARECYCLINGENERGYCORP_11_14_2013-EX-10.6-Cooperation Agreement",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "Signature block has no date and the cover date lacks a day; incomplete-date handling governs.",
+              "llm_evidence": "Party A: Xi'an Zhonghong New Energy Technology Co., Ltd. (Seal)   Representative:"
+            },
+            {
+              "contract_id": "CORIOINC_07_20_2000-EX-10.5-LICENSE AND HOSTING AGREEMENT",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "Commerce One's signature date slot exists but is left blank on the execution page.",
+              "llm_evidence": "Date: 11/5/99                            Date:"
+            },
+            {
+              "contract_id": "FuelcellEnergyInc_20191106_8-K_EX-10.1_11868007_EX-10.1_Development Agreement",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Introductory date slot holds a defined term rather than a value; the rule against ruling absence governs.",
+              "llm_evidence": "This Agreement is made as of the Effective Date between:"
+            },
+            {
+              "contract_id": "NETZEEINC_11_14_2002-EX-10.3-MAINTENANCE AGREEMENT",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "No date appears in an introductory paragraph or on the signature page; the rule fixes when absence may be claimed.",
+              "llm_evidence": "IN WITNESS WHEREOF, the undersigned duly authorized representatives of the parties hereto have made and entered in this Agreement."
+            }
+          ],
+          "examples_regex_only": [
+            {
+              "contract_id": "KINGPHARMACEUTICALSINC_08_09_2006-EX-10.1-PROMOTION AGREEMENT",
+              "category": "Agreement Date",
+              "llm_label": "not_applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "The agreement date is fully stated; no blank, underscore or redaction sits in a date slot.",
+              "llm_evidence": null
+            }
+          ]
+        }
+      }
+    },
+    "w06": {
+      "round2_checkers": [
+        "p02"
+      ],
+      "comparisons": {
+        "p02": {
+          "regex_screening_same_decisions": {
+            "verdict": "fail",
+            "observed_empty_cells": [
+              "applicable_present"
+            ],
+            "reasons": [
+              "gold_absence_gated"
+            ],
+            "reason_notes": [
+              "every applicable decision is gold-absent; the applicable x gold-present cell is empty (D-21)"
+            ],
+            "warnings": [],
+            "rate_in_scope": 0.02,
+            "phi_in_scope": -0.4286,
+            "p_present_given_applicable": 0.0,
+            "p_present_given_not_applicable": 0.9184,
+            "cells": {
+              "applicable_present": 0,
+              "applicable_absent": 2,
+              "notapplicable_present": 90,
+              "notapplicable_absent": 8
+            },
+            "declared_gold_dependency": "gold_absence"
+          },
+          "n_decisions_compared": 100,
+          "scope_compared": [
+            "Agreement Date"
+          ],
+          "n_llm_applicable": 61,
+          "n_regex_applicable": 2,
+          "both": 2,
+          "llm_only": 59,
+          "regex_only": 0,
+          "neither": 39,
+          "agreement": 0.41,
+          "disagreement_rate": 0.59,
+          "jaccard": 0.0328,
+          "examples_llm_only": [
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "Only an incomplete effective-date slot exists; the pull is to substitute the title's filing date.",
+              "llm_evidence": "entered as of this ___ day of _________, 2004 (\"Effective Date\")"
+            },
+            {
+              "contract_id": "AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "Only an effective date is stated; execution date is a separate stamp, so near-miss risk is live.",
+              "llm_evidence": "is made and effective as of February 1, 2019"
+            },
+            {
+              "contract_id": "ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "Signature page states no execution date, offering the effective date as the near-miss substitute.",
+              "llm_evidence": "IN WITNESS WHEREOF, the Parties have duly executed this Agreement as of the date first written above."
+            },
+            {
+              "contract_id": "BLUEHILLSBANCORP,INC_05_20_2014-EX-1.1-AGENCY AGREEMENT",
+              "category": "Agreement Date",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "No dating sentence exists, only a letterhead date and this back-reference; near-miss temptation is live.",
+              "llm_evidence": "Accepted as of the date first above written"
+            }
+          ],
+          "examples_regex_only": []
+        }
+      }
+    },
+    "w07": {
+      "round2_checkers": [
+        "p14"
+      ],
+      "comparisons": {
+        "p14": {
+          "regex_screening_same_decisions": {
+            "verdict": "pass",
+            "observed_empty_cells": [],
+            "reasons": [],
+            "reason_notes": [],
+            "warnings": [],
+            "rate_in_scope": 0.29,
+            "phi_in_scope": 0.2387,
+            "p_present_given_applicable": 0.4828,
+            "p_present_given_not_applicable": 0.2394,
+            "cells": {
+              "applicable_present": 14,
+              "applicable_absent": 15,
+              "notapplicable_present": 17,
+              "notapplicable_absent": 54
+            },
+            "declared_gold_dependency": "instance_only"
+          },
+          "n_decisions_compared": 100,
+          "scope_compared": [
+            "Minimum Commitment"
+          ],
+          "n_llm_applicable": 69,
+          "n_regex_applicable": 29,
+          "both": 24,
+          "llm_only": 45,
+          "regex_only": 5,
+          "neither": 26,
+          "agreement": 0.5,
+          "disagreement_rate": 0.5,
+          "jaccard": 0.3243,
+          "examples_llm_only": [
+            {
+              "contract_id": "AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement",
+              "category": "Minimum Commitment",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Guaranteed full fee for two years is a payment floor, not a purchase obligation; principle governs.",
+              "llm_evidence": "Newegg shall remain responsible and/or liable for the full payment or, if applicable, the remaining portion of the Sponsorship Fee for Contract Year 1 and Contract Year 2"
+            },
+            {
+              "contract_id": "ArcGroupInc_20171211_8-K_EX-10.1_10976103_EX-10.1_Sponsorship Agreement",
+              "category": "Minimum Commitment",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "Guaranteed annual supply floor binds the sponsor, not a buyer; the broadened reading decides it.",
+              "llm_evidence": "Sponsor shall provide Club with food, beverage and serving products from Sponsor's Dicks' Wings restaurant with values equal to the following (each, an \"Annual Trade Value\")"
+            },
+            {
+              "contract_id": "FuelcellEnergyInc_20191106_8-K_EX-10.1_11868007_EX-10.1_Development Agreement",
+              "category": "Minimum Commitment",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Guaranteed payment obligations bind the payer rather than a buyer; the broadened floor convention decides them.",
+              "llm_evidence": "ExxonMobil will pay FCE a first Milestone Payment of five million United States dollars ($5,000,000 USD) upon FCE achieving Milestone 1"
+            },
+            {
+              "contract_id": "GOCALLINC_03_30_2000-EX-10.7-Promotion Agreement",
+              "category": "Minimum Commitment",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "The floor binds the supplier's provision of pagers, not a buyer's purchase; narrow reading would wrongly exclude it.",
+              "llm_evidence": "PageMaster Corporation shall provide a minimum of 100,000 up to 500,000 pagers for the fulfillment of this promotion to all Purchase Customers who prepay their annual airtime."
+            }
+          ],
+          "examples_regex_only": [
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Minimum Commitment",
+              "llm_label": "not_applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "No guaranteed floor of any kind, on either party, appears in the body of this agreement.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT",
+              "category": "Minimum Commitment",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "No guaranteed minimum of supply, payment or access appears; ownership conditions are not floors owed to a counterparty.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "AimmuneTherapeuticsInc_20200205_8-K_EX-10.3_11967170_EX-10.3_Development Agreement",
+              "category": "Minimum Commitment",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Supply article and Schedule 6.1 fall in the omitted middle; no guaranteed floor visible.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "LOGANSROADHOUSEINC_03_27_1998-EX-10.17-SPONSORSHIP AGREEMENT",
+              "category": "Minimum Commitment",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "The base fee is a fixed sum with no guarantee or floor language on supply, payment or access.",
+              "llm_evidence": null
+            }
+          ]
+        }
+      }
+    },
+    "w08": {
+      "round2_checkers": [
+        "p13"
+      ],
+      "comparisons": {
+        "p13": {
+          "regex_screening_same_decisions": {
+            "verdict": "pass",
+            "observed_empty_cells": [],
+            "reasons": [],
+            "reason_notes": [],
+            "warnings": [
+              "near_degenerate_frequency"
+            ],
+            "rate_in_scope": 0.78,
+            "phi_in_scope": 0.2573,
+            "p_present_given_applicable": 0.2821,
+            "p_present_given_not_applicable": 0.0227,
+            "cells": {
+              "applicable_present": 44,
+              "applicable_absent": 112,
+              "notapplicable_present": 1,
+              "notapplicable_absent": 43
+            },
+            "declared_gold_dependency": "instance_only"
+          },
+          "n_decisions_compared": 200,
+          "scope_compared": [
+            "Minimum Commitment",
+            "Volume Restriction"
+          ],
+          "n_llm_applicable": 129,
+          "n_regex_applicable": 156,
+          "both": 113,
+          "llm_only": 16,
+          "regex_only": 43,
+          "neither": 28,
+          "agreement": 0.705,
+          "disagreement_rate": 0.295,
+          "jaccard": 0.657,
+          "examples_llm_only": [
+            {
+              "contract_id": "ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)",
+              "category": "Minimum Commitment",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "The only quantity threshold here is an upper bound; the principle rules it out of minimum commitment.",
+              "llm_evidence": "Consultant will not incur any travel and/or other out-of-pocket expenses of more than \u20ac5,000 individually or \u20ac20,000 in the aggregate without the prior written consent of Aduro."
+            },
+            {
+              "contract_id": "ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)",
+              "category": "Volume Restriction",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "Consent requirement above a stated ceiling; principle assigns by threshold direction to volume restriction.",
+              "llm_evidence": "Consultant will not incur any travel and/or other out-of-pocket expenses of more than \u20ac5,000 individually or \u20ac20,000 in the aggregate without the prior written consent of Aduro."
+            },
+            {
+              "contract_id": "AzulSa_20170303_F-1A_EX-10.3_9943903_EX-10.3_Maintenance Agreement2",
+              "category": "Volume Restriction",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Two-sided operating-parameter threshold triggering repricing; direction of the bound must be decided.",
+              "llm_evidence": "change by more or less [*****] with respect to the estimated values of the same parameters"
+            },
+            {
+              "contract_id": "XLITECHNOLOGIES,INC_12_02_2015-EX-10.02-STRATEGIC ALLIANCE AGREEMENT",
+              "category": "Minimum Commitment",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "One sentence names both max and min limitations; direction of the bound decides the label.",
+              "llm_evidence": "The established price for the market place will be negotiated confidentially but will follow the max and min limitations allowed."
+            }
+          ],
+          "examples_regex_only": [
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Minimum Commitment",
+              "llm_label": "not_applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "No quantity threshold is stated; the direction test has nothing to operate on.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Volume Restriction",
+              "llm_label": "not_applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "No quantity threshold is stated in the body; volumes are deferred entirely to Exhibit A.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT",
+              "category": "Minimum Commitment",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "No quantity threshold governing supply or use; ownership percentages do not engage the two targets.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT",
+              "category": "Volume Restriction",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "No product or service usage threshold appears; the direction-of-threshold question does not arise.",
+              "llm_evidence": null
+            }
+          ]
+        }
+      }
+    },
+    "w09": {
+      "round2_checkers": [
+        "p11",
+        "p15",
+        "p01"
+      ],
+      "comparisons": {
+        "p11": {
+          "regex_screening_same_decisions": {
+            "verdict": "pass",
+            "observed_empty_cells": [],
+            "reasons": [],
+            "reason_notes": [],
+            "warnings": [],
+            "rate_in_scope": 0.53,
+            "phi_in_scope": 0.3279,
+            "p_present_given_applicable": 0.4528,
+            "p_present_given_not_applicable": 0.1489,
+            "cells": {
+              "applicable_present": 24,
+              "applicable_absent": 29,
+              "notapplicable_present": 7,
+              "notapplicable_absent": 40
+            },
+            "declared_gold_dependency": "instance_only"
+          },
+          "n_decisions_compared": 100,
+          "scope_compared": [
+            "Revenue/Profit Sharing"
+          ],
+          "n_llm_applicable": 92,
+          "n_regex_applicable": 53,
+          "both": 53,
+          "llm_only": 39,
+          "regex_only": 0,
+          "neither": 8,
+          "agreement": 0.61,
+          "disagreement_rate": 0.39,
+          "jaccard": 0.5761,
+          "examples_llm_only": [
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "Per-unit fees tied to third-party prices are exactly the payment whose arithmetic decides the sharing label.",
+              "llm_evidence": "Detto shall pay to PivX for each unit of Qwik-Fix Pro distributed hereunder per copy fees (the \"Per Copy Fees\")"
+            },
+            {
+              "contract_id": "ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "Hourly fee plus expense reimbursement are exactly the fixed and cost payments the principle excludes.",
+              "llm_evidence": "Aduro shall pay Consultant for the Services at the rate of \u20ac500 per hour."
+            },
+            {
+              "contract_id": "ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "A value-transfer clause exists; the principle governs ruling it out as not varying with an outcome.",
+              "llm_evidence": "The ValueAct Designee shall participate in all director compensation and benefit programs in which the Company's other non-employee directors participate."
+            },
+            {
+              "contract_id": "AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "A fee obligation is the only payment candidate; principle decides whether a fixed sponsorship fee qualifies.",
+              "llm_evidence": "Newegg shall provide to Allied the Sponsorship Benefits set out in Schedule 3, including paying the Sponsorship Fee as provided in that Schedule."
+            }
+          ],
+          "examples_regex_only": []
+        },
+        "p15": {
+          "regex_screening_same_decisions": {
+            "verdict": "pass",
+            "observed_empty_cells": [],
+            "reasons": [],
+            "reason_notes": [],
+            "warnings": [],
+            "rate_in_scope": 0.14,
+            "phi_in_scope": 0.3527,
+            "p_present_given_applicable": 0.7143,
+            "p_present_given_not_applicable": 0.2442,
+            "cells": {
+              "applicable_present": 20,
+              "applicable_absent": 8,
+              "notapplicable_present": 42,
+              "notapplicable_absent": 130
+            },
+            "declared_gold_dependency": "gold_span_content_other"
+          },
+          "n_decisions_compared": 200,
+          "scope_compared": [
+            "Revenue/Profit Sharing",
+            "Minimum Commitment"
+          ],
+          "n_llm_applicable": 120,
+          "n_regex_applicable": 28,
+          "both": 19,
+          "llm_only": 101,
+          "regex_only": 9,
+          "neither": 71,
+          "agreement": 0.45,
+          "disagreement_rate": 0.55,
+          "jaccard": 0.1473,
+          "examples_llm_only": [
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "Per-unit fees tied to third-party prices are exactly the payment whose arithmetic decides the sharing label.",
+              "llm_evidence": "Detto shall pay to PivX for each unit of Qwik-Fix Pro distributed hereunder per copy fees (the \"Per Copy Fees\")"
+            },
+            {
+              "contract_id": "ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "Hourly fee plus expense reimbursement are exactly the fixed and cost payments the principle excludes.",
+              "llm_evidence": "Aduro shall pay Consultant for the Services at the rate of \u20ac500 per hour."
+            },
+            {
+              "contract_id": "ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "A value-transfer clause exists; the principle governs ruling it out as not varying with an outcome.",
+              "llm_evidence": "The ValueAct Designee shall participate in all director compensation and benefit programs in which the Company's other non-employee directors participate."
+            },
+            {
+              "contract_id": "AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "A fee obligation is the only payment candidate; principle decides whether a fixed sponsorship fee qualifies.",
+              "llm_evidence": "Newegg shall provide to Allied the Sponsorship Benefits set out in Schedule 3, including paying the Sponsorship Fee as provided in that Schedule."
+            }
+          ],
+          "examples_regex_only": [
+            {
+              "contract_id": "INNOVIVA,INC_08_07_2014-EX-10.1-COLLABORATION AGREEMENT",
+              "category": "Minimum Commitment",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "No guaranteed minimum attaches to the royalty provisions visible here; royalty adjustment sections are omitted.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "TomOnlineInc_20060501_20-F_EX-4.46_749700_EX-4.46_Co-Branding Agreement",
+              "category": "Minimum Commitment",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Any guaranteed floor attached to the revenue share would sit in the omitted Section 5.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "AimmuneTherapeuticsInc_20200205_8-K_EX-10.3_11967170_EX-10.3_Development Agreement",
+              "category": "Minimum Commitment",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "Any guaranteed floor beside a royalty would sit in the omitted payments articles; none visible.",
+              "llm_evidence": null
+            },
+            {
+              "contract_id": "CHANGEPOINTCORP_03_08_2000-EX-10.6-LICENSE AND HOSTING AGREEMENT",
+              "category": "Minimum Commitment",
+              "llm_label": "not_applicable",
+              "llm_confidence": "low",
+              "llm_reason": "No guaranteed minimum sits alongside the sharing percentage in visible text; Exhibit B is omitted.",
+              "llm_evidence": null
+            }
+          ]
+        },
+        "p01": {
+          "regex_screening_same_decisions": {
+            "verdict": "pass",
+            "observed_empty_cells": [],
+            "reasons": [],
+            "reason_notes": [],
+            "warnings": [],
+            "rate_in_scope": 0.13,
+            "phi_in_scope": 0.3838,
+            "p_present_given_applicable": 0.7692,
+            "p_present_given_not_applicable": 0.2414,
+            "cells": {
+              "applicable_present": 10,
+              "applicable_absent": 3,
+              "notapplicable_present": 21,
+              "notapplicable_absent": 66
+            },
+            "declared_gold_dependency": "instance_only"
+          },
+          "n_decisions_compared": 100,
+          "scope_compared": [
+            "Revenue/Profit Sharing"
+          ],
+          "n_llm_applicable": 92,
+          "n_regex_applicable": 13,
+          "both": 13,
+          "llm_only": 79,
+          "regex_only": 0,
+          "neither": 8,
+          "agreement": 0.21,
+          "disagreement_rate": 0.79,
+          "jaccard": 0.1413,
+          "examples_llm_only": [
+            {
+              "contract_id": "ADIANUTRITION,INC_04_01_2005-EX-10.D2-RESELLER AGREEMENT",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "high",
+              "llm_reason": "Per-unit fees tied to third-party prices are exactly the payment whose arithmetic decides the sharing label.",
+              "llm_evidence": "Detto shall pay to PivX for each unit of Qwik-Fix Pro distributed hereunder per copy fees (the \"Per Copy Fees\")"
+            },
+            {
+              "contract_id": "ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "Hourly fee plus expense reimbursement are exactly the fixed and cost payments the principle excludes.",
+              "llm_evidence": "Aduro shall pay Consultant for the Services at the rate of \u20ac500 per hour."
+            },
+            {
+              "contract_id": "ALLISONTRANSMISSIONHOLDINGSINC_12_15_2014-EX-99.1-COOPERATION AGREEMENT",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "low",
+              "llm_reason": "A value-transfer clause exists; the principle governs ruling it out as not varying with an outcome.",
+              "llm_evidence": "The ValueAct Designee shall participate in all director compensation and benefit programs in which the Company's other non-employee directors participate."
+            },
+            {
+              "contract_id": "AlliedEsportsEntertainmentInc_20190815_8-K_EX-10.34_11788308_EX-10.34_Sponsorship Agreement",
+              "category": "Revenue/Profit Sharing",
+              "llm_label": "applicable",
+              "llm_confidence": "medium",
+              "llm_reason": "A fee obligation is the only payment candidate; principle decides whether a fixed sponsorship fee qualifies.",
+              "llm_evidence": "Newegg shall provide to Allied the Sponsorship Benefits set out in Schedule 3, including paying the Sponsorship Fee as provided in that Schedule."
+            }
+          ],
+          "examples_regex_only": []
+        }
+      }
+    },
+    "w10": {
+      "round2_checkers": [],
+      "comparisons": {},
+      "note": "no pilot regex checker exists for this principle"
+    }
+  }
+}
