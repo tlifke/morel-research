@@ -456,6 +456,54 @@ Format:
 > recorded like any other proposer; human spot-check on a sample with agreement
 > reported; and the scoring path reads only the frozen file, never the model.
 
+> **D-25 — Smoke-test findings: three blockers before any selection run**
+> (2026-08-16, first contact between the metrics and real model output)
+> The CUAD environment is built and C1/C2/C3 ran clean on 2 scratch contracts
+> with Qwen3.5-9B — 6/6 conformant, no parse/schema/coverage failures, traces
+> and decision rows complete. The pipeline works. Three defects surfaced that
+> would have corrupted results, and **none is fixed yet**.
+>
+> **1. Citation scoring rewards silence when applicability is absent.** With no
+> applicability file, `gold_applicable` is `[]` and `citation_eval([], [])`
+> returns precision = recall = f1 = **1.0** — a model that cites nothing scores
+> perfect, while any citation scores 0. The environment guards this via
+> `assert_ready`, but the runner computes the citation block unconditionally for
+> C3. Fix: citations must carry an explicit `available: false` rather than a
+> number. An unmeasured quantity reported as a value is the same class of error
+> as compliance-reported-as-zero, which we already fixed.
+>
+> **2. Answer granularity is unspecified, and our own prompt biases it.** All
+> smoke spans were verbatim-exact, yet Governing Law scored span-F1 0.176 and
+> Expiration Date 0.261, because the model returned `"State of California"` and
+> `"December 31, 2020"` against **sentence-level gold**. Contributing cause: the
+> task definition appended the CSV's `Answer Format` column, which actively
+> pushes minimal-value answers.
+> **This is the most consequential finding, and it is a design decision rather
+> than a bug.** Gold is mostly sentence-level; working-set `w01` legislates
+> exactly this granularity. So a badly-specified task definition would let C2
+> "improve" largely by *repairing our own prompt* — meaning H1 would be
+> measuring prompt repair, not business logic. **The C1 task definition must be
+> as good as we can make it before any condition comparison is run**, and the
+> granularity choice must be stated and held constant across conditions.
+>
+> **3. Filename leakage.** `prompts.render_instance` prints `Title:` and `Id:`,
+> and CUAD ids encode dates and document types. The model extracted an
+> Agreement Date of `03_29_2000` that appears in the *filename* and nowhere in
+> the contract text — scored `not_found`, inflating invented-language rate and
+> corrupting the presence call. Fix: withhold the id, and decide deliberately
+> whether the title is part of the document (it often is, for Document Name).
+>
+> Also observed, not blocking: C1 and C2 produced byte-identical extractions on
+> one contract at n=1, principles costing ~2.4k prompt tokens for no change;
+> reasoning ran 5–35× the answer length; and `working_set.yaml` will not load
+> because merged records carry list-valued `provenance` against a single-value
+> `Literal` — the model widens or the file normalises, someone must choose.
+>
+> A curiosity worth remembering: the two most-cited principles in the smoke run
+> were both **fabricated calibration controls**. The set loaded was all 23
+> round-2 candidates because it was the only loadable file. Models cite
+> plausible fabrications readily.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing

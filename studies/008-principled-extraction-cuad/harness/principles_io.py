@@ -13,7 +13,8 @@ def load_principle_set(
     version: Optional[str] = None,
     ids: Optional[Iterable[str]] = None,
 ) -> PrincipleSet:
-    rows = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or []
+    payload = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or []
+    rows = payload["principles"] if isinstance(payload, dict) else payload
     principles = [Principle.model_validate(row) for row in rows]
     if ids is not None:
         keep = list(ids)

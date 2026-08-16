@@ -303,3 +303,27 @@ def test_principle_set_loader_reads_yaml_and_subsets():
     assert subset.ids == ["p03", "p01"]
     with pytest.raises(KeyError):
         load_principle_set(path, ids=["nope"])
+
+
+def test_principle_set_loader_accepts_the_mapping_form(tmp_path):
+    import yaml
+
+    path = tmp_path / "set.yaml"
+    path.write_text(
+        yaml.safe_dump(
+            {
+                "title": "wrapped",
+                "principles": [
+                    {
+                        "id": "w01",
+                        "statement": "s",
+                        "trigger_guidance": "t",
+                        "type": "constraint",
+                        "scope": [],
+                        "provenance": "authored",
+                    }
+                ],
+            }
+        )
+    )
+    assert load_principle_set(path, version="wrapped").ids == ["w01"]
