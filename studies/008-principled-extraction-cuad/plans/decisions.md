@@ -408,6 +408,54 @@ Format:
 > become instruction optimisation and the novelty — that the selected units are
 > citable, checkable principles rather than free-form prompt text — is lost.
 
+> **D-23 — Empirical improvement selects; guideline grounding is recorded
+> separately and always** (2026-08-16, refines D-22)
+> A principle enters the set on **measured improvement**. Independently of that,
+> every principle records whether it is grounded in the annotation guidelines.
+> The two are orthogonal and both are reported:
+>
+> | | in guidelines | not in guidelines |
+> |---|---|---|
+> | **improves scores** | strongest — documented convention, followed in practice | implicit convention *or* an annotation artifact; cannot tell which from the data |
+> | **does not improve** | documented but not followed — questionable as guidance | no support from either source |
+> | **sources contradict** | genuinely unresolved; report as such rather than picking |
+>
+> Why the second axis is mandatory rather than nice-to-have: the gold is
+> annotation *practice*, not domain truth, and the two demonstrably diverge —
+> the pilot found conventions gold follows that the Handbook never documents,
+> and Handbook statements gold does not follow. **A principle selected purely
+> on F1 is teaching the model to match the annotators**, which is legitimate for
+> a benchmark but is a different claim from capturing legal convention. Without
+> the provenance axis we could not tell those apart, and the distinction bears
+> directly on whether any of this transfers off CUAD.
+
+> **D-24 — Revisit the checkers; a regex proxy for a semantic condition is a
+> design smell, not an implementation detail** (2026-08-16, for the next agent)
+> Most pilot failures were failures of the **checker**, not the principle. The
+> checkers are lexical instruments doing semantic work: a date regex that misses
+> a fifth of the dates, a `shares?` pattern matching the verb "share", a
+> conflicts-of-law test defeated by the word "its". Many principles have no
+> plausible regex formulation at all.
+>
+> **The resolution has to respect D-4 (no LLM judge in the scoring path), and it
+> can, because two different things have been conflated:**
+>
+> - **Applicability** — *does this principle bear on this decision?* A function
+>   of `(instance, gold)` only. It never sees model output. An LLM computing
+>   this is a **labeling tool**, not a judge: run once, frozen to a file,
+>   auditable, and spot-checkable against human labels with measured agreement.
+>   This is what inv 003's "hand-labeled residual" always was; an LLM is a
+>   cheaper first pass at the same job. **Permitted, under those conditions.**
+> - **Compliance** — *did this output obey the principle?* A function of model
+>   output. An LLM here **is** a judge and is barred by D-4. Where compliance
+>   cannot be checked programmatically, the principle stays **prompt-tier** and
+>   is not scored (the two-tier split in inv 006).
+>
+> Conditions on LLM-assisted applicability, all required: computed once and
+> frozen as data before any trial runs; the labeling model and prompt version
+> recorded like any other proposer; human spot-check on a sample with agreement
+> reported; and the scoring path reads only the frozen file, never the model.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing
