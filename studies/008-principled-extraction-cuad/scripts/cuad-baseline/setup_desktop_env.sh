@@ -19,16 +19,15 @@ uv pip install --python .venv/bin/python \
   torch==1.13.1+cu117 --index-url https://download.pytorch.org/whl/cu117
 
 uv pip install --python .venv/bin/python \
-  'transformers==4.12.5' \
-  'tokenizers<0.11' \
-  'huggingface-hub<0.1' \
-  'numpy<2' \
+  'transformers==4.17.0' \
+  'huggingface-hub==0.4.0' \
+  'numpy==1.23.5' \
+  'protobuf<4' \
   sentencepiece \
   scikit-learn \
   pandas \
   tqdm \
-  tensorboardX \
-  protobuf
+  tensorboardX
 
 for f in roberta-base roberta-large deberta-v2-xlarge; do
   if [ ! -f "ckpt/$f.zip" ]; then
@@ -39,5 +38,9 @@ for f in roberta-base roberta-large deberta-v2-xlarge; do
     unzip -q -o "ckpt/$f.zip" -d "ckpt/"
   fi
 done
+
+if [ ! -f repo/CUADv1.json ]; then
+  (cd repo && unzip -q -o data.zip)
+fi
 
 .venv/bin/python -c "import torch;print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
