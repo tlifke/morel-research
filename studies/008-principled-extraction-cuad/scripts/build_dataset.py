@@ -125,6 +125,118 @@ def stratified_sample(pool_by_bucket, bucket_targets, seed):
     return sorted(picked), allocation
 
 
+def shingle_similarity(texts, ids, shingle_n):
+    vocab = {}
+    indptr = [0]
+    indices = []
+    for cid in ids:
+        row = {vocab.setdefault(sh, len(vocab)) for sh in terms(texts[cid], [shingle_n])}
+        indices.extend(sorted(row))
+        indptr.append(len(indices))
+    matrix = csr_matrix(
+        (np.ones(len(indices), dtype=np.float32), np.array(indices), np.array(indptr)),
+        shape=(len(ids), len(vocab)),
+    )
+    return np.asarray(matrix.sum(axis=1)).ravel(), (matrix @ matrix.T).toarray()
+
+
+def near_duplicate_clusters(texts, ids, cfg):
+    ids = sorted(ids)
+    sizes, inter = shingle_similarity(texts, ids, cfg["shingle_n"])
+    parent = {cid: cid for cid in ids}
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    edges = []
+    for i, j in combinations(range(len(ids)), 2):
+        overlap = inter[i, j]
+        if overlap == 0:
+            continue
+        union = sizes[i] + sizes[j] - overlap
+        jac = float(overlap / union) if union else 0.0
+        cont = float(overlap / min(sizes[i], sizes[j])) if min(sizes[i], sizes[j]) else 0.0
+        if jac >= cfg["jaccard_threshold"] or cont >= cfg["containment_threshold"]:
+            edges.append({"a": ids[i], "b": ids[j], "containment": round(cont, 4), "jaccard": round(jac, 4)})
+            ra, rb = find(ids[i]), find(ids[j])
+            if ra != rb:
+                parent[ra] = rb
+    groups = defaultdict(list)
+    for cid in ids:
+        groups[find(cid)].append(cid)
+    clusters = sorted((sorted(v) for v in groups.values() if len(v) > 1), key=lambda g: g[0])
+    edges.sort(key=lambda e: (-e["containment"], e["a"], e["b"]))
+    return clusters, edges
+
+
+def bucket_spread_pick(candidates, need, bucket_of_id, bucket_weights, rng):
+    by_bucket = defaultdict(list)
+    for cid in candidates:
+        by_bucket[bucket_of_id[cid]].append(cid)
+    capacities = {b: len(v) for b, v in by_bucket.items()}
+    weights = {b: bucket_weights.get(b, 0) for b in capacities}
+    alloc = largest_remainder(weights, need, capacities)
+    picked = []
+    for bucket in sorted(alloc):
+        picked.extend(rng.sample(sorted(by_bucket[bucket]), alloc[bucket]))
+    return sorted(picked)
+
+
+def carve_by_category_floor(pool, instances, subset, floor, n_target, bucket_weights, seed):
+    rng = random.Random(seed)
+    available = set(pool)
+    chosen = set()
+    floor_trace = {}
+    for cat in sorted(subset, key=lambda c: (sum(1 for c2 in pool if not instances[c2]["gold"][c]["is_impossible"]), c)):
+        positives_chosen = sum(1 for c2 in chosen if not instances[c2]["gold"][cat]["is_impossible"])
+        candidates = sorted(
+            c2 for c2 in available - chosen if not instances[c2]["gold"][cat]["is_impossible"]
+        )
+        need = min(floor - positives_chosen, len(candidates))
+        drawn = (
+            bucket_spread_pick(
+                candidates,
+                need,
+                {c2: instances[c2]["length_bucket"] for c2 in candidates},
+                bucket_weights,
+                rng,
+            )
+            if need > 0
+            else []
+        )
+        chosen.update(drawn)
+        floor_trace[cat] = {
+            "pool_positives": len(candidates) + positives_chosen,
+            "already_covered": positives_chosen,
+            "drawn_for_floor": len(drawn),
+            "shortfall": max(0, floor - positives_chosen - len(drawn)),
+        }
+
+    remaining = n_target - len(chosen)
+    assert remaining >= 0, (n_target, len(chosen))
+    chosen_buckets = Counter(instances[c]["length_bucket"] for c in chosen)
+    rest = sorted(available - chosen)
+    rest_by_bucket = defaultdict(list)
+    for cid in rest:
+        rest_by_bucket[instances[cid]["length_bucket"]].append(cid)
+    full_targets = largest_remainder(
+        dict(bucket_weights),
+        n_target,
+        {b: chosen_buckets.get(b, 0) + len(rest_by_bucket.get(b, [])) for b in bucket_weights},
+    )
+    fill_weights = {b: max(0, full_targets.get(b, 0) - chosen_buckets.get(b, 0)) for b in bucket_weights}
+    fill_alloc = largest_remainder(
+        fill_weights, remaining, {b: len(rest_by_bucket.get(b, [])) for b in bucket_weights}
+    )
+    for bucket in sorted(fill_alloc):
+        chosen.update(rng.sample(sorted(rest_by_bucket.get(bucket, [])), fill_alloc[bucket]))
+    assert len(chosen) == n_target, (len(chosen), n_target)
+    return sorted(chosen), floor_trace, fill_alloc
+
+
 def assert_no_cross_split_duplicates(texts, split_of, cfg):
     ids = sorted(split_of)
     norm_hash = {}
@@ -142,19 +254,7 @@ def assert_no_cross_split_duplicates(texts, split_of, cfg):
                 + " | ".join(f"{c} [{split_of[c]}]" for c in sorted(group))
             )
 
-    vocab = {}
-    indptr = [0]
-    indices = []
-    for cid in ids:
-        row = {vocab.setdefault(sh, len(vocab)) for sh in terms(texts[cid], [cfg["shingle_n"]])}
-        indices.extend(sorted(row))
-        indptr.append(len(indices))
-    matrix = csr_matrix(
-        (np.ones(len(indices), dtype=np.float32), np.array(indices), np.array(indptr)),
-        shape=(len(ids), len(vocab)),
-    )
-    sizes = np.asarray(matrix.sum(axis=1)).ravel()
-    inter = (matrix @ matrix.T).toarray()
+    sizes, inter = shingle_similarity(texts, ids, cfg["shingle_n"])
 
     worst = None
     violations = []
@@ -272,25 +372,56 @@ def main():
     assert not (set(exclusions) & set(holdout)), "exclusion targets holdout"
     assert not (set(exclusions) & set(dev)), "exclusion targets dev"
     excluded = sorted(exclusions)
-    ft_train = sorted(set(train_pool) - set(dev) - set(exclusions))
+    ft_pool = sorted(set(train_pool) - set(dev) - set(exclusions))
+
+    ft_bucket_weights = {lab: 0 for lab in labels}
+    for cid in ft_pool:
+        ft_bucket_weights[instances[cid]["length_bucket"]] += 1
+
+    clusters, cluster_edges = near_duplicate_clusters(
+        {cid: full[cid]["context"] for cid in ft_pool}, ft_pool, dataset_cfg["split_clustering"]
+    )
+    bound_to_ft_train = sorted({cid for group in clusters for cid in group})
+    eligible = sorted(set(ft_pool) - set(bound_to_ft_train))
+
+    sel_cfg = dataset_cfg["splits"]["selection"]
+    con_cfg = dataset_cfg["splits"]["confirmation"]
+    selection, selection_floor_trace, selection_fill = carve_by_category_floor(
+        eligible, instances, subset, sel_cfg["category_floor"], sel_cfg["n"], ft_bucket_weights, sel_cfg["seed"]
+    )
+    confirmation, confirmation_floor_trace, confirmation_fill = carve_by_category_floor(
+        sorted(set(eligible) - set(selection)),
+        instances,
+        subset,
+        con_cfg["category_floor"],
+        con_cfg["n"],
+        ft_bucket_weights,
+        con_cfg["seed"],
+    )
+    ft_train = sorted(set(ft_pool) - set(selection) - set(confirmation))
 
     assert len(holdout) == dataset_cfg["splits"]["holdout"]["n"]
     assert len(dev) == dataset_cfg["splits"]["dev"]["n"]
-    assert not (set(holdout) & set(dev))
-    assert not (set(holdout) & set(ft_train))
-    assert not (set(dev) & set(ft_train))
-    assert set(holdout) | set(dev) | set(ft_train) | set(excluded) == set(full)
-    assert len(holdout) + len(dev) + len(ft_train) + len(excluded) == len(full)
+    assert len(selection) == sel_cfg["n"]
+    assert len(confirmation) == con_cfg["n"]
+
+    named = {
+        "holdout": holdout,
+        "dev": dev,
+        "selection": selection,
+        "confirmation": confirmation,
+        "ft_train": ft_train,
+        "excluded": excluded,
+    }
+    for a, b in combinations(sorted(named), 2):
+        assert not (set(named[a]) & set(named[b])), (a, b)
+    assert set().union(*(set(v) for v in named.values())) == set(full)
+    assert sum(len(v) for v in named.values()) == len(full)
 
     split_of = {}
-    for cid in holdout:
-        split_of[cid] = "holdout"
-    for cid in dev:
-        split_of[cid] = "dev"
-    for cid in ft_train:
-        split_of[cid] = "ft_train"
-    for cid in excluded:
-        split_of[cid] = "excluded"
+    for name, members in named.items():
+        for cid in members:
+            split_of[cid] = name
 
     guard = assert_no_cross_split_duplicates(
         {cid: full[cid]["context"] for cid in split_of if split_of[cid] != "excluded"},
@@ -311,8 +442,18 @@ def main():
                 row["exclusion_twin_split"] = exclusions[cid]["twin_split"]
             fh.write(json.dumps(row, sort_keys=True) + "\n")
 
-    for name, members in (("dev", dev), ("holdout", holdout), ("ft_train", ft_train), ("excluded", excluded)):
+    for name, members in sorted(named.items()):
         (OUT / "splits" / f"{name}.txt").write_text("\n".join(members) + "\n")
+
+    reported = [
+        ("dev", dev),
+        ("holdout", holdout),
+        ("selection", selection),
+        ("confirmation", confirmation),
+        ("ft_train", ft_train),
+        ("excluded", excluded),
+        ("all", sorted(full)),
+    ]
 
     with open(OUT / "categories.json", "w") as fh:
         json.dump(
@@ -336,7 +477,7 @@ def main():
         )
 
     length_rows = []
-    for split, members in (("dev", dev), ("holdout", holdout), ("ft_train", ft_train), ("excluded", excluded), ("all", sorted(full))):
+    for split, members in reported:
         toks = sorted(instances[c]["n_tokens"] for c in members)
         chars = sorted(instances[c]["n_chars"] for c in members)
         length_rows.append(
@@ -360,7 +501,7 @@ def main():
         writer.writerows(length_rows)
 
     bucket_rows = []
-    for split, members in (("dev", dev), ("holdout", holdout), ("ft_train", ft_train), ("excluded", excluded), ("all", sorted(full))):
+    for split, members in reported:
         counts = Counter(instances[c]["length_bucket"] for c in members)
         bucket_rows.append({"split": split, **{lab: counts.get(lab, 0) for lab in labels}})
     with open(OUT / "stats" / "length_buckets.csv", "w", newline="") as fh:
@@ -371,7 +512,7 @@ def main():
     cat_rows = []
     for cat in categories:
         row = {"category": cat, "in_subset": cat in subset}
-        for split, members in (("dev", dev), ("holdout", holdout), ("ft_train", ft_train), ("excluded", excluded), ("all", sorted(full))):
+        for split, members in reported:
             pos = sum(1 for c in members if not instances[c]["gold"][cat]["is_impossible"])
             spans = sum(len(instances[c]["gold"][cat]["spans"]) for c in members)
             row[f"n_positive_{split}"] = pos
@@ -409,6 +550,53 @@ def main():
             sort_keys=True,
         )
 
+    def positives(members, cat):
+        return sum(1 for c in members if not instances[c]["gold"][cat]["is_impossible"])
+
+    power_splits = {"selection": selection, "confirmation": confirmation, "ft_train_after": ft_train}
+    category_coverage = {
+        cat: {
+            "ft_pool_before": positives(ft_pool, cat),
+            **{name: positives(members, cat) for name, members in power_splits.items()},
+        }
+        for cat in subset
+    }
+    floors = {"selection": sel_cfg["category_floor"], "confirmation": con_cfg["category_floor"]}
+    floor_violations = {
+        name: sorted(c for c in subset if positives(power_splits[name], c) < floors[name])
+        for name in floors
+    }
+    selection_strata = {
+        "stratification": "subset-category positive floor primary, length_bucket secondary; see plans/splits.md and INV1-D8",
+        "floors": floors,
+        "seeds": {"selection": sel_cfg["seed"], "confirmation": con_cfg["seed"]},
+        "sizes": {name: len(members) for name, members in power_splits.items()},
+        "category_positive_coverage": category_coverage,
+        "floor_violations": floor_violations,
+        "ft_pool_clustering": {
+            "thresholds": dataset_cfg["split_clustering"],
+            "n_pool": len(ft_pool),
+            "n_clusters": len(clusters),
+            "n_bound_to_ft_train": len(bound_to_ft_train),
+            "n_eligible": len(eligible),
+            "clusters": clusters,
+            "edges": cluster_edges,
+        },
+        "floor_draw_trace": {
+            "selection": selection_floor_trace,
+            "confirmation": confirmation_floor_trace,
+        },
+        "length_fill_allocation": {"selection": selection_fill, "confirmation": confirmation_fill},
+        "length_bucket_profile": {
+            name: {
+                lab: Counter(instances[c]["length_bucket"] for c in members).get(lab, 0) for lab in labels
+            }
+            for name, members in [("ft_pool_before", ft_pool), *power_splits.items()]
+        },
+    }
+    with open(OUT / "stats" / "selection_strata.json", "w") as fh:
+        json.dump(selection_strata, fh, indent=2, sort_keys=True)
+
     manifest = {
         "attribution": ATTRIBUTION,
         "built_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -439,14 +627,11 @@ def main():
         "splits": {
             "seed": seed,
             "dev_stratification": "length_bucket primary matched to holdout; positive_count_tercile secondary within bucket (D-13)",
-            "sizes": {
-                "dev": len(dev),
-                "holdout": len(holdout),
-                "ft_train": len(ft_train),
-                "excluded": len(excluded),
-            },
+            "selection_stratification": "subset-category positive floor primary, length_bucket secondary (INV1-D8)",
+            "sizes": {name: len(members) for name, members in sorted(named.items())},
             "dev_length_profile_match": length_profile_match,
             "dev_bucket_shortfall": bucket_shortfall,
+            "selection_strata": selection_strata,
         },
         "exclusions": {
             "applied_after_dev_sampling": True,

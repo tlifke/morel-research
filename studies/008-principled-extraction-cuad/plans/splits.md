@@ -12,16 +12,16 @@ CUAD v1 is 510 contracts. Every one belongs to exactly one split.
 | split | n | purpose | may be touched by |
 |---|---|---|---|
 | `excluded` | 4 | **smoke tests and debugging.** Content duplicates of contracts in other splits (INV1-D7), so they carry no information the other splits don't already have — which makes them free to burn. | anyone, any time |
-| `selection` | ~60 | **per-principle A/B testing** (inv 006). Selection signal. Assume it is overfit by the end. | inv 006 selection loop only |
-| `confirmation` | ~40 | **one confirmation pass per principle** that passes selection. Each principle touches it once. | inv 006 confirmation only |
+| `selection` | 60 | **per-principle A/B testing** (inv 006). Selection signal. Assume it is overfit by the end. | inv 006 selection loop only |
+| `confirmation` | 40 | **one confirmation pass per principle** that passes selection. Each principle touches it once. | inv 006 confirmation only |
 | `dev` | 40 | **harness and prompt iteration, and pilot P0.** The dress rehearsal for the grid. Deliberately *not* used for principle selection or confirmation. | inv 004, harness work |
-| `ft_train` | ~264 | **Phase 2 fine-tuning pool.** | Phase 2 only |
+| `ft_train` | 264 | **Phase 2 fine-tuning pool.** | Phase 2 only |
 | `holdout` | 102 | **final headline results, both phases.** Sealed until gate G4. | nothing, until G4 |
 
-`selection` and `confirmation` are carved from the current 364-contract
-`ft_train`, reducing the Phase-2 pool to ~264. Nothing moves between existing
-splits; `dev` and `holdout` are untouched, preserving D-13's length match and
-the frozen-splits guarantee.
+`selection` and `confirmation` were carved from the 364-contract `ft_train` at
+INV1-D8, reducing the Phase-2 pool to 264. Nothing moved between existing
+splits; `dev`, `holdout` and `excluded` are byte-identical to the pre-carve
+build, preserving D-13's length match and the frozen-splits guarantee.
 
 ## Why selection and confirmation are separate splits
 
@@ -62,8 +62,9 @@ should follow from what it has to support.
 2. **No contract appears in two splits.** Enforced by title disjointness *and*
    by a content-hash plus cross-split containment assertion in
    `build_dataset.py` — title disjointness alone is insufficient, since
-   identical contracts are filed under different titles (INV1-D7). **Re-run the
-   guard after carving the new splits.**
+   identical contracts are filed under different titles (INV1-D7). Re-run after
+   any change to split membership; it was re-run and passes on the six-split
+   arrangement (INV1-D8), where it caught a real violation before it landed.
 3. **Splits are frozen once carved.** Any change is a G1-class decision and
    invalidates every measurement taken against the previous arrangement.
 4. **Every result names its split.** A number without a split is not a result.
@@ -73,8 +74,21 @@ should follow from what it has to support.
 
 ## Open
 
-- Is ~264 contracts enough for the Phase 2 fine-tuning pool? At 12 decisions
-  per contract that is ~3,168 decision-level training targets. Check against
-  Phase 2's needs **before** carving, since taking it back later means
-  re-freezing splits.
-- Exact selection/confirmation sizes are proposals, not decisions.
+- ~~Is ~264 contracts enough for the Phase 2 fine-tuning pool?~~ **Answered at
+  INV1-D8: yes, and the binding constraint was never contract count.** Reasoning
+  in the decision; the short version is that Phase 2's SFT stage is
+  rejection-sampled per `(contract, category)` decision (264 x 12 = 3,168 prompt
+  units before any k>1 sampling) and its RL stage reuses prompts across epochs,
+  so unique prompts are not the scarce resource — reward signal per rare
+  category is. What 264 costs is `Source Code Escrow`, which drops to **2
+  positive contracts** in the Phase-2 pool. That is a category-coverage problem,
+  not a volume problem, and it is recorded as such.
+- ~~Exact selection/confirmation sizes are proposals, not decisions.~~ Decided at
+  INV1-D8: 60 / 40, with per-category positive floors of 5 / 4.
+- **Near-duplicate clusters inside the old `ft_train` are now bound to
+  `ft_train`** (INV1-D8). Carving three splits out of one promoted internal
+  duplicate clusters into cross-split pairs and the standing guard fired on one.
+  23 contracts in 11 clusters are therefore ineligible for `selection` and
+  `confirmation`. This does not fix Phase 2's double-weighting problem; it
+  concentrates it in the one split where it is a data-loader question rather
+  than a validity question.

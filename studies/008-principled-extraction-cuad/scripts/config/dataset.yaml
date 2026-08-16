@@ -44,8 +44,45 @@ splits:
       provisional 12-category subset, so the dev split stays valid if inv 002
       changes the subset. Sampling within a (bucket, tercile) cell is uniform
       without replacement under the seed above.
+  selection:
+    source: official train minus dev minus exclusions (the 364-contract ft_train pool)
+    n: 60
+    seed: 20260816
+    category_floor: 5
+    stratify:
+      - key: subset_category_positive_floor
+        priority: primary
+        note: >
+          Every one of the 12 subset categories must have at least
+          `category_floor` POSITIVE contracts in the split. Purpose is
+          statistical power for a per-principle A/B test, per plans/splits.md;
+          a principle scoped to a rare category can only show an effect on
+          contracts where that category is positive. Floor rationale and the
+          detectable-effect consequences are in INV1-D8.
+      - key: length_bucket
+        priority: secondary
+        match: ft_train_pool
+        note: >
+          Length spread is a secondary key, matched to the 364-contract pool
+          the split is carved from (NOT to holdout — that is dev's job, D-13).
+          Applied twice: to spread the floor draws across buckets where the
+          category's positives allow, and to allocate the remaining slots.
+    priority_rule: >
+      Floor first, always. Length allocation is computed against the floor
+      picks already made and absorbs the imbalance they create.
+  confirmation:
+    source: the ft_train pool minus selection
+    n: 40
+    seed: 20260817
+    category_floor: 4
+    stratify: same keys and priority as selection, drawn from what selection left
+    note: >
+      Mirrors selection's coverage so a principle is confirmed on the same kind
+      of evidence it was selected on. The floor is 4 rather than 5 because
+      Source Code Escrow has only 11 positives in the pool; see INV1-D8 for
+      what that costs and what it means for what can be concluded there.
   ft_train:
-    source: official train minus dev minus exclusions
+    source: official train minus dev minus exclusions minus selection minus confirmation
     note: Reserved for Phase 2. Not read by Phase 1.
 
 exclusions:
@@ -83,6 +120,29 @@ exclusions:
         ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual
         Property Agreement; neither is a substring of the other
       twin_split: dev
+
+split_clustering:
+  shingle_n: 5
+  jaccard_threshold: 0.40
+  containment_threshold: 0.60
+  scope: ft_train_pool_internal
+  note: >
+    Carving selection and confirmation out of ft_train promotes ft_train's
+    INTERNAL near-duplicate clusters into cross-split pairs, which the
+    contamination guard then fails on (it did, on the
+    ChinaRealEstate/Leju Content License cluster at containment 0.989). So
+    before carving, the 364-contract pool is clustered by 5-gram
+    containment/Jaccard and every contract in a multi-member cluster is bound
+    to ft_train — clusters are indivisible and are assigned wholesale to the
+    Phase-2 pool. Only cluster singletons are eligible for selection and
+    confirmation.
+
+    These thresholds are deliberately STRICTER than contamination_guard's.
+    The guard is a fail condition; this is the preventive rule, and the gap
+    between the two pairs of numbers (0.60 vs 0.80 containment, 0.40 vs 0.60
+    Jaccard) is exactly the headroom the build retains. Binding at the guard's
+    own thresholds would have left a legal cross-split pair at containment
+    0.783 against a 0.80 fail line.
 
 contamination_guard:
   shingle_n: 5

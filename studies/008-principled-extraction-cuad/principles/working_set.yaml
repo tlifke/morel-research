@@ -1,0 +1,1010 @@
+schema_version: 1
+id: studies/008-principled-extraction-cuad/principles/working_set
+title: Working set — pilot principles consolidated after round-2 curation
+created: '2026-08-16'
+status: working
+assistant: Claude Code
+source_round: principles/pilot/round2/candidates_round2.reviewed.yaml
+provenance_of_this_file: >
+  Consolidation of the 16 real round-2 candidates after Tyler's decisions were
+  recorded and the calibration controls unblinded. All 7 calibration controls
+  (round-2 p03, p05, p09, p12, p17, p20, p21 = originals d09, g12, d10, g11,
+  d11, g10, g09) are excluded from this set entirely, regardless of their
+  decision, because they are fabricated instrument records and not candidate
+  principles. principles/pilot/ is the archived record of how this set was
+  reached and is unmodified.
+not_locked: >
+  This is a working set, not principles/locked-YYYY-MM-DD.yaml. It has not been
+  curated as a set — every review block below is null — and under D-22 entry to
+  the scored set is decided by measured improvement, not by the judged truth
+  recorded here.
+
+field_notes:
+  provenance_axis: >
+    Recorded per D-23, independently of any performance claim. Values: both
+    (grounded in the Atticus guidelines AND corroborated in gold), guidelines_only,
+    data_only, sources_contradict. Mandatory because gold is annotation practice
+    rather than domain truth and the two demonstrably diverge in both directions
+    in this pilot (w06 and w07 are the two named cases, running opposite ways).
+  checker_status: >
+    usable | needs_rebuild | not_yet_specified. Per D-24 no checker was fixed
+    here; status is recorded as measured in round2/footprint.yaml and
+    round2/critiques.yaml. "needs_rebuild" covers both separability failures
+    (D-21) and lexical-proxy failures (D-24).
+  evidence_summary: >
+    applicability is over the 480-decision dev set (40 contracts x 12
+    categories); in_scope is restricted to the record's declared scope. phi is
+    the applicability-x-gold-presence correlation on the in-scope subset and is
+    a pre-model diagnostic only — it is not compliance, not accuracy, and not
+    evidence that following the principle helps.
+  schema_deviations:
+    - "`provenance` is a list here, not the str the component contract specifies, because merged records have two source arms."
+    - "`proposer` is a list of blocks, one per contributing round-2 record, for the same reason."
+    - "`provenance_axis`, `lineage`, `curator_note`, `checker_status`, `evidence_summary`, `judgement_calls` are new fields not in the pinned Principle model; they are bookkeeping around the record, not part of the portable model (portability constraint, inv 002)."
+
+principles:
+
+- id: w01
+  statement: >
+    Each extracted span is one complete sentence, period to period, extended to
+    include the lead-in clause where the responsive text is a numbered
+    subsection — except for the categories that ask for a single self-contained
+    value, the date and party categories, where the span is instead the minimal
+    expression that answers the question, clipped out of its carrying sentence
+    with the execution or introductory wording left outside it.
+  trigger_guidance: >
+    Whenever span boundaries are being chosen. Ask first which kind of category
+    this is: a yes/no-shaped category takes the whole sentence even when the
+    operative words are a fragment of it, while a single-value category takes
+    the value alone even when it sits inside a long recital.
+  type: constraint
+  scope: []
+  provenance: [atticus_guidelines, data_mined]
+  provenance_axis: both
+  provenance_axis_note: >
+    The scope split is not a compromise between two contradictory rules; the
+    Handbook draws the line itself. Chapter 1 sets the sentence unit
+    period-to-period for the yes/no categories, and the Agreement Date IS-NOT
+    list separately instructs annotators to mark the date itself and not the
+    surrounding "dated"/"as of"/"entered into" wording, with the same clipping
+    instinct stated for Parties and Document Name. Both limbs are corroborated
+    in gold: 82.6% of yes/no-category gold spans sit on sentence boundaries, and
+    the median gold Agreement Date span is 16 characters.
+  lineage:
+    round2_ids: [p22, p10]
+    original_ids: [g01, d01]
+    merge: >
+      p22 (complete sentence, period to period, guidelines arm) merged with p10
+      (minimal expression, data-mined arm) as one conditional rule. Tyler
+      flagged the pair as contradictory; cross_source_validation found them
+      scope-differentiated rather than contradictory.
+  proposer:
+    - from_round2_id: p22
+      model: claude-opus-5
+      prompt_version: null
+      batch_id: null
+      invocation: subagent
+      harness: claude-code
+      source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+    - from_round2_id: p10
+      model: claude-opus-5
+      prompt_version: proposer_v1
+      batch_id: cm-001
+      invocation: subagent
+      harness: claude-code
+      source_document: null
+  evidence:
+    - Handbook ch.1, 'Label one sentence at a time' (p.4) — sentence defined period-to-period; worked example 19.3 / 19.3.1
+    - CUAD Datasheet II-F — full sentences for yes/no categories, 'from period to period' (CC BY 4.0, quotable)
+    - Handbook, Agreement Date, IS-NOT list (p.8) — the date itself is marked, not the surrounding execution reference
+    - pair-0001
+    - pair-0002
+    - pair-0003
+  curator_note:
+    p22: >
+      Compare this to p10 -- which should we keep? Seems contradictory.
+      [decision: defer]
+    p10: >
+      This is clearly true -- but there is a different principle from the
+      guidelines that contradicts it. Which should we follow? [decision: accept]
+  judgement_calls:
+    - >
+      The exception is written as "the date and party categories", following
+      p22's own trigger_guidance and the Handbook exemption it cites. The
+      consolidation brief named "(dates, jurisdictions)". Jurisdictions are
+      deliberately NOT in the exception: cross_source_validation p10 records
+      that for Governing Law the Handbook requires labelling the whole
+      responsive sentence with the jurisdiction typed into a separate answer
+      field that the CUAD extraction task does not expose, so clipping to a bare
+      jurisdiction name would be wrong, and gold agrees (85 of 370 Governing Law
+      spans carry the conflicts-of-law tail inside the span). Flagged for Tyler:
+      if he meant jurisdictions to be exempted, this limb needs re-deciding
+      against that evidence, not silently widened.
+    - >
+      The lead-in half of p22 is retained in the statement but is unverifiable in
+      this corpus: the marker that would identify a lead-in-plus-subsection
+      annotation does not survive into CUAD v1 (see dropped d02/p08). Only the
+      sentence-boundary half is measurable.
+  checker_sketch_status_note: >
+    p22's sketch located spans and tested both offsets for sentence boundaries;
+    p10's tested gold span length and a date regex. Neither is carried forward
+    as usable — see checker_status.
+  checker_status:
+    status: needs_rebuild
+    what_is_wrong: >
+      Both contributing checkers fail D-21 separability. p22's applicability is
+      gated on gold presence (phi = 1.00, the arithmetic signature of the gate),
+      and its period-to-period compliance test fails on ~30% of gold spans,
+      largely through the same furniture-splitting artefact that sinks d07/p19.
+      p10's applicability is gated on the content of the very decision's own gold
+      spans. p22 is also the least stable record in the round-2 set: including
+      the value categories moves its firing rate from 22.5% to 44.0% of dev
+      decisions. A rebuilt checker needs an instance-only applicability test
+      (which category kind is this, does the contract contain a candidate
+      sentence) with compliance read off span offsets.
+  evidence_summary:
+    applicability:
+      p22: {n_applicable: 108, n_units: 480, rate: 0.225, in_scope_rate: 0.30}
+      p10: {n_applicable: 28, n_units: 480, rate: 0.0583, in_scope_rate: 0.70}
+    separability:
+      p22: {verdict: fail, gold_dependency: gold_presence, phi_in_scope: 1.0}
+      p10: {verdict: fail, gold_dependency: gold_span_content_own, phi_in_scope: 0.3504}
+    stability: >
+      p22 max abs rate swing 0.2146 (value_categories_included variant), the
+      largest in the round-2 set; p10 is flat under the len60 variant.
+    cross_source:
+      p22: {status: corroborated, confidence: medium, measure: '2,413 of 2,921 yes/no-category gold spans (82.6%) sit on sentence boundaries'}
+      p10: {status: corroborated, confidence: high, measure: 'median gold Agreement Date span 16 chars; 371 of 380 under 40 chars'}
+    critic:
+      p22: {verdict: 'directionally correct; period-to-period test fails on 30% of gold spans', confidence: moderate, recommendation: keep_with_checker_rewrite}
+      p10: {verdict: 'could not break on the merits; only live objections are scope drafting and a gold-shaped applicability gate', confidence: could_not_break, recommendation: keep}
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: w02
+  statement: >
+    A passage that independently satisfies more than one target's definition is
+    extracted under every one of them; assigning it to one target does not spend
+    it, and targets are not mutually exclusive.
+  trigger_guidance: >
+    Consider whenever a passage has already been assigned to one target and
+    would also answer a second target's question on its own terms — a purchase
+    obligation that also fixes a percentage payment, a payment schedule that
+    also sets a volume threshold. Resist the pull to spend the passage once.
+  type: constraint
+  scope: []
+  provenance: [atticus_guidelines, data_mined]
+  provenance_axis: both
+  provenance_axis_note: >
+    This is the study's clearest case of independent cross-source corroboration
+    and the fact is recorded on the principle rather than left in the
+    validation file. The two derivation arms — guidelines reading and
+    contrastive data mining — produced the same rule without seeing each other
+    (the proposer never sees the guidelines-derived candidates), and the
+    checkers built from the two sketches fire on a byte-identical set of dev
+    decisions (12 of 480, phi 0.1808 for both). The Handbook states it outright
+    (ch.1 p.5, plus at least three worked examples); gold shows 118 overlapping
+    span pairs on 76 of 404 contracts.
+  lineage:
+    round2_ids: [p18, p23]
+    original_ids: [d02, g03]
+    merge: >
+      p18 (data-mined arm) merged with p23 (guidelines arm). The two statements
+      were near-duplicates and the checkers proved byte-identical in footprint.
+      Dual provenance is deliberate and load-bearing, not bookkeeping.
+  proposer:
+    - from_round2_id: p18
+      model: claude-opus-5
+      prompt_version: proposer_v1
+      batch_id: cm-002
+      invocation: subagent
+      harness: claude-code
+      source_document: null
+    - from_round2_id: p23
+      model: claude-opus-5
+      prompt_version: null
+      batch_id: null
+      invocation: subagent
+      harness: claude-code
+      source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+    - Handbook ch.1, 'If one sentence is responsive to multiple labels' (p.5) — label it under each
+    - Handbook worked examples — one introductory date under Agreement Date and Effective Date (p.8, pp.14-15); one renewal sentence under Renewal Term and Notice Period to Terminate Renewal (pp.14-15); one endorsement restriction under Exclusivity and Competitive Restriction Exception (p.41)
+    - CUAD Datasheet II-D — categories independent except within a Group (CC BY 4.0, quotable)
+    - pair-0004
+    - pair-0005
+  curator_note:
+    p18: >
+      identical to p23 yes? Just from opposite sources. Consolidate, but keep.
+      [decision: accept]
+    p23: 'Clear, obvious. [decision: accept]'
+  judgement_calls:
+    - >
+      `type` is recorded as constraint (p18's value); p23 carried procedure. The
+      rule constrains what may be emitted rather than describing a workflow step,
+      so constraint is the better fit, but this is a call and the original values
+      are preserved in lineage.
+    - >
+      The dual-provenance claim is about the STATEMENTS arriving independently,
+      not about the citations. cross_source records that p18's mined support is
+      structurally weak: the miner excludes same-contract overlapping spans by
+      construction, so the mining arm was blind to multi-label annotation and
+      pair-0004/0005 are the same boilerplate in two different contracts, each
+      labelled once. The principle is right; that half of its citation is not,
+      and the flaw is recorded rather than dropped.
+  checker_status:
+    status: needs_rebuild
+    what_is_wrong: >
+      Both sketches gate applicability on the decision's own gold span content —
+      "this principle applies where gold overlaps two categories" — so compliance
+      is a restatement of correctness and the record fails D-21. The critic
+      recommended dropping both on that ground; Tyler kept the statement. A
+      rebuilt checker needs an instance-side test for a passage that plausibly
+      answers two targets, which is the kind of semantic condition D-24 says a
+      regex should not be asked to carry — a candidate for LLM-assisted
+      applicability, frozen to file.
+  evidence_summary:
+    applicability:
+      p18: {n_applicable: 12, n_units: 480, rate: 0.025, in_scope_rate: 0.025}
+      p23: {n_applicable: 12, n_units: 480, rate: 0.025, in_scope_rate: 0.025}
+      note: byte-identical firing sets
+    separability:
+      p18: {verdict: fail, gold_dependency: gold_span_content_own, phi_in_scope: 0.1808}
+      p23: {verdict: fail, gold_dependency: gold_span_content_own, phi_in_scope: 0.1808}
+    cross_source:
+      p18: {status: corroborated, confidence: high, measure: '1 general Handbook rule plus at least 3 worked examples'}
+      p23: {status: corroborated, confidence: high, measure: '118 overlapping gold span pairs on 76 of 404 contracts (18.8%); 90 span texts appear verbatim under two or more categories'}
+    critic:
+      p18: {verdict: 'compliance restates correctness under a gold-overlap gate; near-duplicate of p23; phenomenon reduces to one category pair in the subset', confidence: moderate, recommendation: drop}
+      p23: {verdict: 'same defect as p18 and a near-duplicate of it', confidence: moderate, recommendation: drop}
+    denominator_caution: >
+      Applicable to roughly one contract in five, so a compliance rate computed
+      over all decisions will be dominated by non-applicable ones. This is one
+      of the deliberately rare principles the H4 citation-confusion analysis
+      needs.
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: w03
+  statement: >
+    Governing Law covers only a clause designating the substantive law that
+    governs the contract as a whole; venue, forum, jurisdiction-consent and
+    arbitration clauses are not responsive, and neither is a law that governs
+    only one section of the contract.
+  trigger_guidance: >
+    Consider whenever a dispute-resolution or miscellaneous section is being
+    read — these clauses frequently sit in the same paragraph as the true
+    governing-law sentence, or replace it entirely.
+  type: disambiguation
+  scope: [Governing Law]
+  provenance: [atticus_guidelines]
+  provenance_axis: both
+  provenance_axis_note: >
+    Documented and followed. The single most explicitly documented rule for any
+    pilot category (Handbook p.12, four worked counter-examples), and gold
+    respects the venue/arbitration exclusion on 366 of 370 spans (98.9%); the
+    four exceptions are arbitration-seat sentences, i.e. exactly the confusion
+    the study predicted, at a low rate. The whole-contract-versus-single-section
+    half is not separately testable without reading each span's scope, so the
+    measured rate covers the venue/arbitration half only.
+  lineage:
+    round2_ids: [p06]
+    original_ids: [g04]
+    merge: null
+  proposer:
+    - from_round2_id: p06
+      model: claude-opus-5
+      prompt_version: null
+      batch_id: null
+      invocation: subagent
+      harness: claude-code
+      source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+    - Handbook, Governing Law, IS-NOT list (p.12) — venue and arbitration clauses excluded, four worked counter-examples
+    - Handbook, Governing Law, IS-NOT list (p.12) — law governing a single section excluded; the label is whole-contract only
+    - Handbook, Governing Law, IS list (p.12) — a cross-reference to another agreement's governing-law provision IS responsive
+  curator_note:
+    p06: 'Good coverage, critic agrees. [decision: accept]'
+  judgement_calls: []
+  checker_status:
+    status: usable
+    what_is_wrong: >
+      Nothing disqualifying. Applicability is instance-only (does the contract
+      contain a venue/arbitration sentence), so it passes D-21 separability, and
+      it is the best-footprinted record in the set: 21 of 480 dev decisions,
+      52.5% within scope, phi 0.4005. Optional improvement, not a rebuild: the
+      wide_venue variant lifts phi to 0.4551 and the firing rate to 23 of 480,
+      a 0.4-point rate swing. Sentence segmentation is the only moving part and
+      is needed anyway.
+  evidence_summary:
+    applicability:
+      p06: {n_applicable: 21, n_units: 480, rate: 0.0437, in_scope_rate: 0.525}
+    separability:
+      p06: {verdict: pass, gold_dependency: instance_only, phi_in_scope: 0.4005}
+    stability: 'max abs rate swing 0.0042 (wide_venue variant: 23/480, phi 0.4551)'
+    footprint_status: discriminating
+    cross_source:
+      p06: {status: corroborated, confidence: high, measure: '366 of 370 gold Governing Law spans (98.9%); venue cue with no governing-law cue on 4 of 370 (1.1%)'}
+    critic:
+      p06: {verdict: 'could not break this; gold respects the exclusion at 98.9% and the four exceptions are explicable', confidence: could_not_break, recommendation: keep}
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: w04
+  statement: >
+    Exactly one Agreement Date is extracted per contract and the span is the
+    date text alone, excluding the surrounding execution wording and excluding
+    any date appearing in a header, a footer, or a recital.
+  trigger_guidance: >
+    Consider once the introductory paragraph has been read; the competing
+    candidates are the recital dates, the running-header date, and the two
+    signature-page dates.
+  type: constraint
+  scope: [Agreement Date]
+  provenance: [atticus_guidelines]
+  provenance_axis: both
+  provenance_axis_note: >
+    Documented (Handbook p.7 search order, p.8 exclusions) and followed in gold
+    on all three limbs: exactly one span on 368 of 374 present contracts
+    (98.4%), 373 of 380 spans free of execution wording (98.2%), 0 of 374 inside
+    a recitals block (100%). The 7 execution-wording spans are whole-sentence
+    annotations, a minority style rather than a competing rule.
+  lineage:
+    round2_ids: [p07]
+    original_ids: [g07]
+    merge: null
+  proposer:
+    - from_round2_id: p07
+      model: claude-opus-5
+      prompt_version: null
+      batch_id: null
+      invocation: subagent
+      harness: claude-code
+      source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+    - Handbook, Agreement Date, IS list (p.7) — search order introductory paragraph, cover page, then the later of the signature-page dates, with an explicit instruction not to label both signature dates
+    - Handbook, Agreement Date, IS-NOT list (p.8) — execution wording excluded from the span, as are header, footer, recital and preliminary-statement dates
+  curator_note:
+    p07: 'Excellent. [decision: accept]'
+  judgement_calls:
+    - >
+      Kept as written per the consolidation brief. Note that the statement's
+      "exactly one" limb is the same claim the g11 calibration control
+      over-extended to Governing Law and Expiration Date, where gold uses
+      several spans; scoped to Agreement Date it survives at 98.4%, and the
+      control's failure mode was the scope widening, not this limb.
+  checker_status:
+    status: needs_rebuild
+    what_is_wrong: >
+      Statement kept as-is; the checker is not usable. Applicability is gated on
+      gold marking Agreement Date present, giving phi = 1.00 — the arithmetic
+      signature of a gold-presence gate rather than evidence of anything — so it
+      fails D-21. The three conjunctive compliance tests are individually sound
+      and should be reported separately rather than collapsed to one boolean;
+      the rebuild is on the applicability side, which can be instance-only (does
+      the contract carry a date-shaped construction in the head or signature
+      block).
+  evidence_summary:
+    applicability:
+      p07: {n_applicable: 38, n_units: 480, rate: 0.0792, in_scope_rate: 0.95}
+    separability:
+      p07: {verdict: fail, gold_dependency: gold_presence, phi_in_scope: 1.0}
+    stability: 'max abs rate swing 0.0 (no variants)'
+    footprint_status: tautological-applicability
+    cross_source:
+      p07: {status: corroborated, confidence: high, measure: '(1) 368/374 exactly one span (98.4%); (2) 373/380 free of execution wording (98.2%); (3) 0/374 inside a recitals block'}
+    critic:
+      p07: {verdict: 'sound on span shape, mildly wrong on the exactly-one test, heavily duplicated by the g11 control candidate', confidence: weak, recommendation: keep_with_checker_rewrite}
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: w05
+  statement: >
+    A partially redacted or blank agreement date is still an Agreement Date
+    extraction, recorded with the unknown components bracketed rather than ruled
+    absent; absence is claimed only when no agreement date appears in the
+    introductory paragraph, on the cover page, or on the signature page.
+  trigger_guidance: >
+    Consider when the date position exists but the value is missing — blanks,
+    underscores, asterisks, an empty day slot, or a date phrase interrupted by a
+    redaction marker.
+  type: absence
+  scope: [Agreement Date]
+  provenance: [atticus_guidelines]
+  provenance_axis: both
+  provenance_axis_note: >
+    Documented (Handbook p.7 bracketed-answer format; Datasheet II-F worked
+    example) and confirmed in gold on 17 of 17 applicable contracts (100%), with
+    26 gold Agreement Date spans containing a redaction or blank marker. This
+    record resolves the LOUD FLAG in its own checker sketch and the pilot-scoping
+    error corrected in inv 002 / D-19: the study plan assumed CUAD marks
+    blank-date contracts gold-absent and that following the Handbook would cost
+    answer accuracy. It does not — compliance and correctness point the same way
+    here and no scoring conflict needs deciding.
+  lineage:
+    round2_ids: [p04]
+    original_ids: [g08]
+    merge: null
+  proposer:
+    - from_round2_id: p04
+      model: claude-opus-5
+      prompt_version: null
+      batch_id: null
+      invocation: subagent
+      harness: claude-code
+      source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+    - Handbook, Agreement Date, IS list (p.7) — a redacted date takes the bracketed answer format rather than no answer
+    - CUAD Datasheet II-F — redactions appear as asterisks, underscores or blanks and the answers reflect them (CC BY 4.0, quotable)
+  curator_note:
+    p04: 'seems correct. [decision: accept]'
+  judgement_calls:
+    - >
+      Kept as written per the brief. The critic's rewrite_statement
+      recommendation is NOT applied: it targets the second limb and the
+      applicability regex over-reaching onto the bare-slot family, which gold
+      treats as absence. That objection is recorded under checker_status instead
+      of silently narrowing the statement.
+  checker_status:
+    status: needs_rebuild
+    what_is_wrong: >
+      Separability passes (instance-only), but the implemented checker is
+      already a tightened reading of the sketch — the "bare comma where a date
+      should follow an execution verb" clause was dropped because it fires on
+      ordinary prose — and the critic measured the remaining applicability regex
+      over-reaching onto the bare-slot family that gold marks absent. Rare and
+      weakly discriminating as built: 5 of 480 decisions, 12.5% in scope, phi
+      0.0867.
+  evidence_summary:
+    applicability:
+      p04: {n_applicable: 5, n_units: 480, rate: 0.0104, in_scope_rate: 0.125}
+    separability:
+      p04: {verdict: pass, gold_dependency: instance_only, phi_in_scope: 0.0867}
+    stability: 'max abs rate swing 0.0 (head_only and wide_window variants identical)'
+    footprint_status: discriminating-but-rare
+    faithfulness: 'tightened — one sketch clause dropped as unimplementable'
+    cross_source:
+      p04: {status: corroborated, confidence: high, measure: '17 of 17 applicable contracts carry a gold Agreement Date (100%); 26 gold spans contain a redaction or blank marker'}
+    critic:
+      p04: {verdict: 'first half confirmed by gold (32 present vs 2 absent on date-shaped blanks); second half and the applicability regex over-reach onto the bare-slot family', confidence: moderate, recommendation: rewrite_statement}
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: w06
+  statement: >
+    Claim absence when the document does not state the specific fact the target
+    asks for, even where it states a neighbouring fact that plausibly stands in
+    for it.
+  trigger_guidance: >
+    Consider whenever the document supplies something adjacent to the requested
+    value — an effective date where an execution date is asked for, a venue
+    where a governing law is asked for — and the temptation is to answer with
+    the near miss rather than claim absence.
+  type: absence
+  scope: [Agreement Date]
+  provenance: [data_mined]
+  provenance_axis: sources_contradict
+  provenance_axis_note: >
+    Report as unresolved rather than picking a side. The Handbook directs the
+    OPPOSITE for exactly this case: where a date in the introductory paragraph
+    is defined as the Effective Date it is labelled under BOTH Agreement Date
+    and Effective Date (p.8, worked at pp.14-15), and the Term chapter treats
+    the two as interchangeable when one is missing. Gold follows the documented
+    rule on 151 of 160 applicable contracts (94.4%). The 9 residual abstentions
+    are real — they are the documentation-versus-practice divergence worth
+    reporting — but they are the minority behaviour, not the convention. Tyler
+    kept the principle on soundness while noting its rarity; the axis records
+    that the sources disagree and that gold sides with the guidelines.
+  lineage:
+    round2_ids: [p02]
+    original_ids: [d06]
+    merge: null
+  proposer:
+    - from_round2_id: p02
+      model: claude-opus-5
+      prompt_version: proposer_v1
+      batch_id: cm-005
+      invocation: subagent
+      harness: claude-code
+      source_document: null
+  evidence:
+    - pair-0026
+    - pair-0027
+  curator_note:
+    p02: "Seems right, but doesn't appear very often. [decision: accept]"
+  judgement_calls:
+    - >
+      Retained per the brief as "sound but rare". Both the critic (strong, drop)
+      and cross_source (contradicted, high confidence) argue against it, and its
+      own mined support is thin — pair-0027's absent side contains no date at
+      all, so it cannot evidence a near-miss rule. This is the record in the
+      working set with the weakest evidential standing and it should be first in
+      line for D-22 empirical selection.
+  checker_status:
+    status: needs_rebuild
+    what_is_wrong: >
+      Applicability is gated on gold is_impossible — the checker asks the answer
+      — so the off-diagonal is structurally empty and it fails D-21 outright
+      (phi -0.698, the signature of an absence gate). It also fires on 1 of 480
+      dev decisions, which is too rare to measure anything on dev even if the
+      gate were removed.
+  evidence_summary:
+    applicability:
+      p02: {n_applicable: 1, n_units: 480, rate: 0.0021, in_scope_rate: 0.025}
+    separability:
+      p02: {verdict: fail, gold_dependency: gold_absence, phi_in_scope: -0.698}
+    stability: 'max abs rate swing 0.0 (head4000 variant identical)'
+    footprint_status: tautological-applicability
+    cross_source:
+      p02: {status: contradicted, confidence: high, measure: 'documented rule followed on 151 of 160 applicable contracts (94.4%); 9 residual annotator abstentions'}
+    critic:
+      p02: {verdict: 'disqualified on separability; applicability gated on gold is_impossible', confidence: strong, recommendation: drop}
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: w07
+  statement: >
+    A guaranteed floor qualifies for the minimum-commitment target whichever
+    party it binds, and whatever it is a floor on — supply, payment or access —
+    not only a buyer's purchase obligation.
+  trigger_guidance: >
+    Consider whenever a clause states a guaranteed minimum quantity or amount
+    but the obligated party is the supplier rather than the buyer, or the thing
+    guaranteed is not a purchase; the target's one-line definition reads
+    narrower than the convention.
+  type: constraint
+  scope: [Minimum Commitment]
+  provenance: [data_mined]
+  provenance_axis: sources_contradict
+  provenance_axis_note: >
+    The highest-value divergence in the data-mined half, and it runs the
+    opposite way to w06's: here the documentation is NARROWER than practice. The
+    only guideline statement on the category is buyer-centric ("a minimum order
+    size or minimum amount or units per-time period that one party must buy from
+    the counterparty", CC BY 4.0) and there is no Handbook chapter to soften it,
+    so supplier-side supply floors, guaranteed-payment floors and capacity-access
+    floors sit outside the printed wording. Gold sides with the principle: only
+    77 of 334 Minimum Commitment gold spans (23.1%) contain a purchase verb at
+    all, and 30 of 334 (9.0%) state a floor on a supply/provide/allocate/access
+    obligation with no purchase verb anywhere. The wider round-1 pass put it more
+    starkly — 98 of 133 MC-positive contracts (73.7%) contain no
+    purchase-obligation span at all. A model applying the printed definition
+    literally under-extracts. Carry this into the two-arm design as a named case.
+  lineage:
+    round2_ids: [p14]
+    original_ids: [d04]
+    merge: null
+  proposer:
+    - from_round2_id: p14
+      model: claude-opus-5
+      prompt_version: proposer_v1
+      batch_id: cm-002
+      invocation: subagent
+      harness: claude-code
+      source_document: null
+  evidence:
+    - pair-0008
+    - pair-0011
+    - pair-0012
+  curator_note:
+    p14: 'Empirically grounded, but needs a better checker. [decision: accept]'
+  judgement_calls: []
+  checker_status:
+    status: needs_rebuild
+    what_is_wrong: >
+      Two defects, both measured. (1) The lexicon is too narrow: the regex
+      approximates "the obligated party is not the purchaser" with a
+      supply/deliver/provide/share/allocate alternation and misses the
+      second-largest class, performance/effort/revenue floors. Widening it is
+      measurably better — the widened_floor_and_verbs variant moves the record
+      from 14 to 19 of 480 dev decisions, 35% to 47.5% in scope, and phi from
+      0.2059 to 0.4698. (2) The compliance rule demands an Extraction on 41% of
+      applicable contracts that gold marks absent, so as built it would score
+      correct abstention as a violation. Separability itself passes
+      (instance-only), which is why this is a rebuild and not a drop.
+  evidence_summary:
+    applicability:
+      p14: {n_applicable: 14, n_units: 480, rate: 0.0292, in_scope_rate: 0.35}
+      widened_floor_and_verbs: {n_applicable: 19, rate: 0.0396, in_scope_rate: 0.475, phi_in_scope: 0.4698}
+      widened_verbs: {n_applicable: 18, rate: 0.0375, in_scope_rate: 0.45, phi_in_scope: 0.3948}
+    separability:
+      p14: {verdict: pass, gold_dependency: instance_only, phi_in_scope: 0.2059}
+    stability: 'max abs rate swing 0.0104'
+    footprint_status: discriminating
+    cross_source:
+      p14: {status: contradicted, confidence: high, measure: '1 of 1 guideline statements contradicts; corpus supports at 77/334 purchase verbs (23.1%) and 30/334 supply-side floors (9.0%)'}
+    critic:
+      p14: {verdict: 'the best-evidenced claim in the entire set and I could not touch it; the checker is the problem', confidence: strong, recommendation: keep_with_checker_rewrite}
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: w08
+  statement: >
+    When two targets differ only in the direction of a threshold, assign a
+    clause by which side of the threshold it binds on — a lower bound the
+    obligated party must meet, or an upper bound above which supply is capped,
+    conditioned or repriced.
+  trigger_guidance: >
+    Consider on any clause naming a quantity threshold, especially where the
+    same quantity, forecast or capacity is bounded in two places in one
+    contract.
+  type: disambiguation
+  scope: [Minimum Commitment, Volume Restriction]
+  provenance: [data_mined]
+  provenance_axis: both
+  provenance_axis_note: >
+    Neither category has a Handbook chapter — silence there is structural and is
+    not evidence against — but the two printed CUAD category descriptions divide
+    on exactly this axis: Minimum Commitment is a minimum order size or amount
+    per time period one party must buy; Volume Restriction is a fee increase or
+    consent requirement if use exceeds a threshold (CC BY 4.0). Lower bound
+    versus exceeded ceiling, stated at the definition level, and the direction
+    holds in gold at 99%. Caveat carried from cross_source: the guidelines
+    separate the pair on MORE than direction — Volume Restriction additionally
+    requires a consequence and Minimum Commitment additionally names a buyer
+    (which w07 shows practice ignores) — so a checker keyed on direction alone
+    will over-assign Volume Restriction to bare ceilings.
+  lineage:
+    round2_ids: [p13]
+    original_ids: [d05]
+    merge: null
+  proposer:
+    - from_round2_id: p13
+      model: claude-opus-5
+      prompt_version: proposer_v1
+      batch_id: cm-003
+      invocation: subagent
+      harness: claude-code
+      source_document: null
+  evidence:
+    - pair-0014
+    - pair-0015
+    - pair-0016
+    - pair-0018
+    - pair-0019
+    - pair-0020
+    - pair-0022
+    - pair-0023
+  curator_note:
+    p13: 'Seems good, but another issue with the checker. [decision: accept]'
+  judgement_calls: []
+  checker_status:
+    status: needs_rebuild
+    what_is_wrong: >
+      The trigger is too loose to discriminate: it fires on 60 of 480 dev
+      decisions and 75% of in-scope decisions, which footprint classes as
+      near-degenerate frequency — a principle applying to three quarters of its
+      scope cannot localise an effect. The single-direction variants are barely
+      narrower (lower_only 65% in scope, phi 0.3669; upper_only 60%, phi
+      0.2807). Separately, the sketch's proposed strengthening — when both cue
+      classes fire in one contract, require both decisions to be Extractions —
+      is refuted by gold at 85% and must not be implemented. Separability itself
+      passes (instance-only). Tighten the trigger; do not widen it.
+  evidence_summary:
+    applicability:
+      p13: {n_applicable: 60, n_units: 480, rate: 0.125, in_scope_rate: 0.75}
+    separability:
+      p13: {verdict: pass, gold_dependency: instance_only, phi_in_scope: 0.2887}
+    stability: 'max abs rate swing 0.025 (lower_only, upper_only variants)'
+    footprint_status: near-degenerate-frequency
+    cross_source:
+      p13: {status: corroborated, confidence: high, measure: '2 of 2 guideline statements on the pair support it; 0 of 95 Handbook pages cover either category'}
+    critic:
+      p13: {verdict: 'statement nearly circular but the direction holds in gold at 99%; the real damage is in the proposed strengthening, which gold refutes at 85%', confidence: moderate, recommendation: keep_with_checker_rewrite}
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: w09
+  statement: >
+    A payment answers the revenue/profit-sharing target only when the amount
+    varies with the counterparty's outcome — its revenue, profit, sales, margin
+    or units sold — however the contract labels the payment; fixed sums,
+    milestone payments, fixed-amount tiered schedules and cost or reimbursement
+    payments do not qualify, and neither does machinery that merely administers
+    a share — reporting obligations, report timing, objection and audit process,
+    dispute resolution — without stating an entitlement on its own terms. A
+    guaranteed floor attached to such a payment ADDS the minimum-commitment
+    label; it does not remove the sharing one.
+  trigger_guidance: >
+    Consider whenever a payment, royalty, commission or fee clause is a
+    candidate. Ask three things in order: does the amount move with the
+    counterparty's outcome (the word "royalty" is not evidence either way, the
+    arithmetic is); does this sentence state the entitlement or only administer
+    one someone else granted; and if a guaranteed minimum sits alongside the
+    percentage, record both labels rather than choosing.
+  type: disambiguation
+  scope: [Revenue/Profit Sharing, Minimum Commitment]
+  provenance: [atticus_guidelines, data_mined]
+  provenance_axis: both
+  provenance_axis_note: >
+    The variability limb is documented (Handbook pp.87-89 IS/IS-NOT lists) and
+    confirmed on the exclusion side in gold at 325 of 329 spans (98.8%); the
+    inclusion side is only partly measurable because 45% of gold spans carry no
+    lexical variability marker — that is a property of the lexical proxy, not a
+    gold violation rate. The administration limb is documented (Handbook p.89
+    IS-NOT list, standalone-basis rule; Datasheet III-B) and holds on 327 of 329
+    gold spans (99.4%). The floor limb is the one place the sources diverged and
+    the divergence is resolved in the merge: p15 asserted EXCLUSIVE routing (a
+    floor moves the clause out of sharing), which both the Handbook and gold
+    refute — both cited royalty-with-floor sentences are dual-labelled in gold —
+    so the merged statement takes the additive form the guidelines require,
+    which is w02 applied to this pair.
+  lineage:
+    round2_ids: [p11, p15, p01]
+    original_ids: [g05, d03, g06]
+    merge: >
+      All three records circle the same distinction: a payment answers the
+      sharing target only when it varies with the counterparty's outcome. p11
+      supplies the arithmetic test, p01 the standalone-entitlement carve-out
+      (right topic, wrong function), p15 the floor interaction. p15's exclusive
+      routing is replaced by the additive rule its own cross-source entry names
+      as the salvage.
+  proposer:
+    - from_round2_id: p11
+      model: claude-opus-5
+      prompt_version: null
+      batch_id: null
+      invocation: subagent
+      harness: claude-code
+      source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+    - from_round2_id: p15
+      model: claude-opus-5
+      prompt_version: proposer_v1
+      batch_id: cm-002
+      invocation: subagent
+      harness: claude-code
+      source_document: null
+    - from_round2_id: p01
+      model: claude-opus-5
+      prompt_version: null
+      batch_id: null
+      invocation: subagent
+      harness: claude-code
+      source_document: CUAD Labeling Handbook (Atticus Project, 2021) + CUAD v1 Datasheet
+  evidence:
+    - Handbook, Revenue/Profit Sharing, IS list (pp.87-88) — amount must be a percentage of the other party's revenue/profit rather than a fixed sum; per-unit fees responsive; equity/warrant consideration responsive by a stated CUAD-specific extension
+    - Handbook, Revenue/Profit Sharing, IS-NOT list (pp.88-89) — fixed-amount milestone and tier schedules, bare references to royalty or commission, cost/reimbursement payments, spend caps, and a percentage applied to a fixed amount all excluded
+    - Handbook, Revenue/Profit Sharing, IS-NOT list (p.89) — standalone-basis rule; administration, reporting, audit/objection and dispute resolution non-responsive
+    - CUAD Datasheet III-B — only clauses responsive on a standalone basis are labelled (CC BY 4.0, quotable)
+    - pair-0009
+    - pair-0010
+    - pair-0012
+    - pair-0013
+  curator_note:
+    p11: >
+      Agree with critic -- should keep, but rewrite checker or utilize LLM for
+      checking. [decision: accept]
+    p15: >
+      Critic seems to think this is not the right statement and I'm inclined to
+      agree, but there's some value here. [decision: defer]
+    p01: >
+      My sense is this is correct-ish? I have no idea how I would decide
+      otherwise without expertise. [decision: accept]
+  judgement_calls:
+    - >
+      p15's direction is INVERTED by the merge. As written it routed a
+      floor-plus-share clause to Minimum Commitment INSTEAD of Revenue/Profit
+      Sharing; the merged statement makes the floor additive. This is the salvage
+      cross_source named ("a floor adds the minimum-commitment label; it does not
+      remove the sharing label") and is what gold does — JOINTCORP's "seven
+      percent (7%) of the gross revenues ... with a minimum monthly amount of
+      $700.00" and VirtuosoSurgical's "minimum annual royalties" are each
+      labelled under both categories. It is still a rewrite of a deferred record
+      and Tyler should confirm it.
+    - >
+      Scope now spans two categories (it was Revenue/Profit Sharing for p11 and
+      p01, both categories for p15). The administration limb applies only to
+      Revenue/Profit Sharing; the floor limb is inherently cross-category.
+    - >
+      p01's distinct diagnostic value is preserved in prose but not in the id
+      space: the critic's H4 argument was that p01 catches
+      right-topic-wrong-function while p11 catches wrong-arithmetic, and a
+      confusion matrix can only tell them apart if they are separate ids.
+      Merging them forfeits that separation. Flagged as a real cost of the merge.
+  checker_status:
+    status: needs_rebuild
+    what_is_wrong: >
+      p11's checker blew the abort threshold its own sketch pre-registered. The
+      sketch said in advance that if the false-pass rate exceeded ~15% the rule
+      should be narrowed or moved to hand labelling; the measured false-FAIL rate
+      is 165 of 329 gold Revenue/Profit Sharing spans (50.2%) in the round-2
+      pass and 176 of 329 (53.5%) in the round-1 measurement recorded under D-21
+      — three to three-and-a-half times over. A gold-perfect model would score
+      ~50% compliance, so it cannot ship as a compliance measure. The
+      pre-registration itself worked and should be reported as a methods result.
+      p01's checker is p11's with an administration prefilter and shares the
+      failure mode — all 4 of its flagged spans sit inside p11's 165. p15's
+      HAS_FLOOR test counts any dollar amount as a floor and misroutes real
+      sharing spans, and its separability is only partial (it reads other
+      categories' gold span content). Applicability separability passes for p11
+      and p01 (instance-only), so the rebuild is on the compliance side: per D-24
+      this is a semantic condition a regex should not be asked to carry.
+  evidence_summary:
+    applicability:
+      p11: {n_applicable: 23, n_units: 480, rate: 0.0479, in_scope_rate: 0.575}
+      p15: {n_applicable: 12, n_units: 480, rate: 0.025, in_scope_rate: 0.15}
+      p01: {n_applicable: 5, n_units: 480, rate: 0.0104, in_scope_rate: 0.125}
+    separability:
+      p11: {verdict: pass, gold_dependency: instance_only, phi_in_scope: 0.2726}
+      p15: {verdict: partial, gold_dependency: gold_span_content_other, phi_in_scope: 0.472}
+      p01: {verdict: pass, gold_dependency: instance_only, phi_in_scope: 0.3833}
+    footprint_status: {p11: discriminating, p15: discriminating, p01: discriminating-but-rare}
+    cross_source:
+      p11: {status: corroborated, confidence: medium, measure: 'exclusion side holds on 325 of 329 gold spans (98.8%); inclusion side lexically visible on only 182 of 329 (55.3%)'}
+      p15: {status: contradicted, confidence: high, measure: 'both cited royalty-with-floor sentences are dual-labelled in gold (2 of 2)'}
+      p01: {status: corroborated, confidence: high, measure: '327 of 329 gold spans (99.4%); administration-only spans 2 of 329 (0.6%)'}
+    critic:
+      p11: {verdict: 'the statement is probably right; the checker is not', confidence: strong, recommendation: keep_with_checker_rewrite}
+      p15: {verdict: 'the exclusive routing it prescribes is contradicted by gold, which dual-labels floor-plus-share clauses', confidence: moderate, recommendation: rewrite_statement}
+      p01: {verdict: 'close to the gold convention and I could not overturn it; objections are small-n counterexamples and near-total redundancy with p11', confidence: weak, recommendation: keep_with_checker_rewrite}
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+dropped:
+  note: >
+    Recorded here rather than deleted, because the rejection set is itself a
+    finding about what the derivation arms get wrong (inv 002, review protocol).
+    These three are real candidates, not calibration controls; the 7 controls are
+    excluded from this file entirely and are scored in reviews/working-set.md.
+  records:
+
+  - id: d-p08
+    round2_ids: [p08]
+    original_ids: [g02]
+    statement_as_proposed: >
+      When the responsive material is not contiguous in the contract, the span
+      concatenates only the responsive fragments, in document order, separated by
+      the marker "<omitted>", and drops the intervening non-responsive text.
+    provenance: [atticus_guidelines]
+    provenance_axis: sources_contradict
+    reason: >
+      The marker does not exist in CUAD v1. The convention is real in the
+      Handbook (ch.1 pp.5-6, worked subsection and definition examples) but it
+      describes the internal annotation tool; the released SQuAD-format data
+      represents every annotation as a contiguous character range, so a
+      discontiguous annotation arrives as MULTIPLE SPANS with the intervening
+      text simply uncovered. A checker keyed on the marker can never fire, and a
+      model instructed to emit it fails verbatim-fidelity matching on every such
+      span — and putting the marker in the prompt would change every arm's output
+      format, contaminating the comparison the study exists to make.
+    evidence:
+      applicability: {n_applicable: 0, n_units: 480, rate: 0.0, footprint_status: unimplementable}
+      corpus: '0 of 4,052 gold spans in the 12-category subset contain "<omitted>"; 0 occurrences in the 404 contract texts; 0 in the raw CUADv1.json (D-21). Nearest token in gold is a bare ellipsis "..." (40 occurrences), which the checker does not look for.'
+      separability: {verdict: fail, gold_dependency: gold_span_content_own}
+      cross_source: {status: contradicted, confidence: high}
+      critic: {verdict: 'fatal degeneracy', confidence: strong, recommendation: drop}
+    curator_note:
+      p08: >
+        doesn't apply ever. Confusing since it's from the guidelines so should be
+        followed, but since the marker never occurs it's a problem. We should
+        consider removing the requirement for a checker so the LLM can consider
+        this instead [decision: defer]
+    salvage_available: >
+      The underlying behaviour — label the lead-in plus the operative subsection,
+      drop the intervening subsections — is real. It would have to be restated as
+      a multi-span principle over CUAD's actual representation, with no marker.
+      That is a different principle and is NOT resurrected here. Note the knock-on
+      to w01: the lead-in half of that record is unverifiable in this corpus for
+      the same reason. Note also that this record was ACCEPTED in round 1 and is
+      provably inert — a named calibration failure of the round-1 gate.
+
+  - id: d-p16
+    round2_ids: [p16]
+    original_ids: [d08]
+    statement_as_proposed: >
+      An obligation carrying no quantified threshold does not satisfy a target
+      that asks for one, however emphatic the commitment language.
+    provenance: [data_mined]
+    provenance_axis: data_only
+    reason: >
+      Gold-gated, so unmeasurable, AND contradicted by its own cited pairs.
+      Applicability requires gold is_impossible to be true for Minimum
+      Commitment, so every applicable decision is gold-absent by construction and
+      compliance restates correctness (D-21). Worse, the 63 gold-PRESENT spans
+      that satisfy the text-side condition are invisible to the checker and they
+      are the cases that refute the statement: all three cited pairs have a
+      gold-present left span, including pair-0037's own "In particular, Licensee
+      commits to:" — an undertaking cue with no quantity, labelled Minimum
+      Commitment in gold — and pair-0038's 15-character "You agree that:". The
+      pairs are cross-contract lexical coincidences at 0.20-0.26 similarity and
+      the proposer read the convention off the absent side while the present side
+      says the opposite.
+    evidence:
+      applicability: {n_applicable: 22, n_units: 480, rate: 0.0458, in_scope_rate: 0.55, footprint_status: tautological-applicability}
+      separability: {verdict: fail, gold_dependency: gold_absence, phi_in_scope: -0.7237}
+      corpus: '63 of 334 Minimum Commitment gold spans (18.9%) contain no quantity token whatsoever; 4 of those match the checker undertaking cue exactly.'
+      cross_source: {status: corroborated, confidence: low, note: 'weakest corroboration in the set — an inference by entailment from a one-line definition, not a rule; 0 of 95 Handbook pages cover the category'}
+      critic: {verdict: 'disqualified twice over', confidence: strong, recommendation: drop}
+    curator_note:
+      p16: >
+        Critic says reject strongly, but I'm confused. The data indicates it
+        triggers and can discriminate gold from non-gold, the guidelines
+        independently agree with it... but the critic says the statement is
+        contradicted by its own cited evidence? Not sure what to do with this
+        one. [decision: unclear]
+    salvage_available: >
+      None taken. The idea behind it — that a strong-sounding but unquantified
+      undertaking is not automatically a minimum commitment — is a plausible model
+      trap, but gold does not support it and the checker cannot measure it.
+
+  - id: d-p19
+    round2_ids: [p19]
+    original_ids: [d07]
+    statement_as_proposed: >
+      Document furniture interrupting a passage is carried along inside the
+      extracted span, but furniture standing on its own is never extracted.
+    provenance: [data_mined]
+    provenance_axis: data_only
+    reason: >
+      Refuted as written. The main clause names as a violation what gold does
+      most of the time: across all 41 categories, 25 gold spans swallow furniture
+      versus 204 same-category adjacent pairs separated by nothing but furniture,
+      127 of them splitting mid-sentence — 8:1 against the principle (5:1 by the
+      round-1 count recorded in decisions.md, 2:1 restricted to the 12-category
+      subset at 8 swallow vs 17 split). Either way the checker penalises the
+      majority gold shape. It also rests on a single mined pair (pair-0033) whose
+      right-hand side is gold-ABSENT, so one instance was generalised into a
+      convention that runs against the corpus, and the complementary half is
+      unbreakable but inert (0 of 11,180 gold spans consist only of furniture).
+      This is the D-15 gold-defect surfacing as a proposed convention. The two
+      derivation arms disagreed here and the GUIDELINES arm was right — a result
+      about the derivation method, not a defect to patch.
+    evidence:
+      applicability: {n_applicable: 0, n_units: 480, rate: 0.0, footprint_status: never-fires-in-dev, wide_furniture_variant: {n_applicable: 1, phi_in_scope: 0.0516}}
+      separability: {verdict: fail, gold_dependency: gold_span_content_own}
+      cross_source: {status: silent, confidence: high, silence_reason: 'structural — the Handbook describes annotating contracts, not the EDGAR text dumps CUAD was built from'}
+      critic: {verdict: 'the second half is confirmed and the first half is refuted', confidence: strong, recommendation: rewrite_statement}
+    curator_note:
+      p19: >
+        Seems like we should reject this based on empirical evidence, but maybe
+        should revise wrt the adversarial critique. [decision: unclear]
+    salvage_available: >
+      A disjunctive rewrite EXISTS and is defensible if wanted, but is not
+      adopted here and no such record is created: "furniture is never a span on
+      its own, and a passage interrupted by furniture is annotated either as one
+      span swallowing it or as two spans split at it — a scorer must treat
+      neither shape as a violation." That is weaker than the original and is a
+      scoring rule as much as a principle. Tyler's call whether it enters as a
+      new candidate.
+
+excluded_calibration_controls:
+  note: >
+    Listed for traceability only. These are fabricated instrument records from
+    principles/pilot/controls.yaml, seeded into the round-2 queue to measure the
+    curation gate. None is a candidate principle and none may be resurrected.
+    Scoring is in reviews/working-set.md.
+  records:
+    - {round2_id: p03, original_id: d09, failure_mode: defect-derived, difficulty: medium, decision: reject, outcome: catch}
+    - {round2_id: p05, original_id: g12, failure_mode: degenerate, difficulty: easy, decision: accept, outcome: miss}
+    - {round2_id: p09, original_id: d10, failure_mode: circular, difficulty: easy, decision: unclear, outcome: abstention}
+    - {round2_id: p12, original_id: g11, failure_mode: over-broad scope, difficulty: hard, decision: accept, outcome: miss}
+    - {round2_id: p17, original_id: d11, failure_mode: inverted convention, difficulty: medium, decision: reject, outcome: catch}
+    - {round2_id: p20, original_id: g10, failure_mode: plausible-but-absent, difficulty: hard, decision: defer, outcome: abstention}
+    - {round2_id: p21, original_id: g09, failure_mode: inverted convention, difficulty: medium, decision: unclear, outcome: abstention}

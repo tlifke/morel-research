@@ -11,7 +11,7 @@ axes:
   human_capability: high
 tags: [cuad, data, splits]
 created: 2026-08-15
-updated: 2026-08-15
+updated: 2026-08-16
 ---
 
 # Investigation 1 — Dataset and splits (WS1)
@@ -165,13 +165,119 @@ Implementation detail:
 - Guard cost is ~5s on the full corpus. Post-fix headroom: the worst remaining
   cross-split pair is containment 0.737 against a 0.80 threshold.
 
+**INV1-D8 — `selection` (60) and `confirmation` (40) carved from `ft_train`,
+stratified on a per-category positive floor rather than on length.** Purpose,
+authorisation and the reason the stratification differs from dev's are in
+`plans/splits.md`; opened by D-22/D-23. This decision records construction,
+the floor and what the floor costs.
+
+*Sizes and seeds.* `selection` n=60 seed **20260816**, `confirmation` n=40 seed
+**20260817**, drawn in that order. Dev's seed 20260815 is untouched, and
+`dev.txt`, `holdout.txt` and `excluded.txt` are byte-identical to the pre-carve
+build — the carve is a partition of `ft_train` and nothing else.
+
+*The floor, and why it is 5 and 4.* Primary key is a guaranteed minimum of
+**5 positive contracts per subset category in `selection`** and **4 in
+`confirmation`**; length bucket is secondary, matched to the 364-contract pool
+(not to holdout — that is dev's job under D-13). Both are recorded in
+`scripts/config/dataset.yaml` as data.
+
+The selection floor is set by what the selection test has to be able to do. The
+per-principle A/B is a paired comparison over the contracts where the
+principle's category is positive, so its n *is* that positive count. Under a
+paired sign test — the assumption-free floor for this design — n=4 cannot reach
+p<0.05 even when the principle helps on all four contracts (one-sided p=0.0625).
+**A floor of 4 would make principles scoped to Source Code Escrow untestable by
+construction, not merely underpowered.** n=5 is the smallest floor where a
+perfect result clears the line (p=0.031). That is the entire justification for 5:
+it is the minimum at which the instrument can fire at all.
+
+The confirmation floor is 4 rather than 5 for a supply reason, stated plainly:
+Source Code Escrow has only 11 positive contracts in the whole pool. 5+5 would
+leave one for Phase 2; 5+4 leaves two. Confirmation is a single directional pass
+per surviving principle rather than a fresh significance hunt (`plans/splits.md`),
+so it absorbs the weaker floor better than selection would.
+
+*What the floor implies for the smallest categories — the real limit.* Achieved
+positives are in the Results table. Two categories sit at or near the floor and
+their principles are qualitatively weaker tests than everything else in the set:
+
+| category | selection n | detectable paired effect (t, one-sided α=0.05) | sign test |
+|---|---|---|---|
+| Source Code Escrow | 5 | d ≈ 0.95 | fires only at 5/5 |
+| Most Favored Nation | 8 | d ≈ 0.67 | fires at 7/8 |
+| Volume Restriction | 10 | d ≈ 0.58 | — |
+| Agreement Date | 52 | d ≈ 0.23 | — |
+
+An SCE-scoped principle must produce an effect roughly **four times larger** than
+an Agreement-Date-scoped one to be selected at the same threshold, and must help
+on *every* contract to clear a distribution-free test. Repeated seeds per
+contract do not rescue this: they shrink measurement noise, not the
+between-contract variance that sets n. **Inv 006 must therefore not report an
+SCE or MFN principle as "confirmed" on the same footing as the others.** The
+honest options, in preference order: (a) report rare-category principles as
+descriptive with the n stated inline and no significance claim; (b) pool
+rare-category principles into one family-level test; (c) drop SCE-scoped
+principles from the protocol entirely — which is close to what INV1-D7's flag
+about SCE being near-degenerate was already pointing at. Not silently accepted;
+routed to inv 006 as a design constraint.
+
+*Is 264 enough for Phase 2?* Yes, and contract count was never the binding
+constraint. `plans/phase2-outline.md` describes SFT by rejection sampling over
+generations and RL with a programmatic composite reward. The unit in both is the
+`(contract, category)` decision, so 264 contracts is 3,168 decision-level prompt
+units before any k>1 sampling — and rejection sampling multiplies generations per
+prompt while RL reuses prompts across epochs, so unique prompts are not scarce for
+a LoRA-scale run. What 264 does cost is rare-category *coverage*: Source Code
+Escrow falls to 2 positive contracts and Most Favored Nation to 8. SCE was already
+at 11/364 (a 3% base rate) and was already flagged as near-degenerate, so the carve
+converts a weak signal into effectively none rather than destroying a good one. If
+Phase 2 later needs SCE positives, the correct fix is to drop SCE from the subset
+at G2 — **not** to shave the selection floor below the level where the test can
+fire. Recorded here rather than resolved silently.
+
+*Near-duplicate clusters are now bound to `ft_train`, and the guard earned its
+keep.* Carving three splits out of one promotes `ft_train`'s *internal*
+near-duplicate clusters into *cross-split* pairs. The INV1-D7 guard caught this on
+the first attempt — `ChinaRealEstateInformationCorp…Content License Agreement`
+(ft_train) against `LejuHoldingsLtd…Content License Agreement1/2` (selection) at
+containment 0.989 / Jaccard 0.944. This is exactly the failure `plans/splits.md`
+warned about, and it was a live one: an MFN-positive twin straddling selection and
+the pool. Fix: before carving, the 364-contract pool is clustered by 5-gram
+containment/Jaccard (union-find), and **every contract in a multi-member cluster is
+bound to `ft_train`** — clusters are indivisible and go wholesale to Phase 2. Only
+singletons are eligible for selection and confirmation. 11 clusters, 23 contracts,
+341 eligible.
+
+Clustering thresholds (`split_clustering` in `dataset.yaml`: containment 0.60,
+Jaccard 0.40) are deliberately **stricter than the guard's fail thresholds** (0.80 /
+0.60). The guard is a fail condition; this is the preventive rule, and the gap
+between the two is the headroom. Binding at the guard's own numbers would have left
+a legal cross-split pair (the `BellringBrandsInc` exhibit halves) at containment
+0.783 against a 0.80 fail line — a build one annotation away from breaking.
+
+*Guard result after carving.* Passes. Worst cross-split pair is containment
+**0.7365** / Jaccard 0.0635 against thresholds 0.80 / 0.60 — **unchanged from the
+pre-carve build**, because it is still the pre-existing `AzulSa …Maintenance
+Agreement1/2` ft_train↔dev pair documented under INV1-D7. Residual headroom is
+therefore 0.064 containment, and the carve introduced no new worst pair. Full
+cluster membership, edges and per-category floor traces are in
+`data/processed/stats/selection_strata.json`.
+
+*Disjointness.* All six splits are pairwise disjoint by `contract_id` and union to
+510 (60+40+40+102+264+4), asserted over every pair in `build_dataset.py`. The
+loader's `SPLITS` gained `selection` and `confirmation`; `CuadDataset`'s method
+surface is unchanged.
+
 ## Results
 
 Built from `data.zip` sha256 `f8161d18…b999a` (see `data/processed/manifest.json`
 for the full source-file digests).
 
-**Split sizes.** holdout 102 · dev 40 · ft_train 364 · excluded 4 · total 510.
-Disjoint by `contract_id` and, post-INV1-D7, by content.
+**Split sizes.** holdout 102 · dev 40 · selection 60 · confirmation 40 ·
+ft_train 264 · excluded 4 · total 510. Disjoint by `contract_id` and, post-INV1-D7
+and post-INV1-D8, by content. (Pre-INV1-D8 the arrangement was ft_train 364 with no
+selection or confirmation; dev, holdout and excluded are unchanged across the carve.)
 
 **Length distribution** (`data/processed/stats/length_distribution.csv`):
 
@@ -179,9 +285,24 @@ Disjoint by `contract_id` and, post-INV1-D7, by content.
 |---|---|---|---|---|---|---|---|---|
 | holdout | 102 | 25,657 | 5,440 | 37 | 66 | 83 | 19 | 64,640 |
 | dev | 40 | 28,237 | 6,424 | 15 | 26 | 33 | 7 | 41,703 |
-| ft_train | 364 | 36,820 | 7,580 | 102 | 189 | 288 | 76 | 82,345 |
+| selection | 60 | 36,111 | 7,573 | 17 | 31 | 47 | 13 | 59,063 |
+| confirmation | 40 | 37,826 | 7,708 | 11 | 21 | 32 | 8 | 82,345 |
+| ft_train | 264 | 36,438 | 7,337 | 74 | 137 | 209 | 55 | 64,608 |
 | excluded | 4 | 26,443 | 5,589 | 2 | 2 | 3 | 1 | 19,499 |
 | all | 510 | 33,143 | 6,852 | 156 | 283 | 407 | 103 | 82,345 |
+
+**Selection / confirmation length spread** (INV1-D8 secondary key; matched to the
+364-contract pool, not to holdout). Every bucket lands within 1.1 percentage points
+of the pool despite the floor draws going first — the floor picks are spread across
+buckets where each category's positives allow, and the fill allocation is computed
+against what the floor already took.
+
+| length bucket | pool/364 | selection/60 | confirmation/40 | ft_train/264 |
+|---|---|---|---|---|
+| ≤4k | 102 (28.0%) | 17 (28.3%) | 11 (27.5%) | 74 |
+| 4k–8k | 87 (23.9%) | 14 (23.3%) | 10 (25.0%) | 63 |
+| 8k–16k | 99 (27.2%) | 16 (26.7%) | 11 (27.5%) | 72 |
+| >16k | 76 (20.9%) | 13 (21.7%) | 8 (20.0%) | 55 |
 
 **Dev-to-holdout length-profile match** (D-13; from
 `data/processed/stats/dev_strata.json`). No bucket was capacity-constrained —
@@ -222,22 +343,30 @@ carried forward; the reference token figures should be retired.
 
 **Category subset** (positive contracts, out of the split size):
 
-| category | all/510 | dev/40 | holdout/102 | ft_train/364 |
-|---|---|---|---|---|
-| Agreement Date | 470 | 38 | 93 | 336 |
-| Governing Law | 437 | 32 | 83 | 319 |
-| Expiration Date | 413 | 33 | 78 | 299 |
-| Anti-Assignment | 374 | 24 | 72 | 276 |
-| Cap On Liability | 275 | 21 | 44 | 209 |
-| License Grant | 255 | 16 | 50 | 187 |
-| Exclusivity | 180 | 13 | 33 | 134 |
-| Revenue/Profit Sharing | 166 | 13 | 35 | 117 |
-| Minimum Commitment | 165 | 12 | 32 | 120 |
-| Volume Restriction | 82 | 4 | 17 | 61 |
-| Most Favored Nation | 28 | 4 | 3 | 21 |
-| Source Code Escrow | 13 | 1 | 1 | 11 |
+| category | all/510 | dev/40 | holdout/102 | selection/60 | confirmation/40 | ft_train/264 |
+|---|---|---|---|---|---|---|
+| Agreement Date | 470 | 38 | 93 | 52 | 35 | 249 |
+| Governing Law | 437 | 32 | 83 | 51 | 33 | 235 |
+| Expiration Date | 413 | 33 | 78 | 49 | 34 | 216 |
+| Anti-Assignment | 374 | 24 | 72 | 46 | 33 | 197 |
+| Cap On Liability | 275 | 21 | 44 | 36 | 27 | 146 |
+| License Grant | 255 | 16 | 50 | 27 | 23 | 137 |
+| Exclusivity | 180 | 13 | 33 | 24 | 11 | 99 |
+| Revenue/Profit Sharing | 166 | 13 | 35 | 18 | 12 | 87 |
+| Minimum Commitment | 165 | 12 | 32 | 19 | 9 | 92 |
+| Volume Restriction | 82 | 4 | 17 | 10 | 6 | 45 |
+| Most Favored Nation | 28 | 4 | 3 | 8 | 5 | 8 |
+| Source Code Escrow | 13 | 1 | 1 | 5 | 4 | 2 |
 
-The `all/510` column still counts the 4 excluded contracts, so the four split
+Both floors are met with zero violations (`selection_strata.json` →
+`floor_violations`). The floor binds only on the two rare categories; every other
+category clears 5/4 from the length-stratified fill alone. Selection over-draws MFN
+(8, floor 5) because MFN positives are common enough in the 8k–16k bucket that the
+fill picked more. **Source Code Escrow at selection 5 / confirmation 4 / ft_train 2
+is the study's tightest constraint** — see INV1-D8 for what is and is not
+concludable there.
+
+The `all/510` column still counts the 4 excluded contracts, so the split
 columns no longer sum to it. That is deliberate — `all` describes the CUAD
 corpus, the split columns describe what the study uses.
 
@@ -246,7 +375,8 @@ reproduces every output file byte-identically (manifest differs only in
 `built_at`). In git: `data/processed/instances.jsonl` (per-contract
 `contract_id, title, n_chars, n_tokens, length_bucket, text_sha256, split` and
 per-category gold span offsets + `is_impossible`, all 41 categories, no contract
-text), `splits/*.txt`, `categories.json`, `manifest.json`, `stats/*`. The loader
+text), `splits/*.txt` (six files), `categories.json`, `manifest.json`, `stats/*`
+(including `selection_strata.json`, added at INV1-D8). The loader
 is `scripts/cuad_dataset.py` (`CuadDataset.load_instances`, `.get_instance`,
 `.gold`, `.categories`, `.contract_ids`), satisfying env-interface (a) and (d);
 it reconstructs contract text from `data/raw/CUADv1.json`, which stays
@@ -282,6 +412,43 @@ Assumptions and open calls from the WS1 build, for review at G1:
   remain inside ft_train (see the review). They double-weight the same contract
   during fine-tuning, which is a Phase 2 data-loader question, not a split-safety
   one. Deliberately not bundled into INV1-D7.
+
+- **Superseded in part by INV1-D8**: those clusters are now *bound* to ft_train
+  (11 clusters, 23 contracts, at the stricter `split_clustering` thresholds) so
+  they cannot straddle selection/confirmation. The double-weighting during
+  fine-tuning is unchanged and still a Phase 2 data-loader question.
+
+- **INV1-D8 changed what `ft_train` means, and existing work computed over it is
+  now split across three splits.** Nothing here is broken, but every artifact
+  below was derived from the 364-contract `ft_train` and now spans
+  `ft_train` (264) + `selection` (60) + `confirmation` (40). Not fixed as part of
+  INV1-D8; routed for triage:
+  - `principles/pilot/` — contrastive mining and its config/summary
+    (`mining_config.yaml`, `mining_summary.json`), `checkers/footprint.yaml` and
+    `footprints.json`, `run_footprints.py`, `critiques.yaml`,
+    `cross_source_validation.yaml`, and the whole `round2/` mirror of those.
+    **This is the one that actually matters**: principles were mined from, and
+    their footprints measured on, contracts that now include the very split
+    those principles will be A/B tested on. A principle mined from a selection
+    contract and then selected on that contract is a selection artifact of
+    exactly the kind `plans/splits.md` exists to prevent. Inv 006 needs to decide
+    whether to re-mine on `ft_train`-only or to record the overlap as a known
+    limitation.
+  - `reviews/agreement-date-check.md`, plus `calibration-controls.md`,
+    `cross-source-validation.md`, `principle-claim-checks.md`,
+    `principle-critiques.md`, `principle-footprints.md`, `round2-*.md`,
+    `derivation-pipeline.html`, `sample-contracts.html` — all cite `ft_train`
+    n=364 or counts computed over it. Numbers are still correct for "the
+    364-contract pool", but the split name in them is now wrong.
+  - `scripts/mine_contrastive_pairs.py` and `scripts/render_sample_contracts.py`
+    — read `ft_train` and will now see 264 contracts. Reruns will not reproduce
+    the checked-in outputs.
+  - `apps/principle-review/` (`record_types.py`, `sample_gold.py`,
+    `aggregate_audit.py`, fixtures, tests) — reference `ft_train` as a split
+    literal; `sample_gold.py` defaults to dev+holdout so it is likely unaffected
+    in practice.
+  - `HANDOFF.md`, `plans/decisions.md`, `reviews/split-contamination-check.md`
+    — prose stating ft_train n=364.
 - **Byte-identical contracts carry disagreeing gold labels.** The ADURO pair is
   byte-identical at 12,020 chars yet labeled differently on Anti-Assignment and
   Exclusivity; the WOMENSGOLF and NETGEAR near-twins likewise. This is a direct
