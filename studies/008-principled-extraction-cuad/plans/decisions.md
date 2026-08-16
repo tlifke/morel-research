@@ -360,6 +360,54 @@ Format:
 >   sketch named the condition under which it should be abandoned, and the
 >   measurement hit it.
 
+> **D-22 — Principles are selected by measured effect, not by judged truth**
+> (2026-08-16, opens `investigations/006-empirical-principle-selection`)
+> A candidate is kept if adding it improves scores on contracts where it
+> applies, revised if not, dropped if revision does not help — iterated to
+> diminishing returns.
+>
+> Why, in order of force:
+> 1. **A null C3 result is otherwise uninterpretable.** Without known-useful
+>    principles, "citation does not help" cannot be separated from "the
+>    principles were poor." The pilot makes the second live: 13 of 23 failed
+>    separability, one fired on 100% of decisions, one on none.
+> 2. **The curator is a non-expert, measured not assumed** — round 1 was 11
+>    accept / 5 defer / 0 reject / 0 edit with expertise-disclaiming rationales.
+> 3. **Provenance did not predict quality**, so source authority is not a usable
+>    proxy.
+>
+> **C1/C2/C3 are unchanged** (D-1). Only the construction of the set entering
+> C2/C3 changes.
+>
+> Consequences that must survive into implementation:
+> - **A new selection split, carved from FT-train.** Selecting on a signal and
+>   reporting that signal is artifact, not effect. Dev stays for iteration,
+>   holdout stays sealed, and the headline becomes whether an
+>   empirically-selected set *transfers*.
+> - **Pre-registered effect threshold, fixed seed count, and a confirmation
+>   pass on unseen contracts.** ~25 candidates × revisions × noisy sampling will
+>   otherwise manufacture winners.
+> - **The checker's role narrows and improves.** It no longer justifies a
+>   principle; it *targets the test*, identifying where a principle applies so
+>   the effect is measured where it can appear. A principle applying to ~35% of
+>   decisions loses most of its measurable effect if tested corpus-wide.
+> - **Two tiers replace the single scored set**: a prompt tier justified
+>   empirically, and a scored tier that additionally needs a separable checker
+>   (D-21). The current "no feasible checker → excluded" rule wrongly discards
+>   principles that may help; "does this help?" and "can we score citation of
+>   it?" are different questions and have been entangled.
+> - **Inv 002 is not superseded.** Its curation findings become a comparison
+>   arm — expert-free human curation versus empirical selection over the same
+>   candidate pool — which is a stronger methods result than either alone.
+>   Round-2 curation should therefore be completed before switching, since the
+>   calibration controls are single-use.
+>
+> Standing tension to watch: pure greedy search is optimisation, not reasoning.
+> Generation stays reasoned (guidelines + mining); only selection becomes
+> empirical. If it drifts to "generate hundreds of variants and search," it has
+> become instruction optimisation and the novelty — that the selected units are
+> citable, checkable principles rather than free-form prompt text — is lost.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing

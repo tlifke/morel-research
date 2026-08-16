@@ -9,6 +9,7 @@ children:
   - studies/008-principled-extraction-cuad/investigations/003-applicability-ground-truth
   - studies/008-principled-extraction-cuad/investigations/004-schema-leakage-pilot
   - studies/008-principled-extraction-cuad/investigations/005-phase1-condition-grid
+  - studies/008-principled-extraction-cuad/investigations/006-empirical-principle-selection
 related: []
 axes:
   llm_capability: medium
@@ -65,6 +66,11 @@ Verbatim from the reference plan (v2, 2026-08-15):
   schema × C1/C2. Blocks the main grid. **planned**
 - `005-phase1-condition-grid` — the C1/C2/C3 × model × length grid on the
   official test split. **planned**
+- `006-empirical-principle-selection` — select principles by measured effect on
+  task performance rather than by human judgement of their truth. Opened
+  2026-08-16 after the curation pilot showed a non-expert curator cannot
+  reliably judge substantive quality. Does **not** change C1/C2/C3; changes how
+  the set entering C2 and C3 is built. **planned**
 
 The harness (WS5) is **not** an investigation. It is shared study-level code at
 `harness/`, specified in `plans/component-contracts.md`, consumed by 004 and
