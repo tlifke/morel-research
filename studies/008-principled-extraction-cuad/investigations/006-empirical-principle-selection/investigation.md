@@ -135,6 +135,38 @@ approach alone, and it is why round-2 curation should be completed before
 switching — the calibration controls are single-use and cannot be cheaply
 regenerated once burnt.
 
+## Two constraints inherited from the split carve (INV1-D8)
+
+**1. Derivation overlap.** Mining ran over the pre-carve 364-contract pool, so
+some contracts a principle was read off now sit in `selection`. Testing a
+principle there measures recall of its own evidence. Standing rule 5 in
+`../../plans/splits.md`: exclude each principle's derivation contracts from its
+own A/B and report the excluded count. **Measure the overlap first** — if it is
+negligible the rule costs nothing; if it is large for a given principle, that
+principle's effect estimate is weak regardless and should be flagged.
+
+**2. Rare categories may be untestable, and this is arithmetic rather than
+opinion.** The per-principle A/B is paired over contracts where the category is
+positive, so n *is* the positive count. Under a paired sign test **n=4 cannot
+reach p<0.05 even at 4/4** (one-sided p=0.0625); n=5 barely clears at 5/5
+(p=0.031). Achieved floors: Source Code Escrow n=5, Most Favored Nation n=8.
+Minimum detectable one-sided paired effects: **d≈0.95 (SCE), 0.67 (MFN), 0.58
+(Volume Restriction) against 0.23 (Agreement Date)** — a rare-category
+principle needs an effect roughly four times larger to clear the same bar, and
+must help on *every* contract. More seeds do not rescue this: they reduce
+measurement noise, not between-contract variance.
+
+Three honest options, to be chosen and stated before running:
+- report rare-category principles **descriptively**, with n inline and no
+  significance claim;
+- **pool** them into a family-level test across related categories;
+- **drop** rare-category-scoped principles from the scored set.
+
+Related: dropping Source Code Escrow from the 12-category subset at G2 is
+probably the cleaner fix than shaving the selection floor, since it also
+resolves the Phase-2 coverage problem (SCE has 2 positive contracts in
+`model_train`).
+
 ## Acceptance
 
 - A selection protocol written down **before** any selection run: split,

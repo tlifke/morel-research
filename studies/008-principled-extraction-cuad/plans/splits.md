@@ -68,7 +68,19 @@ should follow from what it has to support.
 3. **Splits are frozen once carved.** Any change is a G1-class decision and
    invalidates every measurement taken against the previous arrangement.
 4. **Every result names its split.** A number without a split is not a result.
-5. **The excluded set is for smoke tests only.** It must never enter a reported
+5. **A principle is never tested on the contracts it was derived from.**
+   Contrastive mining ran over the pre-carve 364-contract `ft_train`, so some
+   of the contracts a principle was read off now sit in `selection`. Selecting
+   a principle on the very contracts that produced it is circular — it would
+   measure recall of its own evidence, not generalisation.
+   Each principle's derivation contracts are recoverable (its `evidence` pair
+   ids resolve to contract ids in `mined_pairs.jsonl`), so the fix is per
+   principle rather than global: **exclude a principle's own derivation
+   contracts from its A/B**, and report the excluded count alongside its
+   effect. Re-mining on the post-carve pool is the alternative, but it would
+   change the candidate set and discard the curation work already done against
+   it. Measure the overlap before choosing.
+6. **The excluded set is for smoke tests only.** It must never enter a reported
    metric — its contracts duplicate content in dev and holdout, so scoring on
    it would be scoring on those.
 

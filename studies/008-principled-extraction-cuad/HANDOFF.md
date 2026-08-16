@@ -32,8 +32,12 @@ there.
 
 **Built and working**
 
-- **Dataset** (inv 001, complete pending G1). Deterministic rebuild, frozen
-  splits: holdout 102 / dev 40 / ft_train 364 / excluded 4. `scripts/`.
+- **Dataset** (inv 001, complete pending G1). Deterministic rebuild, six
+  frozen splits — see `plans/splits.md` for each one's PURPOSE, which is the
+  part that matters: holdout 102 / dev 40 / selection 60 / confirmation 40 /
+  ft_train 264 / excluded 4. A rename to conventional names
+  (`test` / `harness_val` / `principle_train` / `principle_val` /
+  `model_train` / `scratch`) is approved and pending.
 - **Harness** (`harness/`, study-level code, not an investigation). 166 tests.
   Three Tinker backends measured and working; ollama backend built and
   mock-tested, blocked on the desktop being offline. Trace store is tier-1.
