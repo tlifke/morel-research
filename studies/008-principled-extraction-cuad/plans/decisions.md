@@ -503,6 +503,42 @@ Format:
 > because merged records carry list-valued `provenance` against a single-value
 > `Literal` — the model widens or the file normalises, someone must choose.
 >
+> **Amplified 2026-08-16 by reading the real prompt** (`reviews/prompt-inspector.html`,
+> byte-identity against the trace store asserted and passing for all three
+> conditions). Six further defects, one of which makes blocker 2 far worse:
+>
+> - **The answer-format hint affects 9 of the 12 targets, not one.** Nine carry
+>   `(answer format: Yes/No)`. **The model is told the answer is a yes/no while
+>   being asked to return spans**, against sentence-level gold. Governing Law was
+>   merely the visible casualty because it is a TP with a short span; the same
+>   mismatch sits under most of the task. This is the single largest known
+>   defect in the prompt.
+> - **C1 is not principle-free.** Under `field_present` it receives a 25-token
+>   block instructing it to leave `principles_cited` empty — so C1 mentions a
+>   principle-shaped field, and **C3−C2 is a substitution (+48 tokens), not the
+>   addition of a citation instruction from zero.** Must be stated in methods;
+>   it changes what the C1 baseline is.
+> - **The citation block's exemplar id is `"p03"`.** Harmless with the as-run
+>   pilot set; the moment the working set (`w01`–`w09`) is used, the example
+>   names a principle that is not in the prompt.
+> - **Nothing tells the model that category strings must match exactly.** Targets
+>   are prose bullets, the schema types `category` as a bare string with no enum,
+>   and exactness is enforced only post hoc in `validate_output()`.
+> - **Raw CSV artifacts reach the model** — non-breaking spaces and curly quotes
+>   from the category descriptions, unnormalised.
+> - **The CC BY attribution notice sits inside the task-definition block**, so
+>   ~20 tokens of dataset licensing are in the instruction stream.
+>
+> On the leakage channel: on this contract the model answered the Agreement Date
+> correctly from the text despite the id encoding a different date, while on the
+> sibling contract it took the id's date. **The channel is open on both and was
+> exploited on one** — which is the argument for closing it rather than
+> concluding it is benign.
+>
+> Measured prompt costs, same tokenizer as D-12: principle block **2,295
+> tokens** for the as-run 23-principle set, **1,133** for the 9-principle working
+> set. Backend-measured C2−C1 is +2,360, C3−C2 is +48.
+>
 > A curiosity worth remembering: the two most-cited principles in the smoke run
 > were both **fabricated calibration controls**. The set loaded was all 23
 > round-2 candidates because it was the only loadable file. Models cite
