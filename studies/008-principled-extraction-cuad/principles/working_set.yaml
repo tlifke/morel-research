@@ -38,7 +38,7 @@ field_notes:
     a pre-model diagnostic only — it is not compliance, not accuracy, and not
     evidence that following the principle helps.
   schema_deviations:
-    - "`provenance` is a list here, not the str the component contract specifies, because merged records have two source arms."
+    - "`provenance` is a list. This is no longer a deviation: `harness/models.Principle.provenance` was widened to a list on 2026-08-16 rather than normalising this file, because merged records genuinely have two source arms and collapsing w02 to one value would destroy the set's clearest cross-source corroboration. A bare string is still accepted on input and coerced to a one-element list."
     - "`proposer` is a list of blocks, one per contributing round-2 record, for the same reason."
     - "`provenance_axis`, `lineage`, `curator_note`, `checker_status`, `evidence_summary`, `judgement_calls` are new fields not in the pinned Principle model; they are bookkeeping around the record, not part of the portable model (portability constraint, inv 002)."
 
@@ -861,6 +861,131 @@ principles:
       p11: {verdict: 'the statement is probably right; the checker is not', confidence: strong, recommendation: keep_with_checker_rewrite}
       p15: {verdict: 'the exclusive routing it prescribes is contradicted by gold, which dual-labels floor-plus-share clauses', confidence: moderate, recommendation: rewrite_statement}
       p01: {verdict: 'close to the gold convention and I could not overturn it; objections are small-n counterexamples and near-total redundancy with p11', confidence: weak, recommendation: keep_with_checker_rewrite}
+  review:
+    decision: null
+    reviewer: null
+    date: null
+    rationale: null
+
+- id: w10
+  statement: >
+    The document title identifies the agreement; it is not a source of extracted
+    values. Every span must be located in the contract body, so a date, party
+    name, term or amount that appears only in the title and nowhere in the body
+    is not an extraction — a filing date encoded in the title is not an
+    Agreement Date. The title may be quoted only where the target asks for the
+    document's own identity, and even then only if the same string stands in the
+    body.
+  trigger_guidance: >
+    Consider whenever the value you are about to emit came from the title line
+    rather than from the contract text, and whenever a target asks for a
+    self-contained value — a date, a party, a jurisdiction — that the title
+    happens to encode. Ask where in the body the string appears; if the answer
+    is nowhere, the target is absent or answered elsewhere, not answered by the
+    title.
+  type: constraint
+  scope: []
+  provenance: [authored]
+  provenance_axis: guidelines_only
+  provenance_axis_note: >
+    Neither derivation arm produced this record. The guidelines side is
+    consistent with it — the Handbook annotates spans of contract text and its
+    Agreement Date IS-NOT list points at the executed instrument rather than at
+    file metadata — but no Handbook passage states the rule, because the
+    Handbook's annotators never saw a filename. The data side cannot corroborate
+    it either: CUAD gold spans are offsets into the contract body, so a
+    title-sourced answer is unrepresentable in gold and the corpus is silent by
+    construction rather than in agreement. Recorded as guidelines_only with that
+    weakness stated rather than claimed as both.
+  lineage:
+    round2_ids: []
+    original_ids: []
+    merge: null
+    origin: >
+      Originated 2026-08-16 from the C1/C2/C3 smoke observation on the scratch
+      split, not from the guidelines arm and not from the contrastive-mining
+      arm. CUAD contract ids are filenames that encode a date and a document
+      type, and `prompts.render_instance` printed them above the body. On
+      WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT the model
+      returned Agreement Date = "03_29_2000", a string present in the title and
+      absent from the contract text; it scored as a false positive with
+      invented_language_rate 1.0. On the sibling contract
+      (ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT) the same model
+      answered correctly from the body while the title encoded a different date.
+      The channel was open on both contracts and exploited on one.
+    supersedes_prompt_patch: >
+      The alternative fix was to withhold the title from the prompt. Tyler's
+      decision is to keep it — the title is genuinely part of the document for
+      identity-shaped categories — and to govern the channel with this
+      principle instead. That makes the leakage a measurable behaviour rather
+      than a suppressed one: under C1 the model is free to take the title's
+      date, and w10 is what C2 and C3 have to stop it with.
+  proposer:
+    - from_round2_id: null
+      model: claude-opus-5
+      prompt_version: null
+      batch_id: null
+      invocation: subagent
+      harness: claude-code
+      source_document: null
+  evidence:
+    - Smoke run 2026-08-16, C1 on WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT — Agreement Date returned as "03_29_2000", present in the title, absent from the body, scored FP with invented_language_rate 1.0
+    - Smoke run 2026-08-16, ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT — title encodes 06_02_2020; the model answered Agreement Date from the body instead, so the channel is exploited inconsistently rather than always
+    - Handbook, Agreement Date, IS-NOT list (p.8) — the date marked is the one the instrument states, which is a fact about the contract text
+    - CUAD v1 gold spans are character offsets into the contract body, so no gold span can originate in a title
+  curator_note:
+    w10: >
+      Not curated. Written to Tyler's 2026-08-16 decision that the leakage
+      channel is governed by a principle rather than closed by a prompt patch.
+      No review block is filled in; entry to a scored set is decided by measured
+      improvement under D-22, not by this note.
+  judgement_calls:
+    - >
+      Scope is left empty (all targets) rather than narrowed to the date
+      categories. The observed failure is a date, but the title also encodes a
+      document type and party names, and the same channel would answer
+      Expiration Date or a party target. Narrowing to Agreement Date would fit
+      the one observation and miss the mechanism.
+    - >
+      The carve-out for identity-shaped targets ("the target asks for the
+      document's own identity") is written for completeness — Document Name and
+      Parties are the cases — but neither is in the 12-category subset, so the
+      carve-out is inert as scored here and cannot be measured on this subset.
+    - >
+      Whether the title should be in the prompt at all is a task-definition
+      question, not this record's. The principle is written to be true whether
+      or not the harness prints the title, so it does not encode a harness
+      choice that a later run might reverse.
+  checker_sketch: >
+    Applicability (instance-only, D-21 separable): the decision's target is not
+    an identity-shaped category, and the instance title contains at least one
+    candidate value token — a date pattern, a party-like capitalised token
+    sequence, or a document-type keyword. Nothing here reads gold.
+    Compliance (decision-scoped): for each emitted span, normalise it and test
+    whether it occurs in `instance.text`; independently test whether it occurs
+    in `instance.title`. The record FAILS when a span is found in the title and
+    not in the body. A span found in both passes — the title is not evidence of
+    a violation on its own, only title-without-body is. Note that
+    `metrics.classify_span_verbatim` already computes the body half of this
+    test, so the checker is the title half plus a conjunction.
+  checker_status:
+    status: not_yet_specified
+    what_is_wrong: >
+      The sketch above is written but not built and not footprinted, so this
+      record has no applicability rate, no separability verdict and no phi. It
+      is the only record in the set with no measured footprint at all, and it
+      must not be reported alongside the round-2 records as if it had one. On
+      the face of it the applicability test is instance-only and should pass
+      D-21 where most of this set fails, and the compliance test is lexical
+      containment rather than the semantic condition D-24 warns about — but both
+      are predictions until measured. Expected to be rare: only contracts whose
+      title encodes a value the body omits can produce a violation.
+  evidence_summary:
+    applicability: {status: not_measured, note: 'no checker built; not present in the round-2 footprint pass'}
+    separability: {verdict: not_measured, gold_dependency: 'predicted instance_only'}
+    cross_source: {status: silent, confidence: high, silence_reason: 'structural — gold spans are offsets into the body, so a title-sourced answer cannot appear in gold either to confirm or to refute'}
+    critic: {verdict: not_run, confidence: null, recommendation: null}
+    observed_rate: '1 of 2 scratch contracts exploited the channel at n=1 per condition; far too small to be a rate'
   review:
     decision: null
     reviewer: null

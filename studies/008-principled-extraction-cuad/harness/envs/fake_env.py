@@ -156,8 +156,17 @@ def metrics_token_estimate(text: str) -> int:
 class FakeEnvironment(Environment):
     name = "fake-contracts"
 
-    def __init__(self, principle_set: Optional[PrincipleSet] = None) -> None:
+    def __init__(
+        self,
+        principle_set: Optional[PrincipleSet] = None,
+        applicability_available: bool = True,
+    ) -> None:
         self._principles = principle_set or PRINCIPLES
+        self._applicability_available = applicability_available
+
+    @property
+    def applicability_available(self) -> bool:
+        return self._applicability_available
 
     def load_instances(self, split: str) -> list[Instance]:
         specs = [
@@ -206,7 +215,7 @@ class FakeEnvironment(Environment):
     def gold_applicable_for_decision(
         self, instance: Instance, decision: DecisionRecord
     ) -> list[str]:
-        if decision.target is None:
+        if decision.target is None or not self._applicability_available:
             return []
         return list(instance.gold.applicability.get(decision.target, []))
 

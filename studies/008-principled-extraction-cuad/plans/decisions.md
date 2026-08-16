@@ -544,6 +544,57 @@ Format:
 > round-2 candidates because it was the only loadable file. Models cite
 > plausible fabrications readily.
 
+> **D-26 — The external comparison runs through THEIR evaluator, not ours**
+> (2026-08-16, `reviews/cuad-baseline-comparability.md`)
+> The earlier claim that "we cannot compute their metrics and they cannot
+> compute ours" was **half wrong**, and the wrong half is the useful one. We
+> still cannot compute AUPR or P@80%R — those summarise a curve and we produce
+> one committed decision. But **CUAD's own `evaluate.py` scores our output
+> unmodified**: our `Extraction(category, spans)` maps to their `preds_list`,
+> our `AbsenceClaim` maps to `[]`, and `compute_precision_recall` runs with **no
+> invented parameters**. The unit of prediction is already the
+> `(contract, category)` pair, which matches D-14 exactly.
+>
+> **The artifact is their PR curve with our point plotted on it** — same gold,
+> same split, same Jaccard≥0.5 matcher, same micro-pooling. Their side
+> contributes the entire curve, so we cannot be accused of choosing their
+> operating point; our side contributes a committed decision, which is what this
+> study produces.
+>
+> **The reverse direction is rejected.** Taking their top-1 span above "their
+> operating threshold" is not merely unfair to them — that threshold is a value
+> `evaluate.py` discovers *on the test set* to force recall to 0.8, so the
+> comparison would measure our thresholding choice rather than their model. If
+> ever done, it must use their genuine absence signal (`null_odds`, which their
+> SQuAD-2 training actually optimised) with τ swept, reporting their best
+> achievable Level-A F1 — and only as appendix material, since their framework
+> has no TN cell and our absent-class metrics have no counterpart there.
+>
+> **Two consequences for sequencing:**
+> 1. **No rehearsal split exists for this run.** Every non-`test` split was
+>    carved from CUAD's official *train* set — these models' fine-tuning data.
+>    Their models are only honest on `test`, so the baseline run is inherently
+>    **G4-gated**. `harness_val` can shake out the wiring; any score it produces
+>    is meaningless.
+> 2. **Reproducing their Table 2 is a hard gate, not overhead.** The 41-category
+>    run must recover AUPR 42.6 / 48.2 / 47.8 and P@80%R 31.1 / 38.1 / 44.0 from
+>    the released checkpoints. If it does not, everything downstream is void.
+>
+> **The claim is one-sided, and that is what makes it usable.** They consumed
+> 408 expert-annotated contracts (favours them); their encoders' pretraining
+> predates CUAD's 2021 release so their test exposure is genuinely zero while
+> ours is plausibly nonzero and may include the annotations (favours us).
+> Therefore **a result at or below their baseline is strong evidence; a result
+> above it is confounded and cannot be read as a modelling claim.** This is also
+> the argument that the study's load-bearing results remain the internal
+> condition contrasts, which share contamination exactly.
+>
+> Feasibility is not the constraint: the 3080's 12GB fits all three checkpoints
+> (sequences are fixed at 512, so the sliding window removes long-document VRAM
+> pressure), ~3.4 GPU-h for all three at 41 categories; Modal is $10–30 all-in
+> but **must be Ampere** — the pinned 2021 stack supports sm_80/86 and nothing
+> newer. The real bottlenecks are CPU and RAM, not GPU.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing

@@ -220,3 +220,82 @@ def test_coverage_defect_rate_counts_unrepaired_defects_too():
     assert approx(rates["coverage_defect_rate"], 0.5)
     assert rates["any_repair_rate"] == 0.0
     assert rates["conformance"]["parse_failure_by_stage"]["coverage"] == 1
+
+
+def test_empty_gold_with_known_applicability_scores_normally():
+    ce = metrics.citation_eval([], []).to_dict()
+    assert ce["precision"] == ce["recall"] == ce["f1"] == 1.0
+    assert metrics.citation_is_available(ce) is True
+
+
+def test_unavailable_citation_is_a_state_not_a_number():
+    block = metrics.citation_unavailable()
+    assert block["available"] is False
+    assert "precision" not in block
+    assert "f1" not in block
+    assert block["reason"]
+    assert metrics.citation_is_available(block) is False
+
+
+def test_micro_citation_ignores_unavailable_decision_evals():
+    evals = [
+        metrics.citation_eval(["p01"], ["p01"]).to_dict(),
+        metrics.citation_unavailable(),
+    ]
+    micro = metrics.micro_citation(evals)
+    assert micro["n_decisions"] == 1
+    assert micro["tp"] == 1
+    assert micro["available"] is True
+
+
+def test_decision_citation_correct_is_none_when_unavailable():
+    assert metrics.decision_citation_correct(metrics.citation_unavailable()) is None
+
+
+def test_per_principle_and_confusion_skip_unavailable_rows():
+    rows = [
+        {"citation_eval": metrics.citation_unavailable()},
+        {"citation_eval": metrics.citation_eval(["p02"], ["p01"]).to_dict()},
+    ]
+    marginals = metrics.per_principle_marginals(rows)
+    assert set(marginals) == {"p01", "p02"}
+    assert metrics.confusion_pairs(rows) == {("p02", "p01"): 1}
+
+
+def test_summaries_skip_unavailable_citation_trials():
+    base = {
+        "outcome": "ok",
+        "max_repair_attempts": 0,
+        "length_bucket": "short",
+        "answer": {},
+    }
+    rows = [
+        {**base, "citation": metrics.citation_unavailable()},
+        {**base, "citation": metrics.citation_unavailable()},
+    ]
+    summary = metrics.summarize_trials(rows)
+    assert summary["citation_f1"]["n"] == 0
+    assert summary["citation_f1"]["mean"] is None
+    availability = summary["citation_availability"]
+    assert availability["n_unavailable"] == 2
+    assert availability["n_available"] == 0
+    assert availability["citation_metrics_are_measurements"] is False
+    assert availability["unavailable_reasons"]
+
+
+def test_summaries_average_only_the_measured_citation_trials():
+    base = {
+        "outcome": "ok",
+        "max_repair_attempts": 0,
+        "length_bucket": "short",
+        "answer": {},
+    }
+    rows = [
+        {**base, "citation": {"available": True, "precision": 0.5, "recall": 0.5, "f1": 0.5}},
+        {**base, "citation": metrics.citation_unavailable()},
+    ]
+    summary = metrics.summarize_trials(rows)
+    assert summary["citation_f1"]["n"] == 1
+    assert approx(summary["citation_f1"]["mean"], 0.5)
+    assert summary["citation_availability"]["n_available"] == 1
+    assert summary["citation_availability"]["n_unavailable"] == 1

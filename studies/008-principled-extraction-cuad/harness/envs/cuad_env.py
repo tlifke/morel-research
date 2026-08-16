@@ -118,21 +118,47 @@ def load_category_subset(path: Path | str = CATEGORY_SUBSET_CONFIG) -> list[str]
     return [entry["name"] for entry in config["categories"]]
 
 
+CSV_ARTIFACT_FOLD = {
+    " ": " ",
+    "‘": "'",
+    "’": "'",
+    "‚": "'",
+    "“": '"',
+    "”": '"',
+    "„": '"',
+}
+
+
+def normalize_csv_text(text: str) -> str:
+    """Strip raw-CSV artifacts before the text reaches the model.
+
+    Non-breaking spaces and curly quotes/apostrophes come from the CUAD
+    spreadsheet, carry no meaning, and tokenize badly. Nothing else is touched.
+    """
+    for bad, good in CSV_ARTIFACT_FOLD.items():
+        text = text.replace(bad, good)
+    return " ".join(text.split())
+
+
 def load_category_definitions(
     path: Path | str = CATEGORY_DESCRIPTIONS,
 ) -> dict[str, str]:
+    """One-line category definitions, Description column only.
+
+    The CSV's `Answer Format` column is deliberately NOT appended. It described
+    what a human types into an answer field ("Yes/No" for nine of the twelve
+    subset targets) while this task asks for spans scored against sentence-level
+    gold, so it told the model to answer in a shape the scorer does not accept.
+    Nothing replaces it: answer granularity is business logic and belongs to a
+    principle (w01), not to the task definition. The task definition stays
+    neutral on granularity so w01 has something real to do.
+    """
     out: dict[str, str] = {}
     with open(path, encoding="utf-8-sig") as handle:
         for row in csv.DictReader(handle):
             name = row["Category (incl. context and answer)"].split(": ", 1)[1].strip()
             description = row["Description"].split(": ", 1)[1].strip()
-            answer_format = row["Answer Format"]
-            answer_format = (
-                answer_format.split(": ", 1)[1].strip()
-                if ": " in answer_format
-                else answer_format.strip()
-            )
-            out[name.lower()] = f"{description} (answer format: {answer_format})"
+            out[normalize_csv_text(name).lower()] = normalize_csv_text(description)
     return out
 
 
@@ -162,7 +188,8 @@ class CuadEnvironment(Environment):
             else load_category_definitions()
         )
         self._definitions = {
-            target: definitions.get(target.lower(), "") for target in self.targets
+            target: definitions.get(normalize_csv_text(target).lower(), "")
+            for target in self.targets
         }
         missing = [t for t, d in self._definitions.items() if not d]
         if missing:
@@ -199,6 +226,7 @@ class CuadEnvironment(Environment):
         return {
             "name": self.name,
             "targets": list(self.targets),
+            "attribution": ATTRIBUTION,
             "principle_set_version": self._principles.version,
             "n_principles": len(self._principles.principles),
             "applicability": (

@@ -513,6 +513,7 @@ def _score_output(
     active_ids = set(principle_set.ids)
     checkers = env.compliance_checkers()
     decisions = env.iter_decisions(parsed)
+    citation_measurable = condition == "C3" and env.applicability_available
 
     decision_rows: list[DecisionRow] = []
     raw_rows: list[dict[str, Any]] = []
@@ -534,7 +535,9 @@ def _score_output(
 
         cite_eval = None
         crosstab_cell = None
-        if condition == "C3":
+        if condition == "C3" and not citation_measurable:
+            cite_eval = metrics.citation_unavailable()
+        elif condition == "C3":
             ce = metrics.citation_eval(cited, gold_applicable)
             cite_eval = ce.to_dict()
             citation_evals.append(cite_eval)
@@ -608,7 +611,9 @@ def _score_output(
     answer_block["level_b"] = metrics.aggregate_level_b(raw_rows)
 
     citation_block = None
-    if condition == "C3":
+    if condition == "C3" and not citation_measurable:
+        citation_block = metrics.citation_unavailable()
+    elif condition == "C3":
         citation_block = {
             **metrics.micro_citation(citation_evals),
             "per_principle": metrics.per_principle_marginals(raw_rows),

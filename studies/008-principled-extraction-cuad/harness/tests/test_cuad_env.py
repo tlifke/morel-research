@@ -4,11 +4,14 @@ import pytest
 
 from harness.env import ComplianceChecker, Environment
 from harness.envs.cuad_env import (
+    ATTRIBUTION,
     INSTANCE_SCOPE_KEY,
+    STUDY_ROOT,
     ApplicabilitySource,
     CuadEnvironment,
     load_category_definitions,
     load_category_subset,
+    normalize_csv_text,
 )
 from harness.models import (
     AbsenceClaim,
@@ -327,3 +330,45 @@ def test_principle_set_loader_accepts_the_mapping_form(tmp_path):
         )
     )
     assert load_principle_set(path, version="wrapped").ids == ["w01"]
+
+
+def test_definitions_carry_no_answer_format_annotation(env):
+    task = env.task_definition()
+    for target, definition in task.target_definitions.items():
+        assert "answer format" not in definition.lower(), target
+        assert "Yes/No" not in definition, target
+
+
+def test_definitions_are_free_of_raw_csv_artifacts(env):
+    for definition in env.task_definition().target_definitions.values():
+        assert " " not in definition
+        assert not set(definition) & set("‘’“”")
+
+
+def test_normalize_csv_text_folds_nbsp_and_curly_quotes():
+    raw = "the party’s “term”"
+    assert normalize_csv_text(raw) == "the party's \"term\""
+
+
+def test_attribution_is_carried_by_describe_not_by_the_prompt(env):
+    assert env.describe()["attribution"] == ATTRIBUTION
+    assert env.task_definition().attribution == ATTRIBUTION
+
+
+def test_working_set_loads_against_the_pinned_principle_model():
+    path = STUDY_ROOT / "principles" / "working_set.yaml"
+    principle_set = load_principle_set(path, version="working-set-test")
+    ids = principle_set.ids
+    assert ids == sorted(ids)
+    assert "w10" in ids
+    dual = principle_set.by_id("w02")
+    assert dual.provenance == ["atticus_guidelines", "data_mined"]
+    assert dual.provenance_label == "atticus_guidelines + data_mined"
+    for principle in principle_set.principles:
+        assert principle.provenance
+        assert principle.statement.strip()
+        assert principle.trigger_guidance.strip()
+
+
+def test_single_valued_provenance_still_loads_as_a_list():
+    assert _principles().by_id("p01").provenance == ["authored"]

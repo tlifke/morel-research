@@ -711,3 +711,73 @@ def test_conformance_breakdown_is_reachable_per_bucket_and_condition(env, harnes
     for bucket in group["by_length_bucket"].values():
         breakdown = bucket["final"]["conformance"]["parse_failure_by_stage"]
         assert breakdown["json_decode"] == 1
+
+
+def test_citation_is_unavailable_when_the_env_has_no_applicability(harness_val, config):
+    env = FakeEnvironment(applicability_available=False)
+    instance = env.load_instances("harness_val")[0]
+    backend = FakeBackend([json.dumps(PERFECT)], context_limit=100000)
+    result = _run(env, backend, instance, config, condition="C3")
+    assert result.trial.outcome == "ok"
+    assert result.trial.citation["available"] is False
+    assert result.trial.citation["reason"]
+    assert "precision" not in result.trial.citation
+    for row in result.decisions:
+        assert row.citation_eval["available"] is False
+        assert row.citation_x_correctness is None
+
+
+def test_citing_nothing_does_not_score_perfect_without_applicability(harness_val, config):
+    env = FakeEnvironment(applicability_available=False)
+    instance = env.load_instances("harness_val")[0]
+    silent = json.loads(json.dumps(PERFECT))
+    for item in silent["extractions"]:
+        item["principles_cited"] = []
+    backend = FakeBackend([json.dumps(silent)], context_limit=100000)
+    result = _run(env, backend, instance, config, condition="C3")
+    assert result.trial.citation.get("precision") is None
+    assert result.trial.citation["available"] is False
+
+
+def test_legitimately_empty_gold_still_scores_when_applicability_is_present(
+    env, harness_val, config
+):
+    silent = json.loads(json.dumps(PERFECT))
+    for item in silent["extractions"]:
+        item["principles_cited"] = []
+    backend = FakeBackend([json.dumps(silent)], context_limit=100000)
+    result = run_trial(
+        env=env,
+        backend=backend,
+        instance=harness_val["FAKE_0001"],
+        condition="C3",
+        seed=0,
+        schema_variant="field_present",
+        principle_set=env.principle_set().subset(["p02"]),
+        config=config,
+    )
+    assert result.trial.citation["available"] is True
+    empty_gold = [r for r in result.decisions if not r.gold_applicable]
+    assert empty_gold
+    for row in empty_gold:
+        assert row.citation_eval["available"] is True
+        assert row.citation_eval["precision"] == 1.0
+        assert row.citation_eval["recall"] == 1.0
+        assert row.citation_eval["f1"] == 1.0
+
+
+def test_summary_excludes_unavailable_citation_trials(harness_val, config):
+    env = FakeEnvironment(applicability_available=False)
+    instance = env.load_instances("harness_val")[0]
+    measured = FakeEnvironment()
+    rows = [
+        _run(env, FakeBackend([json.dumps(PERFECT)], context_limit=100000),
+             instance, config, condition="C3").trial.model_dump(),
+        _run(measured, FakeBackend([json.dumps(PERFECT)], context_limit=100000),
+             measured.load_instances("harness_val")[0], config, condition="C3",
+             seed=1).trial.model_dump(),
+    ]
+    summary = metrics.summarize_trials(rows)
+    assert summary["citation_availability"]["n_available"] == 1
+    assert summary["citation_availability"]["n_unavailable"] == 1
+    assert summary["citation_f1"]["n"] == 1

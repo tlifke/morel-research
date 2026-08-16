@@ -36,6 +36,16 @@ class ComplianceChecker:
 class Environment(ABC):
     name: str
 
+    @property
+    def applicability_available(self) -> bool:
+        """Whether `gold_applicable_for_decision` is a measurement.
+
+        When this is False an empty gold-applicable list means "unknown", not
+        "no principle applies", and citation precision/recall/F1 must be
+        reported as unavailable rather than as a number.
+        """
+        return True
+
     @abstractmethod
     def load_instances(self, split: str) -> list[Instance]:
         ...

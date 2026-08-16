@@ -34,14 +34,28 @@ SYSTEM_BLOCK = (
     "outside the JSON object."
 )
 
-CITATION_BLOCK = (
+CITATION_BLOCK_TEMPLATE = (
     "CITATION REQUIREMENT\n"
     "For every decision you make (each extraction and each absence claim), list "
     "in `principles_cited` the ids of the principles above that governed that "
     "specific decision. Cite only principles that actually bore on the decision. "
-    "Use the exact ids as given (for example \"p03\"). An empty list means no "
-    "principle applied."
+    "Use the exact ids as given (for example \"{exemplar}\"). An empty list means "
+    "no principle applied."
 )
+
+FALLBACK_CITATION_EXEMPLAR = "p01"
+
+
+def render_citation_block(principle_set: Optional[PrincipleSet]) -> str:
+    """The exemplar id is read off the loaded set, never hardcoded.
+
+    A literal id in the template names a principle that may not be in the
+    prompt: the pilot set runs p01..p23 and the working set runs w01..w10, so
+    the old fixed "p03" would have pointed at nothing under the working set.
+    """
+    ids = principle_set.ids if principle_set is not None else []
+    exemplar = ids[0] if ids else FALLBACK_CITATION_EXEMPLAR
+    return CITATION_BLOCK_TEMPLATE.format(exemplar=exemplar)
 
 NO_CITATION_BLOCK = (
     "The `principles_cited` field must be left as an empty list for every "
@@ -76,6 +90,14 @@ class PromptBundle:
 
 
 def render_task_definition(task: TaskDefinition) -> str:
+    """Render the task block.
+
+    `task.attribution` is deliberately NOT rendered. D-8 requires the CC BY
+    notice in checked-in derivatives, not in the instruction stream; carrying it
+    here spent ~20 prompt tokens on dataset licensing. It stays on the
+    TaskDefinition and is emitted by `Environment.describe()` and by the
+    artifacts that quote the definitions.
+    """
     lines = ["TASK DEFINITION", task.framing, ""]
     lines.append("Decision kinds: " + ", ".join(task.decision_kinds))
     if task.targets:
@@ -84,9 +106,6 @@ def render_task_definition(task: TaskDefinition) -> str:
         for t in task.targets:
             definition = task.target_definitions.get(t, "")
             lines.append(f"- {t}: {definition}")
-    if task.attribution:
-        lines.append("")
-        lines.append(task.attribution)
     return "\n".join(lines)
 
 
@@ -105,10 +124,17 @@ def render_principles(principle_set: PrincipleSet) -> str:
 
 
 def render_instance(instance: Instance) -> str:
+    """Render the document block.
+
+    The `Id:` line is gone: in CUAD the contract_id IS the title string, so the
+    two lines were redundant. The title stays because it is genuinely part of
+    the document for categories like Document Name. That leaves the filename
+    channel open by design, and it is governed by a principle (w10), not by
+    withholding the line.
+    """
     return (
         "DOCUMENT\n"
         f"Title: {instance.title}\n"
-        f"Id: {instance.contract_id}\n"
         "---\n"
         f"{instance.text}\n"
         "---"
@@ -129,14 +155,14 @@ def build_prompt(
     if spec.principles and principle_set is None:
         raise ValueError(f"condition {condition} requires a principle set")
 
-    schema = json_schema_for(output_model, schema_variant)
+    schema = json_schema_for(output_model, schema_variant, categories=task.targets)
 
     blocks: dict[str, str] = {}
     blocks["task_definition"] = render_task_definition(task)
     if spec.principles:
         blocks["principles"] = render_principles(principle_set)
     if spec.citation_required:
-        blocks["citation"] = CITATION_BLOCK
+        blocks["citation"] = render_citation_block(principle_set)
     elif schema_variant == "field_present":
         blocks["citation"] = NO_CITATION_BLOCK
     blocks["output_format"] = (

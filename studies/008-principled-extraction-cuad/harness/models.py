@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 CategoryId = str
 
@@ -16,12 +16,32 @@ Provenance = Literal[
 
 
 class Principle(BaseModel):
+    """A portable principle record.
+
+    `provenance` is a LIST because a merged record genuinely has more than one
+    source arm: w02 in the working set arrived independently from the Atticus
+    guidelines and from contrastive data mining, and collapsing that to a single
+    value would destroy the study's clearest cross-source corroboration. A bare
+    string is accepted on input and normalised to a one-element list.
+    """
+
     id: str
     statement: str
     trigger_guidance: str
     type: PrincipleType
     scope: list[str] = Field(default_factory=list)
-    provenance: Provenance
+    provenance: list[Provenance] = Field(min_length=1)
+
+    @field_validator("provenance", mode="before")
+    @classmethod
+    def _as_list(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return [value]
+        return value
+
+    @property
+    def provenance_label(self) -> str:
+        return " + ".join(self.provenance)
 
 
 class PrincipleSet(BaseModel):

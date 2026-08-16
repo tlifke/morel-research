@@ -421,6 +421,7 @@ class CitationEval:
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "available": True,
             "tp": self.tp,
             "fp": self.fp,
             "fn": self.fn,
@@ -430,7 +431,29 @@ class CitationEval:
         }
 
 
+CITATION_UNAVAILABLE_REASON = (
+    "no applicability source is loaded, so gold_applicable is unknown rather "
+    "than empty; citation precision/recall/F1 would score silence as perfect "
+    "and are therefore not computed"
+)
+
+
+def citation_unavailable(reason: str = CITATION_UNAVAILABLE_REASON) -> dict[str, Any]:
+    return {"available": False, "reason": reason}
+
+
+def citation_is_available(block: Optional[dict[str, Any]]) -> bool:
+    return bool(block) and block.get("available") is not False
+
+
 def citation_eval(cited: Iterable[str], gold_applicable: Iterable[str]) -> CitationEval:
+    """Score one decision's citations against a KNOWN gold-applicable set.
+
+    An empty gold set here is a real measurement — this decision legitimately has
+    no applicable principles, and citing nothing is correct. It is only a lie
+    when applicability was never measured, which is why the unavailable case is
+    handled by the caller and never reaches this function.
+    """
     cited_set = set(cited)
     gold_set = set(gold_applicable)
     tp = sorted(cited_set & gold_set)
@@ -447,16 +470,18 @@ def citation_eval(cited: Iterable[str], gold_applicable: Iterable[str]) -> Citat
 
 
 def micro_citation(decision_evals: Sequence[dict[str, Any]]) -> dict[str, Any]:
-    tp = sum(len(d["tp"]) for d in decision_evals)
-    fp = sum(len(d["fp"]) for d in decision_evals)
-    fn = sum(len(d["fn"]) for d in decision_evals)
+    measured = [d for d in decision_evals if citation_is_available(d)]
+    tp = sum(len(d["tp"]) for d in measured)
+    fp = sum(len(d["fp"]) for d in measured)
+    fn = sum(len(d["fn"]) for d in measured)
     return {
         **_prf(tp, fp, fn),
+        "available": True,
         "micro_over_decisions": True,
         "tp": tp,
         "fp": fp,
         "fn": fn,
-        "n_decisions": len(decision_evals),
+        "n_decisions": len(measured),
     }
 
 
@@ -466,7 +491,7 @@ def per_principle_marginals(
     counts: dict[str, dict[str, int]] = {}
     for row in decision_rows:
         ce = row.get("citation_eval")
-        if not ce:
+        if not citation_is_available(ce):
             continue
         for key, pids in (("tp", ce.get("tp", [])), ("fp", ce.get("fp", [])), ("fn", ce.get("fn", []))):
             for pid in pids:
@@ -481,7 +506,7 @@ def confusion_pairs(decision_rows: Iterable[dict[str, Any]]) -> Counter:
     pairs: Counter = Counter()
     for row in decision_rows:
         ce = row.get("citation_eval")
-        if not ce:
+        if not citation_is_available(ce):
             continue
         for cited in ce.get("fp", []):
             for missed in ce.get("fn", []):
@@ -512,7 +537,7 @@ def decision_citation_correct(
     citation_eval_dict: Optional[dict[str, Any]],
     thresholds: CorrectnessThresholds = DEFAULT_THRESHOLDS,
 ) -> Optional[bool]:
-    if not citation_eval_dict:
+    if not citation_is_available(citation_eval_dict):
         return None
     if thresholds.citation_requires_exact_set:
         return not citation_eval_dict.get("fp") and not citation_eval_dict.get("fn")
@@ -772,6 +797,34 @@ def repair_is_enabled(rows: Sequence[dict[str, Any]]) -> bool:
     return any((r.get("max_repair_attempts") or 0) > 0 for r in rows)
 
 
+def citation_availability(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """How many scored trials carry a citation MEASUREMENT, and why not.
+
+    Trials whose citation block is `{available: false}` contribute nothing to
+    the citation means — they are dropped by `_dig`, not averaged in as 1.0 or
+    0.0 — and this block makes that exclusion visible instead of silent.
+    """
+    with_block = [r for r in rows if r.get("citation") is not None]
+    available = [r for r in with_block if citation_is_available(r.get("citation"))]
+    reasons = sorted(
+        {
+            str((r.get("citation") or {}).get("reason"))
+            for r in with_block
+            if not citation_is_available(r.get("citation"))
+            and (r.get("citation") or {}).get("reason")
+        }
+    )
+    return {
+        "n_trials": len(rows),
+        "n_with_citation_block": len(with_block),
+        "n_available": len(available),
+        "n_unavailable": len(with_block) - len(available),
+        "unavailable_reasons": reasons,
+        "citation_metrics_are_measurements": bool(available)
+        and len(available) == len(with_block),
+    }
+
+
 def summarize_trials(
     rows: Sequence[dict[str, Any]], scope: str = "final"
 ) -> dict[str, Any]:
@@ -800,6 +853,7 @@ def summarize_trials(
     else:
         scored = [r for r in rows if r.get("outcome") == "ok"]
     block["n_scored"] = len(scored)
+    block["citation_availability"] = citation_availability(scored)
     for name, path in _TRIAL_METRIC_PATHS.items():
         block[name] = mean_normal_approx_ci95([_dig(r, path) for r in scored])
     return block
