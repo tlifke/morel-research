@@ -97,8 +97,12 @@ accident:
 - **D-24 / D-27** applicability may be LLM-labelled — a labelling tool, not a
   judge. Our pipeline goes further and reads no gold at all.
 - **D-30 / D-32** CUAD's own scorer is the headline metric; the aggregate is
-  **micro-F1 at our operating point**. AUPR and P@80%R are unavailable to us by
-  construction.
+  **micro-F1 at our operating point** — because that is what our *current*
+  output supports, **not** because nothing else is possible. An earlier version
+  of this line said AUPR and P@80%R were "unavailable by construction". That was
+  **wrong**: AUPR needs a scored ranking, and our lack of one is a design choice
+  in the output contract. Both are obtainable — see the comparability section
+  below.
 - **D-31** applicability has measurable *reliability* and unestablishable
   *validity*. Citation numbers are relative, never absolute.
 
