@@ -840,6 +840,45 @@ Format:
 > number moved, which their scorer cannot. Report the not-found rate alongside,
 > since it corrects a blind spot in theirs.
 
+> **D-31 — Applicability labels get reliability, not validity. The human
+> spot-check is dropped.** (2026-08-16, Tyler)
+> Tyler declines the 114-item applicability spot-check on the grounds that he is
+> not a reliable expert on whether a principle correctly applies — the same
+> expertise limit measured in round-1 curation (D-22), applied consistently
+> rather than selectively. That is the right call: a validity estimate from an
+> unreliable rater is worse than no estimate, because it would carry a number
+> and invite trust.
+>
+> **The distinction this forces, and it must be stated wherever citation
+> numbers appear: we can measure the applicability layer's *reliability* but
+> not its *validity*.**
+> - **Reliability (measurable, and should be measured):** repeat-label a sample
+>   with an independent run and report agreement. We already have one accidental
+>   data point — two concurrent agents labelled the same contract and disagreed,
+>   7 vs 10 applicable of 45 (D-27). That is a large disagreement on n=1 and it
+>   should be scaled into a real measurement, since a frozen artifact hides
+>   variance by construction. Cross-checking against the regex checkers where
+>   they exist is a second, weaker consistency signal (D-27 measured 10–79%
+>   disagreement, median ~30%).
+> - **Validity (not establishable in this study):** no expert-adjudicated
+>   ground truth for applicability exists or will. Say so plainly.
+>
+> **Consequences, all of which need to be lived with rather than argued away:**
+> 1. Citation P/R/F1 is computed against **unvalidated ground truth**. It
+>    remains usable for **relative** comparisons — C3 against C3 across principle
+>    sets, or across models — where label error is roughly constant. It is not
+>    usable as an absolute claim that a model cited correctly.
+> 2. **H4 weakens.** The confusion structure over principles is still
+>    computable and still diagnostically useful for maintaining the principle
+>    set, but it can no longer be presented as ground truth about which
+>    principle genuinely applied.
+> 3. **Phase 2's β term trains on unvalidated labels.** The composite reward
+>    would optimise toward a labeller's judgement rather than a verified one.
+>    That is a legitimate design — it is distillation from a labeller — but it
+>    must be described that way and not as training on ground truth.
+> 4. The `spot_check` block in the frozen artifact stays `{}` — **unavailable,
+>    not zero** — and nothing downstream may read absence as agreement.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing
