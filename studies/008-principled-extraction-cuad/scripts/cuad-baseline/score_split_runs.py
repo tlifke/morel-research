@@ -53,11 +53,19 @@ def merge_nbest(preds_root, model, split):
 
 def point_pr(ev, gt, preds):
     tp = fp = fn = 0
+    fp_absent = fp_present = 0
+    q_present = q_absent = 0
+    declined_present = claimed_absent = 0
     for key in gt:
         answers, ps = gt[key], preds[key]
         if len(answers) == 0:
+            q_absent += 1
             fp += len(ps)
+            fp_absent += len(ps)
+            claimed_absent += int(len(ps) > 0)
             continue
+        q_present += 1
+        declined_present += int(len(ps) == 0)
         for ans in answers:
             if any(ev.get_jaccard(ans, p) >= ev.IOU_THRESH for p in ps):
                 tp += 1
@@ -66,9 +74,22 @@ def point_pr(ev, gt, preds):
         for p in ps:
             if not any(ev.get_jaccard(ans, p) >= ev.IOU_THRESH for ans in answers):
                 fp += 1
+                fp_present += 1
     prec = tp / (tp + fp) if tp + fp else None
     rec = tp / (tp + fn) if tp + fn else None
-    return {"tp": tp, "fp": fp, "fn": fn, "precision": prec, "recall": rec}
+    return {
+        "tp": tp,
+        "fp": fp,
+        "fn": fn,
+        "precision": prec,
+        "recall": rec,
+        "fp_on_gold_absent_questions": fp_absent,
+        "fp_on_gold_present_questions": fp_present,
+        "questions_gold_present": q_present,
+        "questions_gold_absent": q_absent,
+        "gold_present_questions_with_no_prediction": declined_present,
+        "gold_absent_questions_with_a_prediction": claimed_absent,
+    }
 
 
 def main():

@@ -146,6 +146,40 @@ def forest_figure(data):
     return f'<svg viewBox="0 0 {FW} {height}" role="img" aria-label="Forest plot of C3 minus C2 differences">{"".join(parts)}</svg>'
 
 
+CUAD_FW = 620
+
+
+def cuad_forest_figure(data):
+    boot = data["cuad_bootstrap"]["bootstrap"]
+    rows = [("precision", "precision (C3 &minus; C2)"),
+            ("recall", "recall (C3 &minus; C2)"),
+            ("micro_f1", "micro-F1 (C3 &minus; C2)")]
+    n = len(rows)
+    height = 40 + n * 30 + 34
+    span = max(max(abs(boot[k]["ci_low"]), abs(boot[k]["ci_high"])) for k, _ in rows) * 1.2
+    left, right = 200, CUAD_FW - 24
+    width = right - left
+
+    def X(v):
+        return left + (v + span) / (2 * span) * width
+
+    parts = [f'<rect x="0" y="0" width="{CUAD_FW}" height="{height}" fill="#FFFFFF"/>']
+    parts.append(f'<line x1="{X(0):.1f}" y1="24" x2="{X(0):.1f}" y2="{24+n*30}" stroke="{C["dark_earth"]}" stroke-width="1.2"/>')
+    for i, (k, label) in enumerate(rows):
+        r = boot[k]
+        y = 24 + i * 30 + 15
+        col = C["terracotta"] if r["excludes_zero"] else C["slate"]
+        parts.append(f'<text x="{left-12}" y="{y+4:.1f}" text-anchor="end" class="frow">{label}</text>')
+        parts.append(f'<line x1="{X(r["ci_low"]):.1f}" y1="{y:.1f}" x2="{X(r["ci_high"]):.1f}" y2="{y:.1f}" stroke="{col}" stroke-width="2.2"/>')
+        for b in (r["ci_low"], r["ci_high"]):
+            parts.append(f'<line x1="{X(b):.1f}" y1="{y-5:.1f}" x2="{X(b):.1f}" y2="{y+5:.1f}" stroke="{col}" stroke-width="2.2"/>')
+        parts.append(f'<circle cx="{X(r["delta"]):.1f}" cy="{y:.1f}" r="4.2" fill="{col}"/>')
+    for v in (-round(span, 2), 0, round(span, 2)):
+        parts.append(f'<text x="{X(v):.1f}" y="{24+n*30+18}" text-anchor="middle" class="tick">{v:+.2f}</text>')
+    parts.append(f'<text x="{(left+right)/2:.0f}" y="{height-4}" text-anchor="middle" class="axlab">C3 &minus; C2 under CUAD\'s scorer (paired bootstrap over 38 contracts, 95% percentile CI)</text>')
+    return f'<svg viewBox="0 0 {CUAD_FW} {height}" role="img" aria-label="Forest plot of C3 minus C2 under the CUAD scorer">{"".join(parts)}</svg>'
+
+
 def table(headers, rows, cls=""):
     th = "".join(f"<th>{h}</th>" for h in headers)
     trs = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows)
@@ -280,6 +314,30 @@ def build(data):
                              f'{b["tp"]}/{b["fp"]}/{b["fn"]}', f(b["recall"]), f(b["precision"])])
 
     gp = ours["gold_profile"]
+
+    cb = data["cuad_bootstrap"]
+    cbm, cbb = cb["method"], cb["bootstrap"]
+    boot_rows = []
+    for key, label in (("precision", "precision"), ("recall", "recall"), ("micro_f1", "micro-F1")):
+        r = cbb[key]
+        boot_rows.append([
+            label,
+            f'{cb["point_seed_averaged"]["C2"][key]:.4f}',
+            f'{cb["point_seed_averaged"]["C3"][key]:.4f}',
+            f'<strong>{r["delta"]:+.4f}</strong>',
+            f'[{r["ci_low"]:+.4f}, {r["ci_high"]:+.4f}]',
+            f'{r["frac_above_zero"]*100:.2f}%',
+            "excludes 0" if r["excludes_zero"] else "<strong>contains 0</strong>",
+        ])
+    stab_rows = [[f'{s["n_boot"]:,}', s["rng_seed"], f'{s["ci_low"]:+.5f}', f'{s["ci_high"]:+.5f}',
+                  f'{s["frac_above_zero"]*100:.2f}%',
+                  "excludes 0" if s["excludes_zero"] else "<strong>contains 0</strong>"]
+                 for s in cb["precision_ci_stability"]]
+    fps = cb["fp_by_contract_summary"]
+    fpcat_rows = [[e(r["category"]), f'{r["c2_fp_mean"]:.2f}', f'{r["c3_fp_mean"]:.2f}',
+                   f'{r["diff_mean"]:+.2f}', f'{r["c2_fp_raw"]}', f'{r["c3_fp_raw"]}', f'{r["diff_raw"]:+d}']
+                  for r in cb["fp_by_category"]]
+    ri = cb["recall_identity"]
 
     css = f"""
 :root {{
@@ -422,6 +480,27 @@ footer {{ margin-top: 56px; padding-top: 18px; border-top: 2px solid var(--rule)
 <p style="margin-bottom:0">Recall lands at {ourpts['C2']['recall']:.2f} for both conditions, comfortably above the 0.2 floor below which the pre-registered reading says the comparison is uninformative &mdash; so the machinery is ready for G4. It is the split, not the recall level, that blocks the comparison today.</p>
 </div>
 
+<h3>The C2&ndash;C3 gap under their scorer, with an interval</h3>
+<p>The two points above differ &mdash; C3 buys {abs(fps['raw_fp_total']['C3']-fps['raw_fp_total']['C2'])} fewer false-positive spans ({fps['raw_fp_total']['C2']} &rarr; {fps['raw_fp_total']['C3']}) at what looks like unchanged recall. <strong>That gap now has a confidence interval, and the interval does not support reading anything into it.</strong></p>
+<p>Method, stated because it is the whole result: a <strong>paired bootstrap resampling contracts with replacement</strong>, never decisions. Decisions cluster within contracts, so resampling decisions would treat correlated observations as independent and manufacture intervals far too narrow. Each of the {cbm['n_boot']:,} draws takes the <em>same</em> resampled contract set into both arms, so pairing is preserved and contract-level difficulty cancels. Seeds are repetitions, not questions: a contract's TP/FP/FN are <strong>averaged over its scored seeds before aggregation</strong>, which keeps the resampling unit the contract and, incidentally, removes the unequal-seed survivorship asymmetry &mdash; {sum(1 for r in cb['fp_by_contract'] if r['c2_seeds'] != r['c3_seeds'])} of {cbm['n_contracts']} contracts have different scored-seed counts in the two arms. Within a draw the estimator is CUAD's own micro-pooled one: <code>P = &Sigma;TP/(&Sigma;TP+&Sigma;FP)</code>, <code>R = &Sigma;TP/(&Sigma;TP+&Sigma;FN)</code>. RNG: <code>{e(cbm['rng'])}</code>.</p>
+<figure>
+{cuad_forest_figure(data)}
+<figcaption>All three intervals contain zero. Blue is the honest reading.</figcaption>
+</figure>
+{table(["metric (seed-averaged)", "C2", "C3", "C3 &minus; C2", "95% CI", "draws &gt; 0", "verdict"], boot_rows)}
+<div class="banner">
+<p style="margin-top:0"><strong>The precision difference is not distinguishable from noise.</strong> +{cbb['precision']['delta']:.4f} with a 95% interval of [{cbb['precision']['ci_low']:+.4f}, {cbb['precision']['ci_high']:+.4f}] &mdash; the lower bound sits <em>on</em> zero, and {cbb['precision']['frac_above_zero']*100:.1f}% of draws being positive is not a result. It is close enough to the boundary that the bound's sign is itself unstable across RNG seeds:</p>
+{table(["resamples", "RNG seed", "CI low", "CI high", "draws &gt; 0", "verdict"], stab_rows)}
+<p style="margin-bottom:0">Six honest runs of the same procedure, three saying <em>excludes zero</em> and three saying <em>contains zero</em>, separated in the fourth decimal place. <strong>A conclusion that flips on the RNG seed is not a conclusion.</strong> The micro-F1 difference &mdash; the headline metric under D-30 &mdash; is {cbb['micro_f1']['delta']:+.4f} [{cbb['micro_f1']['ci_low']:+.4f}, {cbb['micro_f1']['ci_high']:+.4f}], comfortably straddling zero. <strong>Nothing here is claimed.</strong></p>
+</div>
+<div class="note-box">
+<p style="margin-top:0"><strong>The identical recall is a coincidence, not an invariance.</strong> The pooled figures print as {ri['c2_recall_raw']:.4f} in both arms, but they are not equal: C2 is {ri['c2_counts'][0]}/{ri['c2_counts'][0]+ri['c2_counts'][1]} = {ri['c2_recall_raw']:.7f} and C3 is {ri['c3_counts'][0]}/{ri['c3_counts'][0]+ri['c3_counts'][1]} = {ri['c3_recall_raw']:.7f}. Different numerators, different denominators, agreeing to five decimal places by accident. Under the seed-averaged pairing that the bootstrap uses, the recalls separate to {cb['point_seed_averaged']['C2']['recall']:.4f} vs {cb['point_seed_averaged']['C3']['recall']:.4f} &mdash; a {cbb['recall']['delta']:+.4f} difference that is also indistinguishable from zero, [{cbb['recall']['ci_low']:+.4f}, {cbb['recall']['ci_high']:+.4f}]. <strong>Do not describe this run as "identical recall".</strong> The four-decimal coincidence in the pooled table is a fact about unequal trial counts, not about the model.</p>
+<p style="margin-bottom:0"><strong>The false-positive reduction is diffuse, not one outlier.</strong> Across the {cbm['n_contracts']} paired contracts the seed-averaged FP difference goes <strong>down on {fps['n_down']}, up on {fps['n_up']}, and is flat on {fps['n_flat']}</strong>. The largest single contract contributes {fps['top1_share_of_reduction']*100:.0f}% of the gross reduction and the top five contribute {fps['top5_share_of_reduction']*100:.0f}%, so the {abs(fps['raw_fp_total']['C3']-fps['raw_fp_total']['C2'])}-span figure is not an artifact of one or two documents. That is the one thing this check can rule out; it does not make the difference real, because 16-down-14-up is also exactly what a coin flip over contracts looks like.</p>
+</div>
+<p>Which categories the false positives come out of, seed-averaged and raw. <strong>Exclusivity alone accounts for {abs(cb['fp_by_category'][0]['diff_mean'])/abs(fps['total_reduction_mean_units'])*100:.0f}% of the net reduction</strong>; with Governing Law the two take {(abs(cb['fp_by_category'][0]['diff_mean'])+abs(cb['fp_by_category'][1]['diff_mean']))/abs(fps['total_reduction_mean_units'])*100:.0f}%. It is not a single category, but it is not spread evenly either &mdash; and Revenue/Profit Sharing moves the other way.</p>
+{table(["category", "C2 FP (seed-avg)", "C3 FP (seed-avg)", "&Delta;", "C2 FP raw", "C3 FP raw", "&Delta; raw"], fpcat_rows)}
+<p><strong>If a future run does separate these arms, here is what such a result would and would not be.</strong> It would be a precision gain at unchanged recall, on an <em>unselected</em> principle set, on {cbm['n_contracts']} contracts drawn from CUAD's train split, under a bag-of-words matcher that cannot see hallucination. It would still say nothing whatsoever about whether the citations were <em>correct</em> &mdash; no applicability source was loaded, and citation correctness is unmeasured in this run. Today it is not even that: it is a difference the data cannot separate from zero.</p>
+
 <h3>Per-category, under their scorer</h3>
 <p>Span-level TP/FP/FN under their Jaccard matcher, on <code>harness_val</code>. Note how differently this reads from our own Level A presence metric in &sect;5 &mdash; Governing Law scores 0.98 presence F1 for us and {ours['per_category']['C2']['Governing Law']['precision']:.2f} precision under their span matcher, because getting the presence call right is not the same as putting the span boundary where Atticus put it.</p>
 {table(["category", "C2 TP/FP/FN", "C2 R", "C2 P", "C3 TP/FP/FN", "C3 R", "C3 P"], catcuad_rows)}
@@ -478,7 +557,7 @@ footer {{ margin-top: 56px; padding-top: 18px; border-top: 2px solid var(--rule)
 </ul>
 
 <h2>9. How I read this</h2>
-<p>The headline is a null, and it is a good one. Requiring the model to name the principles it used changes nothing measurable about what it extracts: presence-class F1 moves {data['contrast'][0]['delta']:+.4f} [{data['contrast'][0]['ci_low']:+.4f}, {data['contrast'][0]['ci_high']:+.4f}], span F1 {data['contrast'][5]['delta']:+.4f} [{data['contrast'][5]['ci_low']:+.4f}, {data['contrast'][5]['ci_high']:+.4f}], exact-match {data['contrast'][8]['delta']:+.4f} [{data['contrast'][8]['ci_low']:+.4f}, {data['contrast'][8]['ci_high']:+.4f}] &mdash; fourteen paired comparisons and every accuracy interval straddling zero. What makes it worth having rather than merely uninformative is that the manipulation is demonstrated in the same data: C2 left <code>principles_cited</code> empty on all {cite['C2']['n_decisions']:,} of its decisions and leaked nothing, C3 filled it on {cite['C3']['rate']*100:.1f}% of {cite['C3']['n_decisions']:,}. A null with a treatment you can see landing is evidence; a null without one is a failed experiment. This is the first kind. Concretely it retires the risk the run was scheduled to retire &mdash; the citation half of the study can be built without hedging against the requirement degrading extraction &mdash; and that means the selection budget downstream buys principle quality rather than insurance.</p>
+<p>The headline is a null, and it is a good one. Requiring the model to name the principles it used changes nothing measurable about what it extracts: presence-class F1 moves {data['contrast'][0]['delta']:+.4f} [{data['contrast'][0]['ci_low']:+.4f}, {data['contrast'][0]['ci_high']:+.4f}], span F1 {data['contrast'][5]['delta']:+.4f} [{data['contrast'][5]['ci_low']:+.4f}, {data['contrast'][5]['ci_high']:+.4f}], exact-match {data['contrast'][8]['delta']:+.4f} [{data['contrast'][8]['ci_low']:+.4f}, {data['contrast'][8]['ci_high']:+.4f}] &mdash; fourteen paired comparisons and every accuracy interval straddling zero. <strong>The one place an effect might still have been hiding was CUAD's own scorer</strong>, where C3's point sits {cbb['precision']['delta']:.3f} higher in precision on {abs(fps['raw_fp_total']['C3']-fps['raw_fp_total']['C2'])} fewer false-positive spans. A paired contract-level bootstrap (&sect;2) puts that at [{cbb['precision']['ci_low']:+.4f}, {cbb['precision']['ci_high']:+.4f}], with a lower bound whose sign flips across RNG seeds, and the D-30 headline micro-F1 at {cbb['micro_f1']['delta']:+.4f} [{cbb['micro_f1']['ci_low']:+.4f}, {cbb['micro_f1']['ci_high']:+.4f}]. <strong>That closes it: the null holds on the primary metric too.</strong> What makes it worth having rather than merely uninformative is that the manipulation is demonstrated in the same data: C2 left <code>principles_cited</code> empty on all {cite['C2']['n_decisions']:,} of its decisions and leaked nothing, C3 filled it on {cite['C3']['rate']*100:.1f}% of {cite['C3']['n_decisions']:,}. A null with a treatment you can see landing is evidence; a null without one is a failed experiment. This is the first kind. Concretely it retires the risk the run was scheduled to retire &mdash; the citation half of the study can be built without hedging against the requirement degrading extraction &mdash; and that means the selection budget downstream buys principle quality rather than insurance.</p>
 <p>Two boundaries on what has been shown. The first is the principle set. It is <code>working_set.yaml</code>, not a curated one, and its own records say so: nine of ten principles carry <code>needs_rebuild</code> or <code>not_yet_specified</code> checker status, <code>w10</code> was never footprinted at all, and several fail the D-21 separability rule outright by gating applicability on gold. C2 already contains all ten principles, so C3 &minus; C2 is the addition of the citation <em>instruction</em> alone, measured at exactly +{data['contrast'][13]['delta']:.0f} prompt tokens on all {data['contrast'][13]['n_contracts']} paired contracts. <strong>This run therefore tests the requirement, not the principles</strong>, and nothing here is evidence that principles do or do not help. The second boundary is the CUAD panel. Panel B exists to prove the wiring &mdash; their scorer ingests our committed decisions with no invented parameter on either side, and the numbers it returns are sane &mdash; but on <code>harness_val</code>, inside their fine-tuning data, at 12 categories rather than 41, it is not a comparison and I have not drawn it as one. When the overlay does become drawable at G4, it will still be a calibration point rather than a hypothesis test: it tells a reader whether our starting position is reasonable or a strawman, which is exactly what makes an unoptimised iteration 0 defensible. <strong>The result this study eventually reports is its own iteration-0-to-ladder delta</strong>, which shares contamination on both sides and cancels it, and which no comparison to a fine-tuned encoder can substitute for.</p>
 <p>Three things in this data would change what I do next, and none of them is the null. The truncation asymmetry is the most actionable defect found: four trials, all C3, three of them on the shortest contracts in the split, is not noise shaped like noise &mdash; it says the citation obligation inflates reasoning hardest where there is least to reason about, and it converts directly into C3's {(oc['C2']['conformance']-oc['C3']['conformance'])*100:.1f}-point conformance deficit through <code>json_decode</code>. Fix it or record it as a known condition-asymmetric cost before the grid, because a manipulation that costs conformance is a manipulation that biases every downstream comparison through survivorship &mdash; the mechanism that manufactured a spuriously significant pooled presence-F1 result in this very run, and that a seed-balanced re-analysis reversed. The citation distribution is the second: <code>w06</code> drew {cite['C3']['by_principle']['w06']} citations while its checker fires on 1 of 480 decisions, and <code>w10</code> drew {cite['C3']['by_principle']['w10']} with no measured footprint whatsoever, which means citation counts must never stand in as evidence during principle selection. And the third is not about principles at all: Expiration Date at {data['per_category']['C2']['Expiration Date']['presence_f1']:.3f} against an always-present {data['per_category']['C2']['Expiration Date']['always_present_presence_f1']:.3f}, with two thirds of the Savelka trio at or below trivial, is a task-definition problem sitting in the middle of the category subset the study chose on purpose. It will contaminate any per-category reading of a principle effect until it is understood, and it is cheap to look at now.</p>
 

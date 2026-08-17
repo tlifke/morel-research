@@ -839,6 +839,16 @@ Format:
 > Level A / B / C stay as the diagnostic layer — they are what tells us *why* a
 > number moved, which their scorer cannot. Report the not-found rate alongside,
 > since it corrects a blind spot in theirs.
+>
+> **Aggregate pinned 2026-08-16** (D-30 named the scorer without naming the
+> number, which the bootstrap correctly flagged). The headline is **micro-F1 at
+> our operating point** — the harmonic mean of their micro-pooled precision and
+> recall under `get_jaccard` at IOU 0.5. AUPR and P@80%R are **not available to
+> us by construction**: both summarise a threshold sweep over ranked candidates,
+> and we emit one committed decision with no score to sweep. Micro-F1 is the
+> ladder's y-axis. The *comparison* to their models is separate and is not a
+> scalar — it is whether our point falls above or below their PR curve, which is
+> only drawable on `test` at G4.
 
 > **D-31 — Applicability labels get reliability, not validity. The human
 > spot-check is dropped.** (2026-08-16, Tyler)
@@ -878,6 +888,41 @@ Format:
 >    must be described that way and not as training on ground truth.
 > 4. The `spot_check` block in the frozen artifact stays `{}` — **unavailable,
 >    not zero** — and nothing downstream may read absence as agreement.
+
+> **D-32 — The CUAD-scored precision difference is not distinguishable from
+> noise** (2026-08-16, `reviews/c2-c3-bootstrap.md`)
+> Paired contract-level bootstrap, 38 contracts, 10,000 resamples, seeds
+> averaged as repetitions *within* contract so the resampling unit stays the
+> contract. That averaging also removed a real asymmetry: **18 of 38 contracts
+> had unequal scored-seed counts between arms.**
+>
+> | metric | C2 | C3 | C3 − C2 | 95% CI | draws > 0 |
+> |---|---|---|---|---|---|
+> | precision | 0.7138 | 0.7537 | +0.0400 | [−0.0001, +0.0807] | 97.5% |
+> | recall | 0.4251 | 0.4403 | +0.0152 | [−0.0156, +0.0480] | 83.4% |
+> | **micro-F1 (headline)** | 0.5328 | 0.5559 | +0.0230 | [−0.0102, +0.0578] | 91.5% |
+>
+> **The stability check is the most important number here, not the interval.**
+> The precision bound landed on zero (−0.00005), so it was re-run under other
+> RNG seeds and at 100k resamples: **three runs exclude zero, three contain it**,
+> separated in the fourth decimal, and it does **not** converge with more
+> resamples. 38 contracts simply cannot place that bound. **A conclusion that
+> flips on the RNG seed is not a conclusion.** The headline micro-F1 is a
+> comfortable null.
+>
+> **The identical recall was a coincidence and the results page was wrong to
+> imply otherwise.** C2 = 340/790 = 0.43037975, C3 = 343/797 = 0.43036386 —
+> different numerators *and* denominators agreeing to five decimals by accident
+> (Δ = −1.6e−5), an artifact of unequal trial counts. Seed-averaged they
+> separate to 0.4251 vs 0.4403. Corrected on the page.
+>
+> **The outlier check passed into a worse reading, which is the useful part.**
+> The 19-FP reduction is not one contract — it is down on 16, up on 14, flat on
+> 8. Largest single contract is 14% of the gross reduction, top five 49%. But
+> **16-down/14-up across 38 contracts is what a coin flip looks like**, and that
+> is precisely why the interval touches zero. By category it concentrates
+> without being singular: Governing Law 57% of the net reduction, Exclusivity
+> 35%, with Revenue/Profit Sharing moving the other way.
 
 ## Pending
 

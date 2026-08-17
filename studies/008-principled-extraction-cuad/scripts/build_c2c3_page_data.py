@@ -331,6 +331,10 @@ def main():
         "pooled_all_scored": scored["pooled_all_scored"],
     }
 
+    boot_path = STUDY / "reviews" / "c2-c3-bootstrap-data.json"
+    if boot_path.exists():
+        data["cuad_bootstrap"] = json.loads(boot_path.read_text())
+
     OUT.write_text(json.dumps(data, indent=2) + "\n")
     print(f"wrote {OUT}")
 
