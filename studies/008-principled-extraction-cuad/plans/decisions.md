@@ -843,9 +843,18 @@ Format:
 > **Aggregate pinned 2026-08-16** (D-30 named the scorer without naming the
 > number, which the bootstrap correctly flagged). The headline is **micro-F1 at
 > our operating point** — the harmonic mean of their micro-pooled precision and
-> recall under `get_jaccard` at IOU 0.5. AUPR and P@80%R are **not available to
-> us by construction**: both summarise a threshold sweep over ranked candidates,
-> and we emit one committed decision with no score to sweep. Micro-F1 is the
+> recall under `get_jaccard` at IOU 0.5.
+>
+> **Corrected 2026-08-17.** I wrote that AUPR and P@80%R were "not available to
+> us **by construction**". That was wrong, twice over: AUPR needs a *ranking
+> with scores*, and our lack of one is a **design choice in the output
+> contract**, not a property of prompting — and Tinker does expose logprobs
+> (`TopKPromptLogprobs`), which I had also said it did not. Both are obtainable.
+> `plans/comparability-plan.md` records what it would take, what each candidate
+> score actually measures, and why the resulting comparison is a fair
+> *system-level* one rather than a like-for-like measurement of the same
+> construct. Micro-F1 remains the headline **for now**, because it is what our
+> current outputs support — not because nothing else is possible. Micro-F1 is the
 > ladder's y-axis. The *comparison* to their models is separate and is not a
 > scalar — it is whether our point falls above or below their PR curve, which is
 > only drawable on `test` at G4.
