@@ -254,7 +254,7 @@ def fig_f1_by_category(d):
         parts.append(f'<text x="{lx + 13}" y="38" class="leg">{e(label)}</text>')
         lx += 26 + 6.6 * len(label)
     parts.append(f'<line x1="{lx + 4}" y1="30" x2="{lx + 4}" y2="39" stroke="{C["dark_earth"]}" stroke-width="2"/>')
-    parts.append(f'<text x="{lx + 11}" y="38" class="leg">their best @0.1 (open threshold)</text>')
+    parts.append(f'<text x="{lx + 11}" y="38" class="leg">their best @0.1</text>')
     for t in (0, 0.25, 0.5, 0.75, 1.0):
         x = labw + t * barw
         parts.append(f'<line x1="{x:.1f}" y1="{top - 8}" x2="{x:.1f}" y2="{top + grouph * len(rows) - 12:.1f}" stroke="{C["cream_dark"]}" stroke-width="0.7"/>')
@@ -366,8 +366,9 @@ def fig_per_category(d):
 
 def fig_error_profile(d):
     rows = d["error_profile"]
-    w, h = 900, 300
+    w = 900
     labw, top, rowh = 178, 58, 30
+    h = top + len(rows) * rowh + 52
     barw = w - labw - 210
     parts = []
     parts.append(f'<text x="{labw}" y="26" class="axlab">False-positive composition (each bar = that system\'s total FP)</text>')
@@ -390,7 +391,8 @@ def fig_error_profile(d):
             f'<text x="{labw + barw + 24}" y="{y + 14:.0f}" class="frow">'
             f'{r["decline_rate"] * 100:.0f}% / {r["overclaim_rate"] * 100:.0f}%</text>'
         )
-    parts.append(f'<text x="{labw}" y="{top + len(rows) * rowh + 22:.0f}" class="note">Solid = FPs on questions whose gold is empty (over-claiming). Faded = FPs on questions that do have gold (wrong boundaries). Their models at conf 0.5; ours pooled over 3 seeds.</text>')
+    parts.append(f'<text x="{labw}" y="{top + len(rows) * rowh + 16:.0f}" class="note">Solid = FPs on questions whose gold is empty (over-claiming). Faded = FPs on questions that do have gold (wrong boundaries).</text>')
+    parts.append(f'<text x="{labw}" y="{top + len(rows) * rowh + 32:.0f}" class="note">Their models at conf 0.5; ours pooled over 3 seeds. Bar lengths are normalised per system, so widths compare composition, not counts.</text>')
     return f'<svg viewBox="0 0 {w} {h}" role="img" xmlns="http://www.w3.org/2000/svg">{"".join(parts)}</svg>'
 
 
@@ -424,6 +426,13 @@ def fig_bootstrap(d):
         )
     parts.append(f'<text x="{labw}" y="{top + rowh * len(order) + 30}" class="note">C3 &#8722; C2, paired contract bootstrap, 10,000 resamples, 38 contracts. Every interval crosses zero.</text>')
     return f'<svg viewBox="0 0 {w} {h}" role="img" xmlns="http://www.w3.org/2000/svg">{"".join(parts)}</svg>'
+
+
+def rng(vals, n=3, pct=False):
+    lo, hi = min(vals), max(vals)
+    if pct:
+        return f"{lo * 100:.0f}&ndash;{hi * 100:.0f}%"
+    return f"{f(lo, n)}&ndash;{f(hi, n)}"
 
 
 def build(d):
@@ -646,6 +655,12 @@ footer {{ margin-top: 58px; padding-top: 18px; border-top: 2px solid var(--rule)
 """
 
     c2, c3 = hv["ours"]["C2"], hv["ours"]["C3"]
+    their_hv_aupr = [hv["their"][m]["curve"]["aupr"] for m in MODELS]
+    their_test_aupr = [r["aupr_recovered"] / 100 for r in t2]
+    their_err = [r for r in d["error_profile"] if r["kind"] == "their"]
+    our_err = [r for r in d["error_profile"] if r["kind"] == "ours"]
+    gl = [r for r in d["per_category"] if r["category"] == "Governing Law"][0]
+    gl_their_prec = [gl["their"][m]["precision"] for m in MODELS]
     iv = d["bootstrap"]["intervals"]
     body = f"""<div class="wrap">
 <h1>Study 008 beside the CUAD paper: which comparisons are legitimate?</h1>
@@ -657,8 +672,8 @@ footer {{ margin-top: 58px; padding-top: 18px; border-top: 2px solid var(--rule)
 <p>CUAD's three released checkpoints score AUPR {f(t2[0]['aupr_recovered'], 3)} / {f(t2[1]['aupr_recovered'], 3)} / {f(t2[2]['aupr_recovered'], 3)} against published {f(t2[0]['aupr_published'], 1)} / {f(t2[1]['aupr_published'], 1)} / {f(t2[2]['aupr_published'], 1)} on the official <code>test</code> split ({cmp_['test_questions']:,} questions, {cmp_['test_categories']} categories). This is the honest reference for what a task-specific fine-tuned extractor achieves. It says nothing about us.</p>
 </div>
 <div class="verdict no">
-<h4><span class="flag no">mechanically clean, evidentially not</span>Their models vs ours on <code>harness_val</code></h4>
-<p>Same scorer, same contracts, same {cmp_['hv_categories']} categories &mdash; and their models were <strong>fine-tuned on these contracts</strong>. Their AUPR here is 0.688&ndash;0.744 against their honest 0.426&ndash;0.482, with the published model ordering scrambled. Usable as a <strong>memorised ceiling</strong> and as a diagnostic on annotation convention. <strong>Not</strong> usable to say who is better.</p>
+<h4><span class="flag no">ceiling only</span>Same scorer, but a memorised opponent &mdash; their models vs ours on <code>harness_val</code></h4>
+<p>Same scorer, same contracts, same {cmp_['hv_categories']} categories &mdash; and their models were <strong>fine-tuned on these contracts</strong>. Their AUPR here is {rng(their_hv_aupr)} against their honest {rng(their_test_aupr)}, with the published model ordering scrambled. Usable as a <strong>memorised ceiling</strong> and as a diagnostic on annotation convention. <strong>Not</strong> usable to say who is better.</p>
 </div>
 <div class="verdict missing">
 <h4><span class="flag missing">does not exist</span>Their published numbers vs our numbers</h4>
@@ -699,7 +714,7 @@ footer {{ margin-top: 58px; padding-top: 18px; border-top: 2px solid var(--rule)
 
 <h3>Their Figure 4, recomputed &mdash; and why we cannot appear in it</h3>
 <p>The CUAD paper's Figure&nbsp;4 is captioned &ldquo;<em>{e(d['figure4a']['paper_presentation']['caption'])}</em>&rdquo;: per-category AUPR, a <strong>single model</strong> (DeBERTa-xlarge), horizontal bars, sorted descending. Figure&nbsp;2 below matches that presentation, recomputed from the authors' shipped predictions with <strong>exact-match</strong> category subsetting rather than <code>evaluate.py</code>'s substring filter &mdash; the substring filter leaks on <code>Insurance</code> (102 exact questions against 142 substring matches), and exact match is the correct subsetting.</p>
-<p><strong>We cannot put a bar of ours on this axis, in this figure or any recomputation of it.</strong> AUPR summarises a sweep over ranked candidates at every confidence threshold; our harness emits one committed decision with no confidence and nothing to sweep (D-32). An AUPR for us would have to be invented. Figure&nbsp;5, further down, is the closest comparable per-category view we can honestly draw &mdash; micro-F1 at the operating point, on <code>harness_val</code>, for their models and ours &mdash; and it is a different quantity on a different split, which is why it is a separate figure rather than extra bars here.</p>
+<p><strong>No bar of ours belongs on this axis &mdash; not because an AUPR is impossible for us, but because this run has no ranking to sweep.</strong> AUPR summarises a threshold sweep over <em>scored</em> candidates; their extractive head emits a top-20 candidate list per question with probabilities, swept by one global threshold. Our output contract emits a single committed decision with no score attached, which is a <strong>design choice in the contract</strong> rather than a property of prompting &mdash; D-32 was corrected on this point on 2026-08-17, and <code>plans/comparability-plan.md</code> records what producing a ranking would take (sampling frequency, sequence logprob, or teacher-forced candidate likelihood via Tinker's <code>TopKPromptLogprobs</code>) and why the resulting AUPR would be a fair <em>system-level</em> comparison rather than a like-for-like measurement of the same construct. Until that exists, Figure&nbsp;5 below is the closest comparable per-category view we can honestly draw &mdash; micro-F1 at the operating point, on <code>harness_val</code> &mdash; and it is a different quantity on a different split, which is why it is a separate figure rather than extra bars here.</p>
 <figure>
 {fig_paper_figure4(d)}
 <figcaption><strong>Figure 2.</strong> Their Figure&nbsp;4, recomputed: per-category AUPR for DeBERTa-v2-xlarge on the official <code>test</code> split, all {len(d['figure4a']['rows'])} categories, sorted descending as they sort. Terracotta bars are the {cmp_['hv_categories']} categories study 008 works on. Bar <em>values</em> could not be read from the published PDF &mdash; only their category ordering &mdash; so this is a recomputation matching their presentation, not a pixel-level match.</figcaption>
@@ -714,7 +729,7 @@ footer {{ margin-top: 58px; padding-top: 18px; border-top: 2px solid var(--rule)
 <h2>3. The <code>harness_val</code> head-to-head &mdash; and why the banner matters more than the figure</h2>
 
 <div class="banner">
-<p><strong>These are memorised scores. Read the figure as a ceiling, not as an opponent.</strong> The {cmp_['their_contracts']} <code>harness_val</code> contracts sit inside CUAD's official <em>train</em> split, i.e. inside these three checkpoints' fine-tuning data. Their AUPR here is 0.688 / 0.744 / 0.718 against the reproduced Table 2 values of {f(t2[0]['aupr_recovered'] / 100, 3)} / {f(t2[1]['aupr_recovered'] / 100, 3)} / {f(t2[2]['aupr_recovered'] / 100, 3)}, and the model ordering is scrambled relative to the published one. Nothing in this section is evidence that our system is better or worse than theirs.</p>
+<p><strong>These are memorised scores. Read the figure as a ceiling, not as an opponent.</strong> The {cmp_['their_contracts']} <code>harness_val</code> contracts sit inside CUAD's official <em>train</em> split, i.e. inside these three checkpoints' fine-tuning data. Their AUPR here is {' / '.join(f(a, 3) for a in their_hv_aupr)} against the reproduced Table 2 values of {f(t2[0]['aupr_recovered'] / 100, 3)} / {f(t2[1]['aupr_recovered'] / 100, 3)} / {f(t2[2]['aupr_recovered'] / 100, 3)}, and the model ordering is scrambled relative to the published one. Nothing in this section is evidence that our system is better or worse than theirs.</p>
 <p style="margin-bottom:0"><strong>Second caveat, equally load-bearing.</strong> At any single confidence threshold their models emit <strong>at most one span per question</strong>. On categories whose gold carries several spans per contract &mdash; License Grant averages {f([r for r in d['per_category'] if r['category'] == 'License Grant'][0]['gold_spans_per_question'], 2)} gold spans per gold-present question here, Source Code Escrow {f([r for r in d['per_category'] if r['category'] == 'Source Code Escrow'][0]['gold_spans_per_question'], 2)} &mdash; their recall is structurally capped near 1&thinsp;/&thinsp;spans-per-question. Their apparent weakness there is an artifact of the comparison. That is why every per-category number below is reported at two thresholds.</p>
 </div>
 
@@ -757,7 +772,7 @@ footer {{ margin-top: 58px; padding-top: 18px; border-top: 2px solid var(--rule)
 {table(["gold span class", "n spans", "RoBERTa-base", "RoBERTa-large", "DeBERTa-v2-xlarge", "our C2", "our C3"], exp_rows)}
 <p>Note the calendar-date row, which is the trap: our presence recall there is 1.00 and our span-IOU recall {f(d['expiration'][0]['ours']['C2']['span_iou_recall'], 2)} / {f(d['expiration'][0]['ours']['C3']['span_iou_recall'], 2)} against their 1.00. On the cases we do claim, the span fails the IOU bar because our prompt clips the answer to the bare date value while the gold span is a whole sentence. Fixing the duration false-absents without also widening the span would buy presence and lose it again at the IOU gate.</p>
 
-<h3>Finding 2 &mdash; Governing Law precision: 0.97&ndash;1.00 theirs, {f(d['per_category'][1]['ours']['C2']['precision'], 2)} ours</h3>
+<h3>Finding 2 &mdash; Governing Law precision: {rng(gl_their_prec, 2)} theirs, {f(d['per_category'][1]['ours']['C2']['precision'], 2)} ours</h3>
 <p>Their precision is {f(d['per_category'][1]['their']['RoBERTa-base']['precision'], 2)}&ndash;{f(d['per_category'][1]['their']['RoBERTa-large']['precision'], 2)}; ours is {f(d['per_category'][1]['ours']['C2']['precision'], 2)} (C2) and {f(d['per_category'][1]['ours']['C3']['precision'], 2)} (C3), on {d['per_category'][1]['ours']['C2']['fp']} and {d['per_category'][1]['ours']['C3']['fp']} false positives. Every one of those false positives falls on a <em>gold-present</em> question ({d['per_category'][1]['ours']['C2']['fp_on_gold_absent_questions']} on gold-absent questions), so we are not failing to find the clause &mdash; we are adding venue, forum and arbitration clauses beside it. Their models were trained on annotations that exclude those, and they exclude them. This is independent corroboration of the same convention that principle <code>w03</code> exists to state, and <code>w03</code> is the one record in the working set with <code>checker_status: usable</code>. It is not yet fixing this: C2 and C3 carry essentially the same false positives.</p>
 
 <h3>Finding 3 &mdash; Volume Restriction is poor for everyone</h3>
@@ -770,7 +785,7 @@ footer {{ margin-top: 58px; padding-top: 18px; border-top: 2px solid var(--rule)
 <figcaption><strong>Figure 6.</strong> Where each system's false positives land, on <code>harness_val</code> at their conf&nbsp;{d['headline_conf']:g}. Right-hand column: decline rate (gold-present questions answered with nothing) and over-claim rate (gold-absent questions answered with something).</figcaption>
 </figure>
 {table(["system", "declines on gold-present Q", "over-claims on gold-absent Q", "FP on gold-absent Q", "FP on gold-present Q", "total FP"], err_rows)}
-<p><strong>Their false positives are 89&ndash;95% over-claims on gold-absent questions, with near-perfect span boundaries. Ours are 68&ndash;72% wrong boundaries on gold-present questions.</strong> The decline rates are nearly identical &mdash; 22&ndash;26% theirs against 26&ndash;28% ours &mdash; so both systems lose about the same recall to silence and then differ completely in what they do when they speak. We over-claim on 4&ndash;5% of gold-absent questions against their 17&ndash;22%.</p>
+<p><strong>Their false positives are {rng([r['fp_absent_share'] for r in their_err], pct=True)} over-claims on gold-absent questions, with near-perfect span boundaries. Ours are {rng([r['fp_present_share'] for r in our_err], pct=True)} wrong boundaries on gold-present questions.</strong> The decline rates are nearly identical &mdash; {rng([r['decline_rate'] for r in their_err], pct=True)} theirs against {rng([r['decline_rate'] for r in our_err], pct=True)} ours &mdash; so both systems lose about the same recall to silence and then differ completely in what they do when they speak. We over-claim on {rng([r['overclaim_rate'] for r in our_err], pct=True)} of gold-absent questions against their {rng([r['overclaim_rate'] for r in their_err], pct=True)}.</p>
 <p>Read as system character: <strong>conservative-and-sloppy-bounded</strong> against <strong>aggressive-and-precisely-bounded</strong>. That tracks the task framings exactly. Ours is prompted for a committed decision that has to be defensible, including a decision to say nothing; theirs is a recall-first shortlist for a human reviewer, swept over a threshold. It also means span fidelity and absence discipline are separable problems for us &mdash; any principle that improves boundaries is not in tension with the absence machinery, which is the half already working.</p>
 
 <h2>6. Our own contrast, C2 vs C3, is a null</h2>
@@ -789,10 +804,10 @@ footer {{ margin-top: 58px; padding-top: 18px; border-top: 2px solid var(--rule)
 <p>The clean comparison is: <strong>our committed decision and their released checkpoints, both on the official <code>test</code> split, both scored by <code>evaluate.py</code>, on the same category set.</strong> It does not exist yet. Concretely it requires:</p>
 <ul>
 <li><strong>Gate G4</strong> &mdash; a deliberate human go/no-go opening the {cmp_['test_questions'] // cmp_['test_categories']}-contract <code>test</code> split, which no part of this study has loaded. Everything on this page is pre-G4 development evidence.</li>
-<li><strong>Our run on <code>test</code></strong> at whatever condition the ladder settles on, producing one committed-decision point &mdash; not a curve, because our harness has no threshold to sweep.</li>
+<li><strong>Our run on <code>test</code></strong> at whatever condition the ladder settles on. As the output contract stands that produces one committed-decision point rather than a curve; adding a candidate score would produce a curve, at the cost of the comparison becoming system-level rather than like-for-like.</li>
 <li><strong>A decision on the category axis.</strong> Their published figures pool {cmp_['test_categories']} categories; we run {cmp_['hv_categories']}. A {cmp_['hv_categories']}-category recomputation of their side is a different quantity from Table&nbsp;2 and must never be printed beside it. Either we recompute theirs at {cmp_['hv_categories']} from their shipped predictions, or the comparison is category-mismatched and inadmissible &mdash; and Figure&nbsp;2 shows the mismatch is not neutral: our {cmp_['hv_categories']} average AUPR {f(d['figure4a']['subset_mean_aupr'], 3)} for their best model against {f(d['figure4a']['rest_mean_aupr'], 3)} for the categories we left out.</li>
-<li><strong>An aggregate that both sides can occupy.</strong> Their headline is AUPR; we cannot produce one (D-32). Micro-F1 at the operating point is the aggregate both sides can stand on, and it is what &sect;4's Figure&nbsp;5 uses &mdash; but a single committed point compared against a model free to pick a threshold favours whoever chose better, and the pre-registration should fix which of their operating points is the reference before the split opens.</li>
-<li><strong>An honest treatment of the single-point-versus-curve mismatch.</strong> Our point lands somewhere under their curve; where it lands relative to their <em>operating points</em> is the only defensible reading, and the pre-registration on that should stand before the split opens.</li>
+<li><strong>An aggregate that both sides can occupy.</strong> Their headline is AUPR; we do not have one <em>yet</em> &mdash; it needs a scored ranking our output contract does not currently emit, and <code>plans/comparability-plan.md</code> costs out the three ways to get one. Micro-F1 at the operating point is the aggregate both sides can stand on, and it is what &sect;4's Figure&nbsp;5 uses &mdash; but a single committed point compared against a model free to pick a threshold favours whoever chose better, and the pre-registration should fix which of their operating points is the reference before the split opens.</li>
+<li><strong>An honest treatment of the single-point-versus-curve mismatch.</strong> As long as we report a point and they report a curve, where our point lands relative to their <em>operating points</em> is the only defensible reading, and the pre-registration on that should stand before the split opens.</li>
 </ul>
 <p>Until then, the memorised-ceiling comparison is what we have, and it answers a different question: not &ldquo;are we good&rdquo; but &ldquo;what does competence on this annotation convention look like, and which of our gaps are convention gaps.&rdquo;</p>
 

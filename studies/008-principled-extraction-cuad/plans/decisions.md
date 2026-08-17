@@ -988,6 +988,45 @@ Format:
 > per question) their recall is structurally capped. Per-category tables are
 > given at two thresholds for that reason.
 
+> **D-34 — Our 12-category subset is the easy end of CUAD, and other findings
+> from building the side-by-side** (2026-08-17,
+> `reviews/baseline-comparison.html`)
+>
+> **The one that changes how every number so far should be read:** DeBERTa
+> averages AUPR **0.608 on our 12 categories against 0.393 on the excluded 29**,
+> and nine of our twelve sit in the top half of their difficulty ordering.
+> **Every absolute number this study has produced is flattered by the subset
+> choice.** That was never stated in any prior review. It is also an independent
+> argument for `plans/comparability-plan.md` task 1 — moving to all 41 is not
+> only about comparability, it is about not reporting a number inflated by
+> having picked the easy categories.
+>
+> **An unexplained anomaly, recorded rather than smoothed.** Our recomputed
+> per-category AUPR ordering does not match the paper's: Spearman ρ = 0.861 over
+> their 40 labelled categories, with Source Code Escrow at #19 against their
+> #11 and Volume Restriction #36 against #24. **Pooled Table 2 reproduces to
+> four decimals**, so the scoring path is sound; the per-category divergence has
+> no explanation yet. Do not build a per-category claim on our recomputation
+> until it does.
+>
+> **Their Figure 4 plots 40 categories, not 41.** `Price Restrictions` — AUPR
+> 0.000 for all three checkpoints — is absent from their axis while the caption
+> says all 41.
+>
+> **The `harness_val` head-to-head is not strictly same-question.** Their run
+> covers all 40 contracts (480 questions); ours covers the 38-contract C2∩C3
+> intersection across 3 seeds with per-trial dropout (1,236 and 1,200
+> questions). Gold-present rates differ slightly (44.0% vs 41.2/41.7%). Flagged
+> on the page; an earlier review placed the two counts side by side without
+> noting the differing pools.
+>
+> **Correction to D-33's Governing Law reading.** All 44 (C2) / 42 (C3) false
+> positives fall on **gold-present** questions and none on gold-absent. So it is
+> an extra-span or boundary failure, **not over-claiming** — the
+> venue/arbitration characterisation was carried forward from the earlier
+> analysis and not re-verified. `w03` may still be the relevant principle, but
+> the mechanism stated in D-33 is not established.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing
