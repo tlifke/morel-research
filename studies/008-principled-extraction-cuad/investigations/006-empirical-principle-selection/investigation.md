@@ -168,6 +168,29 @@ probably the cleaner fix than shaving the selection floor, since it also
 resolves the Phase-2 coverage problem (SCE has 2 positive contracts in
 `model_train`).
 
+## A third constraint, found 2026-08-16 (D-29)
+
+**Every principle's A/B must measure effects both inside AND outside its
+declared `scope`.** The design as written tests a principle on the contracts
+where it applies, for statistical power. That is necessary but not sufficient:
+`scope` is declarative to us and **invisible as a constraint to the model**.
+Measured — `w06`, scoped to Agreement Date, is cited on 57 of 120 *Expiration
+Date* decisions against 9 of 120 Agreement Date decisions, and is named in 43 of
+63 false-absents on a category it does not claim.
+
+So a principle can be near-inert inside its own scope while doing real damage
+outside it. An in-scope-only A/B would have scored `w06` harmless. The
+out-of-scope arm is where the surprises live, and it is cheap — the same trials
+already produce all twelve decisions per contract.
+
+Related, and already visible: `w11` (proposed, not added) carries
+`conflicts_with: [w06]`, and `w01` interacts with it directly — `w01`'s
+minimal-expression exception is right for Agreement Date and wrong for
+Expiration Date, so `w11` alone would convert ~132 presence errors into span
+errors. **Pairs must be testable, not just singletons.** This is the
+interaction case the scope section already anticipated, now with a concrete
+instance.
+
 ## Acceptance
 
 - A selection protocol written down **before** any selection run: split,

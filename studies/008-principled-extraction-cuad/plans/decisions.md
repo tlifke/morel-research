@@ -738,6 +738,63 @@ Format:
 > `needs_rebuild` or `not_yet_specified` checkers, this tests the **citation
 > requirement**, not whether the principles are good.
 
+> **D-29 — Declared scope does not constrain citation, and a principle can do
+> damage outside its own scope** (2026-08-16,
+> `reviews/expiration-date-diagnosis.md`)
+> Diagnosing the study's worst cell produced a harness-level result that
+> outranks the category it came from.
+>
+> **`w06` is scoped to Agreement Date. It is cited on 57 of 120 Expiration Date
+> decisions and only 9 of 120 Agreement Date decisions**, and **43 of the 63 C3
+> false-absents on Expiration Date cite it by name.** The `scope` field is
+> declarative to us and invisible as a constraint to the model.
+>
+> **The consequence for inv 006 is structural and must be designed in.** The
+> per-principle A/B was specified to test a principle on the contracts where it
+> *applies* — for statistical power. But a principle can be near-inert inside
+> its declared scope while destroying a different category outside it. Testing
+> only in-scope would have scored `w06` as harmless. **Every principle's A/B
+> must therefore measure effects both inside and outside its declared scope**,
+> and the out-of-scope arm is where the surprises live. This also contaminates
+> H4's confusion matrix independently of anything else.
+>
+> **Expiration Date itself: a principle, not a description fix.** The split is
+> total — recall **1.00** where gold contains an explicit calendar date (31
+> decisions), **0.00** where it expresses a duration (95 decisions). **78% of
+> gold-present contracts state the term without a calendar date.** All 132
+> false-absents sit there; there are zero false-presents in either arm.
+> The reason it is a principle rather than a wording fix: the model finds the
+> right clause every time, quotes it, and frequently **computes the correct
+> expiry date before ruling absent** — "the text says 'expiring on the third
+> anniversary date'. It does not explicitly state 'March 20, 2005'." That is a
+> correctly-understood target plus a wrong call on a hard case, which is the
+> definition of business logic under D-1.
+> Alternatives ruled out with evidence: not length (FN rate flat across token
+> quartiles; shortest contract misses, longest hits), not position (hits and
+> misses span the same offset range), not confusion (zero overlap with any of
+> the 519 non-Expiration decisions on the failing contracts).
+>
+> **Candidate `w11` is proposed but NOT added**, with `conflicts_with: [w06]` —
+> they must be selected *against* each other rather than added independently.
+> Applicability instance-only, so D-21-clean by construction; compliance is
+> programmatic (`decision_kind == "absence"` → fails), so inside D-4. Touches
+> 133 decisions on `harness_val`, all currently false-absent.
+>
+> **`w01` will fight it, and this is the interaction case inv 006 predicted.**
+> Median gold Agreement Date span is 17 chars; median gold **Expiration Date**
+> span is **199** (max 1,243). `w01`'s exception clips "the date and party
+> categories" to the minimal value — right for Agreement Date, wrong for
+> Expiration Date. `w11` alone converts ~132 presence errors into span errors.
+> **Test them as a pair.** A prompt patch would have fixed presence and buried
+> this, which is a second argument for the principle route.
+>
+> **Volume Restriction gets no principle**, deliberately. n=9 present decisions,
+> errors in both directions, and its false-presents read as *more* faithful to
+> the printed definition than gold does. One contract had both gold spans
+> extracted exactly and still scored 4 FN / 1 TP across seeds — seed
+> instability, not comprehension. It needs `w08` checker work at
+> `principle_train` scale, not a new record.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing
