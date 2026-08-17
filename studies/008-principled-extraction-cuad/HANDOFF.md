@@ -3,6 +3,16 @@
 **Read this first, then `plans/splits.md`, `plans/workstreams.md`,
 `plans/comparability-plan.md`, then `plans/decisions.md`.** Updated 2026-08-17.
 
+**Before relying on any data that is not in git, read
+`plans/data-inventory.md`** — it records what lives outside the repo, why, and
+the exact command to rebuild each piece. The two that matter most: their models'
+raw n-best over our splits (45 MB, gitignored, ~1.49 GPU-h to regenerate — the
+raw material for exploring alternative scoring methods, logits included), and
+their shipped `test`-split predictions, which exist **only on the desktop** and
+are re-downloadable from Zenodo record 4599830. Our own trial traces **cannot**
+be regenerated at all: Tinker does not honour seeds, so a re-run yields
+different data, not the same data.
+
 ## What this study is
 
 Does requiring principle citation in structured agent outputs improve task
