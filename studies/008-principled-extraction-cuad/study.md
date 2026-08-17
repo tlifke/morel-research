@@ -126,6 +126,20 @@ Assessed 2026-08-15 rather than inherited by default:
 | LLM-judge scoring patterns from studies 004/005 | **Cut.** Deliberate: every Phase-1 and Phase-2 metric is programmatic. A judge would contaminate the reward story in Phase 2. |
 | Desktop-GPU / Ollama path | **Not primary.** Model axis is Tinker + one frontier API. Local models only if a cheap sanity loop is wanted. |
 
+## Running cost
+
+Recorded per session so the study's cost is reportable rather than
+reconstructed. Inference spend only (Tinker + labelling), excluding the
+researcher's and agents' own time.
+
+| date | spend | what it bought |
+|---|---|---|
+| 2026-08-16 | **$5.49** | the C2-vs-C3 grid (240 trials, 5.26M tokens, 6.55 model-hours), applicability labelling (4,498 judgements over 100 contracts), and all smoke runs |
+
+For scale: the CUAD baseline reproduction costs **$0** (the checkpoints ship
+the authors' own test-split predictions, so `evaluate.py` runs CPU-only), and a
+full three-model inference run is ~5.6 GPU-hours on the desktop, also $0.
+
 ## Forward-looking
 
 _To be populated._
