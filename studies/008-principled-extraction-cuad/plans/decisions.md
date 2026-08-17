@@ -924,6 +924,61 @@ Format:
 > without being singular: Governing Law 57% of the net reduction, Exclusivity
 > 35%, with Revenue/Profit Sharing moving the other way.
 
+> **D-33 — Their models confirm the Expiration Date convention is real and
+> learnable; `w11` is justified and `w01` is measurably harmful there**
+> (2026-08-16, `reviews/cuad-baseline-on-train-splits.md`)
+> All three CUAD checkpoints run over `harness_val` + `principle_train` at 12
+> categories, 1.49 GPU-hours. **Every score here is memorisation-inflated**
+> (AUPR 0.65–0.74 against the reproduced Table 2's 0.43–0.48, model ordering
+> scrambled) and is **never evaluative** — the value is diagnostic.
+>
+> **The Expiration Date question is answered decisively and it favours `w11`.**
+> Presence recall on gold spans expressing the term as a **duration**:
+>
+> | | RoBERTa-b | RoBERTa-l | DeBERTa | our C2 | our C3 |
+> |---|---|---|---|---|---|
+> | duration (n=18) | 0.89 | 1.00 | 1.00 | **0.00** | **0.02** |
+> | calendar date (n=7) | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+>
+> On `principle_train` duration recall is 1.00 for all three. Their hits are
+> verbatim reproductions of the gold sentence on the exact contracts the
+> diagnosis named. **Three architectures at three scales converge on the
+> convention**, so it is real and learnable rather than an annotation quirk, and
+> `w11` targets something genuine. This is the strongest empirical case any
+> principle in the study has.
+>
+> **The `w01` conflict is now measured rather than predicted, and it is worse
+> than expected.** On calendar-date golds our presence recall is 1.00 but our
+> **span-IOU recall is 0.07 (C2) / 0.27 (C3)** — our spans are clipped to the
+> bare date and fail the IOU-0.5 gate, where theirs score 1.00. So `w01`'s
+> minimal-expression exception is *already* costing us on Expiration Date even
+> where we get presence right. Fixing presence with `w11` alone would convert
+> false-absents into IOU failures. **They must be selected as a pair**, and
+> `w01`'s date exception needs narrowing to Agreement Date specifically.
+>
+> **`w03` is in the set and is not doing its job.** Their Governing Law
+> precision is 0.97–1.00 against our 0.42, and **our 44 false positives are the
+> venue and arbitration clauses `w03` exists to exclude.** A second independent
+> confirmation of a documented convention, and evidence that having a principle
+> in the prompt is not the same as it being applied.
+>
+> **Our error profile differs from theirs qualitatively, not just in
+> magnitude**, and it tracks the task framings: their FPs are 89–95%
+> over-claims on gold-absent questions with near-perfect span boundaries; ours
+> are 68–72% wrong boundaries on gold-present questions, with a 4–5% over-claim
+> rate against their 17–22%. **We are conservative and sloppy-bounded; they are
+> aggressive and precisely-bounded** — which is what a committed decision versus
+> a recall-first shortlist should look like.
+>
+> **Volume Restriction is bad for everyone**, including a model that memorised
+> this corpus. That supports the diagnosis's call not to write a principle for
+> it.
+>
+> Caveat on their side: at any single threshold their models emit ≤1 span per
+> question, so on multi-span categories (License Grant averages 3.81 gold spans
+> per question) their recall is structurally capped. Per-category tables are
+> given at two thresholds for that reason.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing

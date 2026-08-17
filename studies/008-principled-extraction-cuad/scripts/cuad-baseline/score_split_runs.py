@@ -163,11 +163,21 @@ def main():
                 p = ev.get_preds(nbest, conf=c)
                 m["conf_sweep"][str(c)] = point_pr(ev, gold, p)
 
-            preds_h = ev.get_preds(nbest, conf=args.headline_conf)
+            m["per_category_by_conf"] = {}
+            for c in CONFS:
+                pc_all = ev.get_preds(nbest, conf=c)
+                m["per_category_by_conf"][str(c)] = {
+                    cat: point_pr(
+                        ev,
+                        {k: v for k, v in gold.items() if k.rsplit("__", 1)[-1] == cat},
+                        pc_all,
+                    )
+                    for cat in subset
+                }
+            m["per_category"] = json.loads(
+                json.dumps(m["per_category_by_conf"][str(args.headline_conf)])
+            )
             for cat in subset:
-                gc = {k: v for k, v in gold.items() if k.rsplit("__", 1)[-1] == cat}
-                pc = {k: preds_h[k] for k in gc}
-                m["per_category"][cat] = point_pr(ev, gc, pc)
                 ps, rs, cs = ev.get_precisions_recalls(nbest, gold, category=cat)
                 m["per_category"][cat]["aupr"] = round(ev.get_aupr(ps, rs), 4)
                 m["per_category"][cat]["max_recall"] = round(float(max(rs)), 4)
@@ -185,17 +195,27 @@ def main():
                         hit = any(
                             ev.get_jaccard(ans, p) >= ev.IOU_THRESH for p in pc[qid]
                         )
-                        key = row["class"]
-                        b = bucket.setdefault(key, {"gold_spans": 0, "matched": 0})
-                        b["gold_spans"] += 1
-                        b["matched"] += int(hit)
-                        if key == "calendar_date":
-                            sub = "calendar_terminal" if row["terminal_date"] else "calendar_start_only"
-                            b2 = bucket.setdefault(sub, {"gold_spans": 0, "matched": 0})
-                            b2["gold_spans"] += 1
-                            b2["matched"] += int(hit)
+                        present = len(pc[qid]) > 0
+                        keys = [row["class"]]
+                        if row["class"] == "calendar_date":
+                            keys.append(
+                                "calendar_terminal"
+                                if row["terminal_date"]
+                                else "calendar_start_only"
+                            )
+                        for key in keys:
+                            b = bucket.setdefault(
+                                key,
+                                {"gold_spans": 0, "matched": 0, "claimed_present": 0},
+                            )
+                            b["gold_spans"] += 1
+                            b["matched"] += int(hit)
+                            b["claimed_present"] += int(present)
                 for k, v in bucket.items():
-                    v["recall"] = round(v["matched"] / v["gold_spans"], 4)
+                    v["span_iou_recall"] = round(v["matched"] / v["gold_spans"], 4)
+                    v["presence_recall"] = round(
+                        v["claimed_present"] / v["gold_spans"], 4
+                    )
                 exp_fp = 0
                 for qid in gold:
                     if qid.rsplit("__", 1)[-1] != "Expiration Date":

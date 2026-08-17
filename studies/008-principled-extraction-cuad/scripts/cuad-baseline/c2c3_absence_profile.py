@@ -8,6 +8,7 @@ STUDY = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(STUDY / "scripts"))
 sys.path.insert(0, str(Path(__file__).parent))
 
+import expiration_taxonomy as tax
 import score_c2c3_with_cuad_evaluator as base
 import score_split_runs as sp
 
@@ -56,6 +57,34 @@ def main():
                 if k.split("#", 1)[0].rsplit("__", 1)[-1] == cat
             }
             entry["per_category"][cat] = sp.point_pr(ev, gc, {k: preds[k] for k in gc})
+
+        tax_rows = {
+            (r["contract"], r["span_index"]): r
+            for r in tax.build(["harness_val"])
+        }
+        bucket = {}
+        for key, answers in gt.items():
+            base_key = key.split("#", 1)[0]
+            if base_key.rsplit("__", 1)[-1] != "Expiration Date":
+                continue
+            contract = base_key.rsplit("__", 1)[0]
+            for i, ans in enumerate(answers):
+                row = tax_rows.get((contract, i))
+                if row is None:
+                    continue
+                hit = any(
+                    ev.get_jaccard(ans, p) >= ev.IOU_THRESH for p in preds[key]
+                )
+                b = bucket.setdefault(
+                    row["class"], {"decisions": 0, "matched": 0, "claimed_present": 0}
+                )
+                b["decisions"] += 1
+                b["matched"] += int(hit)
+                b["claimed_present"] += int(len(preds[key]) > 0)
+        for v in bucket.values():
+            v["span_iou_recall"] = round(v["matched"] / v["decisions"], 4)
+            v["presence_recall"] = round(v["claimed_present"] / v["decisions"], 4)
+        entry["expiration_taxonomy"] = bucket
         out["conditions"][cond] = entry
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
