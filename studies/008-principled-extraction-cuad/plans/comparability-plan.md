@@ -129,6 +129,68 @@ metric families come from a single run.
 the current numbers were never meant to be directly comparable. It stays
 recorded as a caveat on absolute figures rather than as a blocker.
 
+## Answered 2026-08-17 (`reviews/logprobs-and-nbest-depth.md`)
+
+**Task 0 is resolved: teacher-forced candidate scoring WORKS.**
+`SamplingClient.compute_logprobs(prompt)` in the **native** `tinker` SDK scores
+arbitrary supplied tokens. Verified live on Qwen3.5-9B — "The capital of France
+is X" gave Paris −0.540, Berlin −6.602, banana −15.618, with every other
+position **bit-identical across the three calls**, proving it is a real prefill
+over supplied tokens rather than regeneration.
+
+- **Not reachable through our OAI shim.** All four routes measured closed:
+  `top_logprobs` → 400 "not yet supported"; `logprobs:true` → 200 but
+  **generated tokens only**; `prompt_logprobs` → silently dropped;
+  `/completions` + `echo` → 400. **We need a second backend path**, and the two
+  surfaces are genuinely disjoint — `separate_reasoning` does not exist in the
+  native SDK at all.
+- **Prefix caching makes it cheap**: 5 candidates against a shared 6,013-token
+  context ran ~1.5 s each with ~5,888/6,016 tokens served from cache. One
+  prefill plus k short suffix passes.
+- **Length normalisation must be settled before any AUPR is computed.** In a
+  realistic probe, *sum* and *mean* logprob ranked a correct 8-token span and a
+  14-token superset in **opposite orders**. This is not a footnote.
+- **Sequence-logprob-of-the-span is not merely biased, it is unimplementable**
+  on the shim: under `separate_reasoning: true` the returned `logprobs` cover
+  the *reasoning* tokens, not `content`. Option closed.
+- Undocumented cap, measured: `topk_prompt_logprobs` ≤ 20, or
+  `max_tokens × k ≤ 1000`.
+
+**Task 2 is resolved: k = 10 deduplicated spans, not 20.**
+
+The intuition that rank 1 is nearly enough is **half right, and the wrong half
+matters**. Rank 1 satisfies 88% of recoverable *questions* — but their recall
+denominator is **gold spans (2,643), not questions (1,244)**: 2.12 spans per
+answerable question, 5.32 for `Parties`. So depth 1 caps span recall at **47%**
+and costs **38% of AUPR**, and P@80%R is *undefined* below depth 10 because max
+recall never reaches 0.8.
+
+- **Near-duplication confirmed and large**: ~60% of candidates sit within
+  Jaccard ≥ 0.8 of another in the same question, leaving **~11.5 genuinely
+  distinct hypotheses, not 20**. Roughly **40% of their depth is the 512-token
+  encoder** — the artifact, quantified.
+- **Deduplicated depth 10 matches or beats their raw 20 on all three models**
+  (0.4290 > 0.4259, 0.4862 > 0.4825, 0.4798 > 0.4779).
+- **Their published AUPR is slightly depressed by their own windowing** — the
+  full deduplicated list beats the raw list by ~+1 pp while losing 0.08 pp of
+  span recall. A clean, quantified instance of an architectural artifact
+  landing in a published number.
+- Shape is identical across all three models. Rare categories are worse at rank
+  1 (0.82 vs 0.92) but top-5 closes the gap; the larger effect is
+  spans-per-question spread, which argues for **variable k capped at 10** rather
+  than a fixed k.
+
+**Rank is not enough.** A within-question rank gives at most 10 discrete global
+levels against a threshold swept globally, which coarsens the curve and biases
+AUPR low. The continuous cross-question score is needed, and teacher-forced
+likelihood is now confirmed available for it.
+
+**A design tension that needs an explicit ruling against D-14.** k = 1 is
+indefensible on their axes, so the **committed decision and the ranked
+shortlist should be two fields, not one field doing both**. D-14 fixes exactly
+one decision per target; a shortlist is not that. Settle it deliberately rather
+than letting the schema drift.
+
 ## The plan
 
 **Task 0 — determine what the API actually gives.** Read the Tinker logprobs
