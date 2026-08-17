@@ -81,6 +81,54 @@ measurement of the same construct. Arguably the more interesting comparison,
 but it must be described that way and never as "our AUPR versus theirs" without
 the qualifier.
 
+## Separate their artifact from their design (Tyler, 2026-08-17)
+
+The sharpest framing available, and it changes what we should copy.
+
+**Their windowing is an architectural artifact.** A 2021 bidirectional encoder
+has a 512-token limit, so a 25k-token contract *must* be chunked into
+overlapping windows and the pieces reassembled. Much of their 20-deep n-best is
+consequently the same span rediscovered in adjacent windows, not twenty
+genuine alternative hypotheses. **We have 65k+ context and no such constraint.
+Mimicking the windowing would be copying a workaround for a problem we do not
+have.**
+
+**Their ranking is a genuine design choice.** A lawyer reviews a ranked
+shortlist; the paper says outright that recall matters more than precision.
+That is what AUPR measures and it is the thing worth adopting, because it is
+what makes the comparison meaningful rather than a coincidence of metrics.
+
+**So the candidate design is: emit a ranked top-k of candidate spans per
+category as structured output, each carrying its own `principles_cited`.**
+That is a direct analogue of their n-best, obtained in **one generation instead
+of k samples**, and it preserves the study's core — citation stays attached to
+each candidate rather than being bolted on afterwards. Rank 1 remains the
+committed decision, so our own Level A/B/C metrics are unaffected and both
+metric families come from a single run.
+
+**Three things that must be settled before adopting it:**
+
+1. **Within-question rank is not a cross-question score.** Their threshold is
+   swept **globally across all questions**, so a PR curve needs candidates from
+   different questions to be comparable. A model emitting ranks 1–20 per
+   question gives no such ordering. Either we obtain a score that compares
+   across questions (teacher-forced likelihood being the most promising), or we
+   accept that our curve is constructed differently and say so.
+2. **Self-reported confidence is poorly calibrated** and should not be the
+   primary route. AUPR needs only ranking, not calibration — but it does need
+   the ranking to hold *across* questions, which is exactly where self-report
+   is weakest.
+3. **k costs output tokens.** 20 candidates × 41 categories is ~820 spans per
+   contract, which is not viable. The right k is an empirical question about
+   where their n-best's signal actually lives, not a number to copy from their
+   config — hence the depth analysis in
+   `reviews/logprobs-and-nbest-depth.md`.
+
+**On the subset question**: Tyler's position is that the easy-subset finding
+(D-34) is not a concern in itself, since expanding is planned regardless and
+the current numbers were never meant to be directly comparable. It stays
+recorded as a caveat on absolute figures rather than as a blocker.
+
 ## The plan
 
 **Task 0 — determine what the API actually gives.** Read the Tinker logprobs
