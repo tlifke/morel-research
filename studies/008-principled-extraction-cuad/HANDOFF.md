@@ -1,7 +1,7 @@
 # HANDOFF — study 008, principled extraction (CUAD)
 
-**Read this first, then `plans/splits.md`, `plans/workstreams.md`, then
-`plans/decisions.md`.** Updated 2026-08-17.
+**Read this first, then `plans/splits.md`, `plans/workstreams.md`,
+`plans/comparability-plan.md`, then `plans/decisions.md`.** Updated 2026-08-17.
 
 ## What this study is
 
@@ -64,6 +64,21 @@ C1 would do by hand what this study claims to do by derivation.
    measured footprint at all.
 6. **The Expiration Date convention is real and learnable** (D-33). Their three
    models score 0.89–1.00 duration recall where we score 0.00–0.02.
+7. **Our 12-category subset is the easy end of CUAD** (D-34). DeBERTa averages
+   AUPR 0.608 on our subset against 0.393 on the excluded 29. **Every absolute
+   number this study has produced is flattered by the subset choice.** Tyler's
+   position: a caveat on absolute figures, not a blocker, since expanding is
+   planned anyway.
+8. **CUAD's published AUPR is slightly depressed by their own windowing**
+   (`reviews/logprobs-and-nbest-depth.md`). Deduplicating their n-best gains
+   ~+1 pp. An architectural artifact reaching a published number.
+
+**Two unexplained items — do not build on them until resolved.** Our recomputed
+per-category AUPR ordering diverges from the paper's (Spearman ρ = 0.861) while
+pooled Table 2 reproduces to four decimals. And D-33's claim that our Governing
+Law false positives are venue/arbitration clauses is **not established** — all
+of them fall on gold-*present* questions, so it is a boundary failure, not
+over-claiming.
 
 ## Decisions not to silently reverse
 
@@ -86,6 +101,35 @@ accident:
   construction.
 - **D-31** applicability has measurable *reliability* and unestablishable
   *validity*. Citation numbers are relative, never absolute.
+
+## The comparability work — resolved, and ready to build
+
+`plans/comparability-plan.md` is the document; it now carries answers, not open
+questions, for its two hardest parts.
+
+- **Teacher-forced candidate scoring works**, verified live:
+  `SamplingClient.compute_logprobs(prompt)` in the **native** Tinker SDK scores
+  arbitrary supplied tokens. **Not reachable through our OAI shim** — all four
+  routes measured closed — so this needs a second backend path, and the two
+  surfaces are disjoint (`separate_reasoning` does not exist natively). Prefix
+  caching makes it cheap.
+- **k = 10 deduplicated spans**, not 20. Rank 1 satisfies 88% of recoverable
+  *questions*, but their recall denominator is gold **spans**, so depth 1 caps
+  span recall at 47% and costs 38% of AUPR. ~60% of their candidates are
+  near-duplicates — ~40% of their depth is the 512-token encoder.
+- **Length normalisation must be settled before any AUPR is computed.** Sum and
+  mean logprob ranked a correct span and a longer superset in *opposite* orders.
+- **Sequence-logprob-of-the-span is unimplementable** on the shim: under
+  `separate_reasoning` the returned logprobs cover reasoning tokens, not
+  content.
+- **A ruling is needed against D-14.** k=1 is indefensible on their axes, so the
+  committed decision and the ranked shortlist should be **two fields**, not one
+  field doing both. D-14 fixes exactly one decision per target; a shortlist is
+  not that. Settle it deliberately rather than letting the schema drift.
+
+Tyler's framing, which organises the whole plan: **their windowing is an
+architectural artifact of a 512-token encoder; their ranking is a genuine
+design choice.** Copy the second, not the first.
 
 ## What the next session should probably do
 
