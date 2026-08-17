@@ -191,6 +191,34 @@ errors. **Pairs must be testable, not just singletons.** This is the
 interaction case the scope section already anticipated, now with a concrete
 instance.
 
+## Deferred: the derivation approach itself needs a rethink (noted 2026-08-16)
+
+Tyler's instruction: **do not start this in the current session.** Recorded so
+the next session begins from the right question rather than from the existing
+plan.
+
+The ladder as scoped assumes the candidate pool is roughly right and only
+selection is missing. Evidence accumulated since suggests the *derivation and
+validation* approach needs rethinking first, not just the selection step:
+
+- 9 of 10 working-set principles carry `needs_rebuild` or `not_yet_specified`
+  checkers; only one is `usable` (D-27).
+- Declared `scope` does not constrain the model, so a principle can damage a
+  category it does not claim (D-29). Scope-based reasoning about candidates was
+  unsound.
+- Citation frequency does not track principle quality — the most-cited records
+  include one firing on 1 of 480 decisions and one with no footprint at all
+  (D-28), and the smoke run cited fabricated calibration controls.
+- The one principle with a clear empirical case (`w11`, Expiration Date
+  durations) came from **diagnosing a failure**, not from either derivation
+  arm — which is a fourth derivation route neither arm covers.
+- `w11` and `w01` conflict, and `w11` and `w06` conflict, so **pairs must be
+  testable, not just singletons.**
+
+Open question for that session: is failure-diagnosis a better principle source
+than either documentation or contrastive mining? It has produced the strongest
+candidate so far, on one instance.
+
 ## Acceptance
 
 - A selection protocol written down **before** any selection run: split,

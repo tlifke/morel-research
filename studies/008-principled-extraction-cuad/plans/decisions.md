@@ -795,6 +795,51 @@ Format:
 > instability, not comprehension. It needs `w08` checker work at
 > `principle_train` scale, not a new record.
 
+> **D-30 — Our scoring is the better diagnostic; theirs is the better headline**
+> (2026-08-16, a critical comparison of the two scoring methods)
+> Neither is wrong, and the division of labour should be deliberate.
+>
+> **Where ours is genuinely better and should be kept:**
+> - It has a **TN cell**; theirs does not. Absence rulings are where principles
+>   bite hardest, and their framework cannot score an absence claim at all.
+> - It **separates the presence call from span quality**. Their recall conflates
+>   "said absent when present" with "said present but the span missed" — two
+>   different failures with different fixes.
+> - It measures **hallucination**. Their bag-of-words Jaccard matcher cannot see
+>   invented text; our three-way verbatim classification can, and the not-found
+>   rate is a real correction to their metric.
+>
+> **Where ours is flawed, and the flaws are not small:**
+> 1. **Level A alone is misleading and must never be reported alone.** Governing
+>    Law scores **0.981** presence F1 under our Level A and **P 0.421 / R 0.376**
+>    under their span matcher — the presence call is right while the boundary is
+>    nowhere near gold. A headline built on Level A would report competence we do
+>    not have.
+> 2. **D-14 makes us more forgiving of incomplete multi-span extraction.** We
+>    aggregate spans within one per-category decision; they treat each gold span
+>    as separately matchable. Missing two of three gold spans costs us less than
+>    it costs them. Defensible, but it is a real leniency and belongs in
+>    limitations.
+> 3. **We have no single number.** Level A + Level B + Level C are three
+>    quantities, which is right for diagnosis and wrong for the ladder — a curve
+>    needs one y-axis. Picking Level A masks span failure; picking Level B masks
+>    presence failure.
+> 4. **Pooling seeds as independent questions** is fine for a point estimate and
+>    wrong for a CI. Decisions cluster within contracts; any interval must be
+>    bootstrapped **by contract**, not by decision.
+> 5. **"Macro" has meant two different quantities** in our own write-ups —
+>    the mean over 12 categories of pooled per-category F1 (0.707) and the mean
+>    of a per-trial macro field (0.302). Every reported aggregate must name its
+>    unit.
+>
+> **Decision: CUAD's own scorer becomes the primary headline metric**, including
+> for the inv 006 ladder's y-axis. It is the only measure that jointly requires
+> the presence call *and* the span boundary to be right, and it makes us
+> comparable to published work by construction rather than by argument. Our
+> Level A / B / C stay as the diagnostic layer — they are what tells us *why* a
+> number moved, which their scorer cannot. Report the not-found rate alongside,
+> since it corrects a blind spot in theirs.
+
 ## Pending
 
 - ~~**Cross-model assistance parity**~~ — resolved by D-16. Original framing
