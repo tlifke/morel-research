@@ -452,7 +452,8 @@ class CuadEnvironment(Environment):
                         idx=idx,
                         kind="extraction",
                         target=target,
-                        principles_cited=list(item.principles_cited),
+                        principles_cited=item.principles_cited,
+                        explanation=item.explanation,
                         predicted={"spans": list(item.spans)},
                     )
                 )
@@ -463,7 +464,8 @@ class CuadEnvironment(Environment):
                         idx=idx,
                         kind="absence",
                         target=target,
-                        principles_cited=list(item.principles_cited),
+                        principles_cited=item.principles_cited,
+                        explanation=item.explanation,
                         predicted=None,
                     )
                 )
@@ -473,7 +475,7 @@ class CuadEnvironment(Environment):
                         idx=idx,
                         kind=None,
                         target=target,
-                        principles_cited=[],
+                        principles_cited=None,
                         predicted=None,
                     )
                 )
@@ -485,7 +487,7 @@ class CuadEnvironment(Environment):
                 idx=idx,
                 kind=None,
                 target=target,
-                principles_cited=[],
+                principles_cited=None,
                 predicted=None,
             )
             for idx, target in enumerate(self.targets)

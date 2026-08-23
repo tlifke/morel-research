@@ -527,7 +527,7 @@ def _score_output(
             for pid in env.gold_applicable_for_decision(instance, record)
             if pid in active_ids
         ]
-        cited = list(record.principles_cited)
+        cited = list(record.principles_cited or [])
         if cited:
             n_cited_decisions += 1
 

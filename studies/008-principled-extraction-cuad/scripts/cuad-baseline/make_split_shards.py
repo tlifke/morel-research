@@ -13,6 +13,7 @@ def main():
     ap.add_argument("--split", required=True)
     ap.add_argument("--group-size", type=int, default=4)
     ap.add_argument("--outdir", required=True)
+    ap.add_argument("--all-categories", action="store_true")
     args = ap.parse_args()
 
     if args.split == "test":
@@ -25,7 +26,8 @@ def main():
     ]
     if "test" in {args.split}:
         raise SystemExit("test split is sealed until G4")
-    subset = json.loads(CATS.read_text())["subset"]
+    cats_cfg = json.loads(CATS.read_text())
+    subset = cats_cfg["all"] if args.all_categories else cats_cfg["subset"]
 
     src = json.loads(RAW.read_text())
     picked = [d for d in src["data"] if d["title"] in set(members)]

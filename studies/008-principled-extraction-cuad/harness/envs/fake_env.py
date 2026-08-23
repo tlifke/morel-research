@@ -349,7 +349,8 @@ class FakeEnvironment(Environment):
                         idx=idx,
                         kind="extraction",
                         target=target,
-                        principles_cited=list(item.principles_cited),
+                        principles_cited=item.principles_cited,
+                        explanation=item.explanation,
                         predicted={"spans": list(item.spans)},
                     )
                 )
@@ -360,7 +361,8 @@ class FakeEnvironment(Environment):
                         idx=idx,
                         kind="absence",
                         target=target,
-                        principles_cited=list(item.principles_cited),
+                        principles_cited=item.principles_cited,
+                        explanation=item.explanation,
                         predicted=None,
                     )
                 )

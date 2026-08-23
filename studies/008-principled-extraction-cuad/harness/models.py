@@ -1,17 +1,23 @@
 from __future__ import annotations
 
-from typing import Any, Literal, Optional
+from typing import Annotated, Any, Literal, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 CategoryId = str
 
+PrincipleId = Annotated[str, StringConstraints(pattern=r"^[pw]\d{2}$")]
+
+SpanText = Annotated[str, StringConstraints(min_length=1, strip_whitespace=False)]
+
+ExplanationText = Annotated[str, StringConstraints(min_length=1)]
+
 PrincipleType = Literal[
-    "constraint", "procedure", "preference", "disambiguation", "absence"
+    "constraint", "procedure", "preference", "disambiguation", "absence", "other"
 ]
 
 Provenance = Literal[
-    "atticus_guidelines", "savelka_confusion", "data_mined", "authored"
+    "atticus_guidelines", "data_mined", "authored", "other"
 ]
 
 
@@ -111,19 +117,22 @@ class Instance(BaseModel):
 
 
 class Decision(BaseModel):
-    principles_cited: list[str] = Field(default_factory=list)
+    category: CategoryId
+    explanation: Optional[ExplanationText] = None
+    principles_cited: Optional[list[PrincipleId]] = None
 
 
 class Extraction(Decision):
-    category: CategoryId
-    spans: list[str] = Field(min_length=1)
+    kind: Literal["extraction"] = "extraction"
+    spans: list[SpanText] = Field(min_length=1)
 
 
 class AbsenceClaim(Decision):
-    category: CategoryId
+    kind: Literal["absence"] = "absence"
 
 
 class TaskOutput(BaseModel):
+    schema_version: Literal[2] = 2
     extractions: list[Extraction] = Field(default_factory=list)
     absent: list[AbsenceClaim] = Field(default_factory=list)
 
@@ -132,7 +141,8 @@ class DecisionRecord(BaseModel):
     idx: int
     kind: Optional[str]
     target: Optional[str]
-    principles_cited: list[str] = Field(default_factory=list)
+    explanation: Optional[str] = None
+    principles_cited: Optional[list[str]] = None
     predicted: Optional[dict[str, Any]] = None
 
 
