@@ -181,6 +181,12 @@ def main() -> None:
                 )
             )
             (ledger.dir / f"{key.trial_id}.txt").write_text(res.text)
+            reasoning = (
+                ((res.raw.get("choices") or [{}])[0].get("message") or {}).get("reasoning_content")
+                or ""
+            )
+            if reasoning:
+                (ledger.dir / f"{key.trial_id}.reasoning.txt").write_text(reasoning)
 
 
 if __name__ == "__main__":
