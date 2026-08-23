@@ -1,0 +1,174 @@
+<title>Harness Map</title>
+<style>
+:root{--bg:#faf9f7;--fg:#1a1a1a;--mut:#6b6b6b;--line:#ddd9d3;--card:#fff;
+--new:#2c4f7c;--newbg:#e9eff7;--borrow:#1a6b3c;--borrowbg:#e8f5ed;
+--dead:#9a9a9a;--deadbg:#f0efec;--data:#8a5a00;--databg:#fdf2e0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:26px 20px 70px}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:16px;margin:34px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sub{color:var(--mut);font-size:13px;margin-bottom:20px}
+.legend{display:flex;gap:15px;flex-wrap:wrap;font-size:12.5px;margin:0 0 22px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+.stage{background:var(--card);border:1px solid var(--line);border-radius:10px;
+padding:0;margin-bottom:11px;overflow:hidden}
+.hd{display:flex;align-items:baseline;gap:10px;padding:11px 15px;background:#f7f6f3;
+border-bottom:1px solid var(--line)}
+.num{font-size:11px;font-weight:700;color:#fff;background:var(--new);border-radius:50%;
+width:19px;height:19px;display:grid;place-items:center;flex:none}
+.hd b{font-size:14.5px}
+.hd .what{color:var(--mut);font-size:12.5px;margin-left:auto;text-align:right}
+.body{padding:12px 15px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.io{font-size:12.5px}
+.io h4{margin:0 0 5px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+code{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f2f1ee;
+padding:1px 5px;border-radius:4px}
+.file{display:block;margin-bottom:3px}
+.tag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.04em;
+padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:1px}
+.t-new{background:var(--newbg);color:var(--new)}
+.t-bor{background:var(--borrowbg);color:var(--borrow)}
+.t-dat{background:var(--databg);color:var(--data)}
+.arrow{text-align:center;color:var(--mut);font-size:17px;margin:-4px 0 7px;line-height:1}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+tr.off td{color:var(--dead)} tr.off code{background:var(--deadbg);color:var(--dead)}
+.note{background:var(--newbg);border-left:3px solid var(--new);padding:11px 14px;
+border-radius:0 6px 6px 0;font-size:13px;margin:14px 0}
+.num2{text-align:right;font-variant-numeric:tabular-nums}
+</style>
+<div class="wrap">
+<h1>How the loop is wired</h1>
+<div class="sub">studies/008-principled-extraction-cuad &middot; investigation 008 &middot; the pipeline from frozen text to a rung verdict</div>
+
+<div class="legend">
+<span><i class="sw" style="background:var(--newbg);border:1px solid var(--new)"></i>new in this investigation</span>
+<span><i class="sw" style="background:var(--borrowbg);border:1px solid var(--borrow)"></i>borrowed from study harness</span>
+<span><i class="sw" style="background:var(--databg);border:1px solid var(--data)"></i>data on disk</span>
+</div>
+
+<div class="note"><strong>Start here:</strong> <code>loop/run_slice.py</code> is the spine &mdash; read it top to
+bottom and every other file appears in the order it is used. <code>loop/prompt.py</code> is what a principle
+actually changes. <code>loop/ladder.py</code> is where a principle lives or dies.</div>
+
+<h2>The pipeline</h2>
+<div class='stage'>
+<div class='hd'><span class='num'>1</span><b>Freeze the task</b><span class='what'>run once; 7 tests assert it never drifts</span></div>
+<div class='body'>
+<div class='io'><h4>in</h4><span class='file'>ContractEval SYSTEM_PROMPT <span class='tag t-bor'>pinned</span></span><span class='file'>data/raw/CUADv1.json questions</span><span class='file'>data/processed/categories.json</span></div>
+<div class='io'><h4>out</h4><span class='file'>task_definition/v1.json <span class='tag t-dat'>sha-pinned</span></span></div>
+</div>
+<div class='body' style='padding-top:0;grid-template-columns:1fr'><div class='io'><h4>code</h4><code>scripts/build_task_definition.py</code></div></div>
+</div>
+<div class='arrow'>&darr;</div>
+<div class='stage'>
+<div class='hd'><span class='num'>2</span><b>Choose the slice</b><span class='what'>deterministic, no seed</span></div>
+<div class='body'>
+<div class='io'><h4>in</h4><span class='file'>data/processed/splits/principle_train.txt</span><span class='file'>data/processed/instances.jsonl</span></div>
+<div class='io'><h4>out</h4><span class='file'>mvp_slice.json <span class='tag t-dat'></span></span></div>
+</div>
+<div class='body' style='padding-top:0;grid-template-columns:1fr'><div class='io'><h4>code</h4><code>scripts/select_mvp_contracts.py</code></div></div>
+</div>
+<div class='arrow'>&darr;</div>
+<div class='stage'>
+<div class='hd'><span class='num'>3</span><b>Assemble the prompt</b><span class='what'>the ONLY thing that differs between arms is the principles block</span></div>
+<div class='body'>
+<div class='io'><h4>in</h4><span class='file'>task_definition/v1.json</span><span class='file'>the contract text</span><span class='file'>a PrincipleSet <span class='tag t-bor'>harness.models</span></span><span class='file'>schema <span class='tag t-bor'>harness.output_schema</span></span></div>
+<div class='io'><h4>out</h4><span class='file'>system + user messages</span></div>
+</div>
+<div class='body' style='padding-top:0;grid-template-columns:1fr'><div class='io'><h4>code</h4><code>loop/prompt.py</code></div></div>
+</div>
+<div class='arrow'>&darr;</div>
+<div class='stage'>
+<div class='hd'><span class='num'>4</span><b>Sample</b><span class='what'>temp 1.0 / top_p 0.95, k repeats, resumable by trial_id</span></div>
+<div class='body'>
+<div class='io'><h4>in</h4><span class='file'>messages</span><span class='file'>TinkerBackend <span class='tag t-bor'>harness.backends</span></span></div>
+<div class='io'><h4>out</h4><span class='file'>raw response text</span><span class='file'>reasoning text</span><span class='file'>a TrialRecord</span></div>
+</div>
+<div class='body' style='padding-top:0;grid-template-columns:1fr'><div class='io'><h4>code</h4><code>loop/run_slice.py</code></div></div>
+</div>
+<div class='arrow'>&darr;</div>
+<div class='stage'>
+<div class='hd'><span class='num'>5</span><b>Parse</b><span class='what'>strict; defects counted, never repaired</span></div>
+<div class='body'>
+<div class='io'><h4>in</h4><span class='file'>raw response</span><span class='file'>parse_output <span class='tag t-bor'>harness.parsing</span></span></div>
+<div class='io'><h4>out</h4><span class='file'>LoopOutput: 41 decisions</span><span class='file'>conformance counts</span></div>
+</div>
+<div class='body' style='padding-top:0;grid-template-columns:1fr'><div class='io'><h4>code</h4><code>loop/models.py</code></div></div>
+</div>
+<div class='arrow'>&darr;</div>
+<div class='stage'>
+<div class='hd'><span class='num'>6</span><b>Record</b><span class='what'>append-only, keyed on task-def + principle-set + arm + model + contract + repeat</span></div>
+<div class='body'>
+<div class='io'><h4>in</h4><span class='file'>TrialRecord</span></div>
+<div class='io'><h4>out</h4><span class='file'>runs/&lt;run_id&gt;/trials.jsonl <span class='tag t-dat'></span></span><span class='file'>runs/&lt;run_id&gt;/manifest.json</span></div>
+</div>
+<div class='body' style='padding-top:0;grid-template-columns:1fr'><div class='io'><h4>code</h4><code>loop/ledger.py</code></div></div>
+</div>
+<div class='arrow'>&darr;</div>
+<div class='stage'>
+<div class='hd'><span class='num'>7</span><b>Score</b><span class='what'>detection 2&times;2 + localization on the TP cell; each cell labelled with a failure class</span></div>
+<div class='body'>
+<div class='io'><h4>in</h4><span class='file'>trials.jsonl</span><span class='file'>CUAD gold</span><span class='file'>score/is_match <span class='tag t-bor'>harness.comparison_metrics</span></span></div>
+<div class='io'><h4>out</h4><span class='file'>runs/&lt;run_id&gt;/score.json <span class='tag t-dat'></span></span><span class='file'>runs/&lt;run_id&gt;/failures.jsonl <span class='tag t-dat'></span></span></div>
+</div>
+<div class='body' style='padding-top:0;grid-template-columns:1fr'><div class='io'><h4>code</h4><code>loop/scoring.py &rarr; scripts/score_run.py</code></div></div>
+</div>
+<div class='arrow'>&darr;</div>
+<div class='stage'>
+<div class='hd'><span class='num'>8</span><b>Diagnose</b><span class='what'>persistent cells only (2-of-3), ranked &mdash; this is the proposer's input</span></div>
+<div class='body'>
+<div class='io'><h4>in</h4><span class='file'>failures.jsonl</span></div>
+<div class='io'><h4>out</h4><span class='file'>casefile-&lt;class&gt;.json <span class='tag t-dat'></span></span></div>
+</div>
+<div class='body' style='padding-top:0;grid-template-columns:1fr'><div class='io'><h4>code</h4><code>scripts/make_casefile.py</code></div></div>
+</div>
+<div class='arrow'>&darr;</div>
+<div class='stage'>
+<div class='hd'><span class='num'>9</span><b>Judge</b><span class='what'>applies pre-registration.md; the score decides, citation only routes</span></div>
+<div class='body'>
+<div class='io'><h4>in</h4><span class='file'>control run score.json + failures.jsonl</span><span class='file'>candidate run, same two</span></div>
+<div class='io'><h4>out</h4><span class='file'>RungResult: passed, reasons, F2 delta</span></div>
+</div>
+<div class='body' style='padding-top:0;grid-template-columns:1fr'><div class='io'><h4>code</h4><code>loop/ladder.py</code></div></div>
+</div>
+
+<h2>What is borrowed from the study harness, and what is not</h2>
+<div class="note">The study harness is 3,063 lines. The loop touches about a third of it and deliberately
+bypasses the rest &mdash; <code>runner.py</code> and <code>metrics.py</code> alone are 1,598 lines built for the
+earlier C1/C2/C3 framing, with their own trial records, repair loop, and Level A/B/C metrics. Reusing them
+would have meant inheriting that framing. Greyed rows are not imported by anything in the loop.</div>
+<table>
+<tr><th>file</th><th class="num2">lines</th><th>used for</th></tr>
+<tr><td><code>harness/backends/tinker_backend.py</code></td><td class='num2'>215</td><td>the API client. top_p forwarding added here.</td></tr>
+<tr><td><code>harness/comparison_metrics.py</code></td><td class='num2'>346</td><td>CUAD-comparable scoring: jaccard, is_match, detection/localization.</td></tr>
+<tr><td><code>harness/models.py</code></td><td class='num2'>152</td><td><code>Principle</code> / <code>PrincipleSet</code> only. Its <code>TaskOutput</code> is NOT used &mdash; see Decision 7.</td></tr>
+<tr><td><code>harness/output_schema.py</code></td><td class='num2'>108</td><td>serialises the output model into the prompt with the category enum.</td></tr>
+<tr><td><code>harness/parsing.py</code></td><td class='num2'>71</td><td>pulls the JSON object out of the response.</td></tr>
+<tr><td><code>harness/model_registry.py</code></td><td class='num2'>51</td><td>substrate-neutral model ids.</td></tr>
+<tr class='off'><td><code>harness/metrics.py</code></td><td class='num2'>909</td><td>Level A/B/C, citation metrics, verbatim classes. Earlier framing.</td></tr>
+<tr class='off'><td><code>harness/runner.py</code></td><td class='num2'>689</td><td>the C1/C2/C3 trial runner, repair loop, condition grid.</td></tr>
+<tr class='off'><td><code>harness/prompts.py</code></td><td class='num2'>183</td><td>the C1/C2/C3 prompt builder. <code>loop/prompt.py</code> replaces it.</td></tr>
+<tr class='off'><td><code>harness/trace_store.py</code></td><td class='num2'>199</td><td>tier-1 trace store. The ledger replaces it.</td></tr>
+<tr class='off'><td><code>harness/store.py</code></td><td class='num2'>135</td><td>trial store for the grid.</td></tr>
+<tr class='off'><td><code>harness/env.py</code></td><td class='num2'>105</td><td>the env abstraction.</td></tr>
+</table>
+
+<h2>Where the data lands</h2>
+<table>
+<tr><th>path</th><th>written by</th><th>contains</th></tr>
+<tr><td><code>task_definition/v1.json</code></td><td><code>build_task_definition.py</code></td><td>frozen instruction + 41 questions + content sha</td></tr>
+<tr><td><code>mvp_slice.json</code></td><td><code>select_mvp_contracts.py</code></td><td>the 5 contracts and why each was chosen</td></tr>
+<tr><td><code>runs/&lt;id&gt;/manifest.json</code></td><td><code>loop/ledger.py</code></td><td>model, sampling, versions, backend description</td></tr>
+<tr><td><code>runs/&lt;id&gt;/trials.jsonl</code></td><td><code>loop/ledger.py</code></td><td>one row per trial: key, outcome, tokens, parsed output</td></tr>
+<tr><td><code>runs/&lt;id&gt;/&lt;trial&gt;.txt</code></td><td><code>loop/run_slice.py</code></td><td>the raw response, byte for byte</td></tr>
+<tr><td><code>runs/&lt;id&gt;/&lt;trial&gt;.reasoning.txt</code></td><td><code>loop/run_slice.py</code></td><td>the chain of thought (new; absent for baseline-001)</td></tr>
+<tr><td><code>runs/&lt;id&gt;/score.json</code></td><td><code>scripts/score_run.py</code></td><td>per-trial detection + localization, conformance totals</td></tr>
+<tr><td><code>runs/&lt;id&gt;/failures.jsonl</code></td><td><code>scripts/score_run.py</code></td><td>one row per failing cell, with gold and predicted text</td></tr>
+<tr><td><code>runs/&lt;id&gt;/casefile-*.json</code></td><td><code>scripts/make_casefile.py</code></td><td>persistent cells for one failure class</td></tr>
+</table>
+</div>
