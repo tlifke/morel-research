@@ -68,8 +68,9 @@ def segments(text: str, anns: list[dict]):
     return out
 
 
-def main():
-    contract = load_contracts([CID])[0]
+def build_payload(cid: str = CID):
+    """Shared by render_highlights and render_compare."""
+    contract = load_contracts([cid])[0]
     text = contract["text"]
     locate = make_locator(text)
 
@@ -77,7 +78,7 @@ def main():
     ci = {c: i for i, c in enumerate(cats)}
 
     row = [json.loads(l) for l in (STUDY / "data/processed/instances.jsonl").read_text().splitlines()
-           if json.loads(l)["contract_id"] == CID][0]
+           if json.loads(l)["contract_id"] == cid][0]
 
     sources = {}
     gold_text = {}
@@ -92,7 +93,7 @@ def main():
     sources["gold"] = ganns
 
     trials = [json.loads(l) for l in (RUN / "trials.jsonl").read_text().splitlines()
-              if json.loads(l)["key"]["contract_id"] == CID]
+              if json.loads(l)["key"]["contract_id"] == cid]
     trials.sort(key=lambda t: t["key"]["repeat_idx"])
 
     stats = {}
@@ -118,6 +119,24 @@ def main():
         }
         for a in anns:
             payload[k]["counts"][str(a["ci"])] = payload[k]["counts"].get(str(a["ci"]), 0) + 1
+
+    return {
+        "contract": contract,
+        "text": text,
+        "cats": cats,
+        "ci": ci,
+        "gold_text": gold_text,
+        "payload": payload,
+        "stats": stats,
+    }
+
+
+def main():
+    b = build_payload()
+    contract, text, cats, payload, stats = (
+        b["contract"], b["text"], b["cats"], b["payload"], b["stats"]
+    )
+    ci, gold_text = b["ci"], b["gold_text"]
 
     html_out = TEMPLATE.format(
         title=html.escape(contract["title"]),
