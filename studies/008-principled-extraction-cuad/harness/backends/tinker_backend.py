@@ -87,8 +87,10 @@ class TinkerBackend(Backend):
         tokenizer_id: Optional[str] = None,
         safety_margin: Optional[int] = None,
         separate_reasoning: bool = SEPARATE_REASONING,
+        top_p: Optional[float] = None,
     ) -> None:
         self.separate_reasoning = separate_reasoning
+        self.top_p = top_p
         self.model_id = model
         self.served_model = served_name(model, SUBSTRATE)
         self.base_url = base_url.rstrip("/")
@@ -130,6 +132,7 @@ class TinkerBackend(Backend):
             "structured_output_enforcement": NO_ENFORCEMENT_NOTE,
             "emits_reasoning_content": bool(spec and spec.emits_reasoning_content),
             "separate_reasoning": self.separate_reasoning,
+            "top_p": self.top_p,
             "separate_reasoning_note": (
                 "sent explicitly: the server default is true but it flipped from "
                 "false in June 2026, and another flip would silently move reasoning "
@@ -179,6 +182,8 @@ class TinkerBackend(Backend):
             "seed": seed,
             "separate_reasoning": self.separate_reasoning,
         }
+        if self.top_p is not None:
+            payload["top_p"] = self.top_p
 
         t0 = time.time()
         data = self._post("/chat/completions", payload)

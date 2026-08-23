@@ -309,3 +309,26 @@ def test_ollama_reports_seeds_as_honored(server):
     backend = OllamaBackend(model="qwen3.5:9b", num_ctx=8192, host=host)
     assert backend.seed_honored is True
     assert backend.describe()["seed_honored"] is True
+
+
+def test_tinker_forwards_top_p_only_when_set(monkeypatch):
+    monkeypatch.setenv("TINKER_API_KEY", "x")
+    from harness.backends.tinker_backend import TinkerBackend
+
+    captured = {}
+
+    def fake_post(self, path, payload):
+        captured.update(payload)
+        return {"choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}], "usage": {}}
+
+    monkeypatch.setattr(TinkerBackend, "_post", fake_post)
+
+    bare = TinkerBackend(model="Qwen/Qwen3.5-9B")
+    bare.sample([{"role": "user", "content": "hi"}], None, 1.0, 0, 16)
+    assert "top_p" not in captured
+
+    captured.clear()
+    tuned = TinkerBackend(model="Qwen/Qwen3.5-9B", top_p=0.95)
+    tuned.sample([{"role": "user", "content": "hi"}], None, 1.0, 0, 16)
+    assert captured["top_p"] == 0.95
+    assert tuned.notes["top_p"] == 0.95

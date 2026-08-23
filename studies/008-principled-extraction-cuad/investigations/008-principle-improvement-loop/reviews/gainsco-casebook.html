@@ -1,0 +1,851 @@
+<title>GAINSCO Casebook</title><style>
+:root{--bg:#faf9f7;--fg:#1a1a1a;--mut:#6b6b6b;--line:#e0ddd8;--card:#fff;
+--gold:#7a5c00;--goldbg:#fdf6e0;--ok:#1a6b3c;--okbg:#e8f5ed;--bad:#a32b2b;--badbg:#fbeaea;
+--warn:#8a5a00;--warnbg:#fdf2e0;--acc:#2c4f7c;--accbg:#e9eff7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+h1{font-size:24px;margin:0 0 4px} h2{font-size:17px;margin:34px 0 10px;
+padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sub{color:var(--mut);font-size:13px;margin-bottom:22px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 26px;font-size:12.5px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.card{background:var(--card);border:1px solid var(--line);border-radius:9px;
+padding:14px 16px;margin:0 0 12px}
+.cat{font-weight:650;font-size:15px}
+.q{color:var(--mut);font-size:12px;margin:3px 0 11px}
+.grid{display:grid;grid-template-columns:74px 1fr;gap:8px 12px;align-items:start}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);padding-top:3px}
+.span{display:block;padding:6px 9px;border-radius:5px;margin-bottom:5px;
+font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word}
+.g{background:var(--goldbg);border-left:3px solid var(--gold)}
+.m{background:var(--okbg);border-left:3px solid var(--ok)}
+.x{background:var(--badbg);border-left:3px solid var(--bad)}
+.none{color:var(--mut);font-style:italic;font-size:12.5px;padding:4px 0}
+.pill{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10.5px;
+font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin-left:6px}
+.p-ac{background:var(--okbg);color:var(--ok)} .p-aw{background:var(--badbg);color:var(--bad)}
+.p-sp{background:var(--warnbg);color:var(--warn)}
+.p-tp{background:var(--okbg);color:var(--ok)} .p-tn{background:#eee;color:#555}
+.p-fp{background:var(--badbg);color:var(--bad)} .p-fn{background:var(--badbg);color:var(--bad)}
+.meta{font-size:11px;color:var(--mut);margin-left:7px;font-variant-numeric:tabular-nums}
+.stat{display:flex;gap:22px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
+border-radius:9px;padding:14px 18px;margin-bottom:8px}
+.stat div{min-width:96px} .stat .v{font-size:21px;font-weight:650}
+.stat .k{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.note{background:var(--accbg);border-left:3px solid var(--acc);padding:11px 14px;
+border-radius:0 6px 6px 0;font-size:13px;margin:14px 0}
+details{margin-top:9px} summary{cursor:pointer;font-size:12px;color:var(--acc)}
+.scroll{overflow-x:auto}
+</style><div class='wrap'>
+<h1>One contract, three trials, forty-one categories</h1>
+<div class='sub'>GAINSCOINC_01_21_2010-EX-10.41-SPONSORSHIP AGREEMENT &middot; 3,332 tokens &middot; run <code>baseline-001</code> &middot; no principles &middot; task definition v1 &middot; temp 1.0 / top_p 0.95</div>
+<div class='stat'>
+<div><div class='v'>26</div><div class='k'>always correct</div></div>
+<div><div class='v'>9</div><div class='k'>split / flaky</div></div>
+<div><div class='v'>6</div><div class='k'>always wrong</div></div>
+<div><div class='v'>41</div><div class='k'>categories</div></div>
+<div><div class='v'>3</div><div class='k'>repeats</div></div>
+</div>
+<div class='note'><strong>How to read this.</strong> Each card is one category. <em>Gold</em> is CUAD's annotation. <em>r0/r1/r2</em> are the three independent samples at temperature 1.0 &mdash; same prompt, same contract, nothing changed between them. A span is green when it matches gold at Jaccard&nbsp;&ge;&nbsp;0.5, red when it does not. The detection cell (tp/tn/fp/fn) only asks <em>did the model say something here at all</em>; span quality lives inside the tp cell.</div>
+<div class='legend'>
+<span><i class='sw g' style='border-left:3px solid'></i>gold</span>
+<span><i class='sw m' style='border-left:3px solid'></i>matches gold</span>
+<span><i class='sw x' style='border-left:3px solid'></i>no match</span>
+</div>
+<h2>Per-trial detection cells</h2><div class='scroll'><table><tr><th>trial</th><th class='num'>tp</th><th class='num'>tn</th><th class='num'>fp</th><th class='num'>fn</th></tr>
+<tr><td>r0</td><td class='num'>13</td><td class='num'>24</td><td class='num'>4</td><td class='num'>0</td></tr>
+<tr><td>r1</td><td class='num'>12</td><td class='num'>22</td><td class='num'>6</td><td class='num'>1</td></tr>
+<tr><td>r2</td><td class='num'>12</td><td class='num'>24</td><td class='num'>4</td><td class='num'>1</td></tr>
+</table></div>
+<h2>Always wrong &mdash; the principle targets <span class='meta'>6 categories</span></h2>
+<div class='card'>
+<div class='cat'>Agreement Date<span class='pill p-aw'>always wrong</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Agreement Date&quot; that should be reviewed by a lawyer. Details: The date of the contract</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>January 1, 2010</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span x'>This Sponsorship Agreement (the &quot;Agreement&quot;) is entered into effective January 1, 2010 by and between Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing (&quot;Racing&quot;), and GAINSCO, INC., a Texas corporation (the &quot;Sponsor&quot;).</span>
+<div class='meta'>J=0.09 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tp'>tp</span></div><div>
+<span class='span x'>This Sponsorship Agreement (the &quot;Agreement&quot;) is entered into effective January 1, 2010 by and between Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing (&quot;Racing&quot;), and GAINSCO, INC., a Texas corporation (the &quot;Sponsor&quot;).</span>
+<div class='meta'>J=0.09 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tp'>tp</span></div><div>
+<span class='span x'>This Sponsorship Agreement (the &quot;Agreement&quot;) is entered into effective January 1, 2010 by and between Stallings Capital Group  Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing (&quot;Racing&quot;), and GAINSCO, INC., a Texas corporation (the &quot;Sponsor&quot;).</span>
+<div class='meta'>J=0.09</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Effective Date<span class='pill p-aw'>always wrong</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Effective Date&quot; that should be reviewed by a lawyer. Details: The date when the contract is effective </div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>January 1, 2010</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span x'>This Sponsorship Agreement (the &quot;Agreement&quot;) is entered into effective January 1, 2010 by and between Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing (&quot;Racing&quot;), and GAINSCO, INC., a Texas corporation (the &quot;Sponsor&quot;).</span>
+<div class='meta'>J=0.09 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tp'>tp</span></div><div>
+<span class='span x'>This Sponsorship Agreement (the &quot;Agreement&quot;) is entered into effective January 1, 2010 by and between Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing (&quot;Racing&quot;), and GAINSCO, INC., a Texas corporation (the &quot;Sponsor&quot;).</span>
+<div class='meta'>J=0.09 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tp'>tp</span></div><div>
+<span class='span x'>This Sponsorship Agreement (the &quot;Agreement&quot;) is entered into effective January 1, 2010 by and between Stallings Capital Group  Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing (&quot;Racing&quot;), and GAINSCO, INC., a Texas corporation (the &quot;Sponsor&quot;).</span>
+<div class='meta'>J=0.09</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Non-Compete<span class='pill p-aw'>always wrong</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Non-Compete&quot; that should be reviewed by a lawyer. Details: Is there a restriction on the ability of a party to compete with the counterparty or operate in a certain geography or business or technology sector? </div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>Subject to payment by the Sponsor of the sponsorship fee provided for herein, during the term of this  Agreement Racing shall cause the Racing Team to provide for the Sponsor&#x27;s benefit all of the benefits customarily associated with the  sponsorship of a Daytona Prototype Series racing team and consistent with the benefits provided to the Sponsor in 2005 - 2009 (individually, a  &quot;Benefit,&quot; and collectively, the &quot;Bene…</span>
+<span class='span g'>(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or  services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such  endorsement activity is approved in writing by Racing and the Sponsor;</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;</span>
+<div class='meta'>J=0.97 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;</span>
+<div class='meta'>J=0.97 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;</span>
+<div class='meta'>J=0.94 &middot; NOT VERBATIM</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Non-Disparagement<span class='pill p-aw'>always wrong</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Non-Disparagement&quot; that should be reviewed by a lawyer. Details: Is there a requirement on a party not to disparage the counterparty?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>The Sponsor shall have the right to terminate this Agreement on written  notice to Racing if any driver, the general manager or any other member of Racing</span>
+<span class='span g'>(iii)  disparages the products or services of the Sponsor</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span x'>Racing and all Racing members, including but not limited to all drivers, agree to use best efforts to conduct themselves in such a manner so as not to reflect unfavorably upon the Sponsor or its products.</span>
+<div class='meta'>J=0.11 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tp'>tp</span></div><div>
+<span class='span x'>Racing and all Racing members, including but not limited to all drivers, agree to use best efforts to conduct themselves in such a manner so as not to reflect unfavorably upon the Sponsor or its products.</span>
+<div class='meta'>J=0.11 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tp'>tp</span></div><div>
+<span class='span x'>Racing and all Racing members, including but not limited to all drivers, agree to use best efforts to conduct themselves in such a manner so as not to reflect unfavorably upon the Sponsor or its products.</span>
+<div class='meta'>J=0.11 &middot; NOT VERBATIM</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>License Grant<span class='pill p-aw'>always wrong</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;License Grant&quot; that should be reviewed by a lawyer. Details: Does the contract contain a license granted by one party to its counterparty?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>(iv) allowing the Sponsor to use the likeness of the Car, including all paint and graphics, for promotion and advertising of or by the Sponsor, and Racing shall be responsible for all necessary consents and permissions from any other sponsors to be sure the Sponsor can use the likeness of the Car as specified herein;</span>
+<div class='meta'>no gold &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>(iv) allowing the Sponsor to use the likeness of the Car, including all paint and graphics, for promotion and advertising of or by the Sponsor, and Racing shall be responsible for all necessary consents and permissions from any other sponsors to be sure the Sponsor can use the likeness of the Car as specified herein;</span>
+<div class='meta'>no gold &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>allowing the Sponsor the use of the likeness of the Car, including all paint and graphics, for promotion and advertising of or by the Sponsor, and Racing shall be responsible for all necessary consents and permissions from any other sponsors to be sure the  Sponsor can use the likeness of the Car as specified herein;</span>
+<div class='meta'>no gold &middot; NOT VERBATIM</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Insurance<span class='pill p-aw'>always wrong</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Insurance&quot; that should be reviewed by a lawyer. Details: Is there a requirement for insurance that must be maintained by one party for the benefit of the counterparty?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>Racing shall obtain and maintain, at Racing&#x27;s expense, comprehensive automobile liability insurance covering all owned, non-owned and  hired vehicles used by Racing in the Business with limits of not less than $5,000,000 per occurrence combined single limit for personal injury and  property damage, including all statutory coverage for all states of operation.</span>
+<span class='span g'>Racing shall also provide comprehensive (fire and theft) and collision  insurance on each vehicle used in the Business.</span>
+<span class='span g'>Racing shall provide the Sponsor a certificate of insurance evidencing &quot;Gainsco Inc. and all  related entities&quot; as additional insureds, stating that such insurance is primary in coverage to any other insurance which may be available the  Sponsor, and providing at least thirty (30) days&#x27; prior written notice to the Sponsor of cancellation, modification or material change to the policy.</span>
+<span class='span g'>Racing shall obtain and maintain pursuant to the terms of this Agreement, at its sole expense, the following types of insurance coverage,  with minimum limits as set forth below:
+
+(i) Commercial General Liability covering liability arising from premises, operations, independent contractors, personal and advertising injury  and contractual liability—$5,000,000 each occurrence.</span>
+<span class='span g'>Racing shall obtain and maintain pursuant to the terms of this Agreement, at its sole expense, the following types of insurance coverage,  with minimum limits as set forth below:
+
+(i) Commercial General Liability covering liability arising from premises, operations, independent contractors, personal and advertising injury  and contractual liability—$5,000,000 each occurrence.      3
+
+
+
+
+
+(ii) Racing Owners&#x27; Sponsors …</span>
+<span class='span g'>(ii) Racing Owners&#x27; Sponsors (Spectators) Legal Liability including Participant Legal Liability—$5,000,000 each occurrence.
+
+(iii) Business Automobile Liability covering all owned, hired and non-owned vehicles—$5,000,000 each occurrence, including statutory  coverages for all states of operations.
+
+(iv) Workers Compensation—statutory limits for all states of operation.
+
+(v) Employers Liability—$5,000,000 each employe…</span>
+<span class='span g'>All policies of insurance procured by Racing herein shall be written as primary policies, not contributing with or in excess of coverage that the  Sponsor may carry. If Racing&#x27;s liability policies do not contain the standard separation of insureds provision, or a substantially similar clause, they  shall be endorsed to provide cross-liability coverage.</span>
+<span class='span g'>Racing shall provide the Sponsor with a certificate of insurance evidence compliance with the insurance requirements set forth above.  Certificates shall provide that &quot;Gainsco Inc. and all related entities&quot; shall be named as additional insureds on all liability policies, stating that such  insurance is primary in coverage to any other insurance which may be available to the Sponsor, and providing at least thirty (30)…</span>
+<span class='span g'>By  requiring insurance herein, the Sponsor does not represent that coverage limits will necessarily be adequate to protect Racing.</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>8. Insurance. (a) Racing shall obtain and maintain, at Racing&#x27;s expense, comprehensive automobile liability insurance covering all owned, non-owned and hired vehicles used by Racing in the Business with limits of not less than $5,000,000 per occurrence combined single limit for personal injury and property damage, including all statutory coverage for all states of operation. Racing shall also provide comprehensive (f…</span>
+<div class='meta'>J=0.52 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>8. Insurance. (a) Racing shall obtain and maintain, at Racing&#x27;s expense, comprehensive automobile liability insurance covering all owned, non-owned and hired vehicles used by Racing in the Business with limits of not less than $5,000,000 per occurrence combined single limit for personal injury and property damage, including all statutory coverage for all states of operation.</span>
+<div class='meta'>J=0.94 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>Racing shall obtain and maintain, at Racing&#x27;s expense, comprehensive automobile liability insurance covering all owned, non-owned and  hired vehicles used by Racing in the Business with limits of not less than $5,000,000 per occurrence combined single limit for personal injury and  property damage, including all statutory coverage for all states of operation.</span>
+<div class='meta'>J=1.00</div>
+</div>
+</div></div>
+<h2>Split across repeats &mdash; same input, different answer <span class='meta'>9 categories</span></h2>
+<div class='card'>
+<div class='cat'>Document Name<span class='pill p-sp'>split</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Document Name&quot; that should be reviewed by a lawyer. Details: The name of the contract</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>SPONSORSHIP AGREEMENT</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>SPONSORSHIP AGREEMENT</span>
+<div class='meta'>J=1.00</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tp'>tp</span></div><div>
+<span class='span x'>Exhibit 10.41
+
+SPONSORSHIP AGREEMENT</span>
+<div class='meta'>J=0.25</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tp'>tp</span></div><div>
+<span class='span x'>This Sponsorship Agreement (the &quot;Agreement&quot;) is entered into effective January 1, 2010 by and between Stallings Capital Group  Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing (&quot;Racing&quot;), and GAINSCO, INC., a Texas corporation (the &quot;Sponsor&quot;).</span>
+<div class='meta'>J=0.06</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Parties<span class='pill p-sp'>split</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Parties&quot; that should be reviewed by a lawyer. Details: The two or more parties who signed the contract</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>Sponsor</span>
+<span class='span g'>Racing</span>
+<span class='span g'>GAINSCO, INC.</span>
+<span class='span g'>Stallings Capital Group Consultants, Ltd.</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>This Sponsorship Agreement (the &quot;Agreement&quot;) is entered into effective January 1, 2010 by and between Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing (&quot;Racing&quot;), and GAINSCO, INC., a Texas corporation (the &quot;Sponsor&quot;).</span>
+<div class='meta'>J=0.16 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>This Sponsorship Agreement (the &quot;Agreement&quot;) is entered into effective January 1, 2010 by and between Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing (&quot;Racing&quot;), and GAINSCO, INC., a Texas corporation (the &quot;Sponsor&quot;).</span>
+<div class='meta'>J=0.16 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>Stallings Capital Group  Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing (&quot;Racing&quot;), and GAINSCO, INC., a Texas corporation (the &quot;Sponsor&quot;).</span>
+<div class='meta'>J=0.25</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Most Favored Nation<span class='pill p-sp'>split</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Most Favored Nation&quot; that should be reviewed by a lawyer. Details: Is there a clause that if a third party gets better terms on the licensing or sale of technology/goods/services described in the contract, the buyer of such technology/goods/services under the contract shall be entitled to those better terms?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>The Sponsor acknowledges that Racing has arranged and may arrange in the future for other sponsors  for the Racing Team. Racing agrees that, during the term of this Agreement, (i) Sponsor shall have the right to approve or disapprove any  additional sponsor identified by Racing, and (ii) unless another proposed sponsor has agreed to pay a sponsorship fee that exceeds the amount  paid by Sponsor, no other sponsor shal…</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>7. Relationship to Other Sponsors. The Sponsor acknowledges that Racing has arranged and may arrange in the future for other sponsors for the Racing Team. Racing agrees that, during the term of this Agreement, (i) Sponsor shall have the right to approve or disapprove any additional sponsor identified by Racing, and (ii) unless another proposed sponsor has agreed to pay a sponsorship fee that exceeds the amount paid b…</span>
+<div class='meta'>J=0.96 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-fn'>fn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-fn'>fn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Exclusivity<span class='pill p-sp'>split</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Exclusivity&quot; that should be reviewed by a lawyer. Details: Is there an exclusive dealing  commitment with the counterparty? This includes a commitment to procure all “requirements” from one party of certain technology, goods, or services or a prohibition on licensing or selling technology, goods or services to third parties, or a prohibition on  collaborating or working with other parties), whether during the contract or  after the contract ends (or both).</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>(ii) unless another proposed sponsor has agreed to pay a sponsorship fee that exceeds the amount paid by Sponsor, no other sponsor shall receive any benefit of greater value (including either an equivalent or a more prominent use of another sponsor&#x27;s name, logo or other identifying information) than the Benefits provided to the Sponsor hereunder.</span>
+<div class='meta'>no gold &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Competitive Restriction Exception<span class='pill p-sp'>split</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Competitive Restriction Exception&quot; that should be reviewed by a lawyer. Details: This category includes the exceptions or carveouts to Non-Compete, Exclusivity and No-Solicit of Customers above.</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;</span>
+<div class='meta'>no gold &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>unless such endorsement activity is approved in writing by Racing and the Sponsor;</span>
+<div class='meta'>no gold &middot; NOT VERBATIM</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Minimum Commitment<span class='pill p-sp'>split</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Minimum Commitment&quot; that should be reviewed by a lawyer. Details: Is there a minimum order size or minimum amount or units per-time period that one party must buy from the counterparty under the contract?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>3. Sponsorship Fee. The Sponsor shall pay to Racing a sponsorship fee in the amount of $750,000.00 for the term of this Agreement, payable in an initial installment payable on or before February 1, 2010 in the amount of $350,000.00 and ten installments of $40,000.00 on or before the first day of each month commencing March 1, 2010 and ending with the installment due on December 1, 2010 (unless this Agreement is soone…</span>
+<div class='meta'>no gold &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>3. Sponsorship Fee. The Sponsor shall pay to Racing a sponsorship fee in the amount of $750,000.00 for the term of this Agreement, payable in an initial installment payable on or before February 1, 2010 in the amount of $350,000.00 and ten installments of $40,000.00 on or before the first day of each month commencing March 1, 2010 and ending with the installment due on December 1, 2010 (unless this Agreement is soone…</span>
+<div class='meta'>no gold &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Ip Ownership Assignment<span class='pill p-sp'>split</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Ip Ownership Assignment&quot; that should be reviewed by a lawyer. Details: Does intellectual property created  by one party become the property of the counterparty, either per the terms of the contract or upon the occurrence of certain events?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>6. Retention of Rights. The only rights granted to the Sponsor hereunder are the right to receive the Benefits, and Racing hereby retains all other rights with respect to the Racing Team, including but not limited to logos, symbols, names and other marks and intellectual property of the Racing Team, and any proceeds derived by the Racing Team. The Sponsor hereby retains and does not grant any rights to Racing to use …</span>
+<div class='meta'>no gold &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>6. Retention of Rights. The only rights granted to the Sponsor hereunder are the right to receive the Benefits, and Racing hereby retains all other rights with respect to the Racing Team, including but not limited to logos, symbols, names and other marks and intellectual property of the Racing Team, and any proceeds derived by the Racing Team. The Sponsor hereby retains and does not grant any rights to Racing to use …</span>
+<div class='meta'>no gold &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Non-Transferable License<span class='pill p-sp'>split</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Non-Transferable License&quot; that should be reviewed by a lawyer. Details: Does the contract limit the ability of a party to transfer the license being granted to a third party?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>11. Assignment. Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party.</span>
+<div class='meta'>no gold</div>
+</div>
+<div class='lbl'>r2<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party.</span>
+<div class='meta'>no gold</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Post-Termination Services<span class='pill p-sp'>split</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Post-Termination Services&quot; that should be reviewed by a lawyer. Details: Is a party subject to obligations after the termination or expiration of a contract, including any post-termination transition, payment, transfer of IP, wind-down, last-buy, or similar commitments?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>14. Termination by the Sponsor. Notwithstanding the provisions of Section 1 hereof, the Sponsor shall have the right at any time prior to December 31, 2010 to terminate this Agreement by giving written notice of such termination to Racing. In the event of such a termination, (i) the Sponsor shall have no further obligation to make payments toward the sponsorship fee contemplated in Section 3 hereof, (ii) Racing shall…</span>
+<div class='meta'>no gold &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-fp'>fp</span></div><div>
+<span class='span x'>Upon termination, the Sponsor shall be entitled to a pro rata refund of monies paid for services not yet performed by Racing based upon the number of races for the applicable racing season.</span>
+<div class='meta'>no gold &middot; NOT VERBATIM</div>
+<span class='span x'>the remaining provisions of this Agreement shall remain in full force and effect.</span>
+<div class='meta'>no gold</div>
+</div>
+</div></div>
+<h2>Always correct <span class='meta'>26 categories</span></h2>
+<div class='card'>
+<div class='cat'>Expiration Date<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Expiration Date&quot; that should be reviewed by a lawyer. Details: On what date will the contract&#x27;s initial term expire?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>Subject to the provisions of Section 14 hereof, the term of this Agreement and the sponsorship described herein shall commence on  January 1, 2010 and extend through December 31, 2010.</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>1. Term. Subject to the provisions of Section 14 hereof, the term of this Agreement and the sponsorship described herein shall commence on January 1, 2010 and extend through December 31, 2010.</span>
+<div class='meta'>J=0.96 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>1. Term. Subject to the provisions of Section 14 hereof, the term of this Agreement and the sponsorship described herein shall commence on January 1, 2010 and extend through December 31, 2010.</span>
+<div class='meta'>J=0.96 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>Subject to the provisions of Section 14 hereof, the term of this Agreement and the sponsorship described herein shall commence on  January 1, 2010 and extend through December 31, 2010.</span>
+<div class='meta'>J=1.00</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Renewal Term<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Renewal Term&quot; that should be reviewed by a lawyer. Details: What is the renewal term after the initial term expires? This includes automatic extensions and unilateral extensions with prior notice.</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Notice Period To Terminate Renewal<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Notice Period To Terminate Renewal&quot; that should be reviewed by a lawyer. Details: What is the notice period required to terminate renewal?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Governing Law<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Governing Law&quot; that should be reviewed by a lawyer. Details: Which state/country&#x27;s law governs the interpretation of the contract?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>This Agreement shall be governed and construed in accordance with the internal laws of the State of Texas, without giving effect to  principles of conflict of laws.</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>(c) This Agreement shall be governed and construed in accordance with the internal laws of the State of Texas, without giving effect to principles of conflict of laws.</span>
+<div class='meta'>J=0.92 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>(c) This Agreement shall be governed and construed in accordance with the internal laws of the State of Texas, without giving effect to principles of conflict of laws.</span>
+<div class='meta'>J=0.92 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>This Agreement shall be governed and construed in accordance with the internal laws of the State of Texas, without giving effect to  principles of conflict of laws.</span>
+<div class='meta'>J=1.00</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>No-Solicit Of Customers<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;No-Solicit Of Customers&quot; that should be reviewed by a lawyer. Details: Is a party restricted from contracting or soliciting customers or partners of the counterparty, whether during the contract or after the contract ends (or both)?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>No-Solicit Of Employees<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;No-Solicit Of Employees&quot; that should be reviewed by a lawyer. Details: Is there a restriction on a party’s soliciting or hiring employees and/or contractors from the  counterparty, whether during the contract or after the contract ends (or both)?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Termination For Convenience<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Termination For Convenience&quot; that should be reviewed by a lawyer. Details: Can a party terminate this  contract without cause (solely by giving a notice and allowing a waiting  period to expire)?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>Notwithstanding the provisions of Section 1 hereof, the Sponsor shall have the right at any time prior to  December 31, 2010 to terminate this Agreement by giving written notice of such termination to Racing.</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>14. Termination by the Sponsor. Notwithstanding the provisions of Section 1 hereof, the Sponsor shall have the right at any time prior to December 31, 2010 to terminate this Agreement by giving written notice of such termination to Racing.</span>
+<div class='meta'>J=0.94 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>14. Termination by the Sponsor. Notwithstanding the provisions of Section 1 hereof, the Sponsor shall have the right at any time prior to December 31, 2010 to terminate this Agreement by giving written notice of such termination to Racing.</span>
+<div class='meta'>J=0.94 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>the Sponsor shall have the right at any time prior to  December 31, 2010 to terminate this Agreement by giving written notice of such termination to Racing.</span>
+<div class='meta'>J=0.83</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Rofr/Rofo/Rofn<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Rofr/Rofo/Rofn&quot; that should be reviewed by a lawyer. Details: Is there a clause granting one party a right of first refusal, right of first offer or right of first negotiation to purchase, license, market, or distribute equity interest, technology, assets, products or services?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Change Of Control<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Change Of Control&quot; that should be reviewed by a lawyer. Details: Does one party have the right to terminate or is consent or notice required of the counterparty if such party undergoes a change of control, such as a merger, stock sale, transfer of all or substantially all of its assets or business, or assignment by operation of law?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Anti-Assignment<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Anti-Assignment&quot; that should be reviewed by a lawyer. Details: Is consent or notice required of a party if the contract is assigned to a third party?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party.</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>11. Assignment. Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party.</span>
+<div class='meta'>J=0.90</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>11. Assignment. Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party.</span>
+<div class='meta'>J=0.90</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party.</span>
+<div class='meta'>J=1.00</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Revenue/Profit Sharing<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Revenue/Profit Sharing&quot; that should be reviewed by a lawyer. Details: Is one party required to share revenue or profit with the counterparty for any technology, goods, or services?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Price Restrictions<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Price Restrictions&quot; that should be reviewed by a lawyer. Details: Is there a restriction on the  ability of a party to raise or reduce prices of technology, goods, or  services provided?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Volume Restriction<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Volume Restriction&quot; that should be reviewed by a lawyer. Details: Is there a fee increase or consent requirement, etc. if one party’s use of the product/services exceeds certain threshold?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Joint Ip Ownership<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Joint Ip Ownership&quot; that should be reviewed by a lawyer. Details: Is there any clause providing for joint or shared ownership of intellectual property between the parties to the contract?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Affiliate License-Licensor<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Affiliate License-Licensor&quot; that should be reviewed by a lawyer. Details: Does the contract contain a license grant by affiliates of the licensor or that includes intellectual property of affiliates of the licensor? </div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Affiliate License-Licensee<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Affiliate License-Licensee&quot; that should be reviewed by a lawyer. Details: Does the contract contain a license grant to a licensee (incl. sublicensor) and the affiliates of such licensee/sublicensor?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Unlimited/All-You-Can-Eat-License<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Unlimited/All-You-Can-Eat-License&quot; that should be reviewed by a lawyer. Details: Is there a clause granting one party an “enterprise,” “all you can eat” or unlimited usage license?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Irrevocable Or Perpetual License<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Irrevocable Or Perpetual License&quot; that should be reviewed by a lawyer. Details: Does the contract contain a  license grant that is irrevocable or perpetual?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Source Code Escrow<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Source Code Escrow&quot; that should be reviewed by a lawyer. Details: Is one party required to deposit its source code into escrow with a third party, which can be released to the counterparty upon the occurrence of certain events (bankruptcy,  insolvency, etc.)?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Audit Rights<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Audit Rights&quot; that should be reviewed by a lawyer. Details: Does a party have the right to  audit the books, records, or physical locations of the counterparty to ensure compliance with the contract?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Uncapped Liability<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Uncapped Liability&quot; that should be reviewed by a lawyer. Details: Is a party’s liability uncapped upon the breach of its obligation in the contract? This also includes uncap liability for a particular type of breach such as IP infringement or breach of confidentiality obligation.</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Cap On Liability<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Cap On Liability&quot; that should be reviewed by a lawyer. Details: Does the contract include a cap on liability upon the breach of a party’s obligation? This includes time limitation for the counterparty to bring claims or maximum amount for recovery.</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<span class='span g'>Racing represents to the Sponsor that the Sponsor&#x27;s aggregate obligation hereunder  will not exceed the amount of the sponsorship fee set forth in Section 3 hereof (or such lesser amount as is payable by the Sponsor in the event  that this Agreement is terminated pursuant to Section 14 hereof), plus, if applicable, collection costs that may be reasonably incurred by Racing in  a legal proceeding to collect all or any…</span>
+</div>
+<div class='lbl'>r0<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>5. Sponsor&#x27;s Maximum Obligation; Indemnification. Racing represents to the Sponsor that the Sponsor&#x27;s aggregate obligation hereunder will not exceed the amount of the sponsorship fee set forth in Section 3 hereof (or such lesser amount as is payable by the Sponsor in the event that this Agreement is terminated pursuant to Section 14 hereof), plus, if applicable, collection costs that may be reasonably incurred by Rac…</span>
+<div class='meta'>J=0.94 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>5. Sponsor&#x27;s Maximum Obligation; Indemnification. Racing represents to the Sponsor that the Sponsor&#x27;s aggregate obligation hereunder will not exceed the amount of the sponsorship fee set forth in Section 3 hereof (or such lesser amount as is payable by the Sponsor in the event that this Agreement is terminated pursuant to Section 14 hereof), plus, if applicable, collection costs that may be reasonably incurred by Rac…</span>
+<div class='meta'>J=0.64 &middot; NOT VERBATIM</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tp'>tp</span></div><div>
+<span class='span m'>Racing represents to the Sponsor that the Sponsor&#x27;s aggregate obligation hereunder will not exceed the amount of the sponsorship fee set forth in Section 3 hereof (or such lesser amount as is payable by the Sponsor in the event  that this Agreement is terminated pursuant to Section 14 hereof), plus, if applicable, collection costs that may be reasonably incurred by Racing in  a legal proceeding to collect all or any …</span>
+<div class='meta'>J=1.00 &middot; NOT VERBATIM</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Liquidated Damages<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Liquidated Damages&quot; that should be reviewed by a lawyer. Details: Does the contract contain a clause that would award either party liquidated damages for breach or a fee upon the termination of a contract (termination fee)?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Warranty Duration<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Warranty Duration&quot; that should be reviewed by a lawyer. Details: What is the duration of any  warranty against defects or errors in technology, products, or services  provided under the contract?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Covenant Not To Sue<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Covenant Not To Sue&quot; that should be reviewed by a lawyer. Details: Is a party restricted from contesting the validity of the counterparty’s ownership of intellectual property or otherwise bringing a claim against the counterparty for matters unrelated to the contract?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+<div class='card'>
+<div class='cat'>Third Party Beneficiary<span class='pill p-ac'>always correct</span></div>
+<div class='q'>Highlight the parts (if any) of this contract related to &quot;Third Party Beneficiary&quot; that should be reviewed by a lawyer. Details: Is there a non-contracting party who is a beneficiary to some or all of the clauses in the contract and therefore can enforce its rights against a contracting party?</div>
+<div class='grid'>
+<div class='lbl'>gold</div><div>
+<div class='none'>no clause of this type in this contract</div>
+</div>
+<div class='lbl'>r0<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r1<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+<div class='lbl'>r2<span class='pill p-tn'>tn</span></div><div>
+<div class='none'>declared absent</div>
+</div>
+</div></div>
+</div>

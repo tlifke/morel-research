@@ -10,6 +10,8 @@ children:
   - studies/008-principled-extraction-cuad/investigations/004-schema-leakage-pilot
   - studies/008-principled-extraction-cuad/investigations/005-phase1-condition-grid
   - studies/008-principled-extraction-cuad/investigations/006-empirical-principle-selection
+  - studies/008-principled-extraction-cuad/investigations/007-comparison-metrics
+  - studies/008-principled-extraction-cuad/investigations/008-principle-improvement-loop
 related: []
 axes:
   llm_capability: medium
@@ -71,6 +73,16 @@ Verbatim from the reference plan (v2, 2026-08-15):
   2026-08-16 after the curation pilot showed a non-expert curator cannot
   reliably judge substantive quality. Does **not** change C1/C2/C3; changes how
   the set entering C2 and C3 is built. **planned**
+- `007-comparison-metrics` — decides and justifies the scoring methodology for
+  comparing three systems with incompatible output contracts (finetuned
+  DeBERTa-xlarge, ContractEval-prompted Qwen3.5-9B, principles-based
+  Qwen3.5-9B). Opened 2026-08-17. The task is scored as **detection** (2×2
+  confusion per (contract, category); **F2 headline**, F1 reported) plus
+  **localization** (span quality on the TP cell). DeBERTa's free threshold is
+  reported at two operating points — F2-optimal and volume-matched — for two
+  distinct reasons that must not be conflated. **This investigation is the
+  citable source for every comparison number the study reports, and for the
+  Phase-2 reward decomposition.** **in-progress**
 
 The harness (WS5) is **not** an investigation. It is shared study-level code at
 `harness/`, specified in `plans/component-contracts.md`, consumed by 004 and
