@@ -78,12 +78,16 @@ function buildCats(){
 
 function buildSrcs(){
   const box = document.getElementById('srcs');
+  box.innerHTML = '';
   ['gold','r0','r1','r2'].forEach(function(k){
     if(!DATA[k]) return;
     const d = document.createElement('div');
     d.className = 'src' + (k===src?' on':'');
     d.textContent = k;
-    d.onclick = function(){ src=k; buildSrcs(); buildCats(); render(); };
+    d.onclick = function(){
+      if(src===k) return;
+      src=k; buildSrcs(); buildCats(); render();
+    };
     box.appendChild(d);
   });
 }
@@ -101,7 +105,10 @@ function render(){
              '" title="' + names + '">' + piece + '</mark>';
     } else out += piece;
   }
-  document.getElementById('doc').innerHTML = out;
+  const doc = document.getElementById('doc');
+  const keep = doc.scrollTop;
+  doc.innerHTML = out;
+  doc.scrollTop = keep;
   const st = STATS[src];
   const total = Object.values(DATA[src].counts).reduce((x,y)=>x+y,0);
   document.getElementById('bar').innerHTML =
