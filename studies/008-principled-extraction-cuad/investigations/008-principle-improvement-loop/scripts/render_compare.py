@@ -8,13 +8,14 @@ INV = Path(__file__).resolve().parents[1]
 STUDY = INV.parents[1]
 sys.path[:0] = [str(STUDY), str(INV), str(INV / "scripts")]
 
-from render_highlights import CID, build_payload
+from render_highlights import CID, build_payload, parse_args
 
 OUT = INV / "reviews" / "gainsco-compare.html"
 
 
 def main():
-    b = build_payload(CID)
+    runs, cid, out = parse_args(OUT)
+    b = build_payload(cid, runs)
     contract, text, cats, payload = b["contract"], b["text"], b["cats"], b["payload"]
     ci, gold_text = b["ci"], b["gold_text"]
 
@@ -30,7 +31,7 @@ def main():
             ]
             agree[f"{a}|{c}"] = diff
 
-    OUT.write_text(
+    out.write_text(
         TEMPLATE.format(
             title=contract["title"].replace("&", "&amp;").replace("<", "&lt;"),
             chars=f"{len(text):,}",
@@ -40,9 +41,10 @@ def main():
             data=json.dumps(payload),
             stats=json.dumps(b["stats"]),
             diffs=json.dumps(agree),
+            runline=b["runline"],
         )
     )
-    print(f"wrote {OUT} ({OUT.stat().st_size // 1024} KB)")
+    print(f"wrote {out} ({out.stat().st_size // 1024} KB)")
 
 
 TEMPLATE = """<title>GAINSCO Side by Side</title>
@@ -82,7 +84,7 @@ font-size:12.5px;margin:0 0 12px}}
 </style>
 <div class="wrap">
 <h1>Side by side</h1>
-<div class="sub">{title} &middot; {chars} chars &middot; {tokens} tokens &middot; run <code>baseline-001</code>, no principles</div>
+<div class="sub">{title} &middot; {chars} chars &middot; {tokens} tokens &middot; {runline}</div>
 <div class="note">Each pane picks its own source. <strong>differing</strong> selects only the categories where the
 two panes disagree about whether the clause is present at all &mdash; that is the fastest way to see what changed.
 Wavy red underline marks a model span that does not match gold at Jaccard&nbsp;&ge;&nbsp;0.5.</div>
@@ -114,8 +116,8 @@ const CATS = {cats};
 const DATA = {data};
 const STATS = {stats};
 const DIFFS = {diffs};
-const KEYS = ['gold','r0','r1','r2'].filter(k=>DATA[k]);
-let side = {{L:'gold', R:'r0'}};
+const KEYS = Object.keys(DATA);
+let side = {{L: KEYS[0], R: KEYS[Math.min(1, KEYS.length-1)]}};
 let on = new Set(CATS.map((_,i)=>i));
 
 function colour(i){{ return 'hsl(' + ((i*137.508)%360).toFixed(1) + ' 72% 78%)'; }}

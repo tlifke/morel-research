@@ -68,6 +68,7 @@ def main() -> None:
     ap.add_argument("--principles", type=Path, default=None)
     ap.add_argument("--contracts", nargs="*", default=None)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--run-dir", type=Path, default=None, help="override Ledger root (default: study/runs)")
     args = ap.parse_args()
 
     task = TaskDefinition.load()
@@ -77,7 +78,7 @@ def main() -> None:
     contracts = load_contracts(contract_ids)
     principle_set, principle_set_version = load_principle_set(args.principles)
 
-    ledger = Ledger(args.run_id)
+    ledger = Ledger(args.run_id, root=args.run_dir) if args.run_dir else Ledger(args.run_id)
     already = ledger.done()
 
     backend = None

@@ -1,0 +1,437 @@
+The user wants me to extract specific sentences from the provided contract text (Context) to answer 41 different questions.
+I need to follow these rules:
+1.  Extract exact sentences from the Context. Do not rephrase or summarize.
+2.  If a relevant sentence contains unrelated elements (like page numbers), include them exactly.
+3.  If no part of the Context is relevant, set `kind` to "absence" and leave `spans` empty. Do not use the phrase "No related clause." as extracted text.
+4.  Output format must be valid JSON matching the provided schema.
+5.  There are 41 questions/fields. I need to answer each one in order within the `decisions` array.
+6.  I need to track `principles_cited` for each decision based on the provided principles (specifically `license-vs-sponsorship`).
+7.  The principle `license-vs-sponsorship` says to distinguish sponsorship benefits from IP license grants. I should only extract for "License Grant" categories if the text explicitly grants IP rights.
+8.  I need to ensure I capture all 41 categories in the correct order.
+
+Let's go through the questions one by one and locate the text.
+
+1.  **[Document Name]**: "Exhibit 10.41", "SPONSORSHIP AGREEMENT", "This Sponsorship Agreement (the "Agreement")..."
+    *   Sentence: "Exhibit 10.41 SPONSORSHIP AGREEMENT" or "This Sponsorship Agreement (the "Agreement") is entered into effective January 1, 2010..."
+    *   Best match: "This Sponsorship Agreement (the "Agreement") is entered into effective January 1, 2010..." or the header. The question asks for the name. "SPONSORSHIP AGREEMENT" is the title. The first sentence defines it. Let's use "Exhibit 10.41 SPONSORSHIP AGREEMENT". Actually, the instruction says "extract... exact sentence(s)...". Headers aren't always sentences. "This Sponsorship Agreement (the "Agreement")..." is a sentence.
+    *   Let's look for the title. "SPONSORSHIP AGREEMENT". It's on a separate line.
+    *   Let's use: "This Sponsorship Agreement (the "Agreement") is entered into effective January 1, 2010 by and between Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing ("Racing"), and GAINSCO, INC., a Texas corporation (the "Sponsor")."
+
+2.  **[Parties]**: "by and between Stallings Capital Group Consultants, Ltd... and GAINSCO, INC..."
+    *   Sentence: "This Sponsorship Agreement (the "Agreement") is entered into effective January 1, 2010 by and between Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing ("Racing"), and GAINSCO, INC., a Texas corporation (the "Sponsor")."
+    *   Also Section 6 mentions "each of the parties". Section 13 mentions addresses.
+    *   Best sentence for Parties: "This Sponsorship Agreement (the "Agreement") is entered into effective January 1, 2010 by and between Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing ("Racing"), and GAINSCO, INC., a Texas corporation (the "Sponsor")."
+
+3.  **[Agreement Date]**: "effective January 1, 2010"
+    *   Sentence: "This Sponsorship Agreement (the "Agreement") is entered into effective January 1, 2010 by and between Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing ("Racing"), and GAINSCO, INC., a Texas corporation (the "Sponsor")."
+
+4.  **[Effective Date]**: "effective January 1, 2010"
+    *   Sentence: "This Sponsorship Agreement (the "Agreement") is entered into effective January 1, 2010 by and between Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing ("Racing"), and GAINSCO, INC., a Texas corporation (the "Sponsor")."
+
+5.  **[Expiration Date]**: "extend through December 31, 2010"
+    *   Sentence: "1. Term. Subject to the provisions of Section 14 hereof, the term of this Agreement and the sponsorship described herein shall commence on January 1, 2010 and extend through December 31, 2010."
+
+6.  **[Renewal Term]**: No renewal term mentioned.
+    *   Answer: absence.
+
+7.  **[Notice Period To Terminate Renewal]**: Not applicable if no renewal.
+    *   Answer: absence.
+
+8.  **[Governing Law]**: "State of Texas"
+    *   Sentence: "(c) This Agreement shall be governed and construed in accordance with the internal laws of the State of Texas, without giving effect to principles of conflict of laws."
+
+9.  **[Most Favored Nation]**: Check Section 7 "7. Relationship to Other Sponsors." It says no other sponsor shall receive benefit of greater value than Sponsor. This is MFN-like but specific to sponsors/benefits, not technology/goods/services licensing/sale as per definition. The definition says "Is there a clause that if a third party gets better terms on the licensing or sale of technology/goods/services...". This is a sponsorship agreement. Section 7 talks about "any additional sponsor... unless another proposed sponsor has agreed to pay a sponsorship fee that exceeds the amount paid by Sponsor, no other sponsor shall receive any benefit of greater value". This fits the general concept of Most Favored Nation but the specific definition in the prompt mentions "licensing or sale of technology/goods/services". However, usually, in sponsorship contexts, MFN clauses exist regarding marketing visibility. The prompt definition is specific: "licensing or sale of technology/goods/services". This contract is a Sponsorship Agreement. The MFN clause is about Sponsorship Benefits vs other sponsors. I should check if it fits the specific extraction criteria. "Is there a clause that if a third party gets better terms on the licensing or sale of technology/goods/services described in the contract...". This contract is not about technology/goods/services sale. It's about sponsorship. Section 7 is the closest. I will flag it if it matches the text. Section 7 says "no other sponsor shall receive any benefit of greater value". This is effectively a Most Favored Nation clause for the sponsorship benefits. I will extract it.
+    *   Sentence: "7. Relationship to Other Sponsors. The Sponsor acknowledges that Racing has arranged and may arrange in the future for other sponsors for the Racing Team. Racing agrees that, during the term of this Agreement, (i) Sponsor shall have the right to approve or disapprove any additional sponsor identified by Racing, and (ii) unless another proposed sponsor has agreed to pay a sponsorship fee that exceeds the amount paid by Sponsor, no other sponsor shall receive any benefit of greater value (including either an equivalent or a more prominent use of another sponsor's name, logo or other identifying information) than the Benefits provided to the Sponsor hereunder."
+
+10. **[Non-Compete]**: "v) prohibiting the endorsement by Racing and any members of Racing... of any entities... in direct competition... with the Sponsor..."
+    *   Sentence: "(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;" (From Section 2. Advertising and Other Benefits).
+    *   Also Section 7 mentions other sponsors must not get greater value, which implies non-competes on branding value. But Section 2(v) is direct.
+    *   Also Section 9 mentions conduct.
+    *   Best fit for Non-Compete: Section 2(v) prohibits endorsing competitors.
+    *   Sentence: "Racing shall cause the Racing Team to provide for the Sponsor's benefit all of the benefits customarily associated with the sponsorship of a Daytona Prototype Series racing team and consistent with the benefits provided to the Sponsor in 2005 - 2009 (individually, a "Benefit," and collectively, the "Benefits"), including but not limited to the following: ... (v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;"
+    *   Wait, the text breaks down Section 2 into a list. The sentence "Racing shall cause the Racing Team..." is the start. The specific restriction is item (v). I should extract the sentence containing the restriction. The text lists items (i) through (vi) within a paragraph structure.
+    *   Let's look at the raw text provided. It's formatted with line breaks.
+    *   Text: "...including but not limited to the following: (i) displaying...; (ii) making available...; ... (v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor; and (vi) allowing the Sponsor..."
+    *   I will extract the full Section 2 sentence or the specific subsection sentence. Since it's a list within a sentence structure, I might need the whole Section 2 intro sentence to make sense, or just the relevant part. The instruction says "exact sentence(s)". In legal contracts, list items often count as part of the same sentence.
+    *   Let's try to extract the specific sentence containing the clause. "including but not limited to the following: ... (v) prohibiting...".
+    *   Actually, looking at the text: "Racing shall cause the Racing Team to provide for the Sponsor's benefit all of the benefits customarily associated with the sponsorship of a Daytona Prototype Series racing team and consistent with the benefits provided to the Sponsor in 2005 - 2009 (individually, a "Benefit," and collectively, the "Benefits"), including but not limited to the following: ... (v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor; and ..."
+    *   I will extract the sentence starting "Racing shall cause..." up to the end of the relevant clause or the section end. To be safe and exact, I'll extract the Section 2 intro sentence which encompasses the list.
+    *   Wait, the list is long. "Racing shall cause the Racing Team to provide for the Sponsor's benefit all of the benefits customarily associated with the sponsorship of a Daytona Prototype Series racing team and consistent with the benefits provided to the Sponsor in 2005 - 2009 (individually, a "Benefit," and collectively, the "Benefits"), including but not limited to the following: (i) displaying prominent identification of the Sponsor's name and/or logo in signage on the race car and racing suits and, where appropriate, on other team equipment (subject to approval by the Sponsor); (ii) making available for the use of the Sponsor (x) the personalities associated with the Racing Team, including without limitation the name, voice, picture, portrait, likeness, persona and/or signature of each driver for endorsements, commercial advertising and promotions in any and all media throughout the world during the term of this Agreement, (y) the Racing Team's home base facilities in Texas, and (z) those facilities designated or assigned for the use of the Racing Team at each race and race location at which the Racing Team actually participates in the race, all for appropriate public relations and other promotional and marketing purposes. Racing agrees that it will actively participate in the Rolex 24 at Daytona in January, 2010. As it concerns (y) and (z) above, access shall be subject to appropriate security and safety restrictions designated by the applicable racing location and the Racing Team;"
+    *   There are multiple sentences in Section 2.
+    *   Sentence 1: "Racing shall cause the Racing Team to provide for the Sponsor's benefit all of the benefits customarily associated with the sponsorship of a Daytona Prototype Series racing team and consistent with the benefits provided to the Sponsor in 2005 - 2009 (individually, a "Benefit," and collectively, the "Benefits"), including but not limited to the following: (i) displaying prominent identification of the Sponsor's name and/or logo in signage on the race car and racing suits and, where appropriate, on other team equipment (subject to approval by the Sponsor);"
+    *   Sentence 2: "(ii) making available for the use of the Sponsor (x) the personalities associated with the Racing Team, including without limitation the name, voice, picture, portrait, likeness, persona and/or signature of each driver for endorsements, commercial advertising and promotions in any and all media throughout the world during the term of this Agreement, (y) the Racing Team's home base facilities in Texas, and (z) those facilities designated or assigned for the use of the Racing Team at each race and race location at which the Racing Team actually participates in the race, all for appropriate public relations and other promotional and marketing purposes. Racing agrees that it will actively participate in the Rolex 24 at Daytona in January, 2010. As it concerns (y) and (z) above, access shall be subject to appropriate security and safety restrictions designated by the applicable racing location and the Racing Team;"
+    *   Sentence 3: "(iii) making available for the use of the Sponsor a non-racing look-alike (a "Show Car") of the GAINSCO 99 race car (the "Car") used by the Racing Team. Subject to the Sponsor's first right to use the Show Car, it will also be made available to Racing when such use does not interfere with the Sponsor's use of the Show Car;"
+    *   Sentence 4: "(iv) allowing the Sponsor the use of the likeness of the Car, including all paint and graphics, for promotion and advertising of or by the Sponsor, and Racing shall be responsible for all necessary consents and permissions from any other sponsors to be sure the Sponsor can use the likeness of the Car as specified herein;"
+    *   Sentence 5: "(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;"
+    *   Sentence 6: "and (vi) allowing the Sponsor to use the conference room and other areas of the racing shop and garage for meetings and similar events, provided that the Sponsor gives prior notice of the need for such use, and such use does not interfere with operations of the racing shop and garage and is otherwise consistent with reasonable requirements imposed by Racing to assure orderly operations and provide for adequate safety measures at all times."
+    *   To ensure accuracy, I will extract Sentence 5 for Non-Compete. "(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;"
+    *   Wait, the prompt says "Do not rephrase... exact sentence(s)". A list item in this context might be part of a larger sentence structure (starting with "including but not limited to the following"). However, it ends with a semicolon. In the provided text, there are line breaks.
+    *   I will extract the line corresponding to (v) or the sentence containing it. Given the text structure in the prompt, it seems like separate sentences for each item or parts of a run-on.
+    *   I will extract: "Racing agrees that it will actively participate in the Rolex 24 at Daytona in January, 2010. As it concerns (y) and (z) above, access shall be subject to appropriate security and safety restrictions designated by the applicable racing location and the Racing Team;" ... No, that's (y) and (z).
+    *   Let's look at the (v) line: "(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;"
+    *   I'll use this as a sentence unit if it stands alone, otherwise the preceding context. It ends with a semicolon. The text structure is a bit messy. I will use the sentence fragment that contains the clause. Let's try to be as complete as possible while remaining "exact".
+    *   Actually, looking at the JSON requirement, `spans` is an array of strings. I can put the specific line segment.
+    *   For Non-Compete: "prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;"
+    *   Wait, that's not a full sentence. The instruction says "extract... exact sentence(s)...".
+    *   Let's find the sentence that contains this.
+    *   In the provided text:
+        "including but not limited to the following: (i) displaying...; ... (v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor; and (vi)..."
+    *   This is technically one sentence structure starting with "Racing shall cause...".
+    *   I will extract the whole Section 2 benefit description sentence if I need to, or just the specific part if it's distinct. To be safe and follow "exact sentence(s)", I will extract the specific line starting with "(v) prohibiting..." as it appears to be treated as a distinct unit in the list, or the full paragraph.
+    *   Given the strict "exact sentence" rule, I will extract the text segment that forms the semantic unit for (v). It ends with ";". It's part of the list.
+    *   Let's check the instruction: "If a relevant sentence contains unrelated elements such as page numbers or whitespace, include them exactly as they appear."
+    *   I'll extract: "(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;"
+    *   Wait, it's safer to include the lead-in "including but not limited to the following:" to make it a coherent sentence fragment, but the prompt asks for sentences.
+    *   Let's assume the list items are part of the sentence "Racing shall cause...".
+    *   Okay, I will use the Section 2 intro sentence combined with the (v) bit? No, too long.
+    *   I'll extract the specific line: "(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;"
+    *   Actually, looking at the text, there is a line break before "(v)".
+    *   I'll extract: "(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;"
+    *   (Wait, I need to check if this is technically a sentence. It ends with a semicolon. But in extraction tasks, this is often accepted as the relevant clause text.)
+    *   Better yet, I will extract the full Section 2 "Advertising and Other Benefits" paragraph to ensure grammatical completeness, or the specific sentence if it can be isolated.
+    *   Let's check "Compliance with Applicable Rules".
+    *   Section 4: "Racing shall be permitted to provide a substitute promotion or advertisement in compliance with such requirements." (Not Non-Compete).
+    *   Section 2(v) is the Non-Compete.
+    *   I will extract: "Racing shall cause the Racing Team to provide for the Sponsor's benefit all of the benefits customarily associated with the sponsorship of a Daytona Prototype Series racing team and consistent with the benefits provided to the Sponsor in 2005 - 2009 (individually, a "Benefit," and collectively, the "Benefits"), including but not limited to the following: ... (v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;"
+    *   This is too long and spans multiple lines/paragraphs in the text.
+    *   I will extract the specific list item (v) as a span.
+    *   Actually, let's look at "Principle": "Do not rephrase or summarize in any way—respond with exact sentences from the Context relevant to the Question."
+    *   If I extract a fragment, is it a sentence?
+    *   I will extract the full sentence if possible. "Racing agrees that it will actively participate in the Rolex 24 at Daytona in January, 2010." (No).
+    *   I will extract the sentence starting "As it concerns (y) and (z) above..." (No).
+    *   I will use the text: "prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;"
+    *   Wait, this is not a sentence. It's a clause.
+    *   However, in legal extraction, the relevant "sentence" often refers to the paragraph or clause.
+    *   Let's try to find a sentence that encompasses it.
+    *   "including but not limited to the following: (i) displaying... (ii) making available... (iii) making available... (iv) allowing... (v) prohibiting... (vi) allowing..."
+    *   This is one grammatical sentence spanning multiple lines.
+    *   I'll extract the specific part of this sentence that answers the question to avoid including too much noise, but "exact sentence" implies the full sentence.
+    *   Okay, I will extract the full Section 2 text to ensure the non-compete is contextually complete, or the specific item (v) line. I'll go with the specific item (v) line as it's clearly distinct in the visual layout.
+    *   Actually, I'll check if there's a simpler sentence. "Racing agrees that it will actively participate..." No.
+    *   Okay, I'll extract the list item (v). "(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;"
+
+    Wait, I need to be careful with the "license-vs-sponsorship" principle.
+    Non-Compete definition: "Is there a restriction on the ability of a party to compete with the counterparty...". This applies.
+    This is Section 2(v).
+
+11. **[Exclusivity]**: "Relationship to Other Sponsors." Section 7.
+    *   "no other sponsor shall receive any benefit of greater value... than the Benefits provided to the Sponsor hereunder." This is MFN, not exclusivity.
+    *   Is there an exclusive dealing commitment? Section 7 says "Sponsor acknowledges that Racing has arranged and may arrange in the future for other sponsors for the Racing Team."
+    *   This implies non-exclusivity on sponsorship slots, but exclusivity on benefits (MFN).
+    *   "Exclusivity": "commitment to procure all “requirements” from one party... or a prohibition on... collaborating or working with other parties".
+    *   Racing is not prohibited from working with other sponsors. They are allowed, subject to value comparison.
+    *   So, is there an exclusivity clause? No.
+    *   Answer: absence.
+
+12. **[No-Solicit Of Customers]**: Not in a licensing context. In a racing context, "customers" might be fans/sponsors? No, not applicable.
+    *   Answer: absence.
+
+13. **[Competitive Restriction Exception]**: Carveouts to Non-Compete.
+    *   Section 2(v): "unless such endorsement activity is approved in writing by Racing and the Sponsor". This is an exception/approval mechanism.
+    *   Does it fit "exceptions... to Non-Compete"? Yes.
+    *   Sentence: "unless such endorsement activity is approved in writing by Racing and the Sponsor;" (part of the Non-Compete sentence).
+    *   Or the whole Non-Compete sentence.
+    *   I will extract the same sentence used for Non-Compete if it contains the exception.
+    *   Sentence: "(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;"
+
+14. **[No-Solicit Of Employees]**: "No-Solicit Of Employees".
+    *   Any clause restricting soliciting employees?
+    *   Section 9 "Conduct" mentions "best efforts to conduct themselves...". No soliciting.
+    *   Section 2(v) is about endorsing competitors.
+    *   Answer: absence.
+
+15. **[Non-Disparagement]**: "Non-Disparagement".
+    *   Section 9: "...conduct himself/herself in a manner so as not to reflect unfavorably upon the Sponsor... engages in any activity which reflects adversely on the image...".
+    *   Also: "or (iii) disparages the products or services of the Sponsor".
+    *   Does the contract require the Sponsor not to disparage Racing?
+    *   Section 9 says: "Racing and all Racing members... agree to use best efforts... not to reflect unfavorably upon the Sponsor". (This is Rider -> Sponsor).
+    *   Does it restrict Sponsor disparaging Racing?
+    *   Section 6 says "Racing hereby retains all other rights".
+    *   Section 12 says "hold in confidence".
+    *   Section 9 says "The Sponsor's decision with respect to all matters arising under this Section shall be conclusive."
+    *   It does not explicitly say "Sponsor shall not disparage Racing".
+    *   So, Non-Disparagement clause regarding Sponsor -> Counterparty is not explicitly present as a mutual restriction or specific restriction.
+    *   The question asks: "Is there a requirement on a party not to disparage the counterparty?"
+    *   Racing -> Sponsor is covered. Sponsor -> Racing is not explicitly covered.
+    *   I'll check Section 2 again. No.
+    *   I'll check Section 12. No.
+    *   So, strict "requirement on a party" implies either or both. If Racing is restricted, that counts.
+    *   Sentence: "Racing and all Racing members, including but not limited to all drivers, agree to use best efforts to conduct themselves in such a manner so as not to reflect unfavorably upon the Sponsor or its products."
+    *   Also "(iii) disparages the products or services of the Sponsor".
+    *   I will extract the conduct clause.
+    *   Sentence: "9. Conduct. Racing and all Racing members, including but not limited to all drivers, agree to use best efforts to conduct themselves in such a manner so as not to reflect unfavorably upon the Sponsor or its products."
+
+16. **[Termination For Convenience]**: "Termination For Convenience".
+    *   Section 14: "the Sponsor shall have the right at any time prior to December 31, 2010 to terminate this Agreement by giving written notice of such termination to Racing."
+    *   This is a right to terminate without cause (convenience).
+    *   Sentence: "14. Termination by the Sponsor. Notwithstanding the provisions of Section 1 hereof, the Sponsor shall have the right at any time prior to December 31, 2010 to terminate this Agreement by giving written notice of such termination to Racing."
+
+17. **[Rofr/Rofo/Rofn]**: "Right of First Refusal/Offer/Negotiation".
+    *   Check text.
+    *   Section 2(iii): "Subject to the Sponsor's first right to use the Show Car...". This is not RoFo on tech/assets.
+    *   No other RoFo/Rofo/Rofn clauses found.
+    *   Answer: absence.
+
+18. **[Change Of Control]**: "Change Of Control".
+    *   Check text.
+    *   Section 11: "Assignment... without the prior written consent...".
+    *   No specific Change of Control clause (merger, sale, etc.).
+    *   Answer: absence.
+
+19. **[Anti-Assignment]**: "Anti-Assignment".
+    *   Section 11: "11. Assignment. Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party."
+    *   Sentence: "Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party."
+
+20. **[Revenue/Profit Sharing]**: "Revenue/Profit Sharing".
+    *   Check text.
+    *   Sponsorship Fee (Section 3) is fixed ($750,000).
+    *   No sharing of revenue/profit mentioned.
+    *   Answer: absence.
+
+21. **[Price Restrictions]**: "Price Restrictions".
+    *   Check text.
+    *   No restrictions on raising/reducing prices.
+    *   Answer: absence.
+
+22. **[Minimum Commitment]**: "Minimum Commitment".
+    *   Sponsor pays $750,000.
+    *   Is there a minimum order?
+    *   Section 3: "The Sponsor shall pay to Racing a sponsorship fee...".
+    *   Is this a minimum commitment? It's a fixed fee.
+    *   "Minimum Commitment" definition: "minimum order size or minimum amount or units per-time period that one party must buy".
+    *   This is a fixed fee.
+    *   Section 14 allows termination without further obligation.
+    *   No minimum commitment to buy beyond the fee.
+    *   Answer: absence.
+
+23. **[Volume Restriction]**: "Volume Restriction".
+    *   No volume restrictions on usage.
+    *   Answer: absence.
+
+24. **[Ip Ownership Assignment]**: "Ip Ownership Assignment".
+    *   Section 6 "Retention of Rights." "Racing hereby retains all other rights with respect to the Racing Team, including but not limited to logos, symbols, names and other marks and intellectual property of the Racing Team, and any proceeds derived by the Racing Team. The Sponsor hereby retains and does not grant any rights to Racing to use any of its logos, symbols, names or other marks or intellectual property..."
+    *   No assignment of IP between parties.
+    *   Answer: absence.
+
+25. **[Joint Ip Ownership]**: "Joint Ip Ownership".
+    *   Section 6 says "The Sponsor hereby retains... Racing hereby retains...".
+    *   No joint ownership.
+    *   Answer: absence.
+
+26. **[License Grant]**: "License Grant".
+    *   Principle: "Distinguish sponsorship benefits (use of likeness, show car, promotion) from IP license grants. Only extract 'License Grant' or 'Non-Transferable License' when text explicitly grants rights to use, reproduce, or assign IP."
+    *   Section 2(iv): "allowing the Sponsor the use of the likeness of the Car, including all paint and graphics...".
+    *   Section 2(ii): "...use of the Sponsor... the personalities... for endorsements...".
+    *   Section 6: "The Sponsor hereby retains and does not grant any rights to Racing to use any of its logos... except for use as described in Section 2".
+    *   Section 2 uses the word "use", "likeness", "graphics". It's a benefit of the sponsorship.
+    *   Is it a "License Grant"? The principle says "Only extract... when text explicitly grants rights to use, reproduce, or assign IP."
+    *   Section 2(iv) says "allowing the Sponsor the use of the likeness...".
+    *   Section 6 says "except for use as described in Section 2".
+    *   Given the principle instruction, I should be careful. The principle says "Distinguish sponsorship benefits... from IP license grants."
+    *   However, using a logo is often a license.
+    *   The text explicitly says "allowing the Sponsor the use...".
+    *   I will extract Section 2(iv) and Section 6 (retention of rights).
+    *   For "License Grant": "allowing the Sponsor the use of the likeness of the Car, including all paint and graphics, for promotion and advertising of or by the Sponsor, and Racing shall be responsible for all necessary consents and permissions from any other sponsors to be sure the Sponsor can use the likeness of the Car as specified herein;"
+    *   Sentence: "allowing the Sponsor the use of the likeness of the Car, including all paint and graphics, for promotion and advertising of or by the Sponsor, and Racing shall be responsible for all necessary consents and permissions from any other sponsors to be sure the Sponsor can use the likeness of the Car as specified herein;"
+    *   (Note: It's part of a list, but it's a clear grant of use).
+    *   I will extract the specific sentence in Section 2(iv).
+
+27. **[Non-Transferable License]**: "Non-Transferable License".
+    *   Check for ability to transfer the license.
+    *   Section 11: "Neither party shall assign any of its rights or obligations hereunder without the prior written consent...".
+    *   This covers assignment (transfer) of rights, including licenses.
+    *   Does the License Grant itself have a non-transferable clause?
+    *   The general anti-assignment clause (Section 11) covers it.
+    *   The principle says "Does the contract limit the ability of a party to transfer the license being granted to a third party?".
+    *   Section 11 says rights cannot be assigned without consent.
+    *   Sentence: "11. Assignment. Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party."
+    *   Or just the sentence within Section 11.
+    *   I will use the Section 11 text.
+
+28. **[Affiliate License-Licensor]**: "Affiliate License-Licensor".
+    *   No mention of affiliates granting license.
+    *   Answer: absence.
+
+29. **[Affiliate License-Licensee]**: "Affiliate License-Licensee".
+    *   No mention.
+    *   Answer: absence.
+
+30. **[Unlimited/All-You-Can-Eat-License]**: "Unlimited License".
+    *   Section 2(vi): "allowing the Sponsor to use the conference room and other areas...".
+    *   Section 2(ii): "...throughout the world...".
+    *   But Section 1 says "commence on January 1, 2010 and extend through December 31, 2010."
+    *   Not unlimited/perpetual.
+    *   Answer: absence.
+
+31. **[Irrevocable Or Perpetual License]**: "Irrevocable License".
+    *   Contract has term. Termination rights exist (Section 14).
+    *   License ends with Agreement.
+    *   Answer: absence.
+
+32. **[Source Code Escrow]**: "Source Code Escrow".
+    *   No.
+    *   Answer: absence.
+
+33. **[Post-Termination Services]**: "Post-Termination Services".
+    *   Section 14: "Racing shall have no further obligation to provide any Benefits hereunder".
+    *   No post-termination services required.
+    *   Answer: absence.
+
+34. **[Audit Rights]**: "Audit Rights".
+    *   No.
+    *   Answer: absence.
+
+35. **[Uncapped Liability]**: "Uncapped Liability".
+    *   Section 5: "Racing agrees to indemnify the Sponsor... in excess of the Maximum Obligation".
+    *   Maximum Obligation is capped at Section 3 fee + collection costs.
+    *   Section 10: "monetary damages and, if appropriate, equitable relief".
+    *   Section 14: "...no further obligation to make payments...".
+    *   So liability is capped at payment obligations (roughly).
+    *   Indemnification is capped at "Maximum Obligation".
+    *   So not uncapped.
+    *   Answer: absence.
+
+36. **[Cap On Liability]**: "Cap On Liability".
+    *   Section 5: "Racing represents to the Sponsor that the Sponsor's aggregate obligation hereunder will not exceed the amount of the sponsorship fee set forth in Section 3 hereof... (the "Maximum Obligation"). Racing agrees to indemnify the Sponsor... in excess of the Maximum Obligation..."
+    *   This caps the Sponsor's obligation, and the indemnity (Racing's liability to Sponsor) is capped at the Maximum Obligation.
+    *   Does it cap Racing's liability to Sponsor in case of Racing's breach?
+    *   Section 5 says: "indemnify the Sponsor... from any loss... in excess of the Maximum Obligation".
+    *   This implies a cap on the liability to be indemnified.
+    *   Sentence: "Racing represents to the Sponsor that the Sponsor's aggregate obligation hereunder will not exceed the amount of the sponsorship fee set forth in Section 3 hereof (or such lesser amount as is payable by the Sponsor in the event that this Agreement is terminated pursuant to Section 14 hereof), plus, if applicable, collection costs that may be reasonably incurred by Racing in a legal proceeding to collect all or any part thereof (the "Maximum Obligation"). Racing agrees to indemnify the Sponsor and its officers, directors, agents and employees and to hold them harmless from any loss, claim, cost, damage or liability in excess of the Maximum Obligation which (i) the Sponsor shall incur as a result of this Agreement, or (ii) arises from any failure by Racing to perform any of its obligations hereunder."
+    *   This is a cap on liability (indemnity).
+
+37. **[Liquidated Damages]**: "Liquidated Damages".
+    *   No specific mention of liquidated damages formula. Section 10 says "monetary damages".
+    *   Answer: absence.
+
+38. **[Warranty Duration]**: "Warranty Duration".
+    *   No warranty on goods/services (racing team services).
+    *   Answer: absence.
+
+39. **[Insurance]**: "Insurance".
+    *   Section 8.
+    *   Sentence: "8. Insurance. (a) Racing shall obtain and maintain, at Racing's expense, comprehensive automobile liability insurance covering all owned, non-owned and hired vehicles used by Racing in the Business with limits of not less than $5,000,000 per occurrence combined single limit for personal injury and property damage, including all statutory coverage for all states of operation."
+    *   Also (b)(i), (ii), (iii), (iv), (v).
+    *   I'll extract Section 8 intro sentence.
+
+40. **[Covenant Not To Sue]**: "Covenant Not To Sue".
+    *   No specific covenant regarding IP validity.
+    *   Answer: absence.
+
+41. **[Third Party Beneficiary]**: "Third Party Beneficiary".
+    *   No mention.
+    *   Answer: absence.
+
+**Reviewing Principles:**
+*   `license-vs-sponsorship`: Used for License Grant (Section 2(iv) is a use of likeness, but is it an IP license grant? "likeness of the Car, including all paint and graphics" is IP. I'll extract it as it fits "rights to use... IP").
+*   I need to make sure I don't extract things that are purely benefits (like the car use itself). But "use of likeness" is definitely IP.
+
+**Formatting:**
+*   JSON structure with `decisions` array.
+*   41 items.
+*   Keys: `category`, `kind`, `spans`, `explanation`, `principles_cited`.
+*   `category` must match the question names exactly.
+*   `spans` must be array of strings (exact sentences).
+*   `principles_cited` must list principle IDs (I'll use "license-vs-sponsorship").
+
+**Double Check Sentences:**
+*   Some sections like Section 2 are split into many sentences in the text provided due to line breaks.
+*   For Non-Compete (v): The text is "(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in writing by Racing and the Sponsor;".
+*   For License Grant (iv): "(iv) allowing the Sponsor the use of the likeness of the Car, including all paint and graphics, for promotion and advertising of or by the Sponsor, and Racing shall be responsible for all necessary consents and permissions from any other sponsors to be sure the Sponsor can use the likeness of the Car as specified herein;"
+*   For Cap On Liability: Section 5 text.
+*   For Insurance: Section 8 (a) text.
+
+I will ensure the JSON is valid.
+
+One detail: `principles_cited` should be IDs. The instruction says: "On every decision, list in `principles_cited` the ids of the principles that actually bore on that specific decision; an empty list means none applied."
+The only principle provided is `license-vs-sponsorship`. I will use that string for relevant decisions.
+Relevant decisions: `License Grant`, `Non-Transferable License` (assignment of rights), `Anti-Assignment` (related to transfer).
+Wait, `Anti-Assignment` is general. `Non-Transferable License` is about the license. Section 11 covers assignment of rights. Principle applies when distinguishing from sponsorship benefits.
+For `License Grant`, I'm extracting a specific clause about likeness (IP).
+For `Non-Transferable License`, Section 11 covers assignment of rights, which includes the license.
+For `Anti-Assignment`, Section 11 covers assignment of rights.
+For `IP Ownership`, `Joint IP`, etc., Principle might not apply directly but I should check.
+I will add `license-vs-sponsorship` to `License Grant`, `Non-Transferable License` (Section 2(iv) implies license of likeness), `Anti-Assignment` (Section 11).
+Wait, Section 2(iv) is "allowing the Sponsor the use of the likeness". This is a license. So `license-vs-sponsorship` applies.
+I will cite it for `License Grant`.
+For `Non-Transferable License`: "Does the contract limit the ability of a party to transfer the license...". Section 11 says "Neither party shall assign any of its rights...". This covers the license. I will cite the principle if it's about IP.
+For `Anti-Assignment`: General rights.
+
+I'll be conservative and only cite the principle where it's directly relevant to distinguishing IP from Sponsorship.
+1. `License Grant`: Yes, Section 2(iv) is IP use.
+2. `Non-Transferable License`: Yes, related to transfer of the license (Section 11).
+3. `Anti-Assignment`: Yes, covers transfer of rights (IP).
+
+Wait, `Non-Compete` is Section 2(v). That's sponsorship behavior.
+`Insurance` is Section 8.
+
+Okay, I will draft the JSON.
+
+One correction: `Document Name` question asks for "The name of the contract". The text says "Exhibit 10.41 SPONSORSHIP AGREEMENT". I will extract "Exhibit 10.41" and "SPONSORSHIP AGREEMENT" if they are on a line, or just the agreement name. "This Sponsorship Agreement (the "Agreement")..." is safer for a sentence. I'll use: "This Sponsorship Agreement (the "Agreement") is entered into effective January 1, 2010 by and between Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing ("Racing"), and GAINSCO, INC., a Texas corporation (the "Sponsor")."
+
+Wait, `Expiration Date`: "extend through December 31, 2010".
+
+`Most Favored Nation`: Section 7 (Relationship to Other Sponsors). I will extract the MFN-like sentence.
+
+`Non-Compete`: Section 2(v). I'll extract the specific line.
+`Competitive Restriction Exception`: Same line (the "unless" part). Or the whole line. I'll use the whole line for both to avoid ambiguity.
+
+`Governing Law`: "(c) This Agreement shall be governed and construed in accordance with the internal laws of the State of Texas, without giving effect to principles of conflict of laws."
+
+`Termination For Convenience`: Section 14. "14. Termination by the Sponsor. Notwithstanding the provisions of Section 1 hereof, the Sponsor shall have the right at any time prior to December 31, 2010 to terminate this Agreement by giving written notice of such termination to Racing."
+
+Let's refine `spans`. They must be exact strings.
+I will check line breaks. The text provided has line breaks. I should preserve them or just treat them as part of the sentence.
+For safety, I will use the sentence text as it appears in the block, merging lines if they form one logical sentence.
+Actually, the instruction says "exact sentence(s)... from the Context".
+I will copy the text exactly as it appears in the provided block.
+For example, "1. Term. Subject to the provisions of Section 14 hereof, the term of this Agreement and the sponsorship described herein shall commence on January 1, 2010 and extend through December 31, 2010."
+
+I'm ready to construct the JSON.
+
+Note: `principles_cited` is an array of strings. I will use `"license-vs-sponsorship"`.
+
+Check for 41 entries.
+1. Document Name
+2. Parties
+3. Agreement Date
+4. Effective Date
+5. Expiration Date
+6. Renewal Term
+7. Notice Period To Terminate Renewal
+8. Governing Law
+9. Most Favored Nation
+10. Non-Compete
+11. Exclusivity
+12. No-Solicit Of Customers
+13. Competitive Restriction Exception
+14. No-Solicit Of Employees
+15. Non-Disparagement
+16. Termination For Convenience
+17. Rofr/Rofo/Rofn
+18. Change Of Control
+19. Anti-Assignment
+20. Revenue/Profit Sharing
+21. Price Restrictions
+22. Minimum Commitment
+23. Volume Restriction
+24. Ip Ownership Assignment
+25. Joint Ip Ownership
+26. License Grant
+27. Non-Transferable License
+28. Affiliate License-Licensor
+29. Affiliate License-Licensee
+30. Unlimited/All-You-Can-Eat-License
+31. Irrevocable Or Perpetual License
+32. Source Code Escrow
+33. Post-Termination Services
+34. Audit Rights
+35. Uncapped Liability
+36. Cap On Liability
+37. Liquidated Damages
+38. Warranty Duration
+39. Insurance
+40. Covenant Not To Sue
+41. Third Party Beneficiary
+
+All covered.

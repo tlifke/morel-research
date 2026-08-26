@@ -17,6 +17,46 @@ from loop.run_slice import load_contracts
 
 RUN = INV / "runs" / "baseline-001"
 OUT = INV / "reviews" / "gainsco-highlights.html"
+
+
+def manifest(run: Path) -> dict:
+    mf = run / "manifest.json"
+    return json.loads(mf.read_text()) if mf.exists() else {}
+
+
+def run_id(run: Path) -> str:
+    return manifest(run).get("run_id") or run.name
+
+
+def run_label(run: Path) -> str:
+    m = manifest(run)
+    if not m:
+        return f"run <code>{run.name}</code>"
+    principles = m.get("principle_set_version") or "empty"
+    desc = "no principles" if principles == "empty" else f"principles <code>{principles}</code>"
+    return f"run <code>{run_id(run)}</code> &middot; arm <code>{m.get('arm','?')}</code>, {desc}"
+
+
+def resolve_run(name: str) -> Path:
+    run = Path(name)
+    if not run.is_absolute() and not run.exists():
+        run = INV / "runs" / name
+    if not (run / "trials.jsonl").exists():
+        raise SystemExit(f"no trials.jsonl in {run}")
+    return run
+
+
+def resolve_contract(q: str) -> str:
+    ids = [json.loads(l)["contract_id"]
+           for l in (STUDY / "data/processed/instances.jsonl").read_text().splitlines()]
+    if q in ids:
+        return q
+    hits = [c for c in ids if q.lower() in c.lower()]
+    if len(hits) == 1:
+        return hits[0]
+    if not hits:
+        raise SystemExit(f"no contract matching {q!r}")
+    raise SystemExit("ambiguous contract %r, matches:\n  %s" % (q, "\n  ".join(hits[:15])))
 CID = "GAINSCOINC_01_21_2010-EX-10.41-SPONSORSHIP AGREEMENT"
 
 
@@ -68,8 +108,12 @@ def segments(text: str, anns: list[dict]):
     return out
 
 
-def build_payload(cid: str = CID):
-    """Shared by render_highlights and render_compare."""
+def build_payload(cid: str = CID, runs=(RUN,)):
+    """Shared by render_highlights and render_compare.
+
+    One run -> sources gold, r0, r1...  Several runs -> gold, <run-id>:r0, ...
+    """
+    runs = [runs] if isinstance(runs, (str, Path)) else [Path(r) for r in runs]
     contract = load_contracts([cid])[0]
     text = contract["text"]
     locate = make_locator(text)
@@ -92,24 +136,34 @@ def build_payload(cid: str = CID):
             ganns.append({"start": s[0], "end": s[1], "ci": ci[c], "match": True, "how": "gold"})
     sources["gold"] = ganns
 
-    trials = [json.loads(l) for l in (RUN / "trials.jsonl").read_text().splitlines()
-              if json.loads(l)["key"]["contract_id"] == cid]
-    trials.sort(key=lambda t: t["key"]["repeat_idx"])
-
     stats = {}
-    for t in trials:
-        key = f"r{t['key']['repeat_idx']}"
-        anns, how_counts = [], {"exact": 0, "normalized": 0, "not_found": 0}
-        for d in LoopOutput(**t["output"]).decisions:
-            for s in d.spans:
-                how, a, b = locate(s)
-                how_counts[how] += 1
-                if a is None:
-                    continue
-                m = any(is_match(g, s, d.category) for g in gold_text.get(d.category, []))
-                anns.append({"start": a, "end": b, "ci": ci[d.category], "match": m, "how": how})
-        sources[key] = anns
-        stats[key] = how_counts
+    multi = len(runs) > 1
+    n_samples = 0
+    for run in runs:
+        trials = [json.loads(l) for l in (run / "trials.jsonl").read_text().splitlines()
+                  if json.loads(l)["key"]["contract_id"] == cid]
+        trials.sort(key=lambda t: t["key"]["repeat_idx"])
+        if not trials:
+            print(f"warning: {run_id(run)} has no trials for {cid!r}, skipping")
+            continue
+        n_samples += len(trials)
+        for t in trials:
+            key = f"r{t['key']['repeat_idx']}"
+            if multi:
+                key = f"{run_id(run)}:{key}"
+            anns, how_counts = [], {"exact": 0, "normalized": 0, "not_found": 0}
+            for d in LoopOutput(**t["output"]).decisions:
+                for s in d.spans:
+                    how, a, b = locate(s)
+                    how_counts[how] += 1
+                    if a is None:
+                        continue
+                    m = any(is_match(g, s, d.category) for g in gold_text.get(d.category, []))
+                    anns.append({"start": a, "end": b, "ci": ci[d.category], "match": m, "how": how})
+            sources[key] = anns
+            stats[key] = how_counts
+    if n_samples == 0:
+        raise SystemExit(f"no trials for {cid!r} in any of: {[run_id(r) for r in runs]}")
 
     payload = {}
     for k, anns in sources.items():
@@ -128,11 +182,28 @@ def build_payload(cid: str = CID):
         "gold_text": gold_text,
         "payload": payload,
         "stats": stats,
+        "runline": " &nbsp;|&nbsp; ".join(run_label(r) for r in runs),
+        "n_samples": n_samples,
     }
 
 
+def parse_args(default_out: Path):
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--run", nargs="+", default=[str(RUN)],
+                    help="one or more run dirs (name under runs/ or a path); "
+                         "several runs are shown as <run-id>:r<n> sources")
+    ap.add_argument("--contract", default=CID,
+                    help="contract id, or any unambiguous substring of one")
+    ap.add_argument("--out", default=None, help="output html path")
+    a = ap.parse_args()
+    runs = [resolve_run(r) for r in a.run]
+    return runs, resolve_contract(a.contract), (Path(a.out) if a.out else default_out)
+
+
 def main():
-    b = build_payload()
+    runs, cid, out = parse_args(OUT)
+    b = build_payload(cid, runs)
     contract, text, cats, payload, stats = (
         b["contract"], b["text"], b["cats"], b["payload"], b["stats"]
     )
@@ -147,9 +218,11 @@ def main():
         data=json.dumps(payload),
         stats=json.dumps(stats),
         goldcats=json.dumps(sorted(ci[c] for c in gold_text)),
+        runline=b["runline"],
+        nsamples=b["n_samples"],
     )
-    OUT.write_text(html_out)
-    print(f"wrote {OUT} ({OUT.stat().st_size // 1024} KB)")
+    out.write_text(html_out)
+    print(f"wrote {out} ({out.stat().st_size // 1024} KB)")
     print("locator:", stats)
 
 
@@ -183,9 +256,9 @@ mark.miss{{text-decoration:underline wavy rgba(163,43,43,.65);text-underline-off
 </style>
 <div class="wrap">
 <h1>Contract with toggleable highlights</h1>
-<div class="sub">{title} &middot; {chars} chars &middot; {tokens} tokens &middot; run <code>baseline-001</code>, no principles</div>
-<div class="note"><strong>Source</strong> switches between CUAD's gold annotation and each of the three
-independent samples. <strong>Wavy red underline</strong> marks a model span that does not match gold at
+<div class="sub">{title} &middot; {chars} chars &middot; {tokens} tokens &middot; {runline}</div>
+<div class="note"><strong>Source</strong> switches between CUAD's gold annotation and each of the {nsamples}
+independent sample(s). <strong>Wavy red underline</strong> marks a model span that does not match gold at
 Jaccard&nbsp;&ge;&nbsp;0.5. Overlapping categories take the colour of the first enabled one, so toggle down
 to a few categories to read overlaps cleanly. Model spans are located by whitespace-normalised search &mdash;
 most are not byte-exact against the source.</div>
@@ -234,7 +307,7 @@ function buildCats(){{
 function buildSrcs(){{
   const box = document.getElementById('srcs');
   box.innerHTML = '';
-  ['gold','r0','r1','r2'].forEach(function(k){{
+  Object.keys(DATA).forEach(function(k){{
     if(!DATA[k]) return;
     const d = document.createElement('div');
     d.className = 'src' + (k===src?' on':'');

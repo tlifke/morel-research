@@ -22,21 +22,24 @@ global.document = {
   getElementById: id => els[id],
   createElement: t => { const e=new El(t); e.classList=mkClassList(); return e; }
 };
-eval(js + ";globalThis.__setAll=setAll;globalThis.__onlyPresent=onlyPresent;globalThis.__RAW=RAW;");
+eval(js + ";globalThis.__setAll=setAll;globalThis.__onlyPresent=onlyPresent;globalThis.__RAW=RAW;globalThis.__DATA=DATA;");
 const setAll=globalThis.__setAll, onlyPresent=globalThis.__onlyPresent, RAW=globalThis.__RAW;
+const KEYS=Object.keys(globalThis.__DATA), N=KEYS.length, LAST=KEYS[N-1];
 
 // --- assertions ---
 let fail=0;
 const chk=(name,cond,extra='')=>{ if(!cond){fail++;console.log('FAIL:',name,extra);} else console.log('ok  :',name); };
 
-chk('4 source buttons after init', els.srcs.children.length===4, 'got '+els.srcs.children.length);
+chk(N+' source buttons after init', els.srcs.children.length===N, 'got '+els.srcs.children.length);
 const clickSrc = k => els.srcs.children.find(c=>c.textContent===k).onclick();
-clickSrc('r1');
-chk('still 4 after clicking r1', els.srcs.children.length===4, 'got '+els.srcs.children.length);
-clickSrc('r2'); clickSrc('gold'); clickSrc('r0'); clickSrc('r1');
-chk('still 4 after 5 clicks', els.srcs.children.length===4, 'got '+els.srcs.children.length);
+chk('gold is a source', KEYS.includes('gold'), KEYS.join(','));
+clickSrc(LAST);
+chk('still '+N+' after one click', els.srcs.children.length===N, 'got '+els.srcs.children.length);
+for(const k of KEYS) clickSrc(k);
+clickSrc(LAST);
+chk('still '+N+' after many clicks', els.srcs.children.length===N, 'got '+els.srcs.children.length);
 chk('exactly one active', els.srcs.children.filter(c=>c.classList.has('on')).length===1);
-chk('active is r1', els.srcs.children.find(c=>c.classList.has('on')).textContent==='r1');
+chk('active is '+LAST, els.srcs.children.find(c=>c.classList.has('on')).textContent===LAST);
 chk('41 category rows', els.cats.children.length===41, 'got '+els.cats.children.length);
 clickSrc('gold');
 chk('cats not duplicated on source switch', els.cats.children.length===41, 'got '+els.cats.children.length);

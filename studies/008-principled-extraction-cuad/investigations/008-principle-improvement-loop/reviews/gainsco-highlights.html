@@ -28,9 +28,9 @@ mark.miss{text-decoration:underline wavy rgba(163,43,43,.65);text-underline-offs
 </style>
 <div class="wrap">
 <h1>Contract with toggleable highlights</h1>
-<div class="sub">GAINSCOINC_01_21_2010-EX-10.41-SPONSORSHIP AGREEMENT &middot; 15,696 chars &middot; 3,332 tokens &middot; run <code>baseline-001</code>, no principles</div>
-<div class="note"><strong>Source</strong> switches between CUAD's gold annotation and each of the three
-independent samples. <strong>Wavy red underline</strong> marks a model span that does not match gold at
+<div class="sub">GAINSCOINC_01_21_2010-EX-10.41-SPONSORSHIP AGREEMENT &middot; 15,696 chars &middot; 3,332 tokens &middot; run <code>baseline-001</code> &middot; arm <code>baseline</code>, no principles</div>
+<div class="note"><strong>Source</strong> switches between CUAD's gold annotation and each of the 3
+independent sample(s). <strong>Wavy red underline</strong> marks a model span that does not match gold at
 Jaccard&nbsp;&ge;&nbsp;0.5. Overlapping categories take the colour of the first enabled one, so toggle down
 to a few categories to read overlaps cleanly. Model spans are located by whitespace-normalised search &mdash;
 most are not byte-exact against the source.</div>
@@ -79,7 +79,7 @@ function buildCats(){
 function buildSrcs(){
   const box = document.getElementById('srcs');
   box.innerHTML = '';
-  ['gold','r0','r1','r2'].forEach(function(k){
+  Object.keys(DATA).forEach(function(k){
     if(!DATA[k]) return;
     const d = document.createElement('div');
     d.className = 'src' + (k===src?' on':'');
