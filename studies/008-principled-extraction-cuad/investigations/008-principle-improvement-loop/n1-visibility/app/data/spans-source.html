@@ -1,0 +1,161 @@
+<title>GAINSCO Side by Side</title>
+<style>
+:root{--bg:#faf9f7;--fg:#1a1a1a;--mut:#6b6b6b;--line:#e0ddd8;--card:#fff;--acc:#2c4f7c;--accbg:#e9eff7;
+--warn:#8a5a00;--warnbg:#fdf2e0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:1800px;margin:0 auto;padding:22px 16px 50px}
+h1{font-size:21px;margin:0 0 3px} .sub{color:var(--mut);font-size:13px;margin-bottom:14px}
+.layout{display:grid;grid-template-columns:262px 1fr 1fr;gap:14px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:12px 13px;
+position:sticky;top:12px;max-height:90vh;overflow:auto}
+.panel h3{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:0 0 7px}
+.btns{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
+.btns button{flex:1;min-width:56px;font-size:11.5px;padding:4px 5px;border:1px solid var(--line);
+background:#f6f5f2;border-radius:5px;cursor:pointer}
+.btns button.hot{background:var(--warnbg);border-color:#e3c98f;color:var(--warn);font-weight:600}
+label.cat{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:2px 0;cursor:pointer}
+label.cat.zero{opacity:.35}
+label.cat.diff span.nm{font-weight:650;color:var(--warn)}
+.dot{width:10px;height:10px;border-radius:3px;flex:none}
+.n{margin-left:auto;font-size:11px;color:var(--mut);font-variant-numeric:tabular-nums;white-space:nowrap}
+.col h2{font-size:13px;margin:0 0 7px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.srcs{display:flex;gap:4px}
+.src{padding:3px 10px;border:1px solid var(--line);border-radius:6px;cursor:pointer;font-size:12.5px;background:#f0eeea}
+.src.on{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:600}
+.doc{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:16px 18px;
+font:12px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word;
+height:80vh;overflow:auto}
+mark{background:none;color:inherit;border-radius:2px;padding:1px 0}
+mark.miss{text-decoration:underline wavy rgba(163,43,43,.65);text-underline-offset:3px}
+.bar{font-size:11.5px;color:var(--mut);font-variant-numeric:tabular-nums;margin-left:auto}
+.note{background:var(--accbg);border-left:3px solid var(--acc);padding:9px 12px;border-radius:0 6px 6px 0;
+font-size:12.5px;margin:0 0 12px}
+.sync{font-size:11.5px;color:var(--mut);display:flex;align-items:center;gap:5px;cursor:pointer}
+</style>
+<div class="wrap">
+<h1>Side by side</h1>
+<div class="sub">GAINSCOINC_01_21_2010-EX-10.41-SPONSORSHIP AGREEMENT &middot; 15,696 chars &middot; 3,332 tokens &middot; run <code>n1-live-empty</code> &middot; arm <code>empty</code>, no principles</div>
+<div class="note">Each pane picks its own source. <strong>differing</strong> selects only the categories where the
+two panes disagree about whether the clause is present at all &mdash; that is the fastest way to see what changed.
+Wavy red underline marks a model span that does not match gold at Jaccard&nbsp;&ge;&nbsp;0.5.</div>
+<div class="layout">
+  <div class="panel">
+    <h3>Categories</h3>
+    <div class="btns">
+      <button onclick="setAll(1)">all</button>
+      <button onclick="setAll(0)">none</button>
+      <button onclick="onlyPresent()">present</button>
+      <button class="hot" onclick="onlyDiff()">differing</button>
+    </div>
+    <label class="sync"><input type=checkbox id="syncbox" checked> sync scrolling</label>
+    <div id="cats" style="margin-top:8px"></div>
+  </div>
+  <div class="col">
+    <h2><span>left</span><span class="srcs" id="srcsL"></span><span class="bar" id="barL"></span></h2>
+    <div class="doc" id="docL"></div>
+  </div>
+  <div class="col">
+    <h2><span>right</span><span class="srcs" id="srcsR"></span><span class="bar" id="barR"></span></h2>
+    <div class="doc" id="docR"></div>
+  </div>
+</div>
+</div>
+<script>
+const RAW = "Exhibit 10.41\n\nSPONSORSHIP AGREEMENT\n\nThis Sponsorship Agreement (the \"Agreement\") is entered into effective January 1, 2010 by and between Stallings Capital Group  Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing (\"Racing\"), and GAINSCO, INC., a Texas corporation (the \"Sponsor\").\n\nRacing organized and operated a racing team engaging in Daytona Prototype Series auto racing (the \"Racing Team\") in professional races in  2005 through 2008, and the Sponsor was the primary sponsor of the Racing Team pursuant to Sponsorship Agreements dated February 7, 2005,  February 1, 2006, January 1, 2007, January 1, 2008 and January 1, 2009. Racing has invited the Sponsor to continue to act as the primary sponsor of  the Racing Team for 2010, and the Sponsor desires to act in that capacity. In consideration of the sponsorship fee provided for herein, the parties  desire to enter into this Agreement to govern the terms of such sponsorship in 2010.\n\nNow, therefore, Racing and the Sponsor hereby agree as follows:\n\n1. Term. Subject to the provisions of Section 14 hereof, the term of this Agreement and the sponsorship described herein shall commence on  January 1, 2010 and extend through December 31, 2010.\n\n2. Advertising and Other Benefits. Subject to payment by the Sponsor of the sponsorship fee provided for herein, during the term of this  Agreement Racing shall cause the Racing Team to provide for the Sponsor's benefit all of the benefits customarily associated with the  sponsorship of a Daytona Prototype Series racing team and consistent with the benefits provided to the Sponsor in 2005 - 2009 (individually, a  \"Benefit,\" and collectively, the \"Benefits\"), including but not limited to the following:   (i) displaying prominent identification of the Sponsor's name and/or logo in signage on the race car and racing suits and, where  appropriate, on other team equipment (subject to approval by the Sponsor);   (ii) making available for the use of the Sponsor (x) the personalities associated with the Racing Team, including without limitation  the name, voice, picture, portrait, likeness, persona and/or signature of each driver for endorsements, commercial advertising and  promotions in any and all media throughout the world during the term of this Agreement, (y) the Racing Team's home base facilities in  Texas, and (z) those facilities designated or assigned for the use of the Racing Team at each race and race location at which the Racing  Team actually participates in the race, all for appropriate public relations and other promotional and marketing purposes. Racing agrees  that it will actively participate in the Rolex 24 at Daytona in January, 2010. As it concerns (y) and (z) above, access shall be subject to  appropriate security and safety restrictions designated by the applicable racing location and the Racing Team;\n\n\n\n\n\n(iii) making available for the use of the Sponsor a non-racing look-alike (a \"Show Car\") of the GAINSCO 99 race car (the \"Car\")  used by the Racing Team. Subject to the Sponsor's first right to use the Show Car, it will also be made available to Racing when such  use does not interfere with the Sponsor's use of the Show Car;   (iv) allowing the Sponsor the use of the likeness of the Car, including all paint and graphics, for promotion and advertising of or  by the Sponsor, and Racing shall be responsible for all necessary consents and permissions from any other sponsors to be sure the  Sponsor can use the likeness of the Car as specified herein;   (v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or  services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such  endorsement activity is approved in writing by Racing and the Sponsor; and   (vi) allowing the Sponsor to use the conference room and other areas of the racing shop and garage for meetings and similar  events, provided that the Sponsor gives prior notice of the need for such use, and such use does not interfere with operations of the  racing shop and garage and is otherwise consistent with reasonable requirements imposed by Racing to assure orderly operations and  provide for adequate safety measures at all times.\n\n3. Sponsorship Fee. The Sponsor shall pay to Racing a sponsorship fee in the amount of $750,000.00 for the term of this Agreement, payable  in an initial installment payable on or before February 1, 2010 in the amount of $350,000.00 and ten installments of $40,000.00 on or before the first  day of each month commencing March 1, 2010 and ending with the installment due on December 1, 2010 (unless this Agreement is sooner  terminated pursuant to Section 14 hereof, in which case Sponsor shall have no obligation to make any payments after the date of termination).\n\n4. Compliance with Applicable Rules and Regulations. Provision of the Benefits pursuant to this Agreement is subject to rules and  requirements of each organization and venue hosting a racing event in which the Racing Team competes during the term hereof, and the Sponsor  agrees to submit to Racing all advertising and other promotional material relating to each such event in sufficient time to enable Racing to assure  compliance with such rules and requirements. If as a result of such rules and requirements Racing is unable to provide a Benefit in the form  requested by the Sponsor, Racing shall be permitted to provide a substitute promotion or advertisement in compliance with such requirements.      2\n\n\n\n\n\n5. Sponsor's Maximum Obligation; Indemnification. Racing represents to the Sponsor that the Sponsor's aggregate obligation hereunder  will not exceed the amount of the sponsorship fee set forth in Section 3 hereof (or such lesser amount as is payable by the Sponsor in the event  that this Agreement is terminated pursuant to Section 14 hereof), plus, if applicable, collection costs that may be reasonably incurred by Racing in  a legal proceeding to collect all or any part thereof (the \"Maximum Obligation\"). Racing agrees to indemnify the Sponsor and its officers, directors,  agents and employees and to hold them harmless from any loss, claim, cost, damage or liability in excess of the Maximum Obligation which (i) the  Sponsor shall incur as a result of this Agreement, or (ii) arises from any failure by Racing to perform any of its obligations hereunder.\n\n6. Retention of Rights. The only rights granted to the Sponsor hereunder are the right to receive the Benefits, and Racing hereby retains all  other rights with respect to the Racing Team, including but not limited to logos, symbols, names and other marks and intellectual property of the  Racing Team, and any proceeds derived by the Racing Team. The Sponsor hereby retains and does not grant any rights to Racing to use any of its  logos, symbols, names or other marks or intellectual property, except for use as described in Section 2 hereof. In the event that this Agreement is  terminated or if the sponsorship terminates at the end of the term provided for herein, each of the parties shall retain the rights to use its logos,  symbols, names or other marks or intellectual property including, in the case of the Sponsor, the right to use the names and marks \"GAINSCO 99\",  \"the GAINSCO 99 Car\", or similar phrases or derivations thereof.\n\n7. Relationship to Other Sponsors. The Sponsor acknowledges that Racing has arranged and may arrange in the future for other sponsors  for the Racing Team. Racing agrees that, during the term of this Agreement, (i) Sponsor shall have the right to approve or disapprove any  additional sponsor identified by Racing, and (ii) unless another proposed sponsor has agreed to pay a sponsorship fee that exceeds the amount  paid by Sponsor, no other sponsor shall receive any benefit of greater value (including either an equivalent or a more prominent use of another  sponsor's name, logo or other identifying information) than the Benefits provided to the Sponsor hereunder.\n\n8. Insurance.   (a) Racing shall obtain and maintain, at Racing's expense, comprehensive automobile liability insurance covering all owned, non-owned and  hired vehicles used by Racing in the Business with limits of not less than $5,000,000 per occurrence combined single limit for personal injury and  property damage, including all statutory coverage for all states of operation. Racing shall also provide comprehensive (fire and theft) and collision  insurance on each vehicle used in the Business. Racing shall provide the Sponsor a certificate of insurance evidencing \"Gainsco Inc. and all  related entities\" as additional insureds, stating that such insurance is primary in coverage to any other insurance which may be available the  Sponsor, and providing at least thirty (30) days' prior written notice to the Sponsor of cancellation, modification or material change to the policy.\n\n(b) Racing shall obtain and maintain pursuant to the terms of this Agreement, at its sole expense, the following types of insurance coverage,  with minimum limits as set forth below:\n\n(i) Commercial General Liability covering liability arising from premises, operations, independent contractors, personal and advertising injury  and contractual liability\u2014$5,000,000 each occurrence.      3\n\n\n\n\n\n(ii) Racing Owners' Sponsors (Spectators) Legal Liability including Participant Legal Liability\u2014$5,000,000 each occurrence.\n\n(iii) Business Automobile Liability covering all owned, hired and non-owned vehicles\u2014$5,000,000 each occurrence, including statutory  coverages for all states of operations.\n\n(iv) Workers Compensation\u2014statutory limits for all states of operation.\n\n(v) Employers Liability\u2014$5,000,000 each employee for bodily injury by accident and $500,000 each employee for bodily injury by disease.\n\nAll policies of insurance procured by Racing herein shall be written as primary policies, not contributing with or in excess of coverage that the  Sponsor may carry. If Racing's liability policies do not contain the standard separation of insureds provision, or a substantially similar clause, they  shall be endorsed to provide cross-liability coverage.\n\n(c) Racing shall provide the Sponsor with a certificate of insurance evidence compliance with the insurance requirements set forth above.  Certificates shall provide that \"Gainsco Inc. and all related entities\" shall be named as additional insureds on all liability policies, stating that such  insurance is primary in coverage to any other insurance which may be available to the Sponsor, and providing at least thirty (30) days' prior  written notice to the Sponsor of termination, cancellation, modification or material change to the policy.\n\n(d) Such certificates shall be in a form acceptable to, and underwritten by insurance company(ies) reasonably satisfactory to the Sponsor. By  requiring insurance herein, the Sponsor does not represent that coverage limits will necessarily be adequate to protect Racing. The purchase of  appropriate insurance coverage by Racing or the furnishing of certificates of insurance shall not release Racing from its obligations and liabilities  under this Agreement.\n\n9. Conduct. Racing and all Racing members, including but not limited to all drivers, agree to use best efforts to conduct themselves in such a  manner so as not to reflect unfavorably upon the Sponsor or its products. The Sponsor shall have the right to terminate this Agreement on written  notice to Racing if any driver, the general manager or any other member of Racing (i) fails to conduct himself/herself in accordance with generally  accepted standards of morality, (ii) engages in any activity which reflects adversely on the image, reputation or goodwill of the Sponsor or (iii)  disparages the products or services of the Sponsor; provided, however, the Sponsor shall not have the right to terminate this Agreement if Racing,  within fifteen (15) days after receipt of written notice by the Sponsor terminates the employment of, or otherwise dismisses from the racing team,  the driver(s), general manager(s) or other member(s) of Racing engaging in the offensive conduct. Upon termination, the Sponsor shall be entitled  to a pro rata refund of monies paid for services not yet performed by Racing based upon the number of races for the applicable racing season. The  Sponsor's decision with respect to all matters arising under this Section shall be conclusive.      4\n\n\n\n\n\n10. Remedies. If either party breaches any provision of this Agreement, the other party shall be entitled to seek monetary damages and, if  appropriate, equitable relief to require the performance of the obligations hereunder.\n\n11. Assignment. Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party.\n\n12. Entire Agreement; Amendment and Waiver; Confidentiality. This Agreement constitutes the entire agreement between Racing and the  Sponsor with respect to the subject matter hereof and supercedes all prior agreements and understandings. Any amendment of this Agreement  must be by a written instrument signed by both parties, and any waiver of any provision hereof must be in writing, signed by the party agreeing to  such waiver. Each of the parties hereto agrees to hold in confidence the terms hereof and, unless otherwise required by law, neither party shall  release, disclose or publish any of the terms hereof without the prior written consent of the other party.\n\n13. Notices. All notices and communications to be made with respect to this Agreement shall be in writing and shall be effective only when  delivered by (i) hand, (ii) prepaid certified United States mail, return receipt requested, or (iii) overnight delivery service providing proof of delivery,  addressed as follows:\n\nIf to Racing:   Stallings Capital Group Consultants, Ltd., dba Bob Stallings Racing   Attention: Robert W. Stallings, President   4 Windsor Ridge   Frisco, Texas 75034\n\nif to the Sponsor:   GAINSCO, Inc.   Attention: Glenn W. Anderson, President   3333 Lee Parkway, Suite 1200   Dallas, Texas 75219\n\nEither party may change the name or address for notice by providing a written notice of such change in accordance with this Section of the  Agreement.\n\n14. Termination by the Sponsor. Notwithstanding the provisions of Section 1 hereof, the Sponsor shall have the right at any time prior to  December 31, 2010 to terminate this Agreement by giving written notice of such termination to Racing. In the event of such a termination, (i) the  Sponsor shall have no further obligation to make payments toward the sponsorship fee contemplated in Section 3 hereof, (ii) Racing shall have no  further obligation to provide any Benefits hereunder, and (iii) the remaining provisions of this Agreement shall remain in full force and effect.\n\n15. Miscellaneous. (a) This Agreement may be executed in two counterparts, each of which shall be deemed to be an original, but both of  which shall constitute a single agreement.      5\n\n\n\n\n\n(b) The headings and sections of this Agreement are for convenience only and shall not affect the interpretation of any provision hereof.\n\n(c) This Agreement shall be governed and construed in accordance with the internal laws of the State of Texas, without giving effect to  principles of conflict of laws.\n\nThis Agreement is executed as of the date first above written.\n\n   6\n\nSTALLINGS CAPITAL GROUP CONSULTANTS, LTD., DBA BOB  STALLINGS RACING     GAINSCO, INC.\n\nBy:  /s/ Robert W. Stallings     By:  /s/ Glenn W. Anderson    Robert W. Stallings, President       Glenn W. Anderson, President";
+const CATS = ["Document Name", "Parties", "Agreement Date", "Effective Date", "Expiration Date", "Renewal Term", "Notice Period To Terminate Renewal", "Governing Law", "Most Favored Nation", "Non-Compete", "Exclusivity", "No-Solicit Of Customers", "Competitive Restriction Exception", "No-Solicit Of Employees", "Non-Disparagement", "Termination For Convenience", "Rofr/Rofo/Rofn", "Change Of Control", "Anti-Assignment", "Revenue/Profit Sharing", "Price Restrictions", "Minimum Commitment", "Volume Restriction", "Ip Ownership Assignment", "Joint Ip Ownership", "License Grant", "Non-Transferable License", "Affiliate License-Licensor", "Affiliate License-Licensee", "Unlimited/All-You-Can-Eat-License", "Irrevocable Or Perpetual License", "Source Code Escrow", "Post-Termination Services", "Audit Rights", "Uncapped Liability", "Cap On Liability", "Liquidated Damages", "Warranty Duration", "Insurance", "Covenant Not To Sue", "Third Party Beneficiary"];
+const DATA = {"gold": {"segments": [[0, 15, [], 0], [15, 36, [0], 0], [36, 43, [], 0], [43, 50, [1], 0], [50, 109, [], 0], [109, 124, [2, 3], 0], [124, 230, [], 0], [230, 236, [1], 0], [236, 253, [], 0], [253, 266, [1], 0], [266, 1041, [], 0], [1041, 1225, [4], 0], [1225, 1262, [], 0], [1262, 1733, [9], 0], [1733, 3533, [], 0], [3533, 3850, [9], 0], [3850, 5636, [], 0], [5636, 6097, [35], 0], [6097, 7433, [], 0], [7433, 8067, [8], 0], [8067, 8089, [], 0], [8089, 8450, [38], 0], [8450, 8451, [], 0], [8451, 8570, [38], 0], [8570, 8571, [], 0], [8571, 8958, [38], 0], [8958, 8964, [], 0], [8964, 9342, [38], 0], [9342, 9355, [38], 0], [9355, 9863, [38], 0], [9863, 9865, [], 0], [9865, 10219, [38], 0], [10219, 10225, [], 0], [10225, 10765, [38], 0], [10765, 10906, [], 0], [10906, 11037, [38], 0], [11037, 11447, [], 0], [11447, 11601, [14], 0], [11601, 11810, [], 0], [11810, 11867, [14], 0], [11867, 12758, [], 0], [12758, 12881, [18], 0], [12881, 13894, [], 0], [13894, 13935, [1], 0], [13935, 14362, [], 0], [14362, 14570, [15], 0], [14570, 15244, [], 0], [15244, 15408, [7], 0], [15408, 15696, [], 0]], "counts": {"0": 1, "1": 4, "2": 1, "3": 1, "4": 1, "5": 0, "6": 0, "7": 1, "8": 1, "9": 2, "10": 0, "11": 0, "12": 0, "13": 0, "14": 2, "15": 1, "16": 0, "17": 0, "18": 1, "19": 0, "20": 0, "21": 0, "22": 0, "23": 0, "24": 0, "25": 0, "26": 0, "27": 0, "28": 0, "29": 0, "30": 0, "31": 0, "32": 0, "33": 0, "34": 0, "35": 1, "36": 0, "37": 0, "38": 9, "39": 0, "40": 0}}, "r0": {"segments": [[0, 15, [], 0], [15, 36, [0], 0], [36, 38, [], 0], [38, 304, [1, 2, 3], 1], [304, 1032, [], 0], [1032, 1225, [4], 0], [1225, 1227, [], 0], [1227, 3206, [9], 1], [3206, 3530, [9, 25], 1], [3530, 3767, [9], 1], [3767, 3849, [9, 12], 1], [3849, 4299, [9], 1], [4299, 5586, [], 0], [5586, 6450, [35], 0], [6450, 8069, [], 0], [8069, 11227, [38], 1], [11227, 11229, [], 0], [11229, 12501, [14], 1], [12501, 12742, [], 0], [12742, 12881, [18, 26], 1], [12881, 14330, [], 0], [14330, 14907, [15], 0], [14907, 15240, [], 0], [15240, 15408, [7], 0], [15408, 15696, [], 0]], "counts": {"0": 1, "1": 1, "2": 1, "3": 1, "4": 1, "5": 0, "6": 0, "7": 1, "8": 0, "9": 1, "10": 0, "11": 0, "12": 1, "13": 0, "14": 1, "15": 1, "16": 0, "17": 0, "18": 1, "19": 0, "20": 0, "21": 0, "22": 0, "23": 0, "24": 0, "25": 1, "26": 1, "27": 0, "28": 0, "29": 0, "30": 0, "31": 0, "32": 0, "33": 0, "34": 0, "35": 1, "36": 0, "37": 0, "38": 1, "39": 0, "40": 0}}};
+const STATS = {"r0": {"exact": 13, "normalized": 2, "not_found": 0}};
+const DIFFS = {"gold|r0": [8, 12, 25, 26]};
+const KEYS = Object.keys(DATA);
+let side = {L: KEYS[0], R: KEYS[Math.min(1, KEYS.length-1)]};
+let on = new Set(CATS.map((_,i)=>i));
+
+function colour(i){ return 'hsl(' + ((i*137.508)%360).toFixed(1) + ' 72% 78%)'; }
+function diffSet(){
+  const a=side.L, b=side.R;
+  if(a===b) return [];
+  const k = a<b ? a+'|'+b : b+'|'+a;
+  return DIFFS[k] || [];
+}
+
+function buildSrcs(which){
+  const box = document.getElementById('srcs'+which);
+  box.innerHTML = '';
+  KEYS.forEach(function(k){
+    const d = document.createElement('div');
+    d.className = 'src' + (side[which]===k?' on':'');
+    d.textContent = k;
+    d.onclick = function(){
+      if(side[which]===k) return;
+      side[which]=k; buildSrcs(which); buildCats(); renderAll();
+    };
+    box.appendChild(d);
+  });
+}
+
+function buildCats(){
+  const box = document.getElementById('cats');
+  box.innerHTML = '';
+  const dif = new Set(diffSet());
+  CATS.forEach(function(c,i){
+    const nl = DATA[side.L].counts[String(i)] || 0;
+    const nr = DATA[side.R].counts[String(i)] || 0;
+    const l = document.createElement('label');
+    l.className = 'cat' + ((nl||nr) ? '' : ' zero') + (dif.has(i) ? ' diff' : '');
+    l.innerHTML = '<input type=checkbox ' + (on.has(i)?'checked':'') + ' data-i=' + i + '>' +
+      '<span class=dot style="background:' + colour(i) + '"></span>' +
+      '<span class=nm>' + c + '</span><span class=n>' + nl + ' / ' + nr + '</span>';
+    l.querySelector('input').onchange = function(e){
+      e.target.checked ? on.add(i) : on.delete(i); renderAll();
+    };
+    box.appendChild(l);
+  });
+}
+
+function render(which){
+  const src = side[which];
+  const segs = DATA[src].segments;
+  let out = '', shown = 0;
+  for(const [a,b,cats,miss] of segs){
+    const piece = RAW.slice(a,b).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    const hit = cats.filter(c=>on.has(c));
+    if(hit.length){
+      shown++;
+      out += '<mark class="' + (miss?'miss':'') + '" style="background:' + colour(hit[0]) +
+             '" title="' + hit.map(c=>CATS[c]).join(', ') + '">' + piece + '</mark>';
+    } else out += piece;
+  }
+  const doc = document.getElementById('doc'+which);
+  const keep = doc.scrollTop;
+  doc.innerHTML = out;
+  doc.scrollTop = keep;
+  const total = Object.values(DATA[src].counts).reduce((x,y)=>x+y,0);
+  const st = STATS[src];
+  document.getElementById('bar'+which).innerHTML =
+    total + ' spans &middot; ' + shown + ' runs' +
+    (st ? ' &middot; ' + st.exact + ' exact / ' + st.normalized + ' norm / ' + st.not_found + ' missing' : '');
+}
+
+function renderAll(){ render('L'); render('R'); }
+function setAll(v){ on = v ? new Set(CATS.map((_,i)=>i)) : new Set(); buildCats(); renderAll(); }
+function onlyPresent(){
+  on = new Set(CATS.map((_,i)=>i).filter(i =>
+    (DATA[side.L].counts[String(i)]||0) || (DATA[side.R].counts[String(i)]||0)));
+  buildCats(); renderAll();
+}
+function onlyDiff(){ on = new Set(diffSet()); buildCats(); renderAll(); }
+
+let lock = false;
+function link(a,b){
+  a.addEventListener('scroll', function(){
+    if(lock || !document.getElementById('syncbox').checked) return;
+    lock = true; b.scrollTop = a.scrollTop;
+    requestAnimationFrame(function(){ lock = false; });
+  });
+}
+const dL = document.getElementById('docL'), dR = document.getElementById('docR');
+link(dL,dR); link(dR,dL);
+
+buildSrcs('L'); buildSrcs('R'); buildCats(); renderAll();
+</script>

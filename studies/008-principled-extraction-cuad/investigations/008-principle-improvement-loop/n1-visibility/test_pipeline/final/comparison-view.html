@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Iteration Comparison — n1-visibility / final direct-test</title>
+<style>
+  :root{--bg:#0f1115;--fg:#e6e6e6;--accent:#c44e52;--gold:#c44e52;--blue:#2a7ae4;--green:#3a9e68;--gray:#2a2f36;--panel:#171a20;}
+  *{box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  body{background:var(--bg);color:var(--fg);margin:0;padding:2rem;line-height:1.35;}
+  h1{font-size:1.35rem;margin-bottom:.25rem;color:#fff;letter-spacing:-.02em;}
+  .subtitle{color:#8a9199;font-size:.9rem;margin-bottom:1.25rem;}
+  .layout{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+  @media(max-width:1100px){.layout{grid-template-columns:1fr;}}
+  .card{background:var(--panel);border:1px solid var(--gray);border-radius:12px;padding:1rem 1.15rem;}
+  .card h2{font-size:.95rem;margin:0 0 .75rem;padding-bottom:.35rem;border-bottom:1px solid var(--gray);text-transform:uppercase;letter-spacing:.05em;color:#9aa0a6;}
+  pre.contract{background:#13151a;border:1px solid #222; border-radius:8px;padding:1rem;overflow:auto;max-height:70vh;font-size:.82rem;line-height:1.45;white-space:pre-wrap;}
+  .dropdown{display:flex;gap:.35rem;margin-bottom:.75rem;flex-wrap:wrap;}
+  button.tbtn{background:var(--gray);border:1px solid #333;color:#ddd;padding:.35rem .7rem;border-radius:6px;cursor:pointer;font-size:.85rem;}
+  button.tbtn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .dec-item{padding:.35rem .45rem;border-bottom:1px solid #222;font-size:.82rem;}
+  .dec-item .cat{font-weight:600;color:#fff;}
+  .dec-item .meta{color:#8a9199;font-size:.75rem;}
+  .span-hit{background:#c44e5222;border-left:3px solid var(--gold);padding:.35rem .45rem;margin:.15rem 0;font-family:ui-monospace,monospace;font-size:.78rem;border-radius:4px;}
+  .summary{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.75rem;font-size:.85rem;color:#aaa;}
+  .summary b{color:#fff;}
+  .badge{display:inline-block;padding:.15rem .4rem;border-radius:4px;font-size:.75rem;font-weight:600;margin-right:.35rem;}
+  .b-ex{background:#2a7ae433;color:#2a7ae4;}
+  .b-abs{background:#8883;color:#ccc;}
+</style>
+</head>
+<body>
+<h1>n1-visibility — single iteration comparison (test_pipeline/final)</h1>
+<div class="subtitle">Contract: GAINSCOINC_01_21_2010-EX-10.41-SPONSORSHIP AGREEMENT &nbsp;|&nbsp; Model: Qwen/Qwen3.5-9B &nbsp;|&nbsp; Arm: direct-test (derived-001) + empty (no-principles)</div>
+
+<div class="layout">
+<div class="card">
+  <h2>Full contract text (external: intermediate/contract_text.txt)</h2>
+  <pre class="contract" id="contract">Exhibit 10.41
+
+SPONSORSHIP AGREEMENT
+
+This Sponsorship Agreement (the "Agreement") is entered into effective January 1, 2010 by and between Stallings Capital Group  Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing ("Racing"), and GAINSCO, INC., a Texas corporation (the "Sponsor").
+
+Racing organized and operated a racing team engaging in Daytona Prototype Series auto racing (the "Racing Team") in professional races in  2005 through 2008, and the Sponsor was the primary sponsor of the Racing Team pursuant to Sponsorship Agreements dated February 7, 2005,  February 1, 2006, January 1, 2007, January 1, 2008 and January 1, 2009. Racing has invited the Sponsor to continue to act as the primary sponsor of  the Racing Team for 2010, and the Sponsor desires to act in that capacity. In consideration of the sponsorship fee provided for herein, the parties  desire to enter into this Agreement to govern the terms of such sponsorship in 2010.
+
+Now, therefore, Racing and the Sponsor hereby agree as follows:
+
+1. Term. Subject to the provisions of Section 14 hereof, the term of this Agreement and the sponsorship described herein shall commence on  January 1, 2010 and extend through December 31, 2010.
+
+2. Advertising and Other Benefits. Subject to payment by the Sponsor of the sponsorship fee provided for herein, during the term of this  Agreement Racing shall cause the Racing Team to provide for the Sponsor's benefit all of the benefits customarily associated with the  sponsorship of a Daytona Prototype Series racing team and consistent with the benefits provided to the Sponsor in 2005 - 2009 (individually, a  "Benefit," and collectively, the "Benefits"), including but not limited to the following:   (i) displaying prominent identification of the Sponsor's name and/or logo in signage on the race car and racing suits and, where  appropriate, on other team equipment (subject to approval by the Sponsor);   (ii) making available for the use of the Sponsor (x) the personalities associated with the Racing Team, including without limitation  the name, voice, picture, portrait, likeness, persona and/or signature of each driver for endorsements, commercial advertising and  promotions in any and all media throughout the world during the term of this Agreement, (y) the Racing Team's home base facilities in  Texas, and (z) those facilities designated or assigned for the use of the Racing Team at each race and race location at which the Racing  Team actually participates in the race, all for appropriate public relations and other promotional and marketing purposes. Racing agrees  that it will actively participate in the Rolex 24 at Daytona in January, 2010. As it concerns (y) and (z) above, access shall be subject to  appropriate security and safety restrictions designated by the applicable racing location and the Racing Team;
+
+
+
+
+
+(iii) making available for the use of the Sponsor a non-racing look-alike (a "Show Car") of the GAINSCO 99 race car (the "Car")  used by the Racing Team. Subject to the Sponsor's first right to use the Show Car, it will also be made available to Racing when such  use does not interfere with the Sponsor's use of the Show Car;   (iv) allowing the Sponsor the use of the likeness of the Car, including all paint and graphics, for promotion and advertising of or  by the Sponsor, and Racing shall be responsible for all necessary consents and permissions from any other sponsors to be sure the  Sponsor can use the likeness of the Car as specified herein;   (v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or  services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such  endorsement activity is approved in writing by Racing and the Sponsor; and   (vi) allowing the Sponsor to use the conference room and other areas of the racing shop and garage for meetings and similar  events, provided that the Sponsor gives prior notice of the need for such use, and such use does not interfere with operations of the  racing shop and garage and is otherwise consistent with reasonable requirements imposed by Racing to assure orderly operations and  provide for adequate safety measures at all times.
+
+3. Sponsorship Fee. The Sponsor shall pay to Racing a sponsorship fee in the amount of $750,000.00 for the term of this Agreement, payable  in an initial installment payable on or before February 1, 2010 in the amount of $350,000.00 and ten installments of $40,000.00 on or before the first  day of each month commencing March 1, 2010 and ending with the installment due on December 1, 2010 (unless this Agreement is sooner  terminated pursuant to Section 14 hereof, in which case Sponsor shall have no obligation to make any payments after the date of termination).
+
+4. Compliance with Applicable Rules and Regulations. Provision of the Benefits pursuant to this Agreement is subject to rules and  requirements of each organization and venue hosting a racing event in which the Racing Team competes during the term hereof, and the Sponsor  agrees to submit to Racing all advertising and other promotional material relating to each such event in sufficient time to enable Racing to assure  compliance with such rules and requirements. If as a result of such rules and requirements Racing is unable to provide a Benefit in the form  requested by the Sponsor, Racing shall be permitted to provide a substitute promotion or advertisement in compliance with such requirements.      2
+
+
+
+
+
+5. Sponsor's Maximum Obligation; Indemnification. Racing represents to the Sponsor that the Sponsor's aggregate obligation hereunder  will not exceed the amount of the sponsorship fee set forth in Section 3 hereof (or such lesser amount as is payable by the Sponsor in the event  that this Agreement is terminated pursuant to Section 14 hereof), plus, if applicable, collection costs that may be reasonably incurred by Racing in  a legal proceeding to collect all or any part thereof (the "Maximum Obligation"). Racing agrees to indemnify the Sponsor and its officers, directors,  agents and employees and to hold them harmless from any loss, claim, cost, damage or liability in excess of the Maximum Obligation which (i) the  Sponsor shall incur as a result of this Agreement, or (ii) arises from any failure by Racing to perform any of its obligations hereunder.
+
+6. Retention of Rights. The only rights granted to the Sponsor hereunder are the right to receive the Benefits, and Racing hereby retains all  other rights with respect to the Racing Team, including but not limited to logos, symbols, names and other marks and intellectual property of the  Racing Team, and any proceeds derived by the Racing Team. The Sponsor hereby retains and does not grant any rights to Racing to use any of its  logos, symbols, names or other marks or intellectual property, except for use as described in Section 2 hereof. In the event that this Agreement is  terminated or if the sponsorship terminates at the end of the term provided for herein, each of the parties shall retain the rights to use its logos,  symbols, names or other marks or intellectual property including, in the case of the Sponsor, the right to use the names and marks "GAINSCO 99",  "the GAINSCO 99 Car", or similar phrases or derivations thereof.
+
+7. Relationship to Other Sponsors. The Sponsor acknowledges that Racing has arranged and may arrange in the future for other sponsors  for the Racing Team. Racing agrees that, during the term of this Agreement, (i) Sponsor shall have the right to approve or disapprove any  additional sponsor identified by Racing, and (ii) unless another proposed sponsor has agreed to pay a sponsorship fee that exceeds the amount  paid by Sponsor, no other sponsor shall receive any benefit of greater value (including either an equivalent or a more prominent use of another  sponsor's name, logo or other identifying information) than the Benefits provided to the Sponsor hereunder.
+
+8. Insurance.   (a) Racing shall obtain and maintain, at Racing's expense, comprehensive automobile liability insurance covering all owned, non-owned and  hired vehicles used by Racing in the Business with limits of not less than $5,000,000 per occurrence combined single limit for personal injury and  property damage, including all statutory coverage for all states of operation. Racing shall also provide comprehensive (fire and theft) and collision  insurance on each vehicle used in the Business. Racing shall provide the Sponsor a certificate of insurance evidencing "Gainsco Inc. and all  related entities" as additional insureds, stating that such insurance is primary in coverage to any other insurance which may be available the  Sponsor, and providing at least thirty (30) days' prior written notice to the Sponsor of cancellation, modification or material change to the policy.
+
+(b) Racing shall obtain and maintain pursuant to the terms of this Agreement, at its sole expense, the following types of insurance coverage,  with minimum limits as set forth below:
+
+(i) Commercial General Liability covering liability arising from premises, operations, independent contractors, personal and advertising injury  and contractual liability—$5,000,000 each occurrence.      3
+
+
+
+
+
+(ii) Racing Owners' Sponsors (Spectators) Legal Liability including Participant Legal Liability—$5,000,000 each occurrence.
+
+(iii) Business Automobile Liability covering all owned, hired and non-owned vehicles—$5,000,000 each occurrence, including statutory  coverages for all states of operations.
+
+(iv) Workers Compensation—statutory limits for all states of operation.
+
+(v) Employers Liability—$5,000,000 each employee for bodily injury by accident and $500,000 each employee for bodily injury by disease.
+
+All policies of insurance procured by Racing herein shall be written as primary policies, not contributing with or in excess of coverage that the  Sponsor may carry. If Racing's liability policies do not contain the standard separation of insureds provision, or a substantially similar clause, they  shall be endorsed to provide cross-liability coverage.
+
+(c) Racing shall provide the Sponsor with a certificate of insurance evidence compliance with the insurance requirements set forth above.  Certificates shall provide that "Gainsco Inc. and all related entities" shall be named as additional insureds on all liability policies, stating that such  insurance is primary in coverage to any other insurance which may be available to the Sponsor, and providing at least thirty (30) days' prior  written notice to the Sponsor of termination, cancellation, modification or material change to the policy.
+
+(d) Such certificates shall be in a form acceptable to, and underwritten by insurance company(ies) reasonably satisfactory to the Sponsor. By  requiring insurance herein, the Sponsor does not represent that coverage limits will necessarily be adequate to protect Racing. The purchase of  appropriate insurance coverage by Racing or the furnishing of certificates of insurance shall not release Racing from its obligations and liabilities  under this Agreement.
+
+9. Conduct. Racing and all Racing members, including but not limited to all drivers, agree to use best efforts to conduct themselves in such a  manner so as not to reflect unfavorably upon the Sponsor or its products. The Sponsor shall have the right to terminate this Agreement on written  notice to Racing if any driver, the general manager or any other member of Racing (i) fails to conduct himself/herself in accordance with generally  accepted standards of morality, (ii) engages in any activity which reflects adversely on the image, reputation or goodwill of the Sponsor or (iii)  disparages the products or services of the Sponsor; provided, however, the Sponsor shall not have the right to terminate this Agreement if Racing,  within fifteen (15) days after receipt of written notice by the Sponsor terminates the employment of, or otherwise dismisses from the racing team,  the driver(s), general manager(s) or other member(s) of Racing engaging in the offensive conduct. Upon termination, the Sponsor shall be entitled  to a pro rata refund of monies paid for services not yet performed by Racing based upon the number of races for the applicable racing season. The  Sponsor's decision with respect to all matters arising under this Section shall be conclusive.      4
+
+
+
+
+
+10. Remedies. If either party breaches any provision of this Agreement, the other party shall be entitled to seek monetary damages and, if  appropriate, equitable relief to require the performance of the obligations hereunder.
+
+11. Assignment. Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party.
+
+12. Entire Agreement; Amendment and Waiver; Confidentiality. This Agreement constitutes the entire agreement between Racing and the  Sponsor with respect to the subject matter hereof and supercedes all prior agreements and understandings. Any amendment of this Agreement  must be by a written instrument signed by both parties, and any waiver of any provision hereof must be in writing, signed by the party agreeing to  such waiver. Each of the parties hereto agrees to hold in confidence the terms hereof and, unless otherwise required by law, neither party shall  release, disclose or publish any of the terms hereof without the prior written consent of the other party.
+
+13. Notices. All notices and communications to be made with respect to this Agreement shall be in writing and shall be effective only when  delivered by (i) hand, (ii) prepaid certified United States mail, return receipt requested, or (iii) overnight delivery service providing proof of delivery,  addressed as follows:
+
+If to Racing:   Stallings Capital Group Consultants, Ltd., dba Bob Stallings Racing   Attention: Robert W. Stallings, President   4 Windsor Ridge   Frisco, Texas 75034
+
+if to the Sponsor:   GAINSCO, Inc.   Attention: Glenn W. Anderson, President   3333 Lee Parkway, Suite 1200   Dallas, Texas 75219
+
+Either party may change the name or address for notice by providing a written notice of such change in accordance with this Section of the  Agreement.
+
+14. Termination by the Sponsor. Notwithstanding the provisions of Section 1 hereof, the Sponsor shall have the right at any time prior to  December 31, 2010 to terminate this Agreement by giving written notice of such termination to Racing. In the event of such a termination, (i) the  Sponsor shall have no further obligation to make payments toward the sponsorship fee contemplated in Section 3 hereof, (ii) Racing shall have no  further obligation to provide any Benefits hereunder, and (iii) the remaining provisions of this Agreement shall remain in full force and effect.
+
+15. Miscellaneous. (a) This Agreement may be executed in two counterparts, each of which shall be deemed to be an original, but both of  which shall constitute a single agreement.      5
+
+
+
+
+
+(b) The headings and sections of this Agreement are for convenience only and shall not affect the interpretation of any provision hereof.
+
+(c) This Agreement shall be governed and construed in accordance with the internal laws of the State of Texas, without giving effect to  principles of conflict of laws.
+
+This Agreement is executed as of the date first above written.
+
+   6
+
+STALLINGS CAPITAL GROUP CONSULTANTS, LTD., DBA BOB  STALLINGS RACING     GAINSCO, INC.
+
+By:  /s/ Robert W. Stallings     By:  /s/ Glenn W. Anderson    Robert W. Stallings, President       Glenn W. Anderson, President</pre>
+</div>
+
+<div class="card">
+  <h2>Prompt (empty arm — 01-prompt-empty.md)</h2>
+  <pre style="background:#13151a;border:1px solid #222;border-radius:8px;padding:1rem;overflow:auto;max-height:200px;font-size:.78rem;line-height:1.35;white-space:pre-wrap;color:#ccc;">Arm: empty
+Contract: GAINSCOINC_01_21_2010-EX-10.41-SPONSORSHIP AGREEMENT (from mvp_slice.json bucket &lt;=4k, 3332 tokens; raw CUAD title match; instances.jsonl contract_id verified; text_sha256 checked in load_contracts)
+Prompt tokens (dry-run): ~7846
+Delta vs principle arm: principle block absent in build()
+</pre>
+
+  <h2>Comparison view — select option</h2>
+  <div class="dropdown" role="tablist" aria-label="Options">
+    <button class="tbtn active" onclick="show('empty')" id="btn-empty">No-principles (empty)</button>
+    <button class="tbtn" onclick="show('principle')" id="btn-principle">Principle (direct-test)</button>
+    <button class="tbtn" onclick="show('gt')" id="btn-gt">Ground truth (instances.jsonl:163)</button>
+  </div>
+
+  <div id="panel-empty" class="panel active">
+    <div class="summary"><b>Decisions:</b> <span style="color:var(--accent)">0 / 41</span> &nbsp;|&nbsp; <b>Arm:</b> empty &nbsp;|&nbsp; <b>Principle block:</b> absent</div>
+    <div style="font-size:.85rem;color:#8a9199;margin-bottom:.5rem;">Empty arm structured output (<code>03-structured.json</code>): no extraction performed, principle block absent from prompt build.</div>
+    <div style="padding:.75rem;background:#13151a;border:1px solid #222;border-radius:8px;font-size:.85rem;">No spans extracted. All 41 categories report absence / empty.</div>
+  </div>
+
+  <div id="panel-principle" class="panel">
+    <div class="summary"><b>Decisions:</b> <span style="color:var(--green)">41 / 41</span> &nbsp;|&nbsp; <b>Conformance:</b> 0 missing / 0 duplicate / 0 inconsistent &nbsp;|&nbsp; <b>Reasoning chars:</b> ~43k</div>
+    <div style="font-size:.82rem;color:#aaa;margin-bottom:.25rem;">All span highlights rendered below (extraction + absence). Click/hover spans shown as highlighted snippets from the contract.</div>
+<div class="dec-item"><span class="cat">Document Name</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 2</div><div class="span-hit">SPONSORSHIP AGREEMENT</div><div class="span-hit">This Sponsorship Agreement (the "Agreement") is entered into effective January 1, 2010 by and between Stallings Capital Group  Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing ("Racing"), and GAINSCO, INC., a Texas corporation (the "Sponsor").</div></div>
+<div class="dec-item"><span class="cat">Parties</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">Stallings Capital Group Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing ("Racing"), and GAINSCO, INC., a Texas corporation (the "Sponsor").</div></div>
+<div class="dec-item"><span class="cat">Agreement Date</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">This Sponsorship Agreement (the "Agreement") is entered into effective January 1, 2010 by and between Stallings Capital Group  Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing ("Racing"), and GAINSCO, INC., a Texas corporation (the "Sponsor").</div></div>
+<div class="dec-item"><span class="cat">Effective Date</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">This Sponsorship Agreement (the "Agreement") is entered into effective January 1, 2010 by and between Stallings Capital Group  Consultants, Ltd., a Texas limited partnership dba Bob Stallings Racing ("Racing"), and GAINSCO, INC., a Texas corporation (the "Sponsor").</div></div>
+<div class="dec-item"><span class="cat">Expiration Date</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">Subject to the provisions of Section 14 hereof, the term of this Agreement and the sponsorship described herein shall commence on January 1, 2010 and extend through December 31, 2010.</div></div>
+<div class="dec-item"><span class="cat">Renewal Term</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Notice Period To Terminate Renewal</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Governing Law</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">(c) This Agreement shall be governed and construed in accordance with the internal laws of the State of Texas, without giving effect to principles of conflict of laws.</div></div>
+<div class="dec-item"><span class="cat">Most Favored Nation</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">unless another proposed sponsor has agreed to pay a sponsorship fee that exceeds the amount paid by Sponsor, no other sponsor shall receive any benefit of greater value (including either an equivalent or a more prominent use of another sponsor's name, logo or other identifying in</div></div>
+<div class="dec-item"><span class="cat">Non-Compete</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in</div></div>
+<div class="dec-item"><span class="cat">Exclusivity</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">No-Solicit Of Customers</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Competitive Restriction Exception</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">(v) prohibiting the endorsement by Racing and any members of Racing, including the drivers, of any entities, products or services which are in direct competition or otherwise inconsistent with the Sponsor or it products or services, unless such endorsement activity is approved in</div></div>
+<div class="dec-item"><span class="cat">No-Solicit Of Employees</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Non-Disparagement</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">Racing and all Racing members, including but not limited to all drivers, agree to use best efforts to conduct themselves in such a manner so as not to reflect unfavorably upon the Sponsor or its products.</div></div>
+<div class="dec-item"><span class="cat">Termination For Convenience</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">Notwithstanding the provisions of Section 1 hereof, the Sponsor shall have the right at any time prior to December 31, 2010 to terminate this Agreement by giving written notice of such termination to Racing.</div></div>
+<div class="dec-item"><span class="cat">Rofr/Rofo/Rofn</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Change Of Control</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Anti-Assignment</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party.</div></div>
+<div class="dec-item"><span class="cat">Revenue/Profit Sharing</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Price Restrictions</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Minimum Commitment</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Volume Restriction</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Ip Ownership Assignment</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Joint Ip Ownership</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">License Grant</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">(iv) allowing the Sponsor to use the likeness of the Car, including all paint and graphics, for promotion and advertising of or by the Sponsor, and Racing shall be responsible for all necessary consents and permissions from any other sponsors to be sure the Sponsor can use the li</div></div>
+<div class="dec-item"><span class="cat">Non-Transferable License</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Affiliate License-Licensor</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Affiliate License-Licensee</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Unlimited/All-You-Can-Eat-License</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Irrevocable Or Perpetual License</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Source Code Escrow</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Post-Termination Services</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Audit Rights</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Uncapped Liability</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Cap On Liability</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 1</div><div class="span-hit">Racing represents to the Sponsor that the Sponsor's aggregate obligation hereunder will not exceed the amount of the sponsorship fee set forth in Section 3 hereof (or such lesser amount as is payable by the Sponsor in the event that this Agreement is terminated pursuant to Sectio</div></div>
+<div class="dec-item"><span class="cat">Liquidated Damages</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Warranty Duration</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Insurance</span> <span class="badge b-ex">extraction</span><br><div class="meta">Spans: 5</div><div class="span-hit">8. Insurance.   (a) Racing shall obtain and maintain, at Racing's expense, comprehensive automobile liability insurance covering all owned, non-owned and hired vehicles used by Racing in the Business with limits of not less than $5,000,000 per occurrence combined single limit for</div><div class="span-hit">(b) Racing shall obtain and maintain pursuant to the terms of this Agreement, at its sole expense, the following types of insurance coverage, with minimum limits as set forth below: (i) Commercial General Liability covering liability arising from premises, operations, independent</div><div class="span-hit">All policies of insurance procured by Racing herein shall be written as primary policies, not contributing with or in excess of coverage that the Sponsor may carry. If Racing's liability policies do not contain the standard separation of insureds provision, or a substantially sim</div><div class="span-hit">(c) Racing shall provide the Sponsor with a certificate of insurance evidence compliance with the insurance requirements set forth above. Certificates shall provide that "Gainsco Inc. and all related entities" shall be named as additional insureds on all liability policies, stati</div><div class="span-hit">(d) Such certificates shall be in a form acceptable to, and underwritten by insurance company(ies) reasonably satisfactory to the Sponsor. By requiring insurance herein, the Sponsor does not represent that coverage limits will necessarily be adequate to protect Racing. The purcha</div></div>
+<div class="dec-item"><span class="cat">Covenant Not To Sue</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+<div class="dec-item"><span class="cat">Third Party Beneficiary</span> <span class="badge b-abs">absence</span><br><div class="meta">Spans: 0</div></div>
+  </div>
+
+  <div id="panel-gt" class="panel">
+    <div class="summary"><b>Categories with gold spans:</b> <span style="color:var(--gold)">41 / 41</span> &nbsp;|&nbsp; <b>Source:</b> <code>data/processed/instances.jsonl</code> line 163</div>
+    <div style="font-size:.82rem;color:#aaa;margin-bottom:.25rem;">Ground-truth annotations per category (extraction / absence). Highlighted snippet below shows first span for each positive category.</div>
+<div class="dec-item"><span class="cat">Agreement Date</span> <span class="badge b-ex">extraction (gold)</span><br><div class="span-hit">January 1, 2010</div></div>
+<div class="dec-item"><span class="cat">Anti-Assignment</span> <span class="badge b-ex">extraction (gold)</span><br><div class="span-hit">Neither party shall assign any of its rights or obligations hereunder without the prior written consent of the other party.</div></div>
+<div class="dec-item"><span class="cat">Cap On Liability</span> <span class="badge b-ex">extraction (gold)</span><br><div class="span-hit">Racing represents to the Sponsor that the Sponsor's aggregate obligation hereunder  will not exceed the amount of the sponsorship fee set forth in Section 3 hereof (or such lesser amount as is payable by the Sponsor in the event  that this Agreement is terminated pursuant to Sect</div></div>
+<div class="dec-item"><span class="cat">Document Name</span> <span class="badge b-ex">extraction (gold)</span><br><div class="span-hit">SPONSORSHIP AGREEMENT</div></div>
+<div class="dec-item"><span class="cat">Effective Date</span> <span class="badge b-ex">extraction (gold)</span><br><div class="span-hit">January 1, 2010</div></div>
+<div class="dec-item"><span class="cat">Expiration Date</span> <span class="badge b-ex">extraction (gold)</span><br><div class="span-hit">Subject to the provisions of Section 14 hereof, the term of this Agreement and the sponsorship described herein shall commence on  January 1, 2010 and extend through December 31, 2010.</div></div>
+<div class="dec-item"><span class="cat">Governing Law</span> <span class="badge b-ex">extraction (gold)</span><br><div class="span-hit">This Agreement shall be governed and construed in accordance with the internal laws of the State of Texas, without giving effect to  principles of conflict of laws.</div></div>
+<div class="dec-item"><span class="cat">Insurance</span> <span class="badge b-ex">extraction (gold)</span><br><div class="span-hit">Racing shall obtain and maintain, at Racing's expense, comprehensive automobile liability insurance covering all owned, non-owned and  hired vehicles used by Racing in the Business with limits of not less than $5,000,000 per occurrence combined single limit for personal injury an</div></div>
+<div class="dec-item"><span class="cat">Most Favored Nation</span> <span class="badge b-ex">extraction (gold)</span><br><div class="span-hit">The Sponsor acknowledges that Racing has arranged and may arrange in the future for other sponsors  for the Racing Team. Racing agrees that, during the term of this Agreement, (i) Sponsor shall have the right to approve or disapprove any  additional sponsor identified by Racing, </div></div>
+<div class="dec-item"><span class="cat">Non-Compete</span> <span class="badge b-ex">extraction (gold)</span><br><div class="span-hit">Subject to payment by the Sponsor of the sponsorship fee provided for herein, during the term of this  Agreement Racing shall cause the Racing Team to provide for the Sponsor's benefit all of the benefits customarily associated with the  sponsorship of a Daytona Prototype Series </div></div>
+<div class="dec-item"><span class="cat">Non-Disparagement</span> <span class="badge b-ex">extraction (gold)</span><br><div class="span-hit">The Sponsor shall have the right to terminate this Agreement on written  notice to Racing if any driver, the general manager or any other member of Racing</div></div>
+<div class="dec-item"><span class="cat">Parties</span> <span class="badge b-ex">extraction (gold)</span><br><div class="span-hit">Sponsor</div></div>
+<div class="dec-item" style="color:#8a9199;font-size:.82rem;">... and 1 more positive categories.</div>
+  </div>
+
+</div>
+</div>
+
+<script>
+function show(id){
+  ['empty','principle','gt'].forEach(k=>{
+    document.getElementById('panel-'+k).classList.remove('active');
+    document.getElementById('btn-'+k).classList.remove('active');
+  });
+  document.getElementById('panel-'+id).classList.add('active');
+  document.getElementById('btn-'+id).classList.add('active');
+}
+</script>
+
+<div style="margin-top:1rem;font-size:.8rem;color:#666;">
+Built from: <code>01-prompt-empty.md</code>, <code>03-structured.json</code>, <code>test_pipeline/final/427fdf...</code>, <code>test_pipeline/intermediate/contract_text.txt</code>, <code>data/processed/instances.jsonl:163</code>.<br>
+Note: full contract text pulled from intermediate file (96 lines, full agreement with signatures). Empty arm output shows 0 decisions; principle arm shows 41/41 conformance.
+</div>
+</body>
+</html>

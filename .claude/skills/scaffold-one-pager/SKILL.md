@@ -1,6 +1,6 @@
 ---
 name: scaffold-one-pager
-description: Scaffold a one-page LaTeX writeup for a study or investigation in the morel-research repo by copying one-pagers/template/ into the target location and pre-filling the title-block macros. Use this whenever the user says "scaffold a one-pager", "set up a one-pager", "start a one-pager", "create a one-pager for X", "draft a one-pager template", or otherwise indicates they want to begin a one-page writeup. Trigger ALSO when the user is wrapping up an investigation and signals they want to publish a result — that's the right moment to scaffold the paper. CRITICAL: this skill never writes prose. It only sets up the file. The human writes the prose; Claude may give feedback only.
+description: "Scaffold a one-page LaTeX writeup for a study or investigation in the morel-research repo by copying one-pagers/template/ into the target location and pre-filling the title-block macros. Use this whenever the user says \"scaffold a one-pager\", \"set up a one-pager\", \"start a one-pager\", \"create a one-pager for X\", \"draft a one-pager template\", or otherwise indicates they want to begin a one-page writeup. Trigger ALSO when the user is wrapping up an investigation and signals they want to publish a result — that's the right moment to scaffold the paper. CRITICAL: this skill never writes prose. It only sets up the file. The human writes the prose; Claude may give feedback only."
 ---
 
 # scaffold-one-pager

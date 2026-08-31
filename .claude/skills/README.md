@@ -21,6 +21,8 @@ plugin marketplace, and skills written for this repo.
 | `new-investigation` | Scaffold a new investigation under an existing study with proper frontmatter; rebuild `lineage.yaml`. |
 | `scaffold-one-pager` | Copy `one-pagers/template/` next to a study/investigation and prefill title-block macros. Never writes prose. |
 | `capability-map-entry` | Add or update a task entry in `capability-map/tasks.yaml`; re-render `capability-map.png`. |
+| `screenshot-page` | Render a page (local file or URL) to PNGs via its own `capture.py` so an agent can `read` them and actually see the result. |
+| `visual-critique` | Second-opinion pass: show captured PNGs to vision models and merge what they say is broken. Feedback only. |
 
 ## Notes on partial installation
 

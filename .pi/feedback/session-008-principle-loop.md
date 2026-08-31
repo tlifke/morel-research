@@ -1,0 +1,7 @@
+Session: study 008, investigation 008 (principle improvement loop).
+What we did: frozen CUAD slice (GAINSCOINC, mvp_slice.json), live empty run (n1-live-empty), derived 3 principles from error gaps (MFN/Section7, competitive/no-infer, license/sponsorship), ran all 3 + empty via loop/run_slice.py, built side-by-side viewer (04-spans-compare.html), saved all inputs/outputs (prompts, reasoning, structured, trials.jsonl, manifests, segments mapped to RAW).
+What broke: viewer HTML had broken JS/render pipeline (button-to-#doc disconnect, DATA key mismatch, gold copied into live-empty). Fixed by restoring gainsco base + direct sections + real segment mapping (live-empty-segments.json).
+Verification: verify_all.py compares category-level R/P/F1/F2 per arm; verify_scores.py same. Full span-level needs harness.comparison_metrics.is_match.
+Principle results (n=1): MFN works (target cited, R=1.0, F2=0.90) but lowers P; license-vs-sponsorship best (F2=0.96); no-infer-competitive needs redesign (target still absent — needs absence directive, not extraction).
+Key files: n1-visibility/ (prompts, runs/, principles/, verify_*.py, results-table.md); loop/run_slice.py; studies/008-principled-extraction-cuad/reviews/harness-map.html.
+For next agent: verify DATA→render pipeline before claiming done; map live trial spans to RAW before writing comparison; use verify_all.py parameterized by trial_path/target; don't assume reconstructed = live.

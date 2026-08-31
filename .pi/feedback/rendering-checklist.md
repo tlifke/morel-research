@@ -1,0 +1,5 @@
+- Before claiming "populated": verify button → DATA → render() → #doc pipeline.
+- When live run exists, extract spans from output (trials.jsonl) not copy gold.
+- Check render() for RAW gaps (missing slices).
+- Don't substitute gold for missing arm; state live vs reconstructed clearly.
+- For n=1 comparison: map actual response spans before writing DATA.
