@@ -1,0 +1,636 @@
+{
+  "attribution": "Derived from the Contract Understanding Atticus Dataset (CUAD) v1, The Atticus Project, licensed CC BY 4.0.",
+  "built_at": "2026-08-16T18:44:53+00:00",
+  "category_subset_version": "provisional-2026-08-15",
+  "contamination_guard": {
+    "max_cross_split_containment": 0.7365,
+    "max_cross_split_jaccard": 0.0635,
+    "shingle_n": 5,
+    "thresholds": {
+      "containment": 0.8,
+      "jaccard": 0.6
+    }
+  },
+  "dataset_config_version": "frozen-2026-08-15",
+  "exclusions": {
+    "applied_after_harness_val_sampling": true,
+    "contracts": [
+      {
+        "contract_id": "ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT",
+        "reason": "byte-identical to a harness_val contract (containment 1.000): both entries are 12,020 chars and each is a substring of the other; the harness_val twin is ADUROBIOTECH,INC_06_02_2020-EX-10.7-CONSULTING AGREEMENT(1)",
+        "twin_split": "harness_val"
+      },
+      {
+        "contract_id": "ARMSTRONGFLOORING,INC_01_07_2019-EX-10.2-INTELLECTUAL PROPERTY AGREEMENT",
+        "reason": "re-filing of a harness_val contract (containment 0.975): this scratch entry is 69,759 chars against the 56,858-char harness_val entry ArmstrongFlooringInc_20190107_8-K_EX-10.2_11471795_EX-10.2_Intellectual Property Agreement; neither is a substring of the other",
+        "twin_split": "harness_val"
+      },
+      {
+        "contract_id": "IdeanomicsInc_20160330_10-K_EX-10.26_9512211_EX-10.26_Content License Agreement",
+        "reason": "re-filing of a test contract (containment 0.946, gold agrees on all 12): this scratch 10-K entry is 40,866 chars against the 35,189-char test 8-K entry; neither is a substring of the other",
+        "twin_split": "test"
+      },
+      {
+        "contract_id": "WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT - Intellectual Property Rights                 Confidentiality and Non-Use Obligations Agreement",
+        "reason": "contained verbatim WITHIN a test contract (containment 1.000): this scratch entry is the 7,042-char IP/confidentiality annex, a substring of the 32,371-char test filing WOMENSGOLFUNLIMITEDINC_03_29_2000-EX-10.13-ENDORSEMENT AGREEMENT; it ends at exhibit marker A-2 and carries no signing date",
+        "twin_split": "test"
+      }
+    ]
+  },
+  "length_distribution": [
+    {
+      "chars_per_token": 4.722,
+      "max_tokens": 41703,
+      "median_chars": 28237,
+      "median_tokens": 6424,
+      "min_tokens": 357,
+      "n": 40,
+      "n_gt_16k_tokens": 7,
+      "n_le_16k_tokens": 33,
+      "n_le_4k_tokens": 15,
+      "n_le_8k_tokens": 26,
+      "split": "harness_val"
+    },
+    {
+      "chars_per_token": 4.699,
+      "max_tokens": 64640,
+      "median_chars": 25657,
+      "median_tokens": 5440,
+      "min_tokens": 200,
+      "n": 102,
+      "n_gt_16k_tokens": 19,
+      "n_le_16k_tokens": 83,
+      "n_le_4k_tokens": 37,
+      "n_le_8k_tokens": 66,
+      "split": "test"
+    },
+    {
+      "chars_per_token": 4.592,
+      "max_tokens": 59063,
+      "median_chars": 36111,
+      "median_tokens": 7573,
+      "min_tokens": 278,
+      "n": 60,
+      "n_gt_16k_tokens": 13,
+      "n_le_16k_tokens": 47,
+      "n_le_4k_tokens": 17,
+      "n_le_8k_tokens": 31,
+      "split": "principle_train"
+    },
+    {
+      "chars_per_token": 4.69,
+      "max_tokens": 82345,
+      "median_chars": 37826,
+      "median_tokens": 7708,
+      "min_tokens": 349,
+      "n": 40,
+      "n_gt_16k_tokens": 8,
+      "n_le_16k_tokens": 32,
+      "n_le_4k_tokens": 11,
+      "n_le_8k_tokens": 21,
+      "split": "principle_val"
+    },
+    {
+      "chars_per_token": 4.783,
+      "max_tokens": 64608,
+      "median_chars": 36438,
+      "median_tokens": 7337,
+      "min_tokens": 244,
+      "n": 264,
+      "n_gt_16k_tokens": 55,
+      "n_le_16k_tokens": 209,
+      "n_le_4k_tokens": 74,
+      "n_le_8k_tokens": 137,
+      "split": "model_train"
+    },
+    {
+      "chars_per_token": 4.056,
+      "max_tokens": 19499,
+      "median_chars": 26443,
+      "median_tokens": 5589,
+      "min_tokens": 1298,
+      "n": 4,
+      "n_gt_16k_tokens": 1,
+      "n_le_16k_tokens": 3,
+      "n_le_4k_tokens": 2,
+      "n_le_8k_tokens": 2,
+      "split": "scratch"
+    },
+    {
+      "chars_per_token": 4.729,
+      "max_tokens": 82345,
+      "median_chars": 33143,
+      "median_tokens": 6852,
+      "min_tokens": 200,
+      "n": 510,
+      "n_gt_16k_tokens": 103,
+      "n_le_16k_tokens": 407,
+      "n_le_4k_tokens": 156,
+      "n_le_8k_tokens": 283,
+      "split": "all"
+    }
+  ],
+  "n_categories": 41,
+  "n_contracts": 510,
+  "source": {
+    "files": {
+      "CUADv1.json": {
+        "bytes": 40128638,
+        "sha256": "ed0b77d85bdf4014d7495800e8e4a70565b48ee6f8a2e5dca9cf8655dbf10eae"
+      },
+      "category_descriptions.csv": {
+        "bytes": 8987,
+        "sha256": "7499950ee04d2ed2841c0f8ec2ef96b91be039bc2ea3c4edcc36334a465b1f36"
+      },
+      "data.zip": {
+        "bytes": 18309308,
+        "sha256": "f8161d18bea4e9c05e78fa6dda61c19c846fb8087ea969c172753bc2f45b999a"
+      },
+      "evaluate.py": {
+        "bytes": 7132,
+        "sha256": "5c56ac9fc82fe56ef77616a1dffba0707e4366ba916f7ab5d3e4434013d0a624"
+      },
+      "test.json": {
+        "bytes": 7378232,
+        "sha256": "007b6a40b0c65247f881627375c3d2e9b6aeeb5dfa89957494feed0765a1a073"
+      },
+      "train_separate_questions.json": {
+        "bytes": 35065844,
+        "sha256": "7de21d2bb741ac939e2a839ef9640634a5e0f9f40ea2b82c6833baf7db33dab4"
+      }
+    },
+    "repo": "https://github.com/TheAtticusProject/cuad"
+  },
+  "splits": {
+    "harness_val_bucket_shortfall": {},
+    "harness_val_length_profile_match": {
+      "4k-8k": {
+        "harness_val_n": 11,
+        "harness_val_pct": 27.5,
+        "harness_val_target": 11,
+        "test_n": 29,
+        "test_pct": 28.4,
+        "train_pool_n": 98
+      },
+      "8k-16k": {
+        "harness_val_n": 7,
+        "harness_val_pct": 17.5,
+        "harness_val_target": 7,
+        "test_n": 17,
+        "test_pct": 16.7,
+        "train_pool_n": 107
+      },
+      "<=4k": {
+        "harness_val_n": 15,
+        "harness_val_pct": 37.5,
+        "harness_val_target": 15,
+        "test_n": 37,
+        "test_pct": 36.3,
+        "train_pool_n": 119
+      },
+      ">16k": {
+        "harness_val_n": 7,
+        "harness_val_pct": 17.5,
+        "harness_val_target": 7,
+        "test_n": 19,
+        "test_pct": 18.6,
+        "train_pool_n": 84
+      }
+    },
+    "harness_val_stratification": "length_bucket primary matched to test; positive_count_tercile secondary within bucket (D-13)",
+    "principle_train_strata": {
+      "category_positive_coverage": {
+        "Agreement Date": {
+          "model_train_after": 249,
+          "model_train_pool_before": 336,
+          "principle_train": 52,
+          "principle_val": 35
+        },
+        "Anti-Assignment": {
+          "model_train_after": 197,
+          "model_train_pool_before": 276,
+          "principle_train": 46,
+          "principle_val": 33
+        },
+        "Cap On Liability": {
+          "model_train_after": 146,
+          "model_train_pool_before": 209,
+          "principle_train": 36,
+          "principle_val": 27
+        },
+        "Exclusivity": {
+          "model_train_after": 99,
+          "model_train_pool_before": 134,
+          "principle_train": 24,
+          "principle_val": 11
+        },
+        "Expiration Date": {
+          "model_train_after": 216,
+          "model_train_pool_before": 299,
+          "principle_train": 49,
+          "principle_val": 34
+        },
+        "Governing Law": {
+          "model_train_after": 235,
+          "model_train_pool_before": 319,
+          "principle_train": 51,
+          "principle_val": 33
+        },
+        "License Grant": {
+          "model_train_after": 137,
+          "model_train_pool_before": 187,
+          "principle_train": 27,
+          "principle_val": 23
+        },
+        "Minimum Commitment": {
+          "model_train_after": 92,
+          "model_train_pool_before": 120,
+          "principle_train": 19,
+          "principle_val": 9
+        },
+        "Most Favored Nation": {
+          "model_train_after": 8,
+          "model_train_pool_before": 21,
+          "principle_train": 8,
+          "principle_val": 5
+        },
+        "Revenue/Profit Sharing": {
+          "model_train_after": 87,
+          "model_train_pool_before": 117,
+          "principle_train": 18,
+          "principle_val": 12
+        },
+        "Source Code Escrow": {
+          "model_train_after": 2,
+          "model_train_pool_before": 11,
+          "principle_train": 5,
+          "principle_val": 4
+        },
+        "Volume Restriction": {
+          "model_train_after": 45,
+          "model_train_pool_before": 61,
+          "principle_train": 10,
+          "principle_val": 6
+        }
+      },
+      "floor_draw_trace": {
+        "principle_train": {
+          "Agreement Date": {
+            "already_covered": 10,
+            "drawn_for_floor": 0,
+            "pool_positives": 315,
+            "shortfall": 0
+          },
+          "Anti-Assignment": {
+            "already_covered": 10,
+            "drawn_for_floor": 0,
+            "pool_positives": 264,
+            "shortfall": 0
+          },
+          "Cap On Liability": {
+            "already_covered": 10,
+            "drawn_for_floor": 0,
+            "pool_positives": 200,
+            "shortfall": 0
+          },
+          "Exclusivity": {
+            "already_covered": 6,
+            "drawn_for_floor": 0,
+            "pool_positives": 130,
+            "shortfall": 0
+          },
+          "Expiration Date": {
+            "already_covered": 11,
+            "drawn_for_floor": 0,
+            "pool_positives": 287,
+            "shortfall": 0
+          },
+          "Governing Law": {
+            "already_covered": 13,
+            "drawn_for_floor": 0,
+            "pool_positives": 300,
+            "shortfall": 0
+          },
+          "License Grant": {
+            "already_covered": 7,
+            "drawn_for_floor": 0,
+            "pool_positives": 179,
+            "shortfall": 0
+          },
+          "Minimum Commitment": {
+            "already_covered": 3,
+            "drawn_for_floor": 2,
+            "pool_positives": 112,
+            "shortfall": 0
+          },
+          "Most Favored Nation": {
+            "already_covered": 0,
+            "drawn_for_floor": 5,
+            "pool_positives": 19,
+            "shortfall": 0
+          },
+          "Revenue/Profit Sharing": {
+            "already_covered": 4,
+            "drawn_for_floor": 1,
+            "pool_positives": 111,
+            "shortfall": 0
+          },
+          "Source Code Escrow": {
+            "already_covered": 0,
+            "drawn_for_floor": 5,
+            "pool_positives": 11,
+            "shortfall": 0
+          },
+          "Volume Restriction": {
+            "already_covered": 5,
+            "drawn_for_floor": 0,
+            "pool_positives": 60,
+            "shortfall": 0
+          }
+        },
+        "principle_val": {
+          "Agreement Date": {
+            "already_covered": 10,
+            "drawn_for_floor": 0,
+            "pool_positives": 263,
+            "shortfall": 0
+          },
+          "Anti-Assignment": {
+            "already_covered": 11,
+            "drawn_for_floor": 0,
+            "pool_positives": 218,
+            "shortfall": 0
+          },
+          "Cap On Liability": {
+            "already_covered": 9,
+            "drawn_for_floor": 0,
+            "pool_positives": 164,
+            "shortfall": 0
+          },
+          "Exclusivity": {
+            "already_covered": 3,
+            "drawn_for_floor": 1,
+            "pool_positives": 106,
+            "shortfall": 0
+          },
+          "Expiration Date": {
+            "already_covered": 11,
+            "drawn_for_floor": 0,
+            "pool_positives": 238,
+            "shortfall": 0
+          },
+          "Governing Law": {
+            "already_covered": 11,
+            "drawn_for_floor": 0,
+            "pool_positives": 249,
+            "shortfall": 0
+          },
+          "License Grant": {
+            "already_covered": 9,
+            "drawn_for_floor": 0,
+            "pool_positives": 152,
+            "shortfall": 0
+          },
+          "Minimum Commitment": {
+            "already_covered": 4,
+            "drawn_for_floor": 0,
+            "pool_positives": 93,
+            "shortfall": 0
+          },
+          "Most Favored Nation": {
+            "already_covered": 0,
+            "drawn_for_floor": 4,
+            "pool_positives": 11,
+            "shortfall": 0
+          },
+          "Revenue/Profit Sharing": {
+            "already_covered": 2,
+            "drawn_for_floor": 2,
+            "pool_positives": 93,
+            "shortfall": 0
+          },
+          "Source Code Escrow": {
+            "already_covered": 0,
+            "drawn_for_floor": 4,
+            "pool_positives": 6,
+            "shortfall": 0
+          },
+          "Volume Restriction": {
+            "already_covered": 4,
+            "drawn_for_floor": 0,
+            "pool_positives": 50,
+            "shortfall": 0
+          }
+        }
+      },
+      "floor_violations": {
+        "principle_train": [],
+        "principle_val": []
+      },
+      "floors": {
+        "principle_train": 5,
+        "principle_val": 4
+      },
+      "length_bucket_profile": {
+        "model_train_after": {
+          "4k-8k": 63,
+          "8k-16k": 72,
+          "<=4k": 74,
+          ">16k": 55
+        },
+        "model_train_pool_before": {
+          "4k-8k": 87,
+          "8k-16k": 99,
+          "<=4k": 102,
+          ">16k": 76
+        },
+        "principle_train": {
+          "4k-8k": 14,
+          "8k-16k": 16,
+          "<=4k": 17,
+          ">16k": 13
+        },
+        "principle_val": {
+          "4k-8k": 10,
+          "8k-16k": 11,
+          "<=4k": 11,
+          ">16k": 8
+        }
+      },
+      "length_fill_allocation": {
+        "principle_train": {
+          "4k-8k": 11,
+          "8k-16k": 11,
+          "<=4k": 14,
+          ">16k": 11
+        },
+        "principle_val": {
+          "4k-8k": 9,
+          "8k-16k": 8,
+          "<=4k": 9,
+          ">16k": 3
+        }
+      },
+      "model_train_pool_clustering": {
+        "clusters": [
+          [
+            "ALAMOGORDOFINANCIALCORP_12_16_1999-EX-1-AGENCY AGREEMENT",
+            "ATHENSBANCSHARESCORP_11_02_2009-EX-1.2-AGENCY AGREEMENT , 2009"
+          ],
+          [
+            "BellringBrandsInc_20190920_S-1_EX-10.12_11817081_EX-10.12_Manufacturing Agreement2",
+            "BellringBrandsInc_20190920_S-1_EX-10.12_11817081_EX-10.12_Manufacturing Agreement4"
+          ],
+          [
+            "CerenceInc_20191002_8-K_EX-10.4_11827494_EX-10.4_Intellectual Property Agreement",
+            "GarrettMotionInc_20181001_8-K_EX-2.4_11364532_EX-2.4_Intellectual Property Agreement"
+          ],
+          [
+            "ChinaRealEstateInformationCorp_20090929_F-1_EX-10.32_4771615_EX-10.32_Content License Agreement",
+            "LejuHoldingsLtd_20140121_DRS (on F-1)_EX-10.26_8473102_EX-10.26_Content License Agreement1",
+            "LejuHoldingsLtd_20140121_DRS (on F-1)_EX-10.26_8473102_EX-10.26_Content License Agreement2"
+          ],
+          [
+            "FEDERATEDGOVERNMENTINCOMESECURITIESINC_04_28_2020-EX-99.SERV AGREE-SERVICES AGREEMENT_AMENDMENT",
+            "FEDERATEDGOVERNMENTINCOMESECURITIESINC_04_28_2020-EX-99.SERV AGREE-SERVICES AGREEMENT_SECONDAMENDMENT"
+          ],
+          [
+            "INTELLIGENTHIGHWAYSOLUTIONS,INC_01_18_2018-EX-10.1-Strategic Alliance Agreement",
+            "SIBANNAC,INC_12_04_2017-EX-2.1-Strategic Alliance Agreement"
+          ],
+          [
+            "ImpresseCorp_20000322_S-1A_EX-10.11_5199234_EX-10.11_Co-Branding Agreement",
+            "LeadersonlineInc_20000427_S-1A_EX-10.8_4991089_EX-10.8_Co-Branding Agreement"
+          ],
+          [
+            "NETGEAR,INC_04_21_2003-EX-10.16- AMENDMENT #2 TO THE DISTRIBUTION AGREEMENT",
+            "NETGEAR,INC_04_21_2003-EX-10.16-AMENDMENT TO THE DISTRIBUTOR AGREEMENT BETWEEN INGRAM MICRO AND NETGEAR"
+          ],
+          [
+            "NmfSlfIInc_20200115_10-12GA_EX-10.5_11946987_EX-10.5_Trademark License Agreement",
+            "PalmerSquareCapitalBdcInc_20200116_10-12GA_EX-10.6_11949289_EX-10.6_Trademark License Agreement"
+          ],
+          [
+            "SANDRIDGEENERGYINC_08_06_2009-EX-10.6-OPERATIONS AND MAINTENANCE AGREEMENT",
+            "VERTEXENERGYINC_08_14_2014-EX-10.24-OPERATION AND MAINTENANCE AGREEMENT"
+          ],
+          [
+            "SEPARATEACCOUNTIIOFAGL_05_02_2011-EX-99.(J)(4)-UNCONDITIONAL CAPITAL MAINTENANCE AGREEMENT",
+            "VARIABLESEPARATEACCOUNT_04_30_2014-EX-13.C-UNCONDITIONAL CAPITAL MAINTENANCE AGREEMENT"
+          ]
+        ],
+        "edges": [
+          {
+            "a": "NETGEAR,INC_04_21_2003-EX-10.16- AMENDMENT #2 TO THE DISTRIBUTION AGREEMENT",
+            "b": "NETGEAR,INC_04_21_2003-EX-10.16-AMENDMENT TO THE DISTRIBUTOR AGREEMENT BETWEEN INGRAM MICRO AND NETGEAR",
+            "containment": 1.0,
+            "jaccard": 0.6321
+          },
+          {
+            "a": "ChinaRealEstateInformationCorp_20090929_F-1_EX-10.32_4771615_EX-10.32_Content License Agreement",
+            "b": "LejuHoldingsLtd_20140121_DRS (on F-1)_EX-10.26_8473102_EX-10.26_Content License Agreement1",
+            "containment": 0.9887,
+            "jaccard": 0.9445
+          },
+          {
+            "a": "ChinaRealEstateInformationCorp_20090929_F-1_EX-10.32_4771615_EX-10.32_Content License Agreement",
+            "b": "LejuHoldingsLtd_20140121_DRS (on F-1)_EX-10.26_8473102_EX-10.26_Content License Agreement2",
+            "containment": 0.945,
+            "jaccard": 0.0429
+          },
+          {
+            "a": "SEPARATEACCOUNTIIOFAGL_05_02_2011-EX-99.(J)(4)-UNCONDITIONAL CAPITAL MAINTENANCE AGREEMENT",
+            "b": "VARIABLESEPARATEACCOUNT_04_30_2014-EX-13.C-UNCONDITIONAL CAPITAL MAINTENANCE AGREEMENT",
+            "containment": 0.8325,
+            "jaccard": 0.6413
+          },
+          {
+            "a": "INTELLIGENTHIGHWAYSOLUTIONS,INC_01_18_2018-EX-10.1-Strategic Alliance Agreement",
+            "b": "SIBANNAC,INC_12_04_2017-EX-2.1-Strategic Alliance Agreement",
+            "containment": 0.8203,
+            "jaccard": 0.6845
+          },
+          {
+            "a": "BellringBrandsInc_20190920_S-1_EX-10.12_11817081_EX-10.12_Manufacturing Agreement2",
+            "b": "BellringBrandsInc_20190920_S-1_EX-10.12_11817081_EX-10.12_Manufacturing Agreement4",
+            "containment": 0.7833,
+            "jaccard": 0.5137
+          },
+          {
+            "a": "SANDRIDGEENERGYINC_08_06_2009-EX-10.6-OPERATIONS AND MAINTENANCE AGREEMENT",
+            "b": "VERTEXENERGYINC_08_14_2014-EX-10.24-OPERATION AND MAINTENANCE AGREEMENT",
+            "containment": 0.7169,
+            "jaccard": 0.4653
+          },
+          {
+            "a": "NmfSlfIInc_20200115_10-12GA_EX-10.5_11946987_EX-10.5_Trademark License Agreement",
+            "b": "PalmerSquareCapitalBdcInc_20200116_10-12GA_EX-10.6_11949289_EX-10.6_Trademark License Agreement",
+            "containment": 0.6739,
+            "jaccard": 0.4498
+          },
+          {
+            "a": "FEDERATEDGOVERNMENTINCOMESECURITIESINC_04_28_2020-EX-99.SERV AGREE-SERVICES AGREEMENT_AMENDMENT",
+            "b": "FEDERATEDGOVERNMENTINCOMESECURITIESINC_04_28_2020-EX-99.SERV AGREE-SERVICES AGREEMENT_SECONDAMENDMENT",
+            "containment": 0.6609,
+            "jaccard": 0.3794
+          },
+          {
+            "a": "ALAMOGORDOFINANCIALCORP_12_16_1999-EX-1-AGENCY AGREEMENT",
+            "b": "ATHENSBANCSHARESCORP_11_02_2009-EX-1.2-AGENCY AGREEMENT , 2009",
+            "containment": 0.6592,
+            "jaccard": 0.4121
+          },
+          {
+            "a": "CerenceInc_20191002_8-K_EX-10.4_11827494_EX-10.4_Intellectual Property Agreement",
+            "b": "GarrettMotionInc_20181001_8-K_EX-2.4_11364532_EX-2.4_Intellectual Property Agreement",
+            "containment": 0.6474,
+            "jaccard": 0.4508
+          },
+          {
+            "a": "ImpresseCorp_20000322_S-1A_EX-10.11_5199234_EX-10.11_Co-Branding Agreement",
+            "b": "LeadersonlineInc_20000427_S-1A_EX-10.8_4991089_EX-10.8_Co-Branding Agreement",
+            "containment": 0.6433,
+            "jaccard": 0.4373
+          }
+        ],
+        "n_bound_to_model_train": 23,
+        "n_clusters": 11,
+        "n_eligible": 341,
+        "n_pool": 364,
+        "thresholds": {
+          "containment_threshold": 0.6,
+          "jaccard_threshold": 0.4,
+          "note": "Carving principle_train and principle_val out of model_train promotes model_train's INTERNAL near-duplicate clusters into cross-split pairs, which the contamination guard then fails on (it did, on the ChinaRealEstate/Leju Content License cluster at containment 0.989). So before carving, the 364-contract pool is clustered by 5-gram containment/Jaccard and every contract in a multi-member cluster is bound to model_train \u2014 clusters are indivisible and are assigned wholesale to the Phase-2 pool. Only cluster singletons are eligible for principle_train and principle_val.\nThese thresholds are deliberately STRICTER than contamination_guard's. The guard is a fail condition; this is the preventive rule, and the gap between the two pairs of numbers (0.60 vs 0.80 containment, 0.40 vs 0.60 Jaccard) is exactly the headroom the build retains. Binding at the guard's own thresholds would have left a legal cross-split pair at containment 0.783 against a 0.80 fail line.\n",
+          "scope": "model_train_pool_internal",
+          "shingle_n": 5
+        }
+      },
+      "seeds": {
+        "principle_train": 20260816,
+        "principle_val": 20260817
+      },
+      "sizes": {
+        "model_train_after": 264,
+        "principle_train": 60,
+        "principle_val": 40
+      },
+      "stratification": "subset-category positive floor primary, length_bucket secondary; see plans/splits.md and INV1-D8"
+    },
+    "principle_train_stratification": "subset-category positive floor primary, length_bucket secondary (INV1-D8)",
+    "seed": 20260815,
+    "sizes": {
+      "harness_val": 40,
+      "model_train": 264,
+      "principle_train": 60,
+      "principle_val": 40,
+      "scratch": 4,
+      "test": 102
+    }
+  },
+  "tokenizer": {
+    "add_special_tokens": false,
+    "class": "Qwen2Tokenizer",
+    "id": "Qwen/Qwen3-8B",
+    "vocab_size": 151643
+  }
+}
