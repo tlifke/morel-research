@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# pi-clean — minimal-harness launcher for pi.
+#
+# Strips everything the default pi assembly adds to the system prompt:
+#   --no-context-files  -> no AGENTS.md / CLAUDE.md (<project_context> empty)
+#   --no-skills         -> no skills block
+#   --no-extensions     -> no extension contributions (explicit -e still works)
+#   --system-prompt ... -> replaces the default template, which skips the
+#                          hardcoded guidelines entirely ("Be concise in your
+#                          responses", "Show file paths clearly...", the pi-docs
+#                          block, and the canned tool-guidelines).
+#
+# Tools are untouched: their schemas still reach the model natively.
+# Residue: only the trailing "Current working directory:" line.
+#
+# Usage:
+#   pi-clean                     # interactive session
+#   pi-clean -p "prompt"         # one-shot
+#   pi-clean <any pi args>       # everything is passed through
+#
+# Environment:
+#   PI_CLEAN_SYSTEM_PROMPT       system prompt text (default: " " — a single
+#                                space, i.e. an effectively empty system
+#                                prompt; see note below)
+#   PI_CLEAN_SESSION_DIR         save sessions to this directory instead of
+#                                pi's default location
+#   PI_CLEAN_TOOL_DESCRIPTIONS=1 add back the prose "Available tools:" block
+#                                (regenerated from each tool's promptSnippet,
+#                                matching the default template's format)
+#
+# NOTE on the " " default: pi skips its whole template when --system-prompt is
+# truthy, and "" is falsy in JS — an empty value would silently restore the
+# full template including "Be concise". A single space is truthy, so the
+# system prompt is empty in practice but the template stays off.
+# PI_CLEAN_SYSTEM_PROMPT="" therefore also resolves to " " (bash :- semantics),
+# never to an empty prompt.
+
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+PROMPT="${PI_CLEAN_SYSTEM_PROMPT:- }"
+
+ARGS=(--no-context-files --no-skills --no-extensions --system-prompt "$PROMPT")
+
+if [[ -n "${PI_CLEAN_SESSION_DIR:-}" ]]; then
+  ARGS+=(--session-dir "$PI_CLEAN_SESSION_DIR")
+fi
+
+if [[ "${PI_CLEAN_TOOL_DESCRIPTIONS:-0}" == "1" ]]; then
+  ARGS+=(--append-system-prompt "$(node "$HERE/pi-tool-descriptions.mjs")")
+fi
+
+exec pi "${ARGS[@]}" "$@"
