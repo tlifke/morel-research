@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Contract Category Viewer</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --border: #ddd; --text: #222;
+    --muted: #777; --accent: #2f6fde;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text); background: var(--bg);
+    display: flex; height: 100vh; overflow: hidden;
+  }
+
+  /* ---------- sidebar ---------- */
+  #sidebar {
+    width: 340px; min-width: 340px; background: var(--panel);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+  }
+  #sidebar h1 { font-size: 15px; margin: 0; padding: 14px 14px 8px; }
+  #sidebar .sub { font-size: 12px; color: var(--muted); padding: 0 14px 10px; }
+  #search-wrap { padding: 0 12px 10px; }
+  #search {
+    width: 100%; padding: 7px 10px; font-size: 13px;
+    border: 1px solid var(--border); border-radius: 6px; outline: none;
+  }
+  #search:focus { border-color: var(--accent); }
+  #contract-list { flex: 1; overflow-y: auto; border-top: 1px solid var(--border); }
+  .contract-item {
+    padding: 7px 14px; cursor: pointer; border-bottom: 1px solid #f0f0ee;
+    font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .contract-item:hover { background: #f0f4fc; }
+  .contract-item.active { background: #e3ecfb; font-weight: 600; }
+  .contract-item .cat-count { color: var(--muted); font-weight: 400; }
+
+  /* ---------- main ---------- */
+  #main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  #toolbar {
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    padding: 8px 16px; display: flex; align-items: center; gap: 10px;
+  }
+  #toolbar button {
+    padding: 5px 12px; font-size: 13px; border: 1px solid var(--border);
+    background: #fff; border-radius: 6px; cursor: pointer;
+  }
+  #toolbar button:hover:not(:disabled) { background: #f0f4fc; border-color: var(--accent); }
+  #toolbar button:disabled { opacity: .4; cursor: default; }
+  #position { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+  #contract-title {
+    font-size: 13px; font-weight: 600; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; flex: 1; direction: rtl; text-align: left;
+  }
+  #contract-title span { direction: ltr; unicode-bidi: bidi-override; }
+
+  #cats-bar {
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 6px;
+    max-height: 180px; overflow-y: auto;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px; font-size: 12px; border-radius: 20px;
+    border: 1px solid var(--border); background: #fff; cursor: pointer; user-select: none;
+  }
+  .chip:hover { border-color: #999; }
+  .chip .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .chip .n { color: var(--muted); }
+  .chip.hidden-cat { opacity: .45; }
+  .chip.hidden-cat .label { text-decoration: line-through; }
+  #no-cats { color: var(--muted); font-size: 12.5px; padding: 2px 0; }
+
+  #text-wrap { flex: 1; overflow: auto; }
+  #contract-text {
+    white-space: pre-wrap; word-wrap: break-word;
+    max-width: 900px; margin: 0 auto; padding: 24px 28px 60px;
+    font: 13.5px/1.6 "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  mark {
+    color: inherit; border-radius: 3px; padding: 1px 0; cursor: default;
+    box-decoration-break: clone; -webkit-box-decoration-break: clone;
+  }
+  mark.multi {
+    background: repeating-linear-gradient(45deg, #ffe08a, #ffe08a 5px, #b3d7ff 5px, #b3d7ff 10px) !important;
+  }
+  .app-faded mark { opacity: .18; }
+  .app-focused mark { outline: 2px solid #333; }
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <h1>Contract Category Viewer</h1>
+  <div class="sub" id="stats">Loading data&hellip;</div>
+  <div id="search-wrap">
+    <input id="search" type="search" placeholder="Filter contracts by name&hellip;" autocomplete="off">
+  </div>
+  <div id="contract-list"></div>
+</nav>
+
+<section id="main">
+  <div id="toolbar">
+    <button id="prev" title="Previous contract">&#8592; Prev</button>
+    <button id="next" title="Next contract">Next &#8594;</button>
+    <span id="position"></span>
+    <span id="contract-title"></span>
+    <button id="show-all" title="Re-show all category highlights">Show all</button>
+  </div>
+  <div id="cats-bar"></div>
+  <div id="text-wrap"><pre id="contract-text"></pre></div>
+</section>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  "use strict";
+  var DATA = window.CUAD_DATA;
+  var contracts = DATA.contracts;
+  var categories = DATA.categories;
+
+  // Stable color per category (golden-angle hue rotation over sorted order)
+  var catColor = {};
+  categories.forEach(function (c, i) {
+    var hue = Math.round((i * 137.508) % 360);
+    catColor[c] = "hsl(" + hue + ", 75%, 78%)";
+  });
+
+  var current = -1;
+  var hiddenCats = {};   // category -> true (highlights suppressed)
+  var filtered = contracts.map(function (_, i) { return i; });
+
+  var $ = function (id) { return document.getElementById(id); };
+  var listEl = $("contract-list"), searchEl = $("search"),
+      textEl = $("contract-text"), catsEl = $("cats-bar"),
+      titleEl = $("contract-title"), posEl = $("position"),
+      prevEl = $("prev"), nextEl = $("next"), showAllEl = $("show-all"),
+      textWrapEl = $("text-wrap");
+
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function contractSpans(contract, includeHidden) {
+    // -> [{start, end, cats:[..]}] sorted, from visible (or all) categories
+    var out = [];
+    for (var cat in contract.cats) {
+      if (!includeHidden && hiddenCats[cat]) continue;
+      contract.cats[cat].forEach(function (se) {
+        out.push({ start: se[0], end: se[1], cat: cat });
+      });
+    }
+    return out;
+  }
+
+  function renderText(contract) {
+    var spans = contractSpans(contract, false);
+    if (spans.length === 0) {
+      textEl.textContent = contract.text;
+      return;
+    }
+    // breakpoints for overlapping spans
+    var pts = {};
+    spans.forEach(function (s) { pts[s.start] = pts[s.end] = true; });
+    var breaks = Object.keys(pts).map(Number).sort(function (a, b) { return a - b; });
+
+    // active interval lookup
+    var html = [], pos = 0;
+    var active = []; // {cat, start, end}
+    breaks.forEach(function (p) {
+      if (p > pos) {
+        html.push(segment(contract.text.slice(pos, p), active));
+        pos = p;
+      }
+      // update active set at this breakpoint
+      active = active.filter(function (s) { return s.end > p; });
+      spans.forEach(function (s) {
+        if (s.start <= p && p < s.end &&
+            !active.some(function (a) { return a.cat === s.cat && a.end === s.end; })) {
+          active.push(s);
+        }
+      });
+    });
+    if (pos < contract.text.length) html.push(esc(contract.text.slice(pos)));
+    textEl.innerHTML = html.join("");
+  }
+
+  function segment(textSeg, active) {
+    if (active.length === 0) return esc(textSeg);
+    var cats = [];
+    active.forEach(function (a) { if (cats.indexOf(a.cat) < 0) cats.push(a.cat); });
+    cats.sort();
+    var style = cats.length === 1
+      ? "background:" + catColor[cats[0]]
+      : "";
+    var cls = cats.length === 1 ? "" : " class=\"multi\"";
+    return '<mark' + cls + ' style="' + style + '" data-cats="' + esc(cats.join("|")) +
+           '" title="' + esc(cats.join(" + ")) + '">' + esc(textSeg) + "</mark>";
+  }
+
+  function renderCats(contract) {
+    catsEl.innerHTML = "";
+    var present = [];
+    for (var cat in contract.cats) present.push(cat);
+    present.sort();
+    if (present.length === 0) {
+      catsEl.innerHTML = '<span id="no-cats">No categories annotated in this contract.</span>';
+      return;
+    }
+    present.forEach(function (cat) {
+      var n = contract.cats[cat].length;
+      var chip = document.createElement("span");
+      chip.className = "chip" + (hiddenCats[cat] ? " hidden-cat" : "");
+      chip.innerHTML = '<span class="dot" style="background:' + catColor[cat] + '"></span>' +
+        '<span class="label">' + esc(cat) + '</span><span class="n">' + n + "</span>";
+      chip.title = "Click to show/hide this category\u2019s highlights";
+      chip.addEventListener("click", function () {
+        hiddenCats[cat] = !hiddenCats[cat];
+        renderText(contract);
+        renderCats(contract);
+      });
+      chip.addEventListener("mouseenter", function () { focusCat(cat); });
+      chip.addEventListener("mouseleave", function () { unfocusCat(); });
+      catsEl.appendChild(chip);
+    });
+  }
+
+  function focusCat(cat) {
+    var marks = textEl.querySelectorAll("mark");
+    var any = false;
+    marks.forEach(function (m) {
+      var cats = (m.getAttribute("data-cats") || "").split("|");
+      if (cats.indexOf(cat) >= 0) { any = true; m.style.outline = "2px solid #333"; }
+      else m.style.opacity = "0.18";
+    });
+  }
+  function unfocusCat() {
+    textEl.querySelectorAll("mark").forEach(function (m) {
+      m.style.outline = ""; m.style.opacity = "";
+    });
+  }
+
+  function selectContract(i) {
+    if (i < 0 || i >= contracts.length) return;
+    current = i;
+    var c = contracts[i];
+    titleEl.innerHTML = "<span>" + esc(c.id) + "</span>";
+    posEl.textContent = (i + 1) + " / " + contracts.length;
+    prevEl.disabled = i === 0;
+    nextEl.disabled = i === contracts.length - 1;
+    renderCats(c);
+    renderText(c);
+    textWrapEl.scrollTop = 0;
+    var items = listEl.querySelectorAll(".contract-item");
+    items.forEach(function (el) { el.classList.remove("active"); });
+    var active = listEl.querySelector('[data-index="' + i + '"]');
+    if (active) {
+      active.classList.add("active");
+      if (active.scrollIntoViewIfNeeded) active.scrollIntoViewIfNeeded(false);
+    }
+  }
+
+  function renderList() {
+    var q = searchEl.value.trim().toLowerCase();
+    listEl.innerHTML = "";
+    filtered = [];
+    contracts.forEach(function (c, i) {
+      if (q && c.id.toLowerCase().indexOf(q) < 0) return;
+      filtered.push(i);
+      var nCat = Object.keys(c.cats).length;
+      var div = document.createElement("div");
+      div.className = "contract-item" + (i === current ? " active" : "");
+      div.setAttribute("data-index", i);
+      div.textContent = c.id;
+      var badge = document.createElement("span");
+      badge.className = "cat-count";
+      badge.textContent = "  \u00b7 " + nCat + " cat.";
+      div.appendChild(badge);
+      div.addEventListener("click", function () { selectContract(i); });
+      listEl.appendChild(div);
+    });
+  }
+
+  // wire up
+  searchEl.addEventListener("input", renderList);
+  prevEl.addEventListener("click", function () { selectContract(current - 1); });
+  nextEl.addEventListener("click", function () { selectContract(current + 1); });
+  showAllEl.addEventListener("click", function () {
+    hiddenCats = {};
+    if (current >= 0) { renderCats(contracts[current]); renderText(contracts[current]); }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.target === searchEl) return;
+    if (e.key === "ArrowLeft" || e.key === "k") selectContract(current - 1);
+    if (e.key === "ArrowRight" || e.key === "j") selectContract(current + 1);
+    if (e.key === "/") { e.preventDefault(); searchEl.focus(); }
+  });
+
+  $("stats").textContent = contracts.length + " contracts \u00b7 " +
+    categories.length + " categories";
+  renderList();
+  selectContract(0);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Contract Category Viewer</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --border: #d9dde3;
+    --accent: #2b6cb0;
+    --text: #1a202c;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ---------- Sidebar: contract list ---------- */
+  #sidebar {
+    width: 320px;
+    min-width: 220px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  #sidebar h1 {
+    font-size: 15px;
+    margin: 0;
+    padding: 14px 14px 8px;
+  }
+  #sidebar .sub {
+    font-size: 12px;
+    color: #667;
+    padding: 0 14px 10px;
+  }
+  #search {
+    margin: 0 12px 10px;
+    padding: 8px 10px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+  }
+  #search:focus { border-color: var(--accent); }
+  #contract-list {
+    flex: 1;
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+  }
+  .contract-item {
+    padding: 7px 14px;
+    font-size: 12px;
+    line-height: 1.35;
+    cursor: pointer;
+    border-bottom: 1px solid #eef0f3;
+    word-break: break-all;
+  }
+  .contract-item:hover { background: #eef4fb; }
+  .contract-item.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* ---------- Main column ---------- */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  #topbar {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  #topbar .nav-btn {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #topbar .nav-btn:hover { background: #eef4fb; }
+  #contract-title {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #summary {
+    font-size: 12px;
+    color: #667;
+    white-space: nowrap;
+  }
+
+  #content {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  /* ---------- Text pane ---------- */
+  #text-pane {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px 80px;
+    min-width: 0;
+  }
+  #contract-text {
+    max-width: 900px;
+    margin: 0 auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .hl {
+    border-radius: 3px;
+    padding: 1px 0;
+    cursor: pointer;
+    color: inherit;
+  }
+  .hl.dim { background: transparent !important; box-shadow: none !important; color: #99a; }
+  .hl.focus { outline: 2px solid #e53e3e; outline-offset: 1px; }
+
+  /* ---------- Category panel ---------- */
+  #cat-panel {
+    width: 300px;
+    min-width: 240px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 14px;
+  }
+  #cat-panel h2 {
+    font-size: 13px;
+    margin: 0 0 4px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #556;
+  }
+  #cat-panel .hint { font-size: 11px; color: #889; margin: 0 0 10px; }
+  #toggle-all {
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    margin-bottom: 12px;
+  }
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12.5px;
+    line-height: 1.3;
+  }
+  .cat-row:hover { background: #eef4fb; }
+  .cat-row.off { opacity: .38; }
+  .cat-swatch {
+    width: 14px; height: 14px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,.15);
+    flex: none;
+  }
+  .cat-name { flex: 1; }
+  .cat-count {
+    font-size: 11px;
+    color: #778;
+    background: #eef0f3;
+    border-radius: 8px;
+    padding: 1px 7px;
+  }
+  .empty-note { color: #889; font-size: 13px; }
+
+  @media (max-width: 900px) {
+    #cat-panel { display: none; }
+  }
+</style>
+</head>
+<body>
+
+  <nav id="sidebar">
+    <h1>Contract Viewer</h1>
+    <div class="sub">510 contracts &middot; 41 categories</div>
+    <input id="search" type="text" placeholder="Filter contracts&hellip;" autocomplete="off">
+    <div id="contract-list"></div>
+  </nav>
+
+  <section id="main">
+    <div id="topbar">
+      <button class="nav-btn" id="prev-btn">&larr; Prev</button>
+      <button class="nav-btn" id="next-btn">Next &rarr;</button>
+      <span id="contract-title">Select a contract</span>
+      <span id="summary"></span>
+    </div>
+    <div id="content">
+      <div id="text-pane">
+        <div id="contract-text"><div class="empty-note">Select a contract from the list on the left to view its text with highlighted category spans.</div></div>
+      </div>
+      <aside id="cat-panel">
+        <h2>Categories present</h2>
+        <p class="hint">Click a category to cycle through its spans. Click the swatch to hide/show its highlights.</p>
+        <button id="toggle-all">Show all</button>
+        <div id="cat-list"></div>
+      </aside>
+    </div>
+  </section>
+
+<script id="contract-data" type="application/json">
+__DATA__
+</script>
+
+<script>
+(function () {
+  "use strict";
+
+  var DATA = JSON.parse(document.getElementById("contract-data").textContent);
+  var contracts = DATA.contracts;   // [{id, text, cats: {cat: [[s,e],...]}}]
+  var contractsById = {};
+  contracts.forEach(function (c) { contractsById[c.id] = c; });
+
+  // ---------- Colors: 41 visually distinct pastel hues ----------
+  function hsl(h, s, l) { return "hsl(" + h + "," + s + "%," + l + "%)"; }
+  var CAT_COLORS = {};
+  var catNames = Object.keys(DATA.categories);
+  catNames.forEach(function (cat, i) {
+    var hue = (i * 137.508) % 360;
+    CAT_COLORS[cat] = { bg: hsl(hue, 70, 84), strong: hsl(hue, 55, 34) };
+  });
+
+  // ---------- State ----------
+  var current = null;          // current contract object
+  var catEls = {};             // cat -> [span elements] (per contract render)
+  var cycleIdx = {};           // cat -> next index for cycling
+  var hiddenCats = {};         // cat -> true if hidden
+
+  // ---------- Sidebar ----------
+  var listEl = document.getElementById("contract-list");
+  var searchEl = document.getElementById("search");
+
+  function populateList(filter) {
+    listEl.innerHTML = "";
+    var f = (filter || "").toLowerCase();
+    contracts.forEach(function (c, i) {
+      if (f && c.id.toLowerCase().indexOf(f) === -1) return;
+      var div = document.createElement("div");
+      div.className = "contract-item" + (current === c ? " active" : "");
+      div.textContent = c.id;
+      div.title = c.id;
+      div.addEventListener("click", function () { selectContract(i); });
+      listEl.appendChild(div);
+    });
+  }
+  searchEl.addEventListener("input", function () { populateList(searchEl.value); });
+
+  // ---------- Category panel ----------
+  function renderCatPanel(c) {
+    var panel = document.getElementById("cat-list");
+    panel.innerHTML = "";
+    var present = Object.keys(c.cats);
+    document.getElementById("summary").textContent =
+      present.length + " / 41 categories present";
+    if (present.length === 0) {
+      panel.innerHTML = '<div class="empty-note">No categories annotated for this contract.</div>';
+      return;
+    }
+    present.sort(function (a, b) {
+      var d = c.cats[b].length - c.cats[a].length;
+      return d !== 0 ? d : a.localeCompare(b);
+    });
+    present.forEach(function (cat) {
+      var n = c.cats[cat].length;
+      var row = document.createElement("div");
+      row.className = "cat-row" + (hiddenCats[cat] ? " off" : "");
+
+      var sw = document.createElement("span");
+      sw.className = "cat-swatch";
+      sw.style.background = multiBg([cat]);
+      sw.title = "Toggle highlights for this category";
+      sw.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        hiddenCats[cat] = !hiddenCats[cat];
+        applyVisibility(cat);
+        row.classList.toggle("off", !!hiddenCats[cat]);
+      });
+
+      var name = document.createElement("span");
+      name.className = "cat-name";
+      name.textContent = cat;
+
+      var count = document.createElement("span");
+      count.className = "cat-count";
+      count.textContent = n + (n === 1 ? " span" : " spans");
+
+      row.appendChild(sw);
+      row.appendChild(name);
+      row.appendChild(count);
+      row.title = "Click to jump through spans";
+      row.addEventListener("click", function () { cycleTo(cat); });
+      panel.appendChild(row);
+    });
+  }
+
+  document.getElementById("toggle-all").addEventListener("click", function () {
+    hiddenCats = {};
+    Object.keys(catEls).forEach(function (cat) { applyVisibility(cat); });
+    document.querySelectorAll(".cat-row").forEach(function (r) { r.classList.remove("off"); });
+  });
+
+  // ---------- Text rendering with highlights ----------
+  function multiBg(cats) {
+    if (cats.length === 1) return CAT_COLORS[cats[0]].bg;
+    // Overlap of several categories: split the background into equal color bands.
+    var stops = [];
+    var step = 100 / cats.length;
+    cats.forEach(function (cat, i) {
+      stops.push(CAT_COLORS[cat].bg + " " + (i * step) + "%");
+      stops.push(CAT_COLORS[cat].bg + " " + ((i + 1) * step) + "%");
+    });
+    return "linear-gradient(90deg," + stops.join(",") + ")";
+  }
+
+  function renderContract(c) {
+    var text = c.text;
+    var cats = c.cats;
+
+    // 1. Collect every boundary point.
+    var ptsSet = { 0: true };
+    var L = text.length;
+    ptsSet[L] = true;
+    for (var cat in cats) {
+      cats[cat].forEach(function (se) {
+        if (se[0] > 0) ptsSet[se[0]] = true;
+        if (se[1] < L) ptsSet[se[1]] = true;
+      });
+    }
+    var pts = Object.keys(ptsSet).map(Number).sort(function (a, b) { return a - b; });
+    var idxOf = {};
+    pts.forEach(function (p, i) { idxOf[p] = i; });
+
+    // 2. Map each elementary segment -> set of active categories.
+    var segCats = []; // array of null or array of cats
+    for (var i = 0; i < pts.length - 1; i++) segCats.push(null);
+    Object.keys(cats).forEach(function (cat) {
+      cats[cat].forEach(function (se) {
+        for (var k = idxOf[se[0]]; k < idxOf[se[1]]; k++) {
+          if (!segCats[k]) segCats[k] = [];
+          if (segCats[k].indexOf(cat) === -1) segCats[k].push(cat);
+        }
+      });
+    });
+
+    // 3. Build DOM.
+    var container = document.getElementById("contract-text");
+    container.innerHTML = "";
+    catEls = {};
+    cycleIdx = {};
+    Object.keys(cats).forEach(function (cat) { catEls[cat] = []; cycleIdx[cat] = 0; });
+    var frag = document.createDocumentFragment();
+
+    function flushPlain(from, to) {
+      if (to > from) frag.appendChild(document.createTextNode(text.slice(from, to)));
+    }
+
+    var pos = 0;
+    var curEl = null, curKey = null;
+    for (var s = 0; s < pts.length - 1; s++) {
+      var start = pts[s], end = pts[s + 1];
+      var active = segCats[s];
+      if (!active) { curEl = curKey = null; continue; }
+      var key = active.slice().sort().join("\u0001");
+      if (curEl && key === curKey) {
+        // Merge with the previous element so a span stays contiguous unless
+        // another category's span genuinely crosses it.
+        curEl.textContent += text.slice(start, end);
+      } else {
+        flushPlain(pos, start);
+        curEl = document.createElement("span");
+        curEl.className = "hl";
+        curEl.style.background = multiBg(active);
+        curEl.title = "Category: " + active.join(", ");
+        curEl.setAttribute("data-cats", key);
+        active.forEach(function (cat) { catEls[cat].push(curEl); });
+        curEl.textContent = text.slice(start, end);
+        frag.appendChild(curEl);
+        curKey = key;
+      }
+      pos = end;
+    }
+    flushPlain(pos, L);
+    container.appendChild(frag);
+  }
+
+  function applyVisibility(cat) {
+    (catEls[cat] || []).forEach(function (el) {
+      var cats = el.getAttribute("data-cats").split("\u0001");
+      var visible = cats.filter(function (cn) { return !hiddenCats[cn]; });
+      if (visible.length === 0) {
+        el.classList.add("dim");
+      } else {
+        el.classList.remove("dim");
+        el.style.background = multiBg(visible);
+      }
+    });
+  }
+
+  function cycleTo(cat) {
+    var els = catEls[cat] || [];
+    if (!els.length) return;
+    document.querySelectorAll(".hl.focus").forEach(function (e) { e.classList.remove("focus"); });
+    var el = els[cycleIdx[cat] % els.length];
+    cycleIdx[cat] = (cycleIdx[cat] + 1) % els.length;
+    el.classList.add("focus");
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+
+  // ---------- Contract selection ----------
+  function selectContract(i) {
+    current = contracts[i];
+    hiddenCats = {};
+    document.getElementById("contract-title").textContent = current.id;
+    document.getElementById("contract-title").title = current.id;
+    renderCatPanel(current);
+    renderContract(current);
+    document.getElementById("text-pane").scrollTop = 0;
+    populateList(searchEl.value); // refresh active marker
+    var active = listEl.querySelector(".active");
+    if (active) active.scrollIntoView({ block: "nearest" });
+  }
+
+  document.getElementById("prev-btn").addEventListener("click", function () {
+    if (current) selectContract(Math.max(0, contracts.indexOf(current) - 1));
+  });
+  document.getElementById("next-btn").addEventListener("click", function () {
+    if (current) selectContract(Math.min(contracts.length - 1, contracts.indexOf(current) + 1));
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.target === searchEl) return;
+    if (ev.key === "j" || ev.key === "ArrowDown") document.getElementById("next-btn").click();
+    if (ev.key === "k" || ev.key === "ArrowUp") document.getElementById("prev-btn").click();
+  });
+
+  // ---------- Init ----------
+  populateList("");
+  if (contracts.length) selectContract(0);
+})();
+</script>
+</body>
+</html>

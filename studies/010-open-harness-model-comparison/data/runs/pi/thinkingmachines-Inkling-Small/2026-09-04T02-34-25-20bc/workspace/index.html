@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Contract Visualization</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; background: #f4f5f8; color: #1a1a2e; }
+  header { background: linear-gradient(135deg, #1a1a2e, #16213e); color: #fff; padding: 1.2rem 1.5rem; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+  header h1 { margin: 0 0 .25rem; font-size: 1.4rem; letter-spacing: .5px; }
+  header p { margin: 0; opacity: .85; font-size: .9rem; }
+  .wrap { display: flex; height: calc(100vh - 110px); }
+  aside { width: 320px; background: #fff; border-right: 1px solid #dde; overflow-y: auto; padding: 1rem; flex-shrink: 0; }
+  aside input { width: 100%; padding: .55rem .7rem; font-size: .9rem; border: 1.5px solid #ccd; border-radius: 8px; margin-bottom: .75rem; }
+  aside ul { list-style: none; padding: 0; margin: 0; }
+  aside li { margin-bottom: 2px; }
+  aside button.contract-btn { width: 100%; text-align: left; padding: .55rem .6rem; border: none; background: #f7f8fb; border-radius: 6px; cursor: pointer; font-size: .82rem; color: #333; transition: background .1s; }
+  aside button.contract-btn:hover { background: #e8ecf1; }
+  aside button.contract-btn.active { background: #1a1a2e; color: #fff; font-weight: 600; }
+  main { flex: 1; overflow-y: auto; padding: 1.2rem 2rem; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .topbar h2 { margin: 0; font-size: 1.15rem; word-break: break-all; }
+  .badge-list { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .badge { padding: .3rem .55rem; border-radius: 999px; font-size: .78rem; font-weight: 600; cursor: pointer; border: 1.5px solid transparent; user-select: none; transition: transform .05s; }
+  .badge:hover { transform: translateY(-1px); }
+  .badge.active { border-color: #1a1a2e; box-shadow: 0 0 0 2px rgba(26,26,46,.12); }
+  .text-panel { background: #fff; border: 1px solid #dde; border-radius: 10px; padding: 1rem 1.2rem; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+  pre { white-space: pre-wrap; word-break: break-word; line-height: 1.55; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: .88rem; margin: 0; }
+  .highlight { border-radius: 2px; padding: 0 1px; }
+  .legend { margin-top: 1rem; font-size: .78rem; color: #555; }
+  .legend span { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Contract Visualization</h1>
+  <p>Select a contract to view its text with highlighted spans by category</p>
+</header>
+<div class="wrap">
+  <aside>
+    <input id="search" type="text" placeholder="Search contracts..." oninput="filterContracts()" autocomplete="off">
+    <ul id="contract-list"></ul>
+  </aside>
+  <main>
+    <div class="topbar">
+      <h2 id="contract-name">Select a contract</h2>
+      <div class="badge-list" id="badge-list"></div>
+    </div>
+    <div class="text-panel"><pre id="text">Choose a contract from the sidebar.</pre></div>
+    <div class="legend" id="legend"></div>
+  </main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let contracts = [];
+let gt = {};
+let selectedId = null;
+let currentFilter = null;
+let colorMap = new Map();
+
+async function loadData() {
+  const [contractsRes, gtRes] = await Promise.all([
+    fetch('contracts.json'),
+    fetch('data.json')
+  ]);
+  contracts = (await contractsRes.json()).contracts;
+  gt = await gtRes.json();
+  buildColors();
+  renderList();
+  if (contracts.length) select(contracts[0]);
+}
+
+function buildColors() {
+  const cats = new Set();
+  for (const cid in gt) {
+    for (const c in gt[cid]) {
+      if (!gt[cid][c].is_impossible) cats.add(c);
+    }
+  }
+  const arr = Array.from(cats).sort();
+  arr.forEach((cat, i) => {
+    const hue = Math.round((i * 360) / (arr.length || 1));
+    colorMap.set(cat, `hsl(${hue}, 80%, 85%)`);
+  });
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function renderList() {
+  const list = $('contract-list');
+  const query = $('search').value.toLowerCase();
+  list.innerHTML = '';
+  contracts.forEach(id => {
+    if (query && !id.toLowerCase().includes(query)) return;
+    const btn = document.createElement('button');
+    btn.className = 'contract-btn' + (id === selectedId ? ' active' : '');
+    btn.textContent = id;
+    btn.onclick = () => select(id);
+    const li = document.createElement('li');
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+}
+
+function filterContracts() { renderList(); }
+
+async function select(id) {
+  selectedId = id;
+  currentFilter = null;
+  renderList();
+  $('contract-name').textContent = id;
+  $('badge-list').innerHTML = '';
+  $('text').textContent = 'Loading text...';
+  $('legend').innerHTML = '';
+
+  const gold = gt[id];
+  const present = [];
+  for (const c in gold) {
+    if (!gold[c].is_impossible) present.push({cat: c, spans: gold[c].spans});
+  }
+  present.sort((a,b) => a.cat.localeCompare(b.cat));
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'badge active';
+  allBtn.style.background = '#1a1a2e';
+  allBtn.style.color = '#fff';
+  allBtn.textContent = 'All (' + present.length + ')';
+  allBtn.onclick = () => { currentFilter = null; renderText(); renderBadges(present); };
+  $('badge-list').appendChild(allBtn);
+
+  present.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'badge';
+    btn.style.background = colorMap.get(p.cat) || '#ccc';
+    btn.style.color = '#222';
+    btn.textContent = p.cat + ' (' + p.spans.length + ')';
+    btn.onclick = () => { currentFilter = p.cat; renderText(); renderBadges(present); };
+    $('badge-list').appendChild(btn);
+  });
+
+  present.forEach(p => {
+    const span = document.createElement('span');
+    span.style.background = colorMap.get(p.cat) || '#ccc';
+    $('legend').appendChild(span);
+    $('legend').appendChild(document.createTextNode(p.cat + ' '));
+  });
+
+  const res = await fetch('contract_text/' + id + '.txt');
+  const text = await res.text();
+  window.currentText = text;
+  window.currentGold = gold;
+  window.currentPresent = present;
+  renderText();
+}
+
+function renderBadges(present) {
+  const badges = $('badge-list').querySelectorAll('button');
+  badges.forEach(b => {
+    b.classList.remove('active');
+    if (b.textContent.startsWith('All') && currentFilter === null) b.classList.add('active');
+    if (currentFilter && b.textContent.startsWith(currentFilter + ' ')) b.classList.add('active');
+  });
+}
+
+function renderText() {
+  const text = window.currentText || '';
+  const present = window.currentPresent || [];
+  if (!text) return;
+
+  const intervals = [];
+  for (const p of present) {
+    if (!currentFilter || currentFilter === p.cat) {
+      for (const s of p.spans) {
+        intervals.push({start: s[0], end: s[1], cat: p.cat});
+      }
+    }
+  }
+  intervals.sort((a,b) => a.start - b.start);
+
+  const points = new Set();
+  for (const iv of intervals) { points.add(iv.start); points.add(iv.end + 1); }
+  const sorted = Array.from(points).sort((a,b) => a - b);
+
+  let html = '<pre>';
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const s = sorted[i];
+    const e = sorted[i+1] - 1;
+    const segment = text.slice(s, sorted[i+1]);
+    const covering = intervals.filter(iv => iv.start <= s && iv.end >= e);
+    if (covering.length > 0) {
+      const first = covering[0];
+      const titles = covering.map(iv => iv.cat).join(', ');
+      html += `<span class="highlight" style="background:${colorMap.get(first.cat) || '#ccc'};" title="${escapeHtml(titles)}">${escapeHtml(segment)}</span>`;
+    } else {
+      html += escapeHtml(segment);
+    }
+  }
+  html += '</pre>';
+  $('text').innerHTML = html;
+}
+
+loadData();
+</script>
+</body>
+</html>

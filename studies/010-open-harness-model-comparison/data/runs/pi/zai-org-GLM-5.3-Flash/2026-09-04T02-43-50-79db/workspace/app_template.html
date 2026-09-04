@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Contract Category Viewer</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --border: #d9d9d3;
+    --text: #24292f; --muted: #6e7681; --accent: #1f6feb;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; font: 14px/1.45 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text); background: var(--bg);
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+  header {
+    display: flex; align-items: center; gap: 12px; padding: 8px 14px;
+    background: var(--panel); border-bottom: 1px solid var(--border); flex: none;
+  }
+  header h1 { font-size: 15px; margin: 0; font-weight: 600; white-space: nowrap; }
+  header .contract-name {
+    flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    color: var(--muted); font-size: 13px;
+  }
+  button {
+    font: inherit; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--panel); cursor: pointer; color: var(--text);
+  }
+  button:hover { background: #efefec; }
+  main { flex: 1; display: flex; min-height: 0; }
+
+  /* ---- sidebar ---- */
+  #sidebar {
+    width: 320px; flex: none; background: var(--panel); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  #search-wrap { padding: 8px; border-bottom: 1px solid var(--border); }
+  #search {
+    width: 100%; padding: 6px 8px; font: inherit; border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  #contract-list { flex: 1; overflow-y: auto; list-style: none; margin: 0; padding: 4px; }
+  #contract-list li {
+    padding: 6px 8px; border-radius: 6px; cursor: pointer; margin-bottom: 2px;
+    font-size: 12.5px; line-height: 1.3;
+  }
+  #contract-list li:hover { background: #f0f0ed; }
+  #contract-list li.active { background: #dbe9ff; }
+  #contract-list li .meta { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+  /* ---- text pane ---- */
+  #text-pane { flex: 1; overflow: auto; min-width: 0; }
+  #contract-text {
+    font: 13px/1.55 "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    white-space: pre-wrap; word-break: break-word; padding: 20px 26px; margin: 0;
+    max-width: 1000px;
+  }
+  mark.hl { border-radius: 3px; padding: 1px 0; cursor: pointer; color: inherit; }
+  mark.hl.dim { background: transparent !important; box-shadow: none; outline: 1px dotted #bbb; }
+  mark.hl.focus { outline: 2px solid #111; }
+  mark.hl.hovered { outline: 2px solid #555; }
+
+  /* ---- category panel ---- */
+  #cat-panel {
+    width: 300px; flex: none; background: var(--panel); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  #cat-panel .panel-head {
+    padding: 10px 12px; border-bottom: 1px solid var(--border); font-weight: 600;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  #cat-panel .panel-head .toggle { font-size: 12px; font-weight: 400; }
+  #cat-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .cat-chip {
+    display: flex; align-items: center; gap: 8px; padding: 5px 8px; margin-bottom: 3px;
+    border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12.5px;
+  }
+  .cat-chip:hover { background: #f0f0ed; }
+  .cat-chip .swatch { width: 13px; height: 13px; border-radius: 3px; flex: none; border: 1px solid rgba(0,0,0,.15); }
+  .cat-chip .count { margin-left: auto; color: var(--muted); font-size: 11.5px; flex: none; }
+  .cat-chip.absent { opacity: .45; }
+  .cat-chip.absent .cat-name { text-decoration: line-through; }
+  #tooltip {
+    position: fixed; display: none; z-index: 10; pointer-events: none;
+    background: #222; color: #fff; padding: 6px 9px; border-radius: 6px;
+    font-size: 12px; max-width: 340px; box-shadow: 0 4px 14px rgba(0,0,0,.3);
+  }
+  .legend-hint { padding: 8px 12px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11.5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Contract Category Viewer</h1>
+  <button id="prev" title="Previous contract (←)">◀ Prev</button>
+  <button id="next" title="Next contract (→)">Next ▶</button>
+  <span class="contract-name" id="contract-name"></span>
+  <span id="progress" style="color:var(--muted);font-size:12px;flex:none"></span>
+</header>
+<main>
+  <div id="sidebar">
+    <div id="search-wrap">
+      <input id="search" type="search" placeholder="Filter 510 contracts…" autocomplete="off">
+    </div>
+    <ul id="contract-list"></ul>
+  </div>
+  <div id="text-pane">
+    <pre id="contract-text"></pre>
+  </div>
+  <div id="cat-panel">
+    <div class="panel-head">
+      Categories
+      <label class="toggle"><input type="checkbox" id="show-all" checked> show highlights</label>
+    </div>
+    <div id="cat-list"></div>
+    <div class="legend-hint">Click a category to jump to its first highlight. Hover a highlight for details.</div>
+  </div>
+</main>
+<div id="tooltip"></div>
+
+<script>
+const DATA = /*__DATA__*/;
+
+// ---------- deterministic 41-color palette ----------
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const k = n => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  const to = x => Math.round(255 * x).toString(16).padStart(2, "0");
+  return "#" + to(f(0)) + to(f(8)) + to(f(4));
+}
+const COLORS = {};
+DATA.categories.forEach((cat, i) => {
+  const h = Math.round(i * 360 / DATA.categories.length);
+  COLORS[cat] = { bg: hslToHex(h, 70, 82), strong: hslToHex(h, 60, 55) };
+});
+
+const contracts = DATA.contracts;
+const byId = new Map(contracts.map((c, i) => [c.id, i]));
+let current = -1;
+
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// ---------- sidebar list ----------
+const listEl = $("#contract-list");
+const listItems = contracts.map((c, i) => {
+  const li = document.createElement("li");
+  const present = Object.values(DATA.gold[c.id]).filter(g => !g.is_impossible).length;
+  li.innerHTML = `<div class="name"></div><div class="meta">${present} categor${present === 1 ? "y" : "ies"} present</div>`;
+  li.querySelector(".name").textContent = c.id;
+  li.addEventListener("click", () => select(i));
+  listEl.appendChild(li);
+  return li;
+});
+$("#search").addEventListener("input", e => {
+  const q = e.target.value.toLowerCase();
+  listItems.forEach((li, i) => {
+    li.style.display = contracts[i].id.toLowerCase().includes(q) ? "" : "none";
+  });
+});
+
+// ---------- rendering ----------
+const textEl = $("#contract-text");
+const catListEl = $("#cat-list");
+let catChips = []; // {el, cat}
+
+function renderCategories(cid) {
+  catListEl.innerHTML = "";
+  catChips = [];
+  const g = DATA.gold[cid];
+  for (const cat of DATA.categories) {
+    const info = g[cat] || { is_impossible: true, spans: [] };
+    const present = !info.is_impossible && info.spans.length > 0;
+    const chip = document.createElement("div");
+    chip.className = "cat-chip" + (present ? "" : " absent");
+    const swatch = document.createElement("span");
+    swatch.className = "swatch";
+    swatch.style.background = COLORS[cat].bg;
+    const name = document.createElement("span");
+    name.className = "cat-name";
+    name.textContent = cat;
+    const count = document.createElement("span");
+    count.className = "count";
+    count.textContent = present ? info.spans.length + " span" + (info.spans.length > 1 ? "s" : "") : "absent";
+    chip.append(swatch, name, count);
+    if (present) {
+      chip.addEventListener("click", () => {
+        const first = textEl.querySelector(`mark.hl[data-cat="${CSS.escape(cat)}"]`);
+        if (first) {
+          first.scrollIntoView({ block: "center" });
+          first.classList.add("focus");
+          setTimeout(() => first.classList.remove("focus"), 1600);
+        }
+      });
+    }
+    catListEl.appendChild(chip);
+    catChips.push({ el: chip, cat, present });
+  }
+}
+
+function renderText(cid) {
+  const text = contracts[byId.get(cid)].text;
+  const g = DATA.gold[cid];
+
+  // collect all spans
+  const spans = [];
+  for (const cat of DATA.categories) {
+    const info = g[cat];
+    if (info && !info.is_impossible) {
+      for (const [s, e] of info.spans) spans.push([s, e, cat]);
+    }
+  }
+  spans.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+
+  // sweep line -> segments with a set of active categories
+  const bounds = new Set([0, text.length]);
+  for (const [s, e] of spans) { bounds.add(s); bounds.add(e); }
+  const pts = [...bounds].sort((a, b) => a - b);
+
+  const active = new Array(spans.length).fill(false);
+  let sp = 0;
+  const parts = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1];
+    while (sp < spans.length && spans[sp][0] <= a) { if (spans[sp][1] > a) active[sp] = true; sp++; }
+    const cats = [];
+    for (let j = 0; j < spans.length; j++) {
+      if (active[j] && spans[j][0] < b && spans[j][1] > a) cats.push(spans[j][2]);
+    }
+    if (cats.length === 0) {
+      if (b > a) parts.push(esc(text.slice(a, b)));
+    } else {
+      const uniq = [...new Set(cats)];
+      const bg = uniq.length === 1
+        ? COLORS[uniq[0]].bg
+        : `linear-gradient(0deg, ${uniq.map(c => COLORS[c].bg).join(",")})`;
+      const title = uniq.join(" + ") + `  [${a}–${b}]`;
+      parts.push(`<mark class="hl" data-cat="${uniq.map(esc).join("|")}" title="${esc(title)}" style="background:${bg}">${esc(text.slice(a, b))}</mark>`);
+    }
+  }
+  textEl.innerHTML = parts.join("");
+  if (!$("#show-all").checked) textEl.querySelectorAll("mark.hl").forEach(m => m.classList.add("dim"));
+}
+
+// ---------- tooltip ----------
+const tooltip = $("#tooltip");
+textEl.addEventListener("mousemove", e => {
+  const mark = e.target.closest("mark.hl");
+  if (mark) {
+    tooltip.textContent = mark.title;
+    tooltip.style.display = "block";
+    tooltip.style.left = Math.min(e.clientX + 14, innerWidth - 360) + "px";
+    tooltip.style.top = (e.clientY + 14) + "px";
+  } else {
+    tooltip.style.display = "none";
+  }
+});
+textEl.addEventListener("mouseleave", () => tooltip.style.display = "none");
+
+// ---------- selection ----------
+function select(i) {
+  if (i < 0 || i >= contracts.length) return;
+  if (current >= 0) listItems[current].classList.remove("active");
+  current = i;
+  const c = contracts[i];
+  listItems[i].classList.add("active");
+  listItems[i].scrollIntoView({ block: "nearest" });
+  $("#contract-name").textContent = c.id;
+  $("#progress").textContent = `${i + 1} / ${contracts.length}`;
+  renderText(c.id);
+  renderCategories(c.id);
+  $("#text-pane").scrollTop = 0;
+  $("#cat-list").scrollTop = 0;
+}
+$("#prev").addEventListener("click", () => select(current - 1));
+$("#next").addEventListener("click", () => select(current + 1));
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.key === "ArrowLeft") select(current - 1);
+  if (e.key === "ArrowRight") select(current + 1);
+});
+
+// chip hover emphasis (delegated, works after re-render)
+catListEl.addEventListener("mouseover", e => {
+  const chip = e.target.closest(".cat-chip");
+  if (!chip || chip.classList.contains("absent")) return;
+  const cat = chip.querySelector(".cat-name").textContent;
+  textEl.querySelectorAll("mark.hl").forEach(m => {
+    m.classList.toggle("hovered", m.dataset.cat.split("|").includes(cat));
+  });
+});
+catListEl.addEventListener("mouseout", () => {
+  textEl.querySelectorAll("mark.hl.hovered").forEach(m => m.classList.remove("hovered"));
+});
+
+// show/hide all highlights
+$("#show-all").addEventListener("change", e => {
+  const show = e.target.checked;
+  textEl.querySelectorAll("mark.hl").forEach(m => m.classList.toggle("dim", !show));
+});
+
+select(0);
+</script>
+</body>
+</html>
