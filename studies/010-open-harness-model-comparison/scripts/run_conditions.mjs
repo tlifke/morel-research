@@ -34,8 +34,8 @@ const DATA_DIR = path.join(STUDY_DIR, "data");
 const REPO_ROOT = path.resolve(STUDY_DIR, "..", "..");
 
 const MODEL_ALIASES = {
-  inkling: "tinker/thinkingmachines/Inkling-Small",
-  glm: "huggingface/zai-org/GLM-5.3-Flash",
+  inklingsmall: "tinker/thinkingmachines/Inkling-Small",
+  "glm-5-3-flash": "huggingface/zai-org/GLM-5.3-Flash",
 };
 
 function parseArgs(argv) {
@@ -53,7 +53,7 @@ function parseArgs(argv) {
 const args = parseArgs(process.argv.slice(2));
 if (!args.model || !args.condition) {
   console.error(
-    "usage: node run_conditions.mjs --model <inkling|glm|provider/id> --condition <clean|pi> [--spec <path>] [--tag <label>]",
+    "usage: node run_conditions.mjs --model <inklingsmall|glm-5-3-flash|provider/id> --condition <clean|pi> [--spec <path>] [--tag <label>]",
   );
   process.exit(1);
 }
@@ -147,6 +147,53 @@ const sessionFile = fs
   .sort()
   .pop();
 
+// Sum token usage + estimate cost across all assistant turns.
+// Pricing source: pi's model catalog (~/.pi/agent/models-store.json). The
+// tinker provider entry for Inkling-Small carries no cost, so we fall back to
+// the same model id in any catalog provider (huggingface lists it).
+const tokens = { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0 };
+for (const line of fs.readFileSync(sessionFile, "utf-8").split("\n")) {
+  let entry;
+  try {
+    entry = JSON.parse(line);
+  } catch {
+    continue;
+  }
+  const u = entry?.message?.usage;
+  if (entry?.type === "message" && entry.message?.role === "assistant" && u) {
+    for (const k of Object.keys(tokens)) tokens[k] += u[k] ?? 0;
+  }
+}
+
+let pricing = null;
+let pricingSource = null;
+try {
+  const store = JSON.parse(
+    fs.readFileSync(path.join(process.env.HOME, ".pi/agent/models-store.json"), "utf-8"),
+  );
+  for (const [prov, cfg] of Object.entries(store)) {
+    const models = cfg?.models ?? [];
+    const list = Array.isArray(models) ? models : [];
+    const hit = list.find((m) => m.id === modelId);
+    if (hit?.cost) {
+      pricing = hit.cost;
+      pricingSource = `models-store.json:${prov}`;
+      break;
+    }
+  }
+} catch {
+  // catalog unavailable; cost stays null
+}
+const M = 1e6;
+// Note: usage.reasoning is a subset of usage.output (pi-ai), so it is NOT
+// billed separately — output already includes it.
+const estimatedCost = pricing
+  ? (tokens.input * (pricing.input ?? 0) +
+     tokens.output * (pricing.output ?? 0) +
+     tokens.cacheRead * (pricing.cacheRead ?? 0) +
+     tokens.cacheWrite * (pricing.cacheWrite ?? 0)) / M
+  : null;
+
 const violations = [];
 let toolCalls = 0;
 for (const line of fs.readFileSync(sessionFile, "utf-8").split("\n")) {
@@ -186,5 +233,30 @@ const audit = {
   clean: violations.length === 0,
 };
 fs.writeFileSync(path.join(runDir, "audit.json"), JSON.stringify(audit, null, 2));
+
+const runSummary = {
+  runId,
+  condition: args.condition,
+  model: `${model.provider}/${model.id}`,
+  spec: path.relative(STUDY_DIR, specPath),
+  tag: args.tag ?? null,
+  thinkingLevel: "high",
+  sessionFile: path.basename(sessionFile),
+  toolCalls,
+  tokens,
+  pricing,
+  pricingSource,
+  estimatedCostUsd: estimatedCost,
+  auditClean: audit.clean,
+};
+fs.writeFileSync(path.join(runDir, "run-summary.json"), JSON.stringify(runSummary, null, 2));
 console.log(`[run] audit: ${toolCalls} tool calls, ${violations.length} potential violations -> audit.json`);
+console.log(
+  `[run] tokens: in=${tokens.input} out=${tokens.output} reasoning=${tokens.reasoning} cacheRead=${tokens.cacheRead}`,
+);
+console.log(
+  estimatedCost !== null
+    ? `[run] estimated cost: $${estimatedCost.toFixed(4)} (pricing: ${pricingSource})`
+    : "[run] estimated cost: unavailable (no pricing found for model)",
+);
 console.log(`[run] done: ${runDir}`);
