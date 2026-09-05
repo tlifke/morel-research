@@ -130,11 +130,46 @@
   </script>
 
   <!-- PREVIEW -->
-  <div x-show="tab === 'preview'" x-cloak>
-    {% set previews = [] %}
-    {% if run.workspace_dir %}
-    {% endif %}
-    <p class="text-sm text-slate-500 mb-2">Static preview of agent-built files. HTML is served sandboxed; python apps are not executed here (use the agent judge or launch manually).</p>
+  <div x-show="tab === 'preview'" x-cloak class="space-y-4">
+    <!-- LIVE APP LAUNCHER (SPEC 9) -->
+    <div id="launch-panel" class="bg-white rounded-lg shadow p-4" x-data="{ cmd: '', status: null, starting: false }"
+         x-init="fetch(`/api/runs/{{ run.id }}/launch/status`).then(r => r.json()).then(s => { status = s; if (s.command && !cmd) cmd = s.command; })">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-medium text-sm">Live app</h3>
+        <div class="flex items-center space-x-2 text-xs" x-show="status">
+          <template x-for="c in (status ? status.components : [])" :key="c.name">
+            <span class="px-2 py-0.5 rounded-full border" :class="c.present ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'" x-text="c.name + (c.present ? ' ✓' : ' —')"></span>
+          </template>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 mb-2">
+        <input x-model="cmd" id="launch-command" class="flex-1 border rounded px-2 py-1 text-xs font-mono" placeholder="launch command (auto-resolved from README)">
+        <button @click="starting = true; fetch(`/api/runs/{{ run.id }}/launch`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({command: cmd})}).then(r => r.json()).then(() => pollLaunch())"
+                :disabled="starting || (status && status.running)" class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs px-3 py-1.5 rounded">Launch</button>
+        <button x-show="status && status.running" @click="fetch(`/api/runs/{{ run.id }}/launch/stop`, {method:'POST'}).then(() => pollLaunch())" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded">Stop</button>
+        <a x-show="status && status.status === 'healthy' && status.url" :href="status ? status.url : '#'" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded">Open app ↗</a>
+      </div>
+      <div class="text-xs mb-2" x-show="status && status.status">
+        <span class="px-2 py-0.5 rounded-full" :class="{healthy: 'bg-emerald-100 text-emerald-700', failed: 'bg-red-100 text-red-700', starting: 'bg-amber-100 text-amber-700', stopped: 'bg-slate-100 text-slate-500'}[status.status] || 'bg-slate-100'"
+              x-text="status ? (status.status + (status.url ? ' · ' + status.url : '') + (status.mode ? ' · mode: ' + status.mode : '')) : ''"></span>
+        <span class="text-slate-400 ml-2" x-show="status && status.mode === 'desktop'">desktop/GUI app — window opens on this host; no URL to probe</span>
+      </div>
+      <pre x-show="status && status.log_tail" class="text-xs bg-slate-900 text-slate-100 rounded p-2 max-h-48 overflow-y-auto" x-text="status ? status.log_tail : ''"></pre>
+    </div>
+    <script>
+      function pollLaunch() {
+        const runId = location.pathname.split('/').pop();
+        const poll = setInterval(() => {
+          fetch(`/api/runs/${runId}/launch/status`).then(r => r.json()).then(s => {
+            const d = document.getElementById('launch-panel')._x_dataStack[0];
+            d.status = s;
+            if (s.command && !d.cmd) d.cmd = s.command;
+            if (!s.running || s.status === 'healthy' || s.status === 'failed') { d.starting = false; clearInterval(poll); }
+          }).catch(() => {});
+        }, 2000);
+      }
+    </script>
+    <p class="text-sm text-slate-500 mb-2">Static preview below (sandboxed; fetch-based apps show partial content — use the live app above for the real thing). HTML served sandboxed; python apps are not executed here.</p>
     <div id="preview-list" class="space-y-3"></div>
   </div>
   <script x-show="tab === 'preview'">

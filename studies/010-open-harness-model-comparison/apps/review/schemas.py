@@ -167,3 +167,35 @@ class ExportRewardScore(BaseModel):
     answers: dict[str, Any]
     score: float
     trace_ref: str
+
+
+# ---- launcher (SPEC 9) ----
+
+
+class LaunchStart(BaseModel):
+    command: str | None = None  # override; auto-resolved when omitted
+
+
+class LaunchEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    run_id: str
+    command: str
+    port: int | None
+    mode: str
+    started_at: datetime
+    healthy: bool | None
+    log_excerpt: str | None
+
+
+class LaunchStatus(BaseModel):
+    active: bool
+    running: bool
+    status: str | None = None
+    mode: str | None = None
+    port: int | None = None
+    url: str | None = None
+    command: str | None = None
+    log_tail: str = ""
+    components: list[dict[str, Any]] = []

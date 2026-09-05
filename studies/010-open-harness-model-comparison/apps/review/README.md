@@ -32,3 +32,11 @@ auth) in the environment.
 - `docs/API.md` — every route
 - `docs/UI.md` — pages/elements
 - `docs/AS_BUILT.md` — deviations from SPEC, bugs found, residual risks
+
+## Live app launcher — safety note
+
+The **Live app** panel on a run's Preview tab executes the agent-built
+application on this host, from a fresh temp copy of the workspace (original
+artifacts are never touched). Agent-written code runs **unsandboxed** — same
+trust level as the agent judge. Review the workspace contents before
+launching an app you don't recognize.

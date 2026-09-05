@@ -175,3 +175,62 @@ Three stacked bugs, all fixed and verified with an automated browser test:
    modal existed. Now opens first, populates fields on the next tick.
 Verified end-to-end via Playwright: anchor click opens modal with readable
 chip, Esc closes, save persists and appears in the run feedback list.
+
+## Launcher (SPEC 9 addendum)
+
+### What was built
+- `app_launcher.py`: in-process manager — temp-copy creation, free-port
+  allocation (8450+), `shell=True` subprocess with `PORT`/`BROWSER=/usr/bin/true`
+  (suppresses agent apps calling `webbrowser.open()`) /`PYTHONUNBUFFERED=1`,
+  1s health-probe polling (60s budget), log tail (last 40 lines), one active
+  launch per run, stop with terminate→kill + temp-dir cleanup.
+- Launch-command resolution: README fenced-code extraction first, then
+  `run.sh` → `app.py`/`server.py`/`main.py` heuristics, then
+  `python3 -m http.server <port>` for static-only runs (uniform UX).
+  Extracted commands keep their README-declared ports; probe URLs include
+  README-declared `localhost:<port>` values.
+- Three health modes: `http` (URL probe AND our process alive),
+  `desktop` (process alive after 4s grace — GUI opens on host), `static`.
+- `launch_events` table + Pydantic mirror + the three endpoints; a module
+  -level `event_sink` callback writes rows from the polling thread.
+- Preview tab: launch panel for ALL runs (component chips, editable resolved
+  command, Launch/Stop/Open app, status badge, log tail), static preview below.
+
+### Test results (real runs)
+- `clean/Inkling-Small/02-28-27` (app.py server): resolved `python3 app.py`
+  from README; healthy; `GET http://localhost:8765/` → 200. Note: the app
+  hardcodes 8765; the allocated port (8450) is recorded but unused by it.
+- `clean/GLM-5.3-Flash/02-42-10` (static): resolved `python3 -m http.server
+  8000` from README; healthy; serves index.html. Override command
+  (`python3 -m http.server 8460`) also verified.
+- `pi/Inkling-Small/02-32-35` (visualizer.py + run.sh): resolved
+  `python3 visualizer.py` from README; mode `desktop`; the app loaded all
+  510 contracts then crashed at GUI init (see environment gap below) —
+  launcher reported `failed` with the traceback, as designed. Desktop
+  healthy branch verified separately with a long-lived process
+  (process-alive → healthy).
+- All test launches stopped afterward; no listeners left on 8765/8000.
+
+### Deviations from SPEC 9
+1. **desktop mode added** — spec assumed everything is HTTP; one run built a
+   tkinter desktop app. Health = process-alive (no URL to probe).
+2. **Health requires our process alive** — hardened after observing a false
+   positive: a stale `app.py` from the build session was squatting on the
+   README-declared port 8765, and the probe mistook it for our launch.
+3. **Event-sink wiring bug (found in testing, fixed)**: api.py initially set
+   the sink as an instance attribute while `_emit` reads the module global —
+   resolution updates never landed. Fixed (`app_launcher.event_sink = ...`).
+4. **Orphaned processes on server restart**: launch state is in-memory; if
+   uvicorn restarts mid-launch the subprocess keeps running and the Stop
+   button can't reach it (must kill manually). Known limitation.
+5. **Environment gap (not a launcher bug)**: tkinter is unusable on this
+   host — uv-managed Python 3.14 venv lacks Tcl init files; system
+   /usr/bin/python3's tkinter requires macOS 26 SDK (host: 16). The desktop
+   run therefore cannot be visually reviewed here until one of those is
+   fixed (e.g. `brew install python-tk`). Everything except the GUI window
+   (data loading, command resolution, health reporting) verified working.
+
+### Safety caveat
+Launching executes agent-written code on the host from a temp copy — no
+sandbox, same trust level as the agent judge. Original workspace artifacts
+are never executed or modified. Documented in README.

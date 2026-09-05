@@ -11,6 +11,7 @@ erDiagram
     QUESTIONS ||--o{ ANSWERS : "answered in"
     RUNS ||--o{ COMPARISONS : "run_a or run_b"
     RUNS ||--o{ WRITTEN_FEEDBACK : "critiqued in"
+    RUNS ||--o{ LAUNCH_EVENTS : "launched as"
 
     RUNS {
         string id PK "run dir name"
@@ -55,6 +56,16 @@ erDiagram
         text notes "nullable"
         datetime created_at
     }
+    LAUNCH_EVENTS {
+        int id PK
+        string run_id FK
+        text command
+        int port "nullable"
+        string mode "http|desktop|static"
+        datetime started_at
+        bool healthy "null = still starting"
+        text log_excerpt "nullable"
+    }
     COMPARISONS {
         int id PK
         string run_a_id FK
@@ -96,3 +107,24 @@ erDiagram
 - `runs.condition`, `runs.tag` are free-text labels; nothing in the schema
   is study-010-specific except the seed data (imported idempotently) and
   the `runs.study` default.
+
+
+## launch_events (SPEC 9 addendum)
+
+One row per live-app launch attempt (written at launch; `healthy` resolved
+when the launcher's health probe settles — null while starting).
+
+| column | type | notes |
+|---|---|---|
+| id | int PK | |
+| run_id | FK runs | |
+| command | text | resolved or overridden launch command |
+| port | int nullable | allocated port (8450+); may differ from the app's hardcoded port |
+| mode | text | `http` (URL probe) \| `desktop` (process-alive, GUI on host) \| `static` (http.server) |
+| started_at | timestamptz | |
+| healthy | bool nullable | null = pending resolution |
+| log_excerpt | text nullable | last ~40 lines of the app's output |
+
+Health resolution requires the launched process to still be alive when a
+URL probe succeeds (guards against unrelated servers squatting on
+README-declared ports).

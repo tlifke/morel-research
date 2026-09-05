@@ -10,7 +10,9 @@ from sqlalchemy.orm import Session, joinedload
 
 from db import get_db
 from importer import import_runs
-from models import Answer, Comparison, Question, Run, WrittenFeedback
+import app_launcher
+from app_launcher import detect_components, manager as launch_manager
+from models import Answer, Comparison, LaunchEvent, Question, Run, WrittenFeedback
 from schemas import (
     AnswerCreate,
     AnswerOut,
@@ -20,6 +22,9 @@ from schemas import (
     QuestionCreate,
     QuestionOut,
     QuestionUpdate,
+    LaunchEventOut,
+    LaunchStart,
+    LaunchStatus,
     RunOut,
     WrittenFeedbackCreate,
     WrittenFeedbackOut,
@@ -354,7 +359,76 @@ def create_feedback(body: WrittenFeedbackCreate, db: Session = Depends(get_db)):
     return fb
 
 
+
+# ---- live app launcher (SPEC 9 addendum) ----
+
+
+def _launch_event_sink(run_id: str, command: str, port: int | None, mode: str,
+                       healthy: bool | None, log_excerpt: str) -> None:
+    """Launcher thread callback: write/update launch_events rows (own session)."""
+    from db import SessionLocal
+    with SessionLocal() as db:
+        row = (
+            db.query(LaunchEvent)
+            .filter(LaunchEvent.run_id == run_id, LaunchEvent.healthy.is_(None))
+            .order_by(LaunchEvent.id.desc())
+            .first()
+        )
+        if row is None:
+            row = LaunchEvent(run_id=run_id, command=command, port=port, mode=mode)
+            db.add(row)
+        row.healthy = healthy
+        row.log_excerpt = (log_excerpt or "")[:4000]
+        db.commit()
+
+
+app_launcher.event_sink = _launch_event_sink  # module-global sink, read by _emit
+
+
+@router.post("/runs/{run_id}/launch", response_model=LaunchEventOut)
+def launch_app(run_id: str, body: LaunchStart | None = None, db: Session = Depends(get_db)):
+    run = _get_run_or_404(db, run_id)
+    try:
+        state = launch_manager.start(run.id, run.workspace_dir, body.command if body else None)
+    except RuntimeError as e:
+        raise HTTPException(409, str(e))
+    event = LaunchEvent(run_id=run.id, command=state.command, port=state.port, mode=state.mode)
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+    return event
+
+
+@router.get("/runs/{run_id}/launch/status", response_model=LaunchStatus)
+def launch_status(run_id: str, db: Session = Depends(get_db)):
+    run = _get_run_or_404(db, run_id)
+    status = launch_manager.status(run.id)
+    status["components"] = (
+        detect_components(Path(run.workspace_dir)) if Path(run.workspace_dir).exists() else []
+    )
+    return status
+
+
+@router.post("/runs/{run_id}/launch/stop")
+def launch_stop(run_id: str, db: Session = Depends(get_db)):
+    _get_run_or_404(db, run_id)
+    result = launch_manager.stop(run_id)
+    if result.get("stopped"):
+        row = (
+            db.query(LaunchEvent)
+            .filter(LaunchEvent.run_id == run_id, LaunchEvent.healthy.is_(None))
+            .order_by(LaunchEvent.id.desc())
+            .first()
+        )
+        if row:
+            row.healthy = False
+            row.log_excerpt = "stopped by user"
+            db.commit()
+    return result
+
+
 # ---- exports (SPEC 7) ----
+
 
 
 def _session_messages(run: Run, truncate: bool = True) -> list[dict]:

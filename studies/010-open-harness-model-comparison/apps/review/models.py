@@ -102,3 +102,16 @@ class WrittenFeedback(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     run: Mapped[Run | None] = relationship(back_populates="feedback")
+
+
+class LaunchEvent(Base):
+    __tablename__ = "launch_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    run_id: Mapped[str] = mapped_column(ForeignKey("runs.id"))
+    command: Mapped[str] = mapped_column(Text)
+    port: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    mode: Mapped[str] = mapped_column(String)  # http | desktop | static
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    healthy: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # null = still starting
+    log_excerpt: Mapped[str | None] = mapped_column(Text, nullable=True)

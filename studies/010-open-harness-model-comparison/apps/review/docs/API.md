@@ -73,6 +73,14 @@ Request body: `{question_id, judge: "agent"|"human", value, evidence?, judge_mod
 | GET | `/api/export/reward` | Human-answered runs: `{run_id, answers:{code:value}, score, trace_ref}`. Score placeholder = mean over human-answered questions (bool→0/1, int_1_5→x/5, text excluded); formula documented in code. |
 | GET | `/api/export/summary` | Judgment state across all runs (per-run agent/human answered question-id sets, comparison/feedback flags). |
 
+## Live app launcher (SPEC 9 addendum)
+
+| Method | Path | Notes |
+|---|---|---|
+| POST | `/api/runs/{id}/launch` | Body `{command?: str}` (override). Copies workspace to a temp dir, injects `PORT` + `BROWSER=/usr/bin/true` + `PYTHONUNBUFFERED=1`, starts subprocess. Returns the `launch_events` row. 409 if a launch is already active. |
+| GET | `/api/runs/{id}/launch/status` | `{active, running, status: starting\|healthy\|failed\|stopped, mode: http\|desktop\|static, port, url, command, log_tail, components:[{name, present}]}`. `url` points at the first healthy probed endpoint (README-declared ports included). |
+| POST | `/api/runs/{id}/launch/stop` | Terminates the subprocess, marks the event unhealthy ("stopped by user"), removes the temp copy. |
+
 ## Misc
 
 | Method | Path | Notes |
