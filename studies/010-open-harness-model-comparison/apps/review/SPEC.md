@@ -359,3 +359,67 @@ Open app.
 Launching runs agent-written code on the host from a temp copy — same trust
 level as the agent judge; no sandbox. Original workspace artifacts are
 never executed or modified.
+
+---
+
+## 10. ADDENDUM — Judge job dashboard (owner request: async, bulk, pausable)
+
+**Goal**: agent judging becomes a server-side batch job system, monitored
+from a dashboard — independent of any browser pane. Leaving/reloading any
+page never affects a running job.
+
+### Job model (server-side; survives page navigation; documented behavior on
+uvicorn restart: jobs found `running` at startup are set to `paused`)
+
+**`judge_jobs`**: id, status (`queued|running|paused|completed|failed|cancelled`),
+model, total_items, created_at, started_at, finished_at, error nullable.
+
+**`judge_job_items`**: id, job_id FK, run_id FK, status
+(`queued|running|done|failed|skipped|cancelled`), error nullable, started_at,
+finished_at. Unique (job_id, run_id).
+
+### Runner
+- Single background thread in the FastAPI process; **one job running at a
+  time** (global lock; second job stays `queued`).
+- Per item: spawn the existing `agent_judge.py` subprocess (unchanged
+  contract: copies workspace to temp dir, runs pi-clean session, POSTs
+  agent answers). Item `done` when subprocess exits 0 AND the run has
+  agent answers; else `failed` with log excerpt.
+- **Pause**: no new items start; the in-flight run is allowed to finish
+  (documented). **Resume**: continues queue. **Cancel**: terminate the
+  in-flight subprocess, mark it `cancelled`; remaining items → `cancelled`.
+
+### API
+```
+POST /api/judge-jobs            {run_ids: [...], model?: str} -> create job
+GET  /api/judge-jobs            list with progress (x/y, current run)
+GET  /api/judge-jobs/{id}       detail incl. per-item status
+POST /api/judge-jobs/{id}/pause | /resume | /cancel
+```
+Existing per-run judge endpoints remain (used by the runner; also manual single-run use).
+
+### UI
+1. **Runs index**: checkboxes per row + "Judge selected (n)" button (creates
+   a job). New column chips per run: agent-judged ✓ / human-judged ✓ / job
+   status if in flight.
+2. **Judgment matrix** (on the runs index, below or replacing the table's
+   right side): rows = runs, columns = active questions; each cell shows the
+   agent answer and, if present, the human answer (color-coded, e.g. agent
+   indigo / human emerald; disagreement highlighted).
+3. **`/judging` dashboard page** (sidebar link): job cards with progress bar
+   (done/total), current run, status badge, Pause/Resume/Cancel buttons,
+   per-item list with per-run status; polls every 2–3s via fetch (page-side
+   polling is display-only — jobs run server-side).
+4. Run detail's judge tab keeps its per-run button, but links to the
+   dashboard for batch state.
+
+### Acceptance
+- Bulk-select 3 runs → job created → dashboard shows progress → all 3 get
+  agent answers (verified in matrix).
+- Pause mid-batch: current run finishes, queue holds; resume completes.
+- Cancel: in-flight subprocess terminated, remaining items cancelled.
+- Reload/leave the dashboard mid-job: job continues (server-side state).
+- Existing tests still pass; add tests for job lifecycle (pause/cancel via
+  API with a mocked/fast judge where possible — do not run 3 real judge
+  sessions for the pause test; use a stub).
+- Update docs (DATA_MODEL mermaid, API.md, UI.md, AS_BUILT). No git commit.
