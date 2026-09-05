@@ -18,7 +18,7 @@ SEED_QUESTIONS = [
     {"code": "launches_per_docs", "text": "Does the app launch properly in compliance with those instructions?", "answered_by": "both", "value_type": "bool", "sort_order": 2},
     {"code": "launches_at_all", "text": "Does the app launch in general, regardless of documentation?", "answered_by": "both", "value_type": "bool", "sort_order": 3},
     {"code": "fulfills_functions", "text": "Does the app fulfill the required functions?", "answered_by": "human", "value_type": "bool", "sort_order": 4},
-    {"code": "fulfills_well", "text": "Does the app fulfill those functions well?", "answered_by": "human", "value_type": "int_1_5", "sort_order": 5},
+    {"code": "fulfills_well", "text": "Does the app fulfill those functions well?", "answered_by": "human", "value_type": "bool", "sort_order": 5},
 ]
 
 

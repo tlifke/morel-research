@@ -65,8 +65,8 @@
               <p class="text-sm trace-text my-1">{{ block.text }}</p>
             {% elif block.kind == 'thinking' %}
               <details class="my-1 bg-purple-50 border border-purple-100 rounded px-2 py-1">
-                <summary class="text-xs text-purple-700 font-medium">💭 thinking</summary>
-                <p class="text-xs text-purple-900 trace-text mt-1">{{ block.text[:3000] }}</p>
+                <summary class="text-xs text-purple-700 font-medium">💭 thinking <span class="text-purple-400 font-normal">— {{ block.text[:110] }}{% if block.text|length > 110 %}…{% endif %}</span></summary>
+                <p class="text-xs text-purple-900 trace-text mt-1 whitespace-pre-wrap">{{ block.text }}</p>
               </details>
             {% elif block.kind == 'toolCall' %}
               <details class="my-1 bg-slate-50 border rounded px-2 py-1">
@@ -180,23 +180,26 @@
           <pre class="text-xs text-slate-600 mt-1 whitespace-pre-wrap">{{ agent_ans.evidence }}</pre>
         </details>
         {% endif %}
-        <div class="mt-2 flex items-center space-x-3 text-sm" id="q-{{ q.id }}">
-          {% if q.answered_by == 'both' %}
-            {% if agent_ans %}
-            <label class="flex items-center"><input type="radio" name="q{{ q.id }}" value="agree" {% if human_ans and human_ans.value == agent_ans.value %}checked{% endif %}> agree ({{ agent_ans.value }})</label>
-            <label class="flex items-center"><input type="radio" name="q{{ q.id }}" value="disagree" {% if human_ans and agent_ans and human_ans.value != agent_ans.value %}checked{% endif %}> disagree:</label>
-            <input type="text" name="q{{ q.id }}_override" placeholder="{{ 'true'|e }}/{{ 'false'|e }}" class="border rounded px-2 py-1 w-24 text-xs" value="{% if human_ans and agent_ans and human_ans.value != agent_ans.value %}{{ human_ans.value }}{% endif %}">
-            {% else %}<p class="text-xs text-slate-400">No agent answer yet — enter your own:</p>
-            <input type="text" name="q{{ q.id }}_override" placeholder="true/false" class="border rounded px-2 py-1 w-24 text-xs" value="{% if human_ans %}{{ human_ans.value }}{% endif %}">
-            {% endif %}
-          {% elif q.value_type == 'bool' %}
-            <label class="flex items-center"><input type="radio" name="q{{ q.id }}" value="true" {% if human_ans and human_ans.value %}checked{% endif %}> yes</label>
-            <label class="flex items-center"><input type="radio" name="q{{ q.id }}" value="false" {% if human_ans and human_ans.value == false %}checked{% endif %}> no</label>
+        <div class="mt-2 flex items-center space-x-2 text-sm" id="q-{{ q.id }}">
+          {% set bool_val = human_ans.value if human_ans else (agent_ans.value if (q.answered_by in ('both','agent') and agent_ans) else none) %}
+          {% if q.value_type == 'bool' %}
+            <label class="cursor-pointer">
+              <input type="radio" name="q{{ q.id }}" value="true" class="peer sr-only" {% if bool_val == true %}checked{% endif %}>
+              <span class="px-4 py-1.5 rounded-md border border-slate-300 text-sm text-slate-600 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 hover:border-emerald-400">Yes</span>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="q{{ q.id }}" value="false" class="peer sr-only" {% if bool_val == false %}checked{% endif %}>
+              <span class="px-4 py-1.5 rounded-md border border-slate-300 text-sm text-slate-600 peer-checked:bg-red-600 peer-checked:text-white peer-checked:border-red-600 hover:border-red-400">No</span>
+            </label>
+            {% if q.answered_by == 'both' and agent_ans %}<span class="text-xs text-slate-400">(agent said {{ agent_ans.value }} — pre-selected; change to disagree)</span>{% endif %}
+            {% if q.answered_by in ('both','agent') and not agent_ans %}<span class="text-xs text-slate-400">(no agent answer yet)</span>{% endif %}
           {% elif q.value_type == 'int_1_5' %}
             <select name="q{{ q.id }}" class="border rounded px-2 py-1 text-xs">
               <option value="">—</option>
               {% for i in range(1, 6) %}<option value="{{ i }}" {% if human_ans and human_ans.value == i %}selected{% endif %}>{{ i }}</option>{% endfor %}
             </select>
+          {% else %}
+            <textarea name="q{{ q.id }}" class="w-full border rounded p-2 text-sm" rows="2">{{ human_ans.value if human_ans else '' }}</textarea>
           {% endif %}
         </div>
       </div>
@@ -220,19 +223,10 @@
       {% if q.active %}
       {
         const qid = {{ q.id }}, answeredBy = '{{ q.answered_by }}', vtype = '{{ q.value_type }}';
-        if (answeredBy === 'both') {
-          const agree = fd.get('q' + qid) === 'agree';
-          const override = fd.get('q' + qid + '_override');
-          let value = null;
-          if (agree) value = {{ (answers.get((q.id, 'agent')).value | tojson) if answers.get((q.id, 'agent')) else 'null' }};
-          else if (override !== null && override !== '') value = vtype === 'bool' ? (override === 'true') : (vtype === 'int_1_5' ? parseInt(override) : override);
-          if (value !== null) posts.push({question_id: qid, judge: 'human', value, notes});
-        } else {
-          let raw = fd.get('q' + qid);
-          if (raw !== null && raw !== '') {
-            const value = vtype === 'bool' ? (raw === 'true') : (vtype === 'int_1_5' ? parseInt(raw) : raw);
-            posts.push({question_id: qid, judge: 'human', value, notes});
-          }
+        let raw = fd.get('q' + qid);
+        if (raw !== null && raw !== '') {
+          const value = vtype === 'bool' ? (raw === 'true') : (vtype === 'int_1_5' ? parseInt(raw) : raw);
+          posts.push({question_id: qid, judge: 'human', value, notes});
         }
       }
       {% endif %}

@@ -111,3 +111,21 @@
   round-trips, all 4 export endpoints, tests green. Note: a stale uvicorn
   from the build session initially served old code on :8300 — kill stale
   processes before verifying (lesson recorded here).
+
+## Owner feedback round 1 (post first use)
+
+- `fulfills_well` changed from int_1_5 (Likert) to **bool y/n** — owner's
+  call; the seed in importer.py and the live DB row both updated.
+- All answer inputs are now styled **Yes/No buttons** (Tailwind peer
+  styling), including the agent-`both` questions. The explicit
+  agree/disagree radio was removed: the human value is pre-selected from
+  the agent answer (default-agree), and agreement is derivable by comparing
+  human vs agent rows. `int_1_5` and `text` renderers remain for generic
+  future questions.
+- Thinking blocks were present in all 9 traces (8-32 per run) but rendered
+  as bare collapsed summaries — summary now includes a text preview so
+  they're visibly there.
+- Owner verification data cleared (3 human answers, 1 comparison, 1
+  written-feedback row). The worker's agent-judge test output on run
+  2026-09-04T02-28-27-3cd3 (3 agent answers with evidence) is real data
+  and was kept.
