@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% block title %}{{ run.id }} · Contract Lab{% endblock %}
+{% block content %}
+<div x-data="{tab: 'trace'}" class="space-y-4">
+  <div class="flex items-start justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold font-mono">{{ run.id }}</h1>
+      <p class="text-sm text-slate-500">
+        <span class="px-2 py-0.5 rounded text-xs font-medium {{ 'bg-emerald-100 text-emerald-800' if run.condition == 'clean' else 'bg-amber-100 text-amber-800' }}">{{ run.condition }}</span>
+        {{ run.model }} · tag: {{ run.tag or '—' }} ·
+        cost ${{ '%.4f'|format(run.estimated_cost_usd) if run.estimated_cost_usd else '—' }} ·
+        tokens in {{ run.tokens_input }}/{{ run.tokens_cache_read }} cache, out {{ run.tokens_output }} ·
+        audit {{ 'clean ✅' if run.audit_clean else 'VIOLATIONS ❌' }}
+      </p>
+    </div>
+    <button @click="runJudge()" :disabled="judging" class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm px-4 py-2 rounded">
+      <span x-show="!judging">Run agent judge</span><span x-show="judging">Judging… (minutes)</span>
+    </button>
+  </div>
+  <p x-show="judgeStatus" class="text-xs" x-text="judgeStatus" :class="judgeOk ? 'text-emerald-600' : 'text-amber-600'"></p>
+  <script>
+    function runJudge() {
+      const el = document.querySelector('[x-data]');
+      const d = Alpine.$data(el);
+      d.judging = true; d.judgeStatus = 'Starting judge…';
+      fetch(`/api/runs/{{ run.id }}/judge`, { method: 'POST' })
+        .then(r => r.json()).then(start => {
+          d.judgeStatus = start.message;
+          const poll = setInterval(() => {
+            fetch(`/api/runs/{{ run.id }}/judge/status`).then(r => r.json()).then(s => {
+              d.judgeStatus = s.running ? 'Judge running…' : (s.done ? (s.ok ? 'Judge finished ✅' : 'Judge finished (reported failure) — see judge.log') : 'Not running');
+              if (!s.running && s.done) {
+                clearInterval(poll); d.judging = false; d.judgeOk = s.ok;
+                if (s.ok) location.reload();
+              }
+            });
+          }, 5000);
+        }).catch(e => { d.judging = false; d.judgeOk = false; d.judgeStatus = String(e); });
+    }
+  </script>
+
+  <div class="flex space-x-1 border-b">
+    {% set tabs = ['trace', 'files', 'preview', 'judge', 'feedback'] %}
+    {% for t in tabs %}
+    <button @click="tab = '{{ t }}'" :class="tab === '{{ t }}' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'" class="px-4 py-2 text-sm font-medium border-b-2 capitalize">{{ t }}</button>
+    {% endfor %}
+  </div>
+
+  <!-- TRACE -->
+  <div x-show="tab === 'trace'" class="space-y-3">
+    {% if not trace %}<p class="text-slate-500">No session file available.</p>{% endif %}
+    {% for event in (trace.events if trace else []) %}
+      {% if event.role == 'user' %}
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <p class="text-xs font-semibold text-blue-700 mb-1">USER · msg {{ event.index }}</p>
+          {% for block in event.blocks %}{% if block.kind == 'text' %}<p class="text-sm trace-text">{{ block.text[:2000] }}{% if block.text|length > 2000 %}…{% endif %}</p>{% endif %}{% endfor %}
+        </div>
+      {% elif event.role == 'assistant' %}
+        <div class="bg-white border rounded-lg p-3 shadow-sm" id="msg-{{ event.index }}">
+          <p class="text-xs font-semibold text-slate-500 mb-2">ASSISTANT · msg {{ event.index }}
+            <button class="text-xs text-blue-500 ml-2" onclick="anchorFeedback({anchor_type:'tool_call', anchor_ref:{message_index:{{ event.index }}}}); return false;">⚓ anchor</button>
+          </p>
+          {% for block in event.blocks %}
+            {% if block.kind == 'text' %}
+              <p class="text-sm trace-text my-1">{{ block.text }}</p>
+            {% elif block.kind == 'thinking' %}
+              <details class="my-1 bg-purple-50 border border-purple-100 rounded px-2 py-1">
+                <summary class="text-xs text-purple-700 font-medium">💭 thinking</summary>
+                <p class="text-xs text-purple-900 trace-text mt-1">{{ block.text[:3000] }}</p>
+              </details>
+            {% elif block.kind == 'toolCall' %}
+              <details class="my-1 bg-slate-50 border rounded px-2 py-1">
+                <summary class="text-xs font-mono">🔧 {{ block.name }} <span class="text-slate-400">{{ (block.arguments | tojson)[:100] if block.arguments }}</span></summary>
+                <pre class="text-xs bg-slate-900 text-slate-100 rounded p-2 mt-1 overflow-x-auto">{{ block.arguments | tojson(indent=2) }}</pre>
+                <button class="text-xs text-blue-500 mt-1" onclick="anchorFeedback({anchor_type:'tool_call', anchor_ref:{message_index:{{ event.index }}, block_index:{{ block.block_index }}}}); return false;">⚓ anchor this call</button>
+              </details>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% elif event.role == 'toolResult' %}
+        <div class="ml-8 bg-slate-50 border-l-4 border-slate-300 rounded px-3 py-2">
+          <p class="text-xs text-slate-400">tool result{% if event.blocks and event.blocks[-1].kind == 'meta' and event.blocks[-1].tool_name %} · {{ event.blocks[-1].tool_name }}{% endif %}{% if event.blocks and event.blocks[-1].kind == 'meta' and event.blocks[-1].is_error %} · ERROR{% endif %}</p>
+          {% for block in event.blocks %}{% if block.kind == 'text' %}
+          <pre class="text-xs text-slate-600 trace-text max-h-40 overflow-y-auto">{{ block.text[:1500] }}</pre>
+          {% endif %}{% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- FILES -->
+  <div x-show="tab === 'files'" x-cloak class="grid grid-cols-3 gap-4">
+    <div class="bg-white rounded-lg shadow p-3 text-sm" id="file-tree">Loading…</div>
+    <div class="col-span-2 bg-white rounded-lg shadow p-3"><pre id="file-view" class="text-xs trace-text">Select a file…</pre></div>
+  </div>
+  <script x-show="tab === 'files'">
+    htmx.onLoad(function() {});
+    document.addEventListener('alpine:init', () => {});
+    if (!window.__filesLoaded) {
+      window.__filesLoaded = true;
+      fetch(`/api/runs/{{ run.id }}/files`).then(r => r.json()).then(d => {
+        renderTree(d.tree, document.getElementById('file-tree'), '{{ run.id }}');
+      });
+    }
+    function renderTree(nodes, el, runId) {
+      el.innerHTML = '';
+      const ul = document.createElement('ul'); ul.className = 'space-y-1';
+      for (const n of nodes) addNode(ul, n, runId, '');
+      el.appendChild(ul);
+    }
+    function addNode(ul, n, runId, pfx) {
+      const li = document.createElement('li');
+      if (n.type === 'collapsed_dir') { li.textContent = `📁 ${n.name}/ (${n.count} files, dataset copy)`; li.className = 'text-slate-400'; }
+      else if (n.type === 'dir') {
+        li.innerHTML = `📁 ${n.name}/`;
+        const sub = document.createElement('ul'); sub.className = 'ml-4 space-y-1';
+        for (const c of n.children) addNode(sub, c, runId, pfx + n.name + '/');
+        li.appendChild(sub);
+      } else {
+        const a = document.createElement('a'); a.href = '#'; a.textContent = `📄 ${n.name}`;
+        a.className = 'text-blue-600 hover:underline';
+        a.onclick = (e) => { e.preventDefault();
+          fetch(`/api/runs/{{ run.id }}/files/content?path=${encodeURIComponent(pfx + n.name)}`).then(r => r.text()).then(t => {
+            document.getElementById('file-view').textContent = t;
+          });
+        };
+        li.appendChild(a);
+      }
+      ul.appendChild(li);
+    }
+  </script>
+
+  <!-- PREVIEW -->
+  <div x-show="tab === 'preview'" x-cloak>
+    {% set previews = [] %}
+    {% if run.workspace_dir %}
+    {% endif %}
+    <p class="text-sm text-slate-500 mb-2">Static preview of agent-built files. HTML is served sandboxed; python apps are not executed here (use the agent judge or launch manually).</p>
+    <div id="preview-list" class="space-y-3"></div>
+  </div>
+  <script x-show="tab === 'preview'">
+    if (!window.__previewLoaded) {
+      window.__previewLoaded = true;
+      fetch(`/api/runs/{{ run.id }}/files`).then(r => r.json()).then(d => {
+        const el = document.getElementById('preview-list'); el.innerHTML = '';
+        const walk = (nodes, pfx) => { for (const n of nodes) {
+          if (n.type === 'file' && /\.(png|jpe?g|gif|webp)$/i.test(n.name)) {
+            const img = document.createElement('img');
+            img.src = `/api/runs/{{ run.id }}/preview-file?path=${encodeURIComponent(pfx + n.name)}`;
+            img.className = 'rounded shadow border max-w-3xl';
+            el.appendChild(img);
+          } else if (n.type === 'file' && /\.html?$/i.test(n.name)) {
+            const f = document.createElement('iframe');
+            f.src = `/api/runs/{{ run.id }}/preview-file?path=${encodeURIComponent(pfx + n.name)}`;
+            f.sandbox = 'allow-scripts';
+            f.className = 'w-full h-[600px] rounded border';
+            el.appendChild(f);
+          } else if (n.type === 'dir' && n.name !== 'contract_text') walk(n.children, pfx + n.name + '/');
+        }};
+        walk(d.tree, '');
+      });
+    }
+  </script>
+
+  <!-- JUDGE -->
+  <div x-show="tab === 'judge'" x-cloak class="space-y-4">
+    <form onsubmit="saveJudge(event)" class="space-y-4">
+      {% for q in questions %}
+      {% if q.active %}
+      {% set agent_ans = answers.get((q.id, 'agent')) %}
+      {% set human_ans = answers.get((q.id, 'human')) %}
+      <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex items-center justify-between">
+          <p class="font-medium text-sm">{{ q.sort_order }}. {{ q.text }}</p>
+          <span class="text-xs px-2 py-0.5 rounded {{ 'bg-slate-200 text-slate-700' if q.answered_by == 'human' else 'bg-indigo-100 text-indigo-700' }}">{{ q.answered_by }}</span>
+        </div>
+        {% if q.answered_by in ('both', 'agent') and agent_ans %}
+        <details class="mt-2 text-xs bg-slate-50 rounded p-2">
+          <summary class="text-slate-500">agent answer: <b>{{ agent_ans.value }}</b> (model: {{ agent_ans.judge_model or '?' }})</summary>
+          <pre class="text-xs text-slate-600 mt-1 whitespace-pre-wrap">{{ agent_ans.evidence }}</pre>
+        </details>
+        {% endif %}
+        <div class="mt-2 flex items-center space-x-3 text-sm" id="q-{{ q.id }}">
+          {% if q.answered_by == 'both' %}
+            {% if agent_ans %}
+            <label class="flex items-center"><input type="radio" name="q{{ q.id }}" value="agree" {% if human_ans and human_ans.value == agent_ans.value %}checked{% endif %}> agree ({{ agent_ans.value }})</label>
+            <label class="flex items-center"><input type="radio" name="q{{ q.id }}" value="disagree" {% if human_ans and agent_ans and human_ans.value != agent_ans.value %}checked{% endif %}> disagree:</label>
+            <input type="text" name="q{{ q.id }}_override" placeholder="{{ 'true'|e }}/{{ 'false'|e }}" class="border rounded px-2 py-1 w-24 text-xs" value="{% if human_ans and agent_ans and human_ans.value != agent_ans.value %}{{ human_ans.value }}{% endif %}">
+            {% else %}<p class="text-xs text-slate-400">No agent answer yet — enter your own:</p>
+            <input type="text" name="q{{ q.id }}_override" placeholder="true/false" class="border rounded px-2 py-1 w-24 text-xs" value="{% if human_ans %}{{ human_ans.value }}{% endif %}">
+            {% endif %}
+          {% elif q.value_type == 'bool' %}
+            <label class="flex items-center"><input type="radio" name="q{{ q.id }}" value="true" {% if human_ans and human_ans.value %}checked{% endif %}> yes</label>
+            <label class="flex items-center"><input type="radio" name="q{{ q.id }}" value="false" {% if human_ans and human_ans.value == false %}checked{% endif %}> no</label>
+          {% elif q.value_type == 'int_1_5' %}
+            <select name="q{{ q.id }}" class="border rounded px-2 py-1 text-xs">
+              <option value="">—</option>
+              {% for i in range(1, 6) %}<option value="{{ i }}" {% if human_ans and human_ans.value == i %}selected{% endif %}>{{ i }}</option>{% endfor %}
+            </select>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+      <div>
+        <label class="text-sm font-medium">Notes</label>
+        <textarea name="notes" class="w-full border rounded p-2 text-sm" rows="2"></textarea>
+      </div>
+      <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 py-2 rounded">Save human judgment</button>
+      <span id="judge-save-status" class="text-sm"></span>
+    </form>
+  </div>
+  <script>
+    function saveJudge(ev) {
+      ev.preventDefault();
+      const form = ev.target, fd = new FormData(form), status = document.getElementById('judge-save-status');
+      const notes = fd.get('notes') || '';
+      const posts = [];
+      {% for q in questions %}
+      {% if q.active %}
+      {
+        const qid = {{ q.id }}, answeredBy = '{{ q.answered_by }}', vtype = '{{ q.value_type }}';
+        if (answeredBy === 'both') {
+          const agree = fd.get('q' + qid) === 'agree';
+          const override = fd.get('q' + qid + '_override');
+          let value = null;
+          if (agree) value = {{ (answers.get((q.id, 'agent')).value | tojson) if answers.get((q.id, 'agent')) else 'null' }};
+          else if (override !== null && override !== '') value = vtype === 'bool' ? (override === 'true') : (vtype === 'int_1_5' ? parseInt(override) : override);
+          if (value !== null) posts.push({question_id: qid, judge: 'human', value, notes});
+        } else {
+          let raw = fd.get('q' + qid);
+          if (raw !== null && raw !== '') {
+            const value = vtype === 'bool' ? (raw === 'true') : (vtype === 'int_1_5' ? parseInt(raw) : raw);
+            posts.push({question_id: qid, judge: 'human', value, notes});
+          }
+        }
+      }
+      {% endif %}
+      {% endfor %}
+      Promise.all(posts.map(p => fetch(`/api/runs/{{ run.id }}/answers`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(p)
+      }))).then(rs => {
+        const ok = rs.every(r => r.ok);
+        status.textContent = ok ? `Saved ${posts.length} answer(s)` : 'Some saves failed — check server logs';
+        status.className = ok ? 'text-emerald-600' : 'text-red-600';
+        if (ok) setTimeout(() => location.reload(), 600);
+      });
+    }
+    function anchorFeedback(anchor) {
+      document.querySelector('[x-data]')._x_dataStack[0].tab = 'feedback';
+      window.__pendingAnchor = anchor;
+      setTimeout(() => { const el = document.getElementById('anchor-ref'); if (el) el.value = JSON.stringify(anchor); }, 100);
+    }
+  </script>
+
+  <!-- FEEDBACK -->
+  <div x-show="tab === 'feedback'" x-cloak class="grid grid-cols-2 gap-4">
+    <div class="bg-white rounded-lg shadow p-4">
+      <h3 class="font-medium text-sm mb-2">Add written feedback</h3>
+      <form onsubmit="saveFeedback(event)" class="space-y-2 text-sm">
+        <div class="flex space-x-2">
+          <select id="anchor-type" class="border rounded px-2 py-1 text-xs">
+            <option value="run">run</option><option value="file">file</option><option value="tool_call">tool_call</option>
+          </select>
+          <input id="anchor-ref" class="border rounded px-2 py-1 text-xs flex-1 font-mono" placeholder='{"path": "README.md"}'>
+        </div>
+        <textarea id="feedback-text" class="w-full border rounded p-2 text-sm" rows="3" placeholder="What was good/bad and why…"></textarea>
+        <button type="submit" class="bg-blue-600 text-white text-sm px-3 py-1.5 rounded">Save feedback</button>
+        <span id="feedback-status" class="text-xs"></span>
+      </form>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-sm space-y-2">
+      <h3 class="font-medium text-sm">Existing ({{ feedback|length }})</h3>
+      {% for fb in feedback %}
+      <div class="border-t pt-2">
+        <p class="text-xs text-slate-400">{{ fb.anchor_type }} · {{ fb.created_at.strftime('%m-%d %H:%M') }} · <span class="font-mono">{{ fb.anchor_ref | tojson if fb.anchor_ref }}</span></p>
+        <p>{{ fb.text }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <script>
+    function saveFeedback(ev) {
+      ev.preventDefault();
+      const payload = {
+        run_id: '{{ run.id }}',
+        anchor_type: document.getElementById('anchor-type').value,
+        anchor_ref: JSON.parse(document.getElementById('anchor-ref').value || 'null') || {kind: 'run'},
+        text: document.getElementById('feedback-text').value,
+      };
+      fetch('/api/feedback', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)})
+        .then(r => { if (r.ok) location.reload(); else r.text().then(t => document.getElementById('feedback-status').textContent = t); });
+    }
+  </script>
+</div>
+{% endblock %}

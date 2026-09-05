@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Questions · Contract Lab{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-1">Questions</h1>
+<p class="text-sm text-slate-500 mb-4">The rubric is data. answered_by: <span class="text-indigo-600 font-medium">both</span> = agent answers, human confirms/overrides · <span class="text-slate-600 font-medium">human</span> = human-only.</p>
+
+<div class="bg-white rounded-lg shadow divide-y mb-6">
+  {% for q in questions %}
+  <div class="px-4 py-3 flex items-start justify-between">
+    <div>
+      <p class="text-sm font-medium">{{ q.sort_order }}. {{ q.text }} <span class="text-xs font-mono text-slate-400">({{ q.code }})</span></p>
+      {% if q.description %}<p class="text-xs text-slate-500">{{ q.description }}</p>{% endif %}
+    </div>
+    <div class="flex items-center space-x-2">
+      <span class="text-xs px-2 py-0.5 rounded {{ 'bg-indigo-100 text-indigo-700' if q.answered_by == 'both' else 'bg-slate-200 text-slate-700' }}">{{ q.answered_by }}</span>
+      <span class="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600">{{ q.value_type }}</span>
+      <span class="text-xs px-2 py-0.5 rounded {{ 'bg-emerald-100 text-emerald-700' if q.active else 'bg-slate-100 text-slate-400 line-through' }}">{{ 'active' if q.active else 'inactive' }}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="bg-white rounded-lg shadow p-4 max-w-2xl">
+  <h2 class="font-medium text-sm mb-3">Add question</h2>
+  <form onsubmit="saveQuestion(event)" class="grid grid-cols-2 gap-2 text-sm">
+    <input name="code" class="border rounded p-2 text-xs font-mono" placeholder="code (snake_case)" required>
+    <input name="text" class="border rounded p-2 text-sm" placeholder="Question text" required>
+    <select name="answered_by" class="border rounded p-2 text-xs">
+      <option value="both">both</option><option value="agent">agent</option><option value="human">human</option>
+    </select>
+    <select name="value_type" class="border rounded p-2 text-xs">
+      <option value="bool">bool</option><option value="int_1_5">int_1_5</option><option value="text">text</option>
+    </select>
+    <input name="description" class="border rounded p-2 text-xs col-span-2" placeholder="Description (optional)">
+    <button type="submit" class="bg-blue-600 text-white text-sm px-4 py-2 rounded col-span-2">Create question</button>
+  </form>
+  <p id="q-status" class="text-xs mt-2"></p>
+</div>
+<script>
+  function saveQuestion(ev) {
+    ev.preventDefault();
+    const fd = new FormData(ev.target);
+    fetch('/api/questions', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
+      code: fd.get('code'), text: fd.get('text'), description: fd.get('description') || null,
+      answered_by: fd.get('answered_by'), value_type: fd.get('value_type'),
+    })}).then(r => { if (r.ok) location.reload(); else r.text().then(t => document.getElementById('q-status').textContent = t); });
+  }
+</script>
+{% endblock %}

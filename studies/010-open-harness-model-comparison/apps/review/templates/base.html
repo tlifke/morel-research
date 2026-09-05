@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Contract Lab{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <style>
+    .trace-text { white-space: pre-wrap; word-break: break-word; }
+    details > summary { cursor: pointer; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen" x-data>
+<div class="flex min-h-screen">
+  <aside class="w-56 shrink-0 bg-slate-900 text-slate-200 p-4 sticky top-0 h-screen">
+    <a href="/" class="block text-lg font-semibold text-white mb-1">⚗ Contract Lab</a>
+    <p class="text-xs text-slate-400 mb-6">study 010 · run review</p>
+    <nav class="space-y-1 text-sm">
+      {% set nav = request.url.path %}
+      <a href="/" class="block px-3 py-2 rounded {{ 'bg-slate-700 text-white' if nav == '/' else 'hover:bg-slate-800' }}">Runs</a>
+      <a href="/compare" class="block px-3 py-2 rounded {{ 'bg-slate-700 text-white' if nav == '/compare' else 'hover:bg-slate-800' }}">Compare</a>
+      <a href="/questions" class="block px-3 py-2 rounded {{ 'bg-slate-700 text-white' if nav == '/questions' else 'hover:bg-slate-800' }}">Questions</a>
+      <a href="/feedback" class="block px-3 py-2 rounded {{ 'bg-slate-700 text-white' if nav == '/feedback' else 'hover:bg-slate-800' }}">Feedback log</a>
+    </nav>
+    <div class="mt-8 pt-4 border-t border-slate-700 text-xs text-slate-400 space-y-2">
+      <a href="/api/export/summary" class="block hover:text-slate-200">export/summary</a>
+      <a href="/api/export/reward" class="block hover:text-slate-200">export/reward</a>
+      <a href="/api/export/dpo" class="block hover:text-slate-200">export/dpo</a>
+      <a href="/docs" class="block hover:text-slate-200">API docs</a>
+    </div>
+  </aside>
+  <main class="flex-1 p-6 max-w-[1400px]">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

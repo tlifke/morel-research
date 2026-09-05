@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Feedback · Contract Lab{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-4">Feedback log</h1>
+
+<div class="grid grid-cols-3 gap-4 text-sm">
+  <div>
+    <h2 class="font-medium mb-2">Written feedback ({{ feedback|length }})</h2>
+    <div class="space-y-2">
+      {% for fb in feedback %}
+      <div class="bg-white rounded shadow p-3">
+        <p class="text-xs text-slate-400">{{ fb.anchor_type }} · <a class="font-mono text-blue-600" href="/runs/{{ fb.run_id }}">{{ fb.run_id[:19] if fb.run_id else 'general' }}</a> · {{ fb.created_at.strftime('%m-%d %H:%M') }}</p>
+        <p>{{ fb.text }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div>
+    <h2 class="font-medium mb-2">Comparisons ({{ comparisons|length }})</h2>
+    <div class="space-y-2">
+      {% for c in comparisons %}
+      <div class="bg-white rounded shadow p-3">
+        <p class="text-xs text-slate-400 font-mono">{{ c.run_a_id[:19] }} vs {{ c.run_b_id[:19] }}</p>
+        <p>better: <b>{{ c.better }}</b>{% if c.dimensions %} · dims: <span class="font-mono text-xs">{{ c.dimensions | tojson }}</span>{% endif %}</p>
+        {% if c.notes %}<p class="text-slate-600">{{ c.notes }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div>
+    <h2 class="font-medium mb-2">Answers ({{ answers|length }})</h2>
+    <div class="space-y-2">
+      {% for a in answers %}
+      <div class="bg-white rounded shadow p-3">
+        <p class="text-xs text-slate-400"><span class="font-medium {{ 'text-indigo-600' if a.judge == 'agent' else 'text-emerald-600' }}">{{ a.judge }}</span> ·
+          <a class="font-mono text-blue-600" href="/runs/{{ a.run_id }}">{{ a.run_id[:19] }}</a> · {{ a.created_at.strftime('%m-%d %H:%M') }}</p>
+        <p>Q{{ a.question_id }} = <b>{{ a.value }}</b>{% if a.judge_model %} <span class="text-xs text-slate-400">({{ a.judge_model }})</span>{% endif %}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<p class="text-xs text-slate-400 mt-6">
+  Exports: <a class="text-blue-600" href="/api/export/sft?run_ids=">/api/export/sft?run_ids=…</a> ·
+  <a class="text-blue-600" href="/api/export/dpo">/api/export/dpo</a> ·
+  <a class="text-blue-600" href="/api/export/reward">/api/export/reward</a> ·
+  <a class="text-blue-600" href="/api/export/summary">/api/export/summary</a>
+</p>
+{% endblock %}

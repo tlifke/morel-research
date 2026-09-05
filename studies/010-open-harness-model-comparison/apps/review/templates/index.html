@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Runs · Contract Lab{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-semibold">Runs</h1>
+  <button hx-post="/api/import" hx-target="#import-result" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded">Import runs</button>
+</div>
+<p id="import-result" class="text-sm text-slate-500 mb-3"></p>
+
+<table class="w-full text-sm bg-white rounded-lg shadow overflow-hidden">
+  <thead class="bg-slate-100 text-left text-xs uppercase text-slate-500">
+    <tr>
+      <th class="px-3 py-2">Run</th><th class="px-3 py-2">Model</th><th class="px-3 py-2">Condition</th>
+      <th class="px-3 py-2">Tag</th><th class="px-3 py-2">Cost</th><th class="px-3 py-2">Audit</th>
+      <th class="px-3 py-2">Answers (agent/human)</th><th class="px-3 py-2"></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for row in rows %}
+    {% set run = row.run %}
+    <tr class="border-t hover:bg-slate-50">
+      <td class="px-3 py-2 font-mono text-xs"><a href="/runs/{{ run.id }}" class="text-blue-600 hover:underline">{{ run.id }}</a></td>
+      <td class="px-3 py-2"><span class="badge">{{ run.model.split('/')[-1] }}</span></td>
+      <td class="px-3 py-2">
+        <span class="px-2 py-0.5 rounded text-xs font-medium {{ 'bg-emerald-100 text-emerald-800' if run.condition == 'clean' else 'bg-amber-100 text-amber-800' }}">{{ run.condition }}</span>
+      </td>
+      <td class="px-3 py-2 text-xs">{{ run.tag or '—' }}</td>
+      <td class="px-3 py-2 text-xs">${% if run.estimated_cost_usd %}{{ '%.4f'|format(run.estimated_cost_usd) }}{% else %}—{% endif %}</td>
+      <td class="px-3 py-2 text-xs">{{ '✅' if run.audit_clean else '❌ ' ~ (run.audit_violations|length) }}</td>
+      <td class="px-3 py-2 text-xs text-slate-500">
+        {% for q in questions %}
+          <span class="mr-1" title="{{ q.code }}">
+            {% if q.id in row.agent_answered %}<span class="text-blue-600 font-semibold">A</span>{% else %}<span class="text-slate-300">a</span>{% endif %}
+            {% if q.id in row.human_answered %}<span class="text-emerald-600 font-semibold">H</span>{% else %}<span class="text-slate-300">h</span>{% endif %}
+          </span>
+        {% endfor %}
+      </td>
+      <td class="px-3 py-2 text-right"><a href="/runs/{{ run.id }}" class="text-blue-600 text-sm hover:underline">review →</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="text-xs text-slate-400 mt-3">A = agent answered · H = human answered · {{ comparison_count }} comparison(s) recorded</p>
+{% endblock %}
