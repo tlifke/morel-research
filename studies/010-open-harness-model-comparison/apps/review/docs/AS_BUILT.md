@@ -147,3 +147,13 @@ flow now shows a human-readable chip ("Anchored to: bash call - msg 3") with
 a clear button; manual anchoring (whole run / file / advanced tool-call JSON)
 is the fallback row. Existing-feedback list renders human-readable anchors.
 Storage schema unchanged (anchor_type + anchor_ref JSONB).
+
+### Follow-up: feedback modal replaces the Feedback tab (owner feedback)
+
+Anchored feedback no longer switches tabs: the trace anchor buttons open an
+in-page modal (chip + textarea, Esc/click-outside to close). The run-detail
+Feedback tab is removed; existing feedback shows as a compact collapsible
+"Run feedback (N)" section at the bottom of the run page (+ run-level add
+button); the global /feedback page remains the full log. Manual file/
+tool-call anchoring moved into an "advanced" section inside the modal.
+Storage schema unchanged.
