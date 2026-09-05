@@ -129,3 +129,13 @@
   written-feedback row). The worker's agent-judge test output on run
   2026-09-04T02-28-27-3cd3 (3 agent answers with evidence) is real data
   and was kept.
+
+### Follow-up: empty thinking blocks (owner-reported, fixed)
+
+pi stores assistant reasoning as `{"type":"thinking","thinking":"...",
+"thinkingSignature":"reasoning_content"}` — the payload key is `thinking`,
+not `text`. `trace.py` read `text`, so every thinking block rendered empty
+(summary said "thinking —" with nothing after it) and SFT/DPO exports
+carried empty thinking text. Fixed: `parse_session` reads `thinking` first,
+falls back to `text`. Verified: 30/30 thinking blocks non-empty in the
+pi/Inkling trace and in the SFT export for that run.

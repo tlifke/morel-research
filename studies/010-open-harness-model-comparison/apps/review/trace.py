@@ -39,7 +39,9 @@ def parse_session(session_file: str | Path, truncate: bool = True) -> dict:
                     if btype == "text":
                         blocks.append({"kind": "text", "text": block.get("text", ""), "block_index": bi})
                     elif btype == "thinking":
-                        blocks.append({"kind": "thinking", "text": block.get("text", ""), "block_index": bi})
+                        # pi stores reasoning under `thinking` (with
+                        # `thinkingSignature`), not `text` — check both.
+                        blocks.append({"kind": "thinking", "text": block.get("thinking") or block.get("text", ""), "block_index": bi})
                     elif btype == "toolCall":
                         blocks.append(
                             {
