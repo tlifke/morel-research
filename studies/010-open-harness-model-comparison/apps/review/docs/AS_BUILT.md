@@ -157,3 +157,21 @@ Feedback tab is removed; existing feedback shows as a compact collapsible
 button); the global /feedback page remains the full log. Manual file/
 tool-call anchoring moved into an "advanced" section inside the modal.
 Storage schema unchanged.
+
+### Follow-up: broken feedback modal (owner-reported, root-caused, fixed)
+
+Three stacked bugs, all fixed and verified with an automated browser test:
+1. Wrong Alpine component: `document.querySelector('[x-data]')` matched the
+   sidebar nav's empty `x-data` in base.html, not the run-detail component —
+   fbOpen (and the judge poller's judging/judgeStatus) were set on the wrong
+   scope. All lookups now go through `#run-detail-root`.
+2. Alpine `x-show` + `@click.outside` self-close: the modal existed in the
+   DOM while hidden, and the microtask checkpoint after the opening button's
+   onclick meant the just-attached document-level outside listener fired for
+   the SAME click, closing the modal instantly. Switched to
+   `template x-if` (modal absent when closed) and removed @click.outside;
+   Esc / ✕ / Cancel close it.
+3. Chicken-and-egg with x-if: openFeedbackModal set input values before the
+   modal existed. Now opens first, populates fields on the next tick.
+Verified end-to-end via Playwright: anchor click opens modal with readable
+chip, Esc closes, save persists and appears in the run feedback list.

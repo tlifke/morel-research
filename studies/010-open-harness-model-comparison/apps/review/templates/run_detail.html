@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ run.id }} · Contract Lab{% endblock %}
 {% block content %}
-<div x-data="{tab: 'trace', fbOpen: false}" class="space-y-4">
+<div id="run-detail-root" x-data="{tab: 'trace', fbOpen: false, judging: false, judgeOk: null, judgeStatus: ''}" class="space-y-4">
   <div class="flex items-start justify-between">
     <div>
       <h1 class="text-2xl font-semibold font-mono">{{ run.id }}</h1>
@@ -20,8 +20,7 @@
   <p x-show="judgeStatus" class="text-xs" x-text="judgeStatus" :class="judgeOk ? 'text-emerald-600' : 'text-amber-600'"></p>
   <script>
     function runJudge() {
-      const el = document.querySelector('[x-data]');
-      const d = Alpine.$data(el);
+      const d = document.getElementById('run-detail-root')._x_dataStack[0];
       d.judging = true; d.judgeStatus = 'Starting judge…';
       fetch(`/api/runs/{{ run.id }}/judge`, { method: 'POST' })
         .then(r => r.json()).then(start => {
@@ -240,22 +239,31 @@
         if (ok) setTimeout(() => location.reload(), 600);
       });
     }
+    function rootComponent() {
+      return document.getElementById('run-detail-root')._x_dataStack[0];
+    }
     function anchorFeedback(anchor, label) {
       openFeedbackModal(anchor, label);
     }
     function openFeedbackModal(anchor, label) {
-      const root = document.querySelector('[x-data]')._x_dataStack[0];
-      if (anchor) {
-        document.getElementById('anchor-type').value = anchor.anchor_type;
-        document.getElementById('anchor-ref').value = JSON.stringify(anchor);
-        document.getElementById('anchor-chip-text').textContent = label || anchor.anchor_type;
-        document.getElementById('anchor-chip').classList.remove('hidden');
-      } else {
-        clearAnchor();
-      }
-      document.getElementById('feedback-text').value = '';
-      root.fbOpen = true;
-      setTimeout(() => document.getElementById('feedback-text').focus(), 120);
+      const d = rootComponent();
+      window.__pendingAnchor = anchor || null;
+      window.__pendingLabel = label || null;
+      d.fbOpen = true;
+      // x-if renders the modal asynchronously; populate fields after it exists
+      setTimeout(() => {
+        if (window.__pendingAnchor) {
+          document.getElementById('anchor-type').value = window.__pendingAnchor.anchor_type;
+          document.getElementById('anchor-ref').value = JSON.stringify(window.__pendingAnchor);
+          document.getElementById('anchor-chip-text').textContent = window.__pendingLabel || window.__pendingAnchor.anchor_type;
+          document.getElementById('anchor-chip').classList.remove('hidden');
+        } else {
+          clearAnchor();
+        }
+        const ta = document.getElementById('feedback-text');
+        ta.value = '';
+        ta.focus();
+      }, 50);
     }
     function clearAnchor() {
       document.getElementById('anchor-ref').value = '';
@@ -281,14 +289,15 @@
   </details>
 
   <!-- FEEDBACK MODAL -->
-  <div x-show="fbOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @keydown.escape.window="fbOpen = false">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-5 m-4" @click.outside="fbOpen = false">
+  <template x-if="fbOpen">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @keydown.escape.window="fbOpen = false">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-5 m-4">
       <div class="flex items-center justify-between mb-3">
         <h3 class="font-medium text-sm">Add written feedback</h3>
         <button type="button" @click="fbOpen = false" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
       <form onsubmit="saveFeedback(event)" class="space-y-2 text-sm">
-        <div id="anchor-chip" class="hidden items-center justify-between bg-indigo-50 border border-indigo-200 rounded px-3 py-2">
+        <div id="anchor-chip" class="hidden flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded px-3 py-2">
           <span class="text-xs text-indigo-800">📎 Anchored to: <b id="anchor-chip-text"></b></span>
           <button type="button" onclick="clearAnchor()" class="text-indigo-400 hover:text-indigo-700 text-xs">✕ detach</button>
         </div>
@@ -312,6 +321,7 @@
       </form>
     </div>
   </div>
+  </template>
   <script>
     function saveFeedback(ev) {
       ev.preventDefault();
