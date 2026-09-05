@@ -58,7 +58,7 @@
       {% elif event.role == 'assistant' %}
         <div class="bg-white border rounded-lg p-3 shadow-sm" id="msg-{{ event.index }}">
           <p class="text-xs font-semibold text-slate-500 mb-2">ASSISTANT · msg {{ event.index }}
-            <button class="text-xs text-blue-500 ml-2" onclick="anchorFeedback({anchor_type:'tool_call', anchor_ref:{message_index:{{ event.index }}}}); return false;">⚓ anchor</button>
+            <button class="text-xs text-blue-500 ml-2" onclick="anchorFeedback({anchor_type:'tool_call', anchor_ref:{message_index:{{ event.index }}}}, 'assistant message · msg {{ event.index }}'); return false;">⚓ anchor</button>
           </p>
           {% for block in event.blocks %}
             {% if block.kind == 'text' %}
@@ -72,7 +72,7 @@
               <details class="my-1 bg-slate-50 border rounded px-2 py-1">
                 <summary class="text-xs font-mono">🔧 {{ block.name }} <span class="text-slate-400">{{ (block.arguments | tojson)[:100] if block.arguments }}</span></summary>
                 <pre class="text-xs bg-slate-900 text-slate-100 rounded p-2 mt-1 overflow-x-auto">{{ block.arguments | tojson(indent=2) }}</pre>
-                <button class="text-xs text-blue-500 mt-1" onclick="anchorFeedback({anchor_type:'tool_call', anchor_ref:{message_index:{{ event.index }}, block_index:{{ block.block_index }}}}); return false;">⚓ anchor this call</button>
+                <button class="text-xs text-blue-500 mt-1" onclick="anchorFeedback({anchor_type:'tool_call', anchor_ref:{message_index:{{ event.index }}, block_index:{{ block.block_index }}}}, '{{ block.name }} call · msg {{ event.index }}'); return false;">⚓ anchor this call</button>
               </details>
             {% endif %}
           {% endfor %}
@@ -240,10 +240,23 @@
         if (ok) setTimeout(() => location.reload(), 600);
       });
     }
-    function anchorFeedback(anchor) {
+    function anchorFeedback(anchor, label) {
       document.querySelector('[x-data]')._x_dataStack[0].tab = 'feedback';
       window.__pendingAnchor = anchor;
-      setTimeout(() => { const el = document.getElementById('anchor-ref'); if (el) el.value = JSON.stringify(anchor); }, 100);
+      setTimeout(() => {
+        const el = document.getElementById('anchor-ref');
+        if (el) el.value = JSON.stringify(anchor);
+        document.getElementById('anchor-type').value = anchor.anchor_type;
+        document.getElementById('anchor-chip-text').textContent = label || anchor.anchor_type;
+        document.getElementById('anchor-chip').classList.remove('hidden');
+        document.getElementById('manual-anchor').classList.add('hidden');
+      }, 100);
+    }
+    function clearAnchor() {
+      document.getElementById('anchor-ref').value = '';
+      document.getElementById('anchor-type').value = 'run';
+      document.getElementById('anchor-chip').classList.add('hidden');
+      document.getElementById('manual-anchor').classList.remove('hidden');
     }
   </script>
 
@@ -252,12 +265,17 @@
     <div class="bg-white rounded-lg shadow p-4">
       <h3 class="font-medium text-sm mb-2">Add written feedback</h3>
       <form onsubmit="saveFeedback(event)" class="space-y-2 text-sm">
-        <div class="flex space-x-2">
-          <select id="anchor-type" class="border rounded px-2 py-1 text-xs">
-            <option value="run">run</option><option value="file">file</option><option value="tool_call">tool_call</option>
-          </select>
-          <input id="anchor-ref" class="border rounded px-2 py-1 text-xs flex-1 font-mono" placeholder='{"path": "README.md"}'>
+        <div id="anchor-chip" class="hidden flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded px-3 py-2">
+          <span class="text-xs text-indigo-800">📎 Anchored to: <b id="anchor-chip-text"></b></span>
+          <button type="button" onclick="clearAnchor()" class="text-indigo-400 hover:text-indigo-700 text-xs">✕ attach to whole run instead</button>
         </div>
+        <div id="manual-anchor" class="flex space-x-2">
+          <select id="anchor-type" class="border rounded px-2 py-1 text-xs" onchange="document.getElementById('anchor-ref').placeholder = this.value === 'file' ? '{\"path\": \"README.md\"}' : (this.value === 'tool_call' ? '{\"message_index\": 3, \"block_index\": 1}' : '')">
+            <option value="run">whole run</option><option value="file">a file</option><option value="tool_call">a tool call (advanced)</option>
+          </select>
+          <input id="anchor-ref" class="border rounded px-2 py-1 text-xs flex-1 font-mono" placeholder=''>
+        </div>
+        <p class="text-xs text-slate-400">Tip: use the ⚓ buttons in the Trace tab to attach feedback to a specific action.</p>
         <textarea id="feedback-text" class="w-full border rounded p-2 text-sm" rows="3" placeholder="What was good/bad and why…"></textarea>
         <button type="submit" class="bg-blue-600 text-white text-sm px-3 py-1.5 rounded">Save feedback</button>
         <span id="feedback-status" class="text-xs"></span>
@@ -267,7 +285,7 @@
       <h3 class="font-medium text-sm">Existing ({{ feedback|length }})</h3>
       {% for fb in feedback %}
       <div class="border-t pt-2">
-        <p class="text-xs text-slate-400">{{ fb.anchor_type }} · {{ fb.created_at.strftime('%m-%d %H:%M') }} · <span class="font-mono">{{ fb.anchor_ref | tojson if fb.anchor_ref }}</span></p>
+        <p class="text-xs text-slate-400">{% if fb.anchor_type == 'file' and fb.anchor_ref.path %}📄 {{ fb.anchor_ref.path }}{% elif fb.anchor_type == 'tool_call' and fb.anchor_ref.message_index is not none %}🔧 msg {{ fb.anchor_ref.message_index }}{% if fb.anchor_ref.block_index is not none %} · block {{ fb.anchor_ref.block_index }}{% endif %}{% else %}whole run{% endif %} · {{ fb.created_at.strftime('%m-%d %H:%M') }}</p>
         <p>{{ fb.text }}</p>
       </div>
       {% endfor %}

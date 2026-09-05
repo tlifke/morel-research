@@ -139,3 +139,11 @@ not `text`. `trace.py` read `text`, so every thinking block rendered empty
 carried empty thinking text. Fixed: `parse_session` reads `thinking` first,
 falls back to `text`. Verified: 30/30 thinking blocks non-empty in the
 pi/Inkling trace and in the SFT export for that run.
+
+### Follow-up: written-feedback form UX (owner feedback)
+
+The anchor coordinates (JSON) were exposed as a raw input; the anchor-button
+flow now shows a human-readable chip ("Anchored to: bash call - msg 3") with
+a clear button; manual anchoring (whole run / file / advanced tool-call JSON)
+is the fallback row. Existing-feedback list renders human-readable anchors.
+Storage schema unchanged (anchor_type + anchor_ref JSONB).
