@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import httpx
@@ -28,6 +29,47 @@ APP_DIR = Path(__file__).resolve().parent
 API_BASE = os.environ.get("CONTRACTLAB_API", "http://localhost:8300")
 DEFAULT_MODEL = "tinker/thinkingmachines/Inkling-Small"
 JUDGE_TIMEOUT_S = 45 * 60
+
+
+def _run_stub(run_id: str, model_spec: str, questions: list[Question], run: Run) -> int:
+    """AGENT_JUDGE_STUB=1: skip the pi session entirely and write canned agent
+    answers straight to the DB. Used for job-lifecycle tests (no API cost).
+    AGENT_JUDGE_STUB_DELAY=<seconds> simulates a slow judge."""
+    delay = int(os.environ.get("AGENT_JUDGE_STUB_DELAY", "0") or 0)
+    if delay:
+        time.sleep(delay)
+    db = SessionLocal()
+    try:
+        for q in questions:
+            value = {"bool": True, "int_1_5": 4}.get(q.value_type, "stub")
+            existing = db.scalar(
+                select(Answer).where(
+                    Answer.run_id == run_id, Answer.question_id == q.id, Answer.judge == "agent"
+                )
+            )
+            if existing:
+                existing.value = value
+                existing.evidence = "[stub] canned verdict for job-lifecycle testing"
+                existing.judge_model = "stub"
+            else:
+                db.add(
+                    Answer(
+                        run_id=run_id,
+                        question_id=q.id,
+                        judge="agent",
+                        value=value,
+                        evidence="[stub] canned verdict for job-lifecycle testing",
+                        judge_model="stub",
+                    )
+                )
+        db.commit()
+    finally:
+        db.close()
+    (Path(run.run_dir) / "judge.done").write_text(
+        json.dumps({"ok": True, "posted": len(questions), "stub": True})
+    )
+    print(f"[judge] STUB: wrote {len(questions)} canned answers for {run_id}")
+    return 0
 
 
 def main() -> int:
@@ -52,6 +94,9 @@ def main() -> int:
             )
         )
         questions = sorted(questions, key=lambda q: q.sort_order)
+
+        if os.environ.get("AGENT_JUDGE_STUB") == "1":
+            return _run_stub(run_id, model_spec, questions, run)
 
         # 1. copy workspace to fresh temp dir (FULL copy: the artifact may
         # legitimately read its dataset copies; excluding them would unfairly

@@ -115,3 +115,37 @@ class LaunchEvent(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     healthy: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # null = still starting
     log_excerpt: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class JudgeJob(Base):
+    __tablename__ = "judge_jobs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    # queued | running | paused | completed | failed | cancelled
+    status: Mapped[str] = mapped_column(String, default="queued")
+    model: Mapped[str] = mapped_column(String)
+    stub: Mapped[bool] = mapped_column(Boolean, default=False)
+    total_items: Mapped[int] = mapped_column(Integer, default=0)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    items: Mapped[list["JudgeJobItem"]] = relationship(back_populates="job", cascade="all, delete-orphan")
+
+
+class JudgeJobItem(Base):
+    __tablename__ = "judge_job_items"
+    __table_args__ = (UniqueConstraint("job_id", "run_id", name="uq_judge_job_item_job_run"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    job_id: Mapped[int] = mapped_column(ForeignKey("judge_jobs.id"))
+    run_id: Mapped[str] = mapped_column(ForeignKey("runs.id"))
+    # queued | running | done | failed | skipped | cancelled
+    status: Mapped[str] = mapped_column(String, default="queued")
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    job: Mapped[JudgeJob] = relationship(back_populates="items")
+    run: Mapped[Run] = relationship()

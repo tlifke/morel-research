@@ -86,3 +86,15 @@ Request body: `{question_id, judge: "agent"|"human", value, evidence?, judge_mod
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/health` | `{status:"ok"}` after a DB round-trip. |
+
+
+## Judge jobs (SPEC 10)
+
+| method | path | body | notes |
+|---|---|---|---|
+| POST | /api/judge-jobs | `{run_ids: [...], model?: str, stub_delay?: int}` | creates a queued batch; 404 on unknown run ids. `stub_delay` is a testing affordance (seconds the stub judge sleeps) |
+| GET | /api/judge-jobs | — | list, newest first, with done/failed counts + current_run_id |
+| GET | /api/judge-jobs/{id} | — | detail incl. per-item statuses |
+| POST | /api/judge-jobs/{id}/pause | — | 409 unless queued/running; in-flight run finishes, queue holds |
+| POST | /api/judge-jobs/{id}/resume | — | 409 unless paused; job re-enters queue in creation order |
+| POST | /api/judge-jobs/{id}/cancel | — | terminates in-flight subprocess; queued items → cancelled; 409 on terminal jobs |

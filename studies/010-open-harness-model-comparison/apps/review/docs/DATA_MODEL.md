@@ -128,3 +128,39 @@ when the launcher's health probe settles — null while starting).
 Health resolution requires the launched process to still be alive when a
 URL probe succeeds (guards against unrelated servers squatting on
 README-declared ports).
+
+
+## Judge jobs (SPEC 10)
+
+```mermaid
+erDiagram
+    JUDGE_JOBS ||--o{ JUDGE_JOB_ITEMS : "contains"
+    RUNS ||--o{ JUDGE_JOB_ITEMS : "target of"
+    JUDGE_JOBS {
+        int id PK
+        string status "queued|running|paused|completed|failed|cancelled"
+        string model
+        int total_items
+        datetime created_at
+        datetime started_at
+        datetime finished_at
+        text error
+    }
+    JUDGE_JOB_ITEMS {
+        int id PK
+        int job_id FK
+        string run_id FK
+        string status "queued|running|done|failed|skipped|cancelled"
+        text error
+        datetime started_at
+        datetime finished_at
+    }
+```
+
+- `judge_jobs` — one batch of agent judging. Status transitions:
+  queued → running → (paused ⇄ running) → completed | failed | cancelled.
+- `judge_job_items` — one per (job, run), unique together. The runner thread
+  spawns `agent_judge.py` per item; `done` requires exit 0 AND agent answers
+  present for the run.
+- Startup recovery: jobs stuck in `running` from a dead process are flipped
+  to `paused`, their `running` items back to `queued` (see AS_BUILT).

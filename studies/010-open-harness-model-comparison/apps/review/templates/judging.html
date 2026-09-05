@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Judging · Contract Lab{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-semibold">Judging dashboard</h1>
+  <span class="text-xs text-slate-400">jobs run server-side — safe to leave this page</span>
+</div>
+<div id="jobs-container" class="space-y-4">
+  {% for card in cards %}
+  {% set job = card.job %}
+  <div class="bg-white rounded-lg shadow p-4" data-job-id="{{ job.id }}" data-status="{{ job.status }}">
+    <div class="flex items-center justify-between mb-2">
+      <div>
+        <span class="font-semibold">Job #{{ job.id }}</span>
+        <span data-role="status-badge" class="ml-2 px-2 py-0.5 rounded text-xs font-medium
+          {{ 'bg-slate-200 text-slate-700' if job.status == 'queued' else
+             'bg-blue-100 text-blue-800' if job.status == 'running' else
+             'bg-amber-100 text-amber-800' if job.status == 'paused' else
+             'bg-emerald-100 text-emerald-800' if job.status == 'completed' else
+             'bg-red-100 text-red-800' }}">{{ job.status }}</span>
+        <span class="text-xs text-slate-400 ml-2">{{ job.model.split('/')[-1] }}</span>
+      </div>
+      <div class="space-x-2">
+        {% if job.status in ('queued', 'running') %}
+        <button onclick="jobAction({{ job.id }}, 'pause')" class="text-xs border border-slate-300 rounded px-3 py-1 hover:bg-slate-50">Pause</button>
+        <button onclick="jobAction({{ job.id }}, 'cancel')" class="text-xs border border-red-300 text-red-600 rounded px-3 py-1 hover:bg-red-50">Cancel</button>
+        {% elif job.status == 'paused' %}
+        <button onclick="jobAction({{ job.id }}, 'resume')" class="text-xs bg-indigo-600 text-white rounded px-3 py-1 hover:bg-indigo-700">Resume</button>
+        <button onclick="jobAction({{ job.id }}, 'cancel')" class="text-xs border border-red-300 text-red-600 rounded px-3 py-1 hover:bg-red-50">Cancel</button>
+        {% endif %}
+      </div>
+    </div>
+    {% set total = job.total_items or card.items|length %}
+    <div class="w-full bg-slate-200 rounded h-2 mb-2">
+      <div data-role="bar" class="bg-indigo-500 h-2 rounded" style="width: {{ (card.done / total * 100) | round(0, 'floor') if total else 0 }}%"></div>
+    </div>
+    <p class="text-xs text-slate-500 mb-2">
+      <span data-role="counts">{{ card.done }}/{{ total }} done{% if card.failed %} · {{ card.failed }} failed{% endif %}</span>
+      {% if card.current_run %} · current: <span class="font-mono" data-role="current">{{ card.current_run.id[:13] }}…</span> ({{ card.current_run.model.split('/')[-1] }}){% endif %}
+      {% if job.error %} · <span class="text-red-600">{{ job.error }}</span>{% endif %}
+    </p>
+    <div class="text-xs space-y-1" data-role="items">
+      {% for item in card['items'] %}
+      <div class="flex items-center justify-between border-t pt-1">
+        <span class="font-mono text-slate-600">{{ item.run_id[:19] }}…</span>
+        <span class="{{ 'text-emerald-600' if item.status == 'done' else 'text-red-600' if item.status == 'failed' else 'text-slate-400' }}">
+          {{ item.status }}{% if item.error %} — {{ item.error[:120] }}{% endif %}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="bg-white rounded-lg shadow p-6 text-sm text-slate-500">
+    No judge jobs yet. Select runs on the <a href="/" class="text-indigo-600 hover:underline">Runs page</a> and click "Judge selected".
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+  // Display-only polling: jobs run server-side; leaving this page is safe.
+  // Progress updates in place; a full reload happens only on a status
+  // transition (which changes which control buttons should show).
+  const BADGE = {
+    queued: 'bg-slate-200 text-slate-700', running: 'bg-blue-100 text-blue-800',
+    paused: 'bg-amber-100 text-amber-800', completed: 'bg-emerald-100 text-emerald-800',
+    failed: 'bg-red-100 text-red-800', cancelled: 'bg-red-100 text-red-800',
+  };
+  async function refresh() {
+    try {
+      const jobs = await (await fetch('/api/judge-jobs')).json();
+      for (const j of jobs) {
+        const card = document.querySelector(`[data-job-id="${j.id}"]`);
+        if (!card) { location.reload(); return; }  // new job created elsewhere
+        if (card.dataset.status !== j.status) { location.reload(); return; }  // transition
+        if (j.status !== 'running' && j.status !== 'paused') continue;
+        // in-place progress update
+        card.querySelector('[data-role="bar"]').style.width = `${j.total_items ? Math.floor(j.done_items / j.total_items * 100) : 0}%`;
+        card.querySelector('[data-role="counts"]').textContent =
+          `${j.done_items}/${j.total_items} done${j.failed_items ? ` · ${j.failed_items} failed` : ''}`;
+        const cur = card.querySelector('[data-role="current"]');
+        if (cur) cur.textContent = j.current_run_id ? `${j.current_run_id.slice(0, 13)}…` : '';
+        const itemsEl = card.querySelector('[data-role="items"]');
+        itemsEl.innerHTML = j.items.map(it => {
+          const color = it.status === 'done' ? 'text-emerald-600' : it.status === 'failed' ? 'text-red-600' : 'text-slate-400';
+          return `<div class="flex items-center justify-between border-t pt-1">
+            <span class="font-mono text-slate-600">${it.run_id.slice(0, 19)}…</span>
+            <span class="${color}">${it.status}${it.error ? ' — ' + it.error.slice(0, 120) : ''}</span></div>`;
+        }).join('');
+      }
+    } catch (e) { /* server briefly busy; keep showing last state */ }
+  }
+  setInterval(refresh, 2500);
+  function jobAction(id, action) {
+    fetch(`/api/judge-jobs/${id}/${action}`, {method: 'POST'})
+      .then(r => { if (!r.ok) r.text().then(t => alert('failed: ' + t)); location.reload(); });
+  }
+</script>
+{% endblock %}

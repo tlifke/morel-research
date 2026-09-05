@@ -199,3 +199,43 @@ class LaunchStatus(BaseModel):
     command: str | None = None
     log_tail: str = ""
     components: list[dict[str, Any]] = []
+
+
+class JudgeJobCreate(BaseModel):
+    run_ids: list[str] = Field(min_length=1)
+    model: str = "tinker/thinkingmachines/Inkling-Small"
+    # testing affordance (SPEC 10 stub mode): seconds agent_judge sleeps
+    # before writing its canned verdict — makes pause/cancel deterministic
+    stub: bool = False
+    stub_delay: int | None = None
+
+
+class JudgeJobItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    run_id: str
+    status: str
+    error: str | None
+    started_at: datetime | None
+    finished_at: datetime | None
+
+
+class JudgeJobOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    status: str
+    model: str
+    total_items: int
+    error: str | None
+    created_at: datetime
+    started_at: datetime | None
+    finished_at: datetime | None
+
+
+class JudgeJobDetailOut(JudgeJobOut):
+    items: list[JudgeJobItemOut] = []
+    done_items: int = 0
+    failed_items: int = 0
+    current_run_id: str | None = None

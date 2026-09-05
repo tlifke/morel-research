@@ -13,6 +13,7 @@
         audit {{ 'clean ✅' if run.audit_clean else 'VIOLATIONS ❌' }}
       </p>
     </div>
+    <a href="/judging" class="text-xs text-indigo-600 hover:underline mr-2">batch dashboard →</a>
     <button @click="runJudge()" :disabled="judging" class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm px-4 py-2 rounded">
       <span x-show="!judging">Run agent judge</span><span x-show="judging">Judging… (minutes)</span>
     </button>

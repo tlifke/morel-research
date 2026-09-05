@@ -47,3 +47,17 @@ create-question form.
 ### `/feedback` (screenshots/feedback.png)
 Three columns: written feedback, comparisons, answers (newest first), with
 export links.
+
+
+## Judge job dashboard (SPEC 10)
+
+- **Runs index**: row checkboxes + "Judge selected (n)" button (creates a
+  batch job, redirects to /judging). Judgment matrix below the table: rows =
+  runs, columns = active questions; agent answers indigo, human answers
+  emerald, disagreement ringed red.
+- **/judging dashboard** (sidebar "Judging"): job cards with status badge,
+  progress bar, done/failed counts, current run, per-item statuses,
+  Pause/Resume/Cancel. Polls /api/judge-jobs every 2.5s; progress updates
+  in place, full reload only on a status transition. Display-only — jobs
+  run server-side, leaving the page is always safe.
+- **Run detail** judge tab links to the dashboard ("batch dashboard →").

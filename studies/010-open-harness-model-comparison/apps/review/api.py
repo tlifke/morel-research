@@ -12,9 +12,19 @@ from db import get_db
 from importer import import_runs
 import app_launcher
 from app_launcher import detect_components, manager as launch_manager
-from models import Answer, Comparison, LaunchEvent, Question, Run, WrittenFeedback
+from judge_runner import cancel_active
+from models import Answer, Comparison, JudgeJob, JudgeJobItem, LaunchEvent, Question, Run, WrittenFeedback
+from datetime import datetime, timezone
+
+
+def utcnow():
+    return datetime.now(timezone.utc)
+
 from schemas import (
     AnswerCreate,
+    JudgeJobCreate,
+    JudgeJobDetailOut,
+    JudgeJobOut,
     AnswerOut,
     ComparisonCreate,
     ComparisonOut,
@@ -29,6 +39,7 @@ from schemas import (
     WrittenFeedbackCreate,
     WrittenFeedbackOut,
 )
+import judge_runner
 from trace import parse_session
 
 router = APIRouter(prefix="/api")
@@ -552,3 +563,90 @@ def export_summary(db: Session = Depends(get_db)):
             }
         )
     return {"runs": per_run}
+
+
+# ---- judge jobs (SPEC 10) ----
+
+
+@router.post("/judge-jobs", response_model=JudgeJobDetailOut, status_code=201)
+def create_judge_job(body: JudgeJobCreate, db: Session = Depends(get_db)):
+    try:
+        job = judge_runner.create_job(body.run_ids, body.model, body.stub_delay, body.stub)
+    except ValueError as e:
+        raise HTTPException(404, str(e))
+    return _job_detail(db, job.id)
+
+
+@router.get("/judge-jobs", response_model=list[JudgeJobDetailOut])
+def list_judge_jobs(db: Session = Depends(get_db)):
+    jobs = list(db.scalars(select(JudgeJob).order_by(JudgeJob.created_at.desc())))
+    return [_job_detail(db, j.id) for j in jobs]
+
+
+@router.get("/judge-jobs/{job_id}", response_model=JudgeJobDetailOut)
+def get_judge_job(job_id: int, db: Session = Depends(get_db)):
+    return _job_detail(db, job_id)
+
+
+@router.post("/judge-jobs/{job_id}/pause", response_model=JudgeJobDetailOut)
+def pause_judge_job(job_id: int, db: Session = Depends(get_db)):
+    job = _get_job_or_404(db, job_id)
+    if job.status not in ("queued", "running"):
+        raise HTTPException(409, f"cannot pause a job in status '{job.status}'")
+    job.status = "paused"  # in-flight item finishes; runner holds the queue
+    db.commit()
+    return _job_detail(db, job_id)
+
+
+@router.post("/judge-jobs/{job_id}/resume", response_model=JudgeJobDetailOut)
+def resume_judge_job(job_id: int, db: Session = Depends(get_db)):
+    job = _get_job_or_404(db, job_id)
+    if job.status != "paused":
+        raise HTTPException(409, f"cannot resume a job in status '{job.status}'")
+    job.status = "queued"  # runner re-picks it in creation order
+    db.commit()
+    return _job_detail(db, job_id)
+
+
+@router.post("/judge-jobs/{job_id}/cancel", response_model=JudgeJobDetailOut)
+def cancel_judge_job(job_id: int, db: Session = Depends(get_db)):
+    job = _get_job_or_404(db, job_id)
+    if job.status in ("completed", "failed", "cancelled"):
+        raise HTTPException(409, f"cannot cancel a job in status '{job.status}'")
+    judge_runner.cancel_active(job_id)  # terminate in-flight subprocess, if any
+    job.status = "cancelled"
+    job.finished_at = utcnow()
+    for item in job.items:
+        if item.status in ("queued", "running"):
+            item.status = "cancelled"
+            if item.finished_at is None:
+                item.finished_at = utcnow()
+    db.commit()
+    return _job_detail(db, job_id)
+
+
+def _get_job_or_404(db: Session, job_id: int) -> JudgeJob:
+    job = db.get(JudgeJob, job_id)
+    if not job:
+        raise HTTPException(404, f"judge job not found: {job_id}")
+    return job
+
+
+def _job_detail(db: Session, job_id: int) -> dict:
+    job = db.get(JudgeJob, job_id)
+    items = sorted(job.items, key=lambda i: i.id)
+    current = next((i for i in items if i.status == "running"), None)
+    return {
+        "id": job.id,
+        "status": job.status,
+        "model": job.model,
+        "total_items": job.total_items,
+        "error": job.error,
+        "created_at": job.created_at,
+        "started_at": job.started_at,
+        "finished_at": job.finished_at,
+        "items": items,
+        "done_items": sum(1 for i in items if i.status == "done"),
+        "failed_items": sum(1 for i in items if i.status == "failed"),
+        "current_run_id": current.run_id if current else None,
+    }

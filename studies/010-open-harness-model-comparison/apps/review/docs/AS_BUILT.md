@@ -234,3 +234,48 @@ chip, Esc closes, save persists and appears in the run feedback list.
 Launching executes agent-written code on the host from a temp copy — no
 sandbox, same trust level as the agent judge. Original workspace artifacts
 are never executed or modified. Documented in README.
+# SPEC 10 as-built notes (judge job dashboard)
+
+## Deviations from spec
+- `JudgeJobCreate.stub_delay` (int, optional): a testing affordance not in
+  the spec — seconds the stub judge sleeps before writing its verdict, so
+  pause/cancel are deterministic in tests. Passed to the subprocess env by
+  the runner; harmless in real (non-stub) runs.
+- Item `skipped` status exists in the schema but is never set by the runner
+  (reserved; cancel marks items `cancelled`).
+- Pause is graceful by design: the in-flight run finishes (its subprocess
+  keeps running; results are recorded); only new items are held. Mid-run
+  hard-stop = Cancel. This matches SPEC 10's wording but is worth stating:
+  there is no "kill current run but keep queue" control.
+
+## Startup recovery (documented behavior)
+On uvicorn startup, `recover_stuck_jobs()` flips any job stuck in `running`
+(from a previous dead process — its subprocess died with it) to `paused`,
+and its `running` items back to `queued`. The owner resumes deliberately
+from the dashboard. The runner thread itself is a daemon started at startup
+and after each job creation.
+
+## Limitations
+- One job runs at a time (global runner). A paused job releases the runner:
+  a different queued job may start; resume re-enters the queue in creation
+  order.
+- Job state survives page navigation and uvicorn restarts (Postgres), but
+  the in-flight SUBPROCESS does not survive a restart — hence the recovery
+  behavior above.
+- Run detail's per-run judge button still uses the old per-run flow (its
+  state lives in run-dir marker files); it does not appear on the
+  dashboard. Prefer the dashboard/bulk flow.
+
+### Follow-up: stub-answer cleanup archaeology
+During verification, 9 stub answers + 3 jobs were found left over from the
+first test run: the test's cleanup imported `db` without the app dir on
+sys.path (pytest runs from repo root) — ModuleNotFoundError swallowed by
+best-effort cleanup. Fixed: tests insert the app dir into sys.path; cleanup
+verified to fully remove stub answers and test jobs.
+
+## Ship decision (2026-09-05)
+
+Shipped as first pass per owner decision: dashboard + job system live,
+lifecycle tests red on timing assumptions (see docs/KNOWN_ISSUES.md — the
+canonical handoff list, with P1/P2/P3 priorities and fix directions). Test
+jobs cleaned; accidental real agent answers kept and documented there.

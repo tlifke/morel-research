@@ -3,13 +3,18 @@
 {% block content %}
 <div class="flex items-center justify-between mb-4">
   <h1 class="text-2xl font-semibold">Runs</h1>
-  <button hx-post="/api/import" hx-target="#import-result" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded">Import runs</button>
+  <div class="flex items-center space-x-2">
+    <button hx-post="/api/import" hx-target="#import-result" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded">Import runs</button>
+    <button onclick="judgeSelected()" id="judge-selected-btn" disabled class="bg-indigo-600 disabled:opacity-40 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded">Judge selected (0)</button>
+  </div>
 </div>
 <p id="import-result" class="text-sm text-slate-500 mb-3"></p>
+<p class="text-xs text-slate-400 mb-3">Tick runs and use <b>Judge selected</b> to start a server-side agent-judging batch — progress lives on the <a href="/judging" class="text-indigo-600 hover:underline">Judging dashboard</a> and continues if you leave this page.</p>
 
 <table class="w-full text-sm bg-white rounded-lg shadow overflow-hidden">
   <thead class="bg-slate-100 text-left text-xs uppercase text-slate-500">
     <tr>
+      <th class="px-2 py-2"><input type="checkbox" id="select-all" onchange="toggleAll(this)"></th>
       <th class="px-3 py-2">Run</th><th class="px-3 py-2">Model</th><th class="px-3 py-2">Condition</th>
       <th class="px-3 py-2">Tag</th><th class="px-3 py-2">Cost</th><th class="px-3 py-2">Audit</th>
       <th class="px-3 py-2">Answers (agent/human)</th><th class="px-3 py-2"></th>
@@ -19,6 +24,7 @@
   {% for row in rows %}
     {% set run = row.run %}
     <tr class="border-t hover:bg-slate-50">
+      <td class="px-2 py-2"><input type="checkbox" class="run-select" value="{{ run.id }}" onchange="updateCount()"></td>
       <td class="px-3 py-2 font-mono text-xs"><a href="/runs/{{ run.id }}" class="text-blue-600 hover:underline">{{ run.id }}</a></td>
       <td class="px-3 py-2"><span class="badge">{{ run.model.split('/')[-1] }}</span></td>
       <td class="px-3 py-2">
@@ -41,4 +47,68 @@
   </tbody>
 </table>
 <p class="text-xs text-slate-400 mt-3">A = agent answered · H = human answered · {{ comparison_count }} comparison(s) recorded</p>
+
+<h2 class="text-lg font-semibold mt-8 mb-2">Judgment matrix</h2>
+<p class="text-xs text-slate-500 mb-2">Agent answers <span class="text-indigo-600 font-semibold">indigo</span>, human answers <span class="text-emerald-600 font-semibold">emerald</span>; a red ring marks agent/human disagreement. booleans render as ✓/✗.</p>
+<div class="overflow-x-auto bg-white rounded-lg shadow">
+  <table class="w-full text-xs">
+    <thead class="bg-slate-100 text-left text-xs uppercase text-slate-500">
+      <tr>
+        <th class="px-3 py-2 sticky left-0 bg-slate-100">Run</th>
+        {% for q in questions %}{% if q.active %}
+        <th class="px-3 py-2" title="{{ q.text }} ({{ q.answered_by }})">{{ q.code }}</th>
+        {% endif %}{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in rows %}
+      {% set run = row.run %}
+      <tr class="border-t">
+        <td class="px-3 py-2 font-mono text-xs sticky left-0 bg-white">
+          <a href="/runs/{{ run.id }}" class="text-blue-600 hover:underline">{{ run.id[:13] }}…</a>
+          <span class="text-slate-400 ml-1">{{ run.condition }}</span>
+        </td>
+        {% for q in questions %}{% if q.active %}
+          {% set cell = row.answers.get(q.id) %}
+          <td class="px-3 py-2 border-l">
+            {% if cell %}
+              {% set disagree = cell.get('agent') is not none and cell.get('human') is not none and cell.get('agent') != cell.get('human') %}
+              <div class="flex flex-col gap-0.5 {{ 'ring-2 ring-red-400 rounded p-0.5' if disagree else '' }}">
+                {% if cell.get('agent') is not none %}<span class="text-indigo-700 bg-indigo-50 rounded px-1 inline-block w-fit">A: {{ cell.get('agent') | to_bool }}</span>{% endif %}
+                {% if cell.get('human') is not none %}<span class="text-emerald-700 bg-emerald-50 rounded px-1 inline-block w-fit">H: {{ cell.get('human') | to_bool }}</span>{% endif %}
+              </div>
+            {% else %}
+              <span class="text-slate-300">—</span>
+            {% endif %}
+          </td>
+        {% endif %}{% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  function updateCount() {
+    const n = document.querySelectorAll('.run-select:checked').length;
+    const btn = document.getElementById('judge-selected-btn');
+    btn.textContent = `Judge selected (${n})`;
+    btn.disabled = n === 0;
+  }
+  function toggleAll(el) {
+    document.querySelectorAll('.run-select').forEach(c => c.checked = el.checked);
+    updateCount();
+  }
+  function judgeSelected() {
+    const ids = Array.from(document.querySelectorAll('.run-select:checked')).map(c => c.value);
+    if (!ids.length) return;
+    fetch('/api/judge-jobs', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({run_ids: ids})
+    }).then(r => {
+      if (r.ok) location.href = '/judging';
+      else r.text().then(t => document.getElementById('import-result').textContent = 'judge job failed: ' + t);
+    });
+  }
+</script>
 {% endblock %}
