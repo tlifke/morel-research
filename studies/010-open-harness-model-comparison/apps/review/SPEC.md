@@ -311,3 +311,51 @@ Acceptance:
 7. Screenshots of every page (playwright or similar) in
    `apps/review/screenshots/`.
 8. Do not `git commit` — leave the working tree for owner review.
+
+---
+
+## 9. ADDENDUM — Live app launcher (owner request, post-review)
+
+**Goal**: eliminate the asymmetry between static-artifact runs and full-app
+runs. Every run's Preview tab converges to: Launch → components go green →
+Open app.
+
+### Behavior
+- Preview tab shows a **Launch panel** for every run:
+  - Detected components (workspace scan): `frontend` (index.html/static
+    files), `backend` (server scripts, requirements.txt, package.json),
+    `database` (*.db, *.sql, migrations). Chips with per-component state.
+  - **Launch command** (auto-resolved, editable text field before launch):
+    1. launch command extracted from the run's README/docs (prefer fenced
+       code blocks containing `python`/`uv run`/`npm`/`bash`), else
+    2. `run.sh` → `bash run.sh`, else `app.py`/`server.py`/`main.py` →
+       `python <file>`, else
+    3. static-only → `python -m http.server <port>` (uniform experience).
+  - **Launch button** → copies workspace to a fresh temp dir, injects
+    `PORT=<free port from 8450+>` env, starts subprocess from the temp dir.
+  - **Health monitoring**: subprocess alive + HTTP probe
+    (`http://localhost:<port>/`) every 1s up to 60s. States: `starting` →
+    `healthy` (green) / `failed` (log tail shown). Log tail (last ~40 lines)
+    always visible in the panel.
+  - When healthy: **Open app ↗** link (`http://localhost:<port>`,
+    target=_blank) + **Stop** button.
+- Static runs: the same panel works (http.server), so 1:1 comparison holds.
+
+### Backend
+- New module `app_launcher.py`: in-process launch manager (dict keyed by
+  run_id; subprocess + polling thread; free-port allocation; temp-copy
+  creation). One launch per run at a time; Stop kills process + cleans up.
+- `launch_events` table (SQLAlchemy + Pydantic mirror):
+  id, run_id FK, command, port, started_at, healthy bool, log_excerpt text.
+  Written on start and on health resolution. Feeds q2/q3 evidence later.
+- API:
+  - `POST /api/runs/{id}/launch` body `{command?: str}` → starts; returns event id
+  - `GET /api/runs/{id}/launch/status` → `{running, healthy|failed|null, port, url, log_tail, components, command}`
+  - `POST /api/runs/{id}/launch/stop`
+- Preview tab UI: launch panel above the static preview; panel visible for
+  all runs.
+
+### Safety (document in README + AS_BUILT)
+Launching runs agent-written code on the host from a temp copy — same trust
+level as the agent judge; no sandbox. Original workspace artifacts are
+never executed or modified.
