@@ -21,6 +21,7 @@ plugin marketplace, and skills written for this repo.
 | `new-investigation` | Scaffold a new investigation under an existing study with proper frontmatter; rebuild `lineage.yaml`. |
 | `scaffold-one-pager` | Copy `one-pagers/template/` next to a study/investigation and prefill title-block macros. Never writes prose. |
 | `capability-map-entry` | Add or update a task entry in `capability-map/tasks.yaml`; re-render `capability-map.png`. |
+| `functional-emotions` | Replicate Anthropic's emotion-concepts paper (2026) on open-weight models: emotion-vector extraction/validation, PCA geometry, key-token probing, steering, and the reward-hacking (desperate/calm) case study + mitigations. Ships tested scripts (`scripts/selftest.py` first). Needs a GPU box for real runs. |
 
 ## Notes on partial installation
 
