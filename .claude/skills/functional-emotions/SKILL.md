@@ -42,12 +42,12 @@ Scripts import each other, so run them from `scripts/` or put it on `PYTHONPATH`
 calls (dataset generation, ratings, judging) use `claude-opus-5-5` and need Anthropic
 credentials. **Before any paid bulk run, estimate cost and get the human's OK.**
 
-Where outputs go: under an investigation, e.g.
-`studies/NNN-functional-emotions/investigations/NNN-slug/runs/<model-tag>/`. If no study
-exists yet, ask the human whether to create one (use the `new-study` /
-`new-investigation` skills). Decide with the human what to commit: vectors files are
-large (L × E × d floats), so gitignore them by default and commit the configs, JSON
-summaries, and figures.
+Where outputs go (fixed; don't re-litigate the layout):
+- generated datasets → `studies/008-functional-emotions/data/` (shared by all models; commit them,
+  since they cost API money)
+- per-model results → `studies/008-functional-emotions/runs/<model-tag>/` (e.g. `qwen2.5-7b-instruct`)
+- `*.npz` files there are gitignored (large, regenerable); commit the JSON/JSONL and figures.
+Record what you ran and found in `studies/008-functional-emotions/study.md`.
 
 ## Pipeline
 
@@ -84,12 +84,13 @@ coherence sweep first, and always include `random:k` controls.
 
 ```bash
 cd .claude/skills/functional-emotions/scripts
-M=Qwen/Qwen2.5-7B-Instruct; R=../../../../studies/<study>/investigations/<inv>/runs/qwen7b
-python generate_dataset.py stories --out $R/../data/stories.jsonl --pilot          # → human review
-python generate_dataset.py stories --out $R/../data/stories.jsonl \
+ST=../../../../studies/008-functional-emotions; D=$ST/data
+M=Qwen/Qwen2.5-7B-Instruct; R=$ST/runs/qwen2.5-7b-instruct
+python generate_dataset.py stories --out $D/pilot_stories.jsonl --pilot            # → human review
+python generate_dataset.py stories --out $D/stories.jsonl \
        --emotions-subset core12,frustrated,panicked,blissful,hostile
-python generate_dataset.py neutral_dialogues --out $R/../data/neutral.jsonl
-python extract_vectors.py --model $M --stories $R/../data/stories.jsonl --neutral $R/../data/neutral.jsonl --out $R/vectors.npz
+python generate_dataset.py neutral_dialogues --out $D/neutral.jsonl
+python extract_vectors.py --model $M --stories $D/stories.jsonl --neutral $D/neutral.jsonl --out $R/vectors.npz
 python validate.py scenarios  --model $M --vectors $R/vectors.npz --continue-tokens 20 --out $R/val_scenarios.json
 python validate.py he-feels   --model $M --vectors $R/vectors.npz --steer-layers 12 13 14 --out $R/val_hefeels.json
 python validate.py logit-lens --model $M --vectors $R/vectors.npz --out $R/val_logitlens.json
